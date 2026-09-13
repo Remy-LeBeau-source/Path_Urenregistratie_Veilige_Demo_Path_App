@@ -1836,6 +1836,42 @@ test('[MOB-H-028] mobiele panelen meten hun hoogte aan de zichtbare viewport, ni
   ).toBe(true);
 });
 
+test('[MOB-H-029] elk zwevend element onderin wordt opgetild zodra de navigatiebalk verschijnt', async () => {
+  // Fase 17.5-audit. Deze fout is inmiddels vier keer gevonden, steeds met
+  // dezelfde oorzaak: de sidebar wordt bij max-width:820px de onderste
+  // navigatiebalk (68px hoog), maar een vast gepositioneerd element onderin
+  // wordt pas bij een smallere breedte (590px of 720px) opgetild -- of
+  // helemaal niet. In die kier ligt het element op de navigatieknoppen.
+  //
+  // .help-launcher onderschepte daar zelfs kliks (zie MOB-H-021-reeks en de
+  // cascade in dashboard.spec.ts), .install-banner heeft eigen knoppen, en
+  // .toast dekt de knoppen visueel af.
+  //
+  // Deze case bewaakt de klásse in plaats van de losse gevallen, zodat een
+  // volgend zwevend element dat iemand toevoegt hier meteen tegenaan loopt.
+  // Bronregel en niet de berekende stijl, omdat deze elementen standaard
+  // verborgen zijn (toast en installatiebanner verschijnen alleen op een
+  // moment dat een test niet betrouwbaar kan afdwingen).
+  const css = await readFile(join(process.cwd(), 'assets', 'styles.css'), 'utf8');
+
+  const blokStart = css.indexOf('@media (max-width: 820px) {', css.indexOf('.help-launcher {'));
+  expect(blokStart, 'er hoort een 820px-blok te staan waarin de zwevende elementen worden opgetild').toBeGreaterThan(0);
+  const blok = css.slice(blokStart, css.indexOf('\n}', blokStart));
+
+  // Commentaar eruit voor de controle. Zonder deze stap zou de case ook groen
+  // blijven als een regel wordt verwijderd maar de toelichting erover blijft
+  // staan -- de eerste versie van deze case had precies dat gat en bleef
+  // slagen terwijl .install-banner zijn lift al kwijt was.
+  const alleenRegels = blok.replace(/\/\*[\s\S]*?\*\//g, '');
+
+  for (const element of ['.help-launcher', '.toast', '.install-banner']) {
+    expect(
+      new RegExp(`\\${element}\\s*\\{[^}]*bottom:`).test(alleenRegels),
+      `${element} hoort bij max-width:820px een eigen bottom-waarde te krijgen, anders ligt hij op de mobiele navigatiebalk`
+    ).toBe(true);
+  }
+});
+
 test('[MOB-H-027] een uur met een komma getypt komt aan als 8,5 en niet als leeg veld', async ({ page }) => {
   // Fase 17.5-audit (Android/Chrome-blok, main). De urenvelden zijn
   // type="number" met inputmode="decimal". Een Nederlands Android-toetsenbord

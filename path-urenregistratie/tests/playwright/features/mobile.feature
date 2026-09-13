@@ -237,6 +237,14 @@ Feature: Mobiele gebruikerservaring
     Then wordt met Playwright-assertions bevestigd dat mobiele panelen meten hun hoogte aan de zichtbare viewport, niet aan 100vh
 
   @happy
+  Scenario: [MOB-H-029] elk zwevend element onderin wordt opgetild zodra de navigatiebalk verschijnt
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given mobiele gebruikerservaring is voorbereid
+    When de flow voor MOB-H-029 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat elk zwevend element onderin wordt opgetild zodra de navigatiebalk verschijnt
+
+  @happy
   Scenario: [MOB-H-027] een uur met een komma getypt komt aan als 8,5 en niet als leeg veld
     # Testtechniek: Responsive viewport + end-to-end use-case
     # Aantoonbare Playwright-assertions in deze case: 3

@@ -2076,7 +2076,28 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   zelfde bekende omgevingsgat als `[SKIN-H-027]`) én bewaakt dat de `vh`-terugval blijft staan
   voor browsers zonder `dvh`. Discriminerend bevestigd: zonder de fix faalt hij, met de fix
   slaagt hij in 6,5s.
-- [ ] iOS/Safari resterend: keyboard, uploads, sticky headers, overige fixed buttons
+- [x] **Sticky headers en zwevende knoppen (13 sep): nog twee plekken van hetzelfde patroon.**
+  Alle `position: sticky`- en `position: fixed`-elementen nagelopen. **In orde:** de sticky
+  `.topbar` (die heeft de safe-area-fix al, zie `[SKIN-H-027]`), en het sluitkruisje van een
+  dialoog — dat is bewust géén sticky maar absoluut vastgezet op een niet-scrollende schil,
+  met een uitgeschreven toelichting dat sticky daar op mobiel onbetrouwbaar bleek; gedekt door
+  `[MOB-H-023]` en `[A11Y-H-006]`. **Twee nieuwe vondsten, allebei dezelfde oorzaak als de
+  hulpknop-fix (v2.0.6):** een element onderin dat pas bij een smallere breedte wordt opgetild
+  dan waar de navigatiebalk ontstaat (820px). (1) `.toast` werd pas vanaf 590px opgetild, dus
+  tussen 591 en 820px lag hij op de navigatieknoppen — hij heeft `pointer-events: none` en
+  blokkeert dus geen kliks, maar dekt ze wel af. (2) `.install-banner` had **helemaal geen**
+  lift, op geen enkele breedte, terwijl zijn eigen toelichting letterlijk zegt "Boven de
+  mobiele onderbalk zodat hij niets afdekt" — die banner staat bovendien buiten `#app-shell`
+  en heeft eigen knoppen, dus die onderschepte de navigatie ook echt. Beide opgetild in het
+  820px-blok; bij de banner blijft `env(safe-area-inset-bottom)` erin voor het home-balkje.
+  **Nieuwe regressie `[MOB-H-029]` bewaakt de klasse, niet de losse gevallen:** hij eist dat
+  `.help-launcher`, `.toast` én `.install-banner` alle drie een eigen `bottom` krijgen in dat
+  blok, zodat een volgend zwevend element hier meteen tegenaan loopt. Discriminerend bevestigd
+  — en de eerste versie van die case was zélf fout: hij zocht met `includes()` naar de
+  selectornaam en vond die ook in het commentaar, waardoor hij groen bleef terwijl de regel al
+  weg was. Nu wordt commentaar eerst gestript en op een echte `bottom:`-declaratie gecontroleerd;
+  daarna faalt hij wél correct.
+- [ ] iOS/Safari resterend: keyboard (toetsenbord dat een knop afdekt), uploads
   (datumvelden vervallen: die bestaan niet, zie de Android-doorloop hieronder)
 - [x] **Android/Chrome-doorloop gedaan (13 sep), grotendeels in orde.** Statisch nagelopen in
   `index.html` en `assets/app.js`. **Viewport:** `width=device-width, initial-scale=1,

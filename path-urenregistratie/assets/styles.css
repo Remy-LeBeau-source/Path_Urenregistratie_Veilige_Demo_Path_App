@@ -2044,6 +2044,21 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
    bestaande 590px-regel verderop, alleen breder toegepast. */
 @media (max-width: 820px) {
   .help-launcher { bottom: 78px; }
+  /* Vervolg van dezelfde audit: .help-launcher bleek niet het enige vast
+     gepositioneerde element onderin dat de navigatiebalk niet kende. Nog twee
+     gevonden, met exact dezelfde oorzaak -- een lift die pas bij een smallere
+     breedte intreedt dan waar de balk ontstaat.
+     - .toast werd pas vanaf 590px opgetild, dus tussen 591 en 820px lag hij
+       op de navigatieknoppen. Hij heeft pointer-events:none en blokkeert dus
+       geen kliks, maar dekt de knoppen wel af zolang hij zichtbaar is.
+       Dezelfde waarde als de bestaande 590px-regel, alleen breder toegepast.
+     - .install-banner had helemaal geen lift, op geen enkele breedte, terwijl
+       zijn eigen toelichting zegt dat hij boven de balk hoort te staan. Die
+       heeft wél knoppen, dus die onderschepte de navigatie ook echt.
+       env(safe-area-inset-bottom) blijft erin: op een iPhone met home-balkje
+       moet hij daar nog steeds bovenuit komen. */
+  .toast { bottom: 82px; }
+  .install-banner { bottom: calc(78px + env(safe-area-inset-bottom, 0px)); }
 }
 .help-panel { position: fixed; right: 24px; bottom: 82px; z-index: 90; display: grid; width: min(420px, calc(100vw - 28px)); max-height: min(700px, calc(100vh - 110px)); grid-template-rows: auto auto minmax(120px,1fr) auto; overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); box-shadow: 0 28px 70px rgba(13,27,56,.24); transform-origin: bottom right; opacity: 0; transform: scale(.95) translateY(10px); transition: opacity .18s ease, transform .18s ease; }
 .help-panel.is-open { opacity: 1; transform: scale(1) translateY(0); }
@@ -3187,6 +3202,13 @@ button,
    ---------------------------------------------------------------------------
    Onderin, want daar zit de duim. Boven de mobiele onderbalk zodat hij niets
    afdekt, en met ruimte voor de veilige zone van een iPhone.
+
+   Fase 17.5-audit (13 sep): die tweede zin klopte niet met de code. 16px is
+   niet boven de onderbalk -- die is 68px hoog en verschijnt al vanaf
+   max-width:820px (zie .sidebar). Deze banner staat bovendien buiten
+   #app-shell, dus hij legde zich op elke mobiele en tabletbreedte over de
+   navigatieknoppen heen, mét zijn eigen knoppen eroverheen. De lift staat nu
+   in het 820px-blok verderop, bij dezelfde breedte waar de balk ontstaat.
    --------------------------------------------------------------------------- */
 .install-banner {
   position: fixed;

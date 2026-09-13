@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 504 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 505 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 504 unieke case-ID's
+- Playwright executable cases: 505 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 505 unieke case-ID's
+- Totaal executable cases: 506 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 543
+- Uitvoeringen: 545
 - Niet-mobile projectuitvoeringen: 465
-- Mobile functionele cases: 39
-- Pixel 7 / Chromium-uitvoeringen: 39
-- iPhone 13 / WebKit-uitvoeringen: 39
+- Mobile functionele cases: 40
+- Pixel 7 / Chromium-uitvoeringen: 40
+- iPhone 13 / WebKit-uitvoeringen: 40
 
-De 39 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 504 Playwright-functionele cases in totaal 543 resultaten op: 465 + (39 x 2) = 543.
+De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 505 Playwright-functionele cases in totaal 545 resultaten op: 465 + (40 x 2) = 545.
 
 ## Documentatieketen
 
@@ -394,7 +394,7 @@ De 39 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 504 Playwri
 
 - Feature: `tests/playwright/features/mobile.feature`
 - Source: `tests/playwright/mobile-ui.spec.ts`
-- Cases: 28
+- Cases: 29
 
 - [MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 31
 - [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken — Techniek: Responsive viewport + end-to-end use-case · Assertions: 19
@@ -423,6 +423,7 @@ De 39 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 504 Playwri
 - [MOB-H-025] elke .segmented-control krijgt een schuifrand zodra hij écht overloopt, generiek voor de hele app — Techniek: Responsive viewport + end-to-end use-case · Assertions: 6
 - [MOB-H-026] getypte velden blijven op 16px zodat iOS Safari niet inzoomt bij focus — Techniek: Responsive viewport + end-to-end use-case · Assertions: 9
 - [MOB-H-028] mobiele panelen meten hun hoogte aan de zichtbare viewport, niet aan 100vh — Techniek: Responsive viewport + end-to-end use-case · Assertions: 2
+- [MOB-H-029] elk zwevend element onderin wordt opgetild zodra de navigatiebalk verschijnt — Techniek: Responsive viewport + end-to-end use-case · Assertions: 2
 - [MOB-H-027] een uur met een komma getypt komt aan als 8,5 en niet als leeg veld — Techniek: Responsive viewport + end-to-end use-case · Assertions: 3
 
 ### Meldingen beheren
