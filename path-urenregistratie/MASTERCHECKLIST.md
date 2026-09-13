@@ -1966,6 +1966,25 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
 - [ ] Mobiele prioriteit: wat moet ik nu doen -> uren -> open acties -> klanturenstaat -> overig
 - [ ] Data mag nooit verloren gaan door rerender, schermrotatie, browser-back, modal sluiten,
   toetsenbord openen, thema-/designwissel
+- [x] **Live/visuele bevestiging van de vier hierboven (13 sep, main).** De vier items zijn op
+  13 sep van herontwerp aan main overgedragen (zie de werkverdeling op die tak, commit
+  `bdd49ec3`); de code-audit was daar al gedaan en concludeerde "geen wijziging nodig", met als
+  enige openstaande punt live/visuele bevestiging. Die is nu gedaan: medewerkerdashboard en
+  Mijn uren op telefoonbreedte (412px), in **alle vier de combinaties** Klassiek/Nieuw x
+  licht/donker, ingelogd als echte medewerker. Geen afgekapte tekst, geen horizontale overflow,
+  geen onleesbare combinatie. Twee dingen expliciet nagemeten in plaats van ingeschat, omdat ze
+  op de schermafdruk verdacht oogden:
+  - De zwevende hulpknop leek de weekkiezer te overlappen. **Gemeten** met `elementFromPoint`
+    over alle knoppen, invoervelden, selects en links: hij dekt **nul** bedienbare elementen af.
+    De indruk klopte niet.
+  - De statuspil "Nog invullen" leek in Klassiek+licht platte tekst zonder pil. **Gemeten:** het
+    is wel degelijk een pil (`border-radius: 999px`), alleen met een zeer lichte achtergrond
+    (`rgb(246,249,248)` op tekst `rgb(101,113,127)`; in Nieuw net zo). Consistent tussen de
+    skins en de contrastpoort is groen, dus geen defect -- als observatie doorgegeven aan de
+    vormgevingslane.
+  Meteen ook visuele bevestiging van twee fixes van deze nacht: de installatiebanner staat nu
+  boven de onderste navigatiebalk (die volledig zichtbaar blijft), en "Herstel demo" is op
+  tabletbreedte weer aanwezig.
 
 **17.2 Beheerderrol (checklist, sectie 3 van de opdracht -- grootste blok, meer info per scherm)**
 - [x] New-skin topnav: volgorde en groepering gelijkgetrokken met Klassiek-sidebar
