@@ -14472,6 +14472,47 @@ function resetSharedTestEnvironment() {
 document.querySelector("#reset-demo")?.addEventListener("click", openResetDemoModal);
 document.querySelector("#quick-reset-demo")?.addEventListener("click", openResetDemoModal);
 
+// Een getypte komma in een getalveld wordt een punt.
+//
+// Waarom dit nodig is, en waarom het een echte databug was: onze urenvelden
+// zijn type="number" met inputmode="decimal", zodat een telefoon het numerieke
+// toetsenbord toont. Bij type="number" bepaalt de BROWSER-UI-taal wat een
+// geldig decimaalteken is -- niet navigator.language en niet de taal van de
+// pagina. Staat de telefoon of browser op Nederlands, dan wordt "8,5" keurig
+// 8.5. Staat hij op Engels, dan laat de browser de komma stil weg en houd je
+// 85 over. Gemeten met Chromium: --lang=nl-NL geeft "8.5", --lang=en-US geeft
+// "85". Een Nederlander met een Engels ingestelde telefoon boekte dus 85 uur
+// op een dag zonder enige melding; de opdracht noemt precies dit soort stil
+// urenverlies als hoogste risico.
+//
+// Bewust géén overstap naar type="text": dat zou het numerieke toetsenbord,
+// de stappen van 0,5 en de min/max van elk urenveld opofferen voor een
+// randgeval. Dit onderschept alleen de komma-aanslag zelf. Er gaat niets
+// verloren wat nu wel werkt: vandaag wordt die komma door de browser toch al
+// weggegooid.
+//
+// execCommand("insertText") is formeel verouderd maar hier bewust gekozen:
+// het is de enige invoegmethode die de ongedaan-maken-geschiedenis van het
+// veld intact laat, en setRangeText werkt niet op type="number". Geen browser
+// heeft verwijdering van insertText aangekondigd.
+// Alleen velden waar een decimaal betekenis heeft, dus met een gebroken step.
+// Dat is precies de zeven urenvelden (step="0.5"). Bewust NIET elk
+// type="number"-veld: de twee jaartalvelden (#period-year-picker en
+// #customer-timesheet-year) hebben step="1", en daar zou dit een verslechtering
+// zijn. Vandaag laat een Engelstalige browser de komma in "20,26" weg en houd
+// je het geldige jaar 2026 over; met een blinde komma-naar-punt-vervanging zou
+// daar "20.26" staan, en dat is ongeldig voor step="1". Aangedragen door de
+// herontwerp-sessie bij het nalopen van deze listener.
+document.addEventListener("beforeinput", event => {
+  if (event.data !== ",") return;
+  const veld = event.target;
+  if (!(veld instanceof HTMLInputElement) || veld.type !== "number") return;
+  const stap = Number(veld.step);
+  if (!Number.isFinite(stap) || Number.isInteger(stap)) return;
+  event.preventDefault();
+  document.execCommand("insertText", false, ".");
+});
+
 // De container zelf wordt nooit vervangen (alleen zijn innerHTML bij elke
 // renderHoursWeekFilter()), dus deze twee listeners hoeven maar één keer.
 // Scroll-luisteraars per .segmented-control worden dynamisch toegevoegd

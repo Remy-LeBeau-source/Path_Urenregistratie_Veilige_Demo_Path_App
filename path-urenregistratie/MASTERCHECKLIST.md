@@ -2157,6 +2157,27 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   juist op Android nodig, waar de ene bestandskiezer alleen extensies en de andere alleen
   MIME-types honoreert. **Terugknop:** gedekt door `[DASH-H-022]` (beheerder) en `[DASH-H-023]`
   (medewerker), die met browser-terug/-vooruit door alle eigen schermen navigeren.
+- [x] **CORRECTIE op het punt hieronder (13 sep): het was wél een echte bug, en erger dan
+  "leeg veld".** Mijn conclusie "risico grotendeels weerlegd" was fout, en de reden is
+  leerzaam. Bij `type="number"` bepaalt de **UI-taal van de browser** wat een geldig
+  decimaalteken is — niet `navigator.language` en niet de taal van de pagina. Deze machine
+  draait op Nederlands, dus hier werd "8,5" netjes 8.5 en zag ik de case drie keer groen. In
+  CI (Engelstalig) viel hij om, op beide mobiele projecten, inclusief retry — gemeld door de
+  herontwerp-sessie. Gemeten met Chromium op een kaal veld: `--lang=nl-NL` geeft `"8.5"`,
+  `--lang=en-US` geeft **`"85"`**. Dus niet leeg, maar **85 uur op één dag**, stil en zonder
+  melding. Een Nederlander met een Engels ingestelde telefoon raakt dit. Let op voor volgende
+  keer: **Playwright's `locale`-optie helpt hier niet** — die zet alleen `navigator.language`
+  en Accept-Language, niet de UI-taal die `type="number"` gebruikt. Dat moet via een
+  opstartvlag (`--lang=`).
+  **Gefixt** met een `beforeinput`-handler in `assets/app.js` die een getypte komma in elk
+  `type="number"`-veld vervangt door een punt. Bewust géén overstap naar `type="text"`: dat
+  zou het numerieke toetsenbord, de stappen van 0,5 en min/max opofferen voor een randgeval.
+  Er gaat niets verloren wat nu wel werkt, want die komma wordt vandaag door de browser toch
+  al weggegooid. Dekt meteen ook de klassieke urentabel en `#summary-leave`/`#summary-sick`.
+  `[MOB-H-027]` dwingt nu zelf een Engelstalige browser af (eigen `chromium.launch` binnen die
+  ene case, zodat de rest van het bestand ongemoeid blijft), anders bewijst hij alleen iets
+  over de machine waarop hij toevallig draait. Discriminerend bevestigd: zonder de fix faalt
+  hij op "een dag kan nooit meer dan 24 uur hebben, veld bevat 85"; met de fix groen.
 - [x] **Android-komma in het urenveld getoetst (13 sep), risico grotendeels weerlegd.** De
   urenvelden zijn `type="number"` met `inputmode="decimal"`; een Nederlands Android-toetsenbord
   biedt daar een **komma** aan, en bij `type="number"` kan een komma in sommige browsers een

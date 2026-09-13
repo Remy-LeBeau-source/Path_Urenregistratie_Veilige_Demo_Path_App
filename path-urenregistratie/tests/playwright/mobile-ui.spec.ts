@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { expect, test, type Page } from '@playwright/test';
+import { chromium, expect, test, type Page } from '@playwright/test';
 import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErrors';
 import { useFixedDemoClock } from './fixtures/fixedDemoClock';
 import { LoginPage } from './pages/LoginPage';
@@ -1872,18 +1872,37 @@ test('[MOB-H-029] elk zwevend element onderin wordt opgetild zodra de navigatieb
   }
 });
 
-test('[MOB-H-027] een uur met een komma getypt komt aan als 8,5 en niet als leeg veld', async ({ page }) => {
+test('[MOB-H-027] een uur met een komma getypt komt aan als 8,5 en niet als leeg veld', async () => {
   // Fase 17.5-audit (Android/Chrome-blok, main). De urenvelden zijn
-  // type="number" met inputmode="decimal". Een Nederlands Android-toetsenbord
-  // biedt bij inputmode="decimal" een KOMMA aan, en bij type="number" levert
-  // een komma in verschillende browsers een lege input.value op in plaats van
-  // 8.5 -- dan verdwijnt een ingevuld uur stil. Precies het soort urenveld-
-  // probleem waar de opdracht expliciet voor waarschuwt ("uren mogen nooit
-  // stilletjes verloren gaan").
+  // type="number" met inputmode="decimal". Een Nederlands toetsenbord biedt
+  // daar een KOMMA aan, en bij type="number" bepaalt de BROWSER-UI-taal wat
+  // een geldig decimaalteken is. Gemeten met Chromium: --lang=nl-NL maakt van
+  // "8,5" netjes 8.5, --lang=en-US laat de komma stil weg en houdt 85 over.
+  // Een Nederlander met een Engels ingestelde telefoon boekte dus 85 uur op
+  // een dag zonder melding -- precies het stille urenverlies waar de opdracht
+  // voor waarschuwt. Opgelost met een beforeinput-handler in app.js.
+  //
+  // Deze case is eerst ten onrechte groen geweest. Hij draaide op een machine
+  // met een Nederlandse Windows-taal, waar de browser de komma juist wél goed
+  // verwerkte, terwijl hij in CI (Engelstalig) omviel. Playwright's
+  // `locale`-optie helpt hier niet: die zet navigator.language en
+  // Accept-Language, maar niet de UI-taal die type="number" gebruikt voor het
+  // decimaalteken. Daarom dwingt deze case nu zelf een Engelstalige browser af
+  // -- anders bewijst hij alleen iets over de machine waarop hij toevallig
+  // draait.
   //
   // Bewust pressSequentially() en niet fill(): fill() zet de waarde direct via
   // de DOM en slaat de toetsaanslagen over, waardoor juist het gedrag dat hier
   // getest moet worden niet optreedt. Dit bootst een echte typende gebruiker na.
+  //
+  // Deze case start bewust zijn eigen browser in plaats van de gedeelde
+  // page-fixture: --lang moet bij het opstarten mee, en dat mag de rest van
+  // dit bestand niet raken.
+  const browser = await chromium.launch({ args: ['--lang=en-US'] });
+  const context = await browser.newContext({ viewport: { width: 412, height: 915 } });
+  const page = await context.newPage();
+
+  try {
   const loginPage = new LoginPage(page);
   await loginPage.open();
   await loginPage.loginAsEmployee();
@@ -1924,4 +1943,7 @@ test('[MOB-H-027] een uur met een komma getypt komt aan als 8,5 en niet als leeg
       `een dag kan nooit meer dan 24 uur hebben, veld bevat "${waarde}"`
     ).toBe(true);
   });
+  } finally {
+    await browser.close();
+  }
 });
