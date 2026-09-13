@@ -1611,20 +1611,20 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
    de rij lopen. De laatste stap krijgt geen lijn, anders loopt hij door naar
    niets. */
 .employee-status-keten { margin: 0 0 22px; }
-#employee-status-keten-list { display: grid; gap: 0; margin: 0; padding: 0 16px 16px; list-style: none; }
-#employee-status-keten-list li { position: relative; display: grid; grid-template-columns: 26px 1fr; align-items: start; gap: 0 12px; padding: 0 0 16px; }
-#employee-status-keten-list li:last-child { padding-bottom: 0; }
-#employee-status-keten-list li::before { content: ""; position: absolute; top: 20px; bottom: 0; left: 9px; width: 2px; background: var(--line); }
-#employee-status-keten-list li:last-child::before { display: none; }
-#employee-status-keten-list li.is-af::before { background: var(--mint); }
+.status-keten-lijst { display: grid; gap: 0; margin: 0; padding: 0 16px 16px; list-style: none; }
+.status-keten-lijst li { position: relative; display: grid; grid-template-columns: 26px 1fr; align-items: start; gap: 0 12px; padding: 0 0 16px; }
+.status-keten-lijst li:last-child { padding-bottom: 0; }
+.status-keten-lijst li::before { content: ""; position: absolute; top: 20px; bottom: 0; left: 9px; width: 2px; background: var(--line); }
+.status-keten-lijst li:last-child::before { display: none; }
+.status-keten-lijst li.is-af::before { background: var(--mint); }
 .keten-bol { position: relative; z-index: 1; display: block; width: 20px; height: 20px; margin-top: 1px; border: 2px solid var(--line); border-radius: 50%; background: var(--vlak); }
-#employee-status-keten-list li.is-af .keten-bol { border-color: var(--mint); background: var(--mint); }
-#employee-status-keten-list li.is-nu .keten-bol { border-color: var(--warning-rand); background: var(--warning-bg); box-shadow: 0 0 0 4px var(--warning-bg); }
-#employee-status-keten-list li strong { grid-column: 2; color: var(--navy-tekst); font-size: 14px; }
-#employee-status-keten-list li small { grid-column: 2; margin-top: 2px; color: var(--muted); font-size: 11.5px; }
-#employee-status-keten-list li.is-af strong { color: var(--mint-dark-tekst); }
-#employee-status-keten-list li.is-nu strong { color: var(--warning-tekst); }
-#employee-status-keten-list li.is-wacht strong { color: var(--muted); font-weight: 600; }
+.status-keten-lijst li.is-af .keten-bol { border-color: var(--mint); background: var(--mint); }
+.status-keten-lijst li.is-nu .keten-bol { border-color: var(--warning-rand); background: var(--warning-bg); box-shadow: 0 0 0 4px var(--warning-bg); }
+.status-keten-lijst li strong { grid-column: 2; color: var(--navy-tekst); font-size: 14px; }
+.status-keten-lijst li small { grid-column: 2; margin-top: 2px; color: var(--muted); font-size: 11.5px; }
+.status-keten-lijst li.is-af strong { color: var(--mint-dark-tekst); }
+.status-keten-lijst li.is-nu strong { color: var(--warning-tekst); }
+.status-keten-lijst li.is-wacht strong { color: var(--muted); font-weight: 600; }
 .employee-open-overview { scroll-margin-top: calc(var(--topbar-hoogte, 110px) + 16px); margin: 0 0 22px; overflow: hidden; border-radius: 22px; background-color: var(--vlak); background-image: linear-gradient(180deg, var(--vlak), var(--vlak-zacht)); box-shadow: 0 16px 34px rgba(13,27,56,.06); }
 .employee-open-overview .panel-heading { align-items: flex-start; }
 .employee-open-overview-list { display: grid; gap: 12px; padding: 0 24px 24px; }
@@ -1667,6 +1667,14 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
    maken dan haar inhoud. */
 #employee-history.has-customer-timesheet-column .employee-history-head,
 #employee-history.has-customer-timesheet-column .employee-history-row { grid-template-columns: 1fr .8fr .8fr .8fr auto; }
+/* Het verloop van één maand, uitgeklapt onder zijn regel. Hij is een kind van
+   dezelfde grid als de cellen, dus grid-column: 1 / -1 laat hem over de volle
+   breedte lopen zonder de kolommen te verstoren. */
+.employee-history-actions { display: flex; align-items: center; gap: 8px; }
+.employee-history-verloop { grid-column: 1 / -1; margin-top: 12px; border-top: 1px solid var(--line); padding-top: 14px; }
+.employee-history-verloop .status-keten-lijst { padding: 0; }
+.employee-history-verloop-chevron { display: inline-block; margin-left: 6px; border-top: 4px solid currentColor; border-right: 4px solid transparent; border-left: 4px solid transparent; vertical-align: middle; transition: transform .16s ease; }
+.employee-history-verloop-toggle[aria-expanded="true"] .employee-history-verloop-chevron { transform: rotate(180deg); }
 .employee-history-row strong, .employee-history-row small { display: block; }
 .employee-history-row strong { font-size: 11px; }
 .employee-history-row small { margin-top: 3px; color: var(--muted); font-size: 9px; }

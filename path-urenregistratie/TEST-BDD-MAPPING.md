@@ -161,6 +161,7 @@
 | DASH-N-029 | ui | dashboard.feature | de pijl springt naar de eerstvolgende week met een leeg urenvak, ook terug in de tijd | Negatieve equivalentieklasse + error guessing | 6 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | de pijl springt naar de eerstvolgende week met een leeg urenvak, ook terug in de tijd | Negative | 15 | Actueel |
 | DASH-H-026 | ui | dashboard.feature | het medewerkerdashboard houdt op telefoonbreedte de afgesproken prioriteitsvolgorde aan | Beslissingstabel rollen en autorisatie | 11 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | het medewerkerdashboard houdt op telefoonbreedte de afgesproken prioriteitsvolgorde aan | Happy | 15 | Actueel |
 | DASH-H-030 | ui | dashboard.feature | de indienbevestiging noemt werkdagen die bewust op 0,0 staan | Toestandsovergang | 11 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | de indienbevestiging noemt werkdagen die bewust op 0,0 staan | Happy | 15 | Actueel |
+| DASH-H-031 | ui | dashboard.feature | het verloop van een maand klapt open in Mijn maanden en overleeft een hertekening | End-to-end use-case + visuele contractasserties | 14 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | het verloop van een maand klapt open in Mijn maanden en overleeft een hertekening | Happy | 15 | Actueel |
 | DASH-H-001 | ui | dashboard.feature | admin dashboard opent zonder console errors | Beslissingstabel rollen en autorisatie | 1 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | admin dashboard opent zonder console errors | Happy | 15 | Actueel |
 | DASH-H-018 | ui | dashboard.feature | elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen | End-to-end use-case + visuele contractasserties | 29 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen | Happy | 15 | Actueel |
 | DASH-N-022 | ui | dashboard.feature | een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding | Beslissingstabel rollen en autorisatie | 8 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding | Negative | 15 | Actueel |
@@ -542,9 +543,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 520
+- Playwright executable cases: 521
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 521
+- Totaal unieke executable cases: 522
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30

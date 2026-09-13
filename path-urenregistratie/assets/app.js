@@ -5467,20 +5467,25 @@ function statusKetenStappen(record, period) {
   });
 }
 
-// De Klassieke weergave van dezelfde keten. Alleen opmaak: welke stap waar
-// staat komt uit statusKetenStappen(), net als bij Modern.
+// De Klassieke weergave van de keten, als HTML. Eén bouwer voor alle plekken
+// waar hij in Klassiek staat -- het dashboard en straks elke opengeklapte maand
+// in Mijn maanden. De standen komen uit statusKetenStappen(), dus ook hier is er
+// maar één plek waar bepaald wordt wat af, huidig of wachtend is.
+function statusKetenItemsHtml(stappen) {
+  return stappen.map(stap =>
+    '<li data-keten-step="' + escapeHtml(stap.key) + '" class="is-' + escapeHtml(stap.stand) + '">' +
+      '<span class="keten-bol" aria-hidden="true"></span>' +
+      '<strong>' + escapeHtml(stap.titel) + '</strong>' +
+      '<small data-keten-detail>' + escapeHtml(stap.detail) + '</small>' +
+    '</li>'
+  ).join("");
+}
+
 function vulStatusKeten(record, period) {
   const lijst = document.querySelector("#employee-status-keten-list");
   if (!lijst) return;
   const stappen = statusKetenStappen(record, period);
-  lijst.querySelectorAll("[data-keten-step]").forEach(item => {
-    item.classList.remove("is-af", "is-nu", "is-wacht");
-    const stap = stappen.find(s => s.key === item.dataset.ketenStep);
-    if (!stap) return;
-    item.classList.add("is-" + stap.stand);
-    const detail = item.querySelector("[data-keten-detail]");
-    if (detail) detail.textContent = stap.detail;
-  });
+  lijst.innerHTML = statusKetenItemsHtml(stappen);
   const nu = document.querySelector("#employee-status-keten-nu");
   if (nu) {
     const huidig = stappen.find(stap => stap.stand === "nu");
@@ -6131,7 +6136,22 @@ function renderEmployeeDashboard() {
     // "totaal verantwoord" stond hier eerder onder elk uurtotaal. Dat is geen
     // gegeven per maand maar de betekenis van de kolom, en zes keer dezelfde
     // regel onder elkaar leest als ruis. Staat nu één keer in de kolomkop.
-    return '<div class="employee-history-row"><div><strong>' + escapeHtml(periodFromKey(key).label) + currentLabel + '</strong><small>' + escapeHtml(historyNote) + '</small></div><div><strong>' + hoursFormat.format(historyTotal) + ' uur</strong></div><div>' + timesheetStatusPill(employee, historyRecord) + '</div>' + customerCell + '<button class="small-button" data-history-period="' + key + '">Open maand</button></div>';
+    // Ontwerpronde 13 sep: een opengeklapte maand toont zijn eigen verloop in
+    // vijf stappen. Hier als uitklap onder de regel, met dezelfde
+    // toggle-opzet als de maanden in "Open acties per maand" -- dat patroon
+    // staat al in Klassiek, dus dit voegt geen tweede manier van uitklappen
+    // toe. De knop "Open maand" blijft wat hij was (die kiest de maand voor de
+    // hele app); dit staat ernaast en verandert niets aan die betekenis.
+    const verloopId = "employee-history-verloop-" + key;
+    const verloopOpen = state.historyVerloopOpen === key;
+    const verloopStappen = statusKetenStappen(historyRecord, periodFromKey(key));
+    return '<div class="employee-history-row"><div><strong>' + escapeHtml(periodFromKey(key).label) + currentLabel + '</strong><small>' + escapeHtml(historyNote) + '</small></div><div><strong>' + hoursFormat.format(historyTotal) + ' uur</strong></div><div>' + timesheetStatusPill(employee, historyRecord) + '</div>' + customerCell
+      + '<div class="employee-history-actions">'
+      + '<button class="small-button employee-history-verloop-toggle" type="button" data-history-verloop="' + key + '" aria-expanded="' + (verloopOpen ? "true" : "false") + '" aria-controls="' + verloopId + '">Verloop<span class="employee-history-verloop-chevron" aria-hidden="true"></span></button>'
+      + '<button class="small-button" data-history-period="' + key + '">Open maand</button>'
+      + '</div>'
+      + '<div class="employee-history-verloop" id="' + verloopId + '"' + (verloopOpen ? "" : " hidden") + '><ol class="status-keten-lijst">' + statusKetenItemsHtml(verloopStappen) + '</ol></div>'
+      + '</div>';
   }).join("");
   const historyHeadCustomerColumn = showsCustomerTimesheetColumn ? '<span>Klanturenstaat</span>' : '';
   document.querySelector("#employee-history").classList.toggle("has-customer-timesheet-column", showsCustomerTimesheetColumn);
@@ -13542,6 +13562,20 @@ function toonInstallatieAanbod() {
     const expanded = employeeOpenMonthToggle.getAttribute("aria-expanded") === "true";
     employeeOpenMonthToggle.setAttribute("aria-expanded", expanded ? "false" : "true");
     body.hidden = expanded;
+    return;
+  }
+
+  // Het verloop van één maand in Mijn maanden open- of dichtklappen. De stand
+  // gaat in state.historyVerloopOpen en niet alleen in de DOM, want deze lijst
+  // wordt bij elke render opnieuw opgebouwd -- zonder die stand klapte hij bij
+  // de eerstvolgende hertekening weer dicht. Eén maand tegelijk: de vijf
+  // stappen zijn hoog genoeg dat twee open maanden de lijst onleesbaar maken.
+  const historyVerloopToggle = event.target.closest("[data-history-verloop]");
+  if (historyVerloopToggle) {
+    const periodKey = historyVerloopToggle.dataset.historyVerloop;
+    if (!parsePeriodKey(periodKey)) return;
+    state.historyVerloopOpen = state.historyVerloopOpen === periodKey ? null : periodKey;
+    renderEmployeeDashboard();
     return;
   }
 

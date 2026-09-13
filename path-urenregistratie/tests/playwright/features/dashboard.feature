@@ -212,6 +212,18 @@ Feature: Dashboard en open werkvoorraad
     And blijft de melding weg zodra die dagen wel uren hebben
 
   @happy
+  Scenario: [DASH-H-031] het verloop van een maand klapt open in Mijn maanden en overleeft een hertekening
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 14
+    Given de medewerker staat op Mijn maanden in Klassiek
+    Then staat het verloop dicht tot je erom vraagt
+    When het verloop van de eerste maand wordt opengeklapt
+    Then toont die maand vijf stappen in de vaste volgorde
+    And blijft hij open staan na een hertekening van het scherm
+    And staat er hoogstens één maand tegelijk open
+    And sluit een tweede tik op dezelfde maand hem weer
+
+  @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 1

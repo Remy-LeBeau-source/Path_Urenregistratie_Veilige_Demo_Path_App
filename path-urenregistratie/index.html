@@ -406,13 +406,9 @@
              dan de kaart. -->
         <section class="panel employee-status-keten" id="employee-status-keten">
           <div class="panel-heading"><div><span class="section-label">Jouw maand</span><h3>Jouw uren in 5 stappen</h3></div><small id="employee-status-keten-nu"></small></div>
-          <ol id="employee-status-keten-list">
-            <li data-keten-step="fill"><span class="keten-bol" aria-hidden="true"></span><strong>Uren ingevuld</strong><small data-keten-detail></small></li>
-            <li data-keten-step="submit"><span class="keten-bol" aria-hidden="true"></span><strong>Maand ingediend</strong><small data-keten-detail></small></li>
-            <li data-keten-step="review"><span class="keten-bol" aria-hidden="true"></span><strong>Uren goedgekeurd</strong><small data-keten-detail></small></li>
-            <li data-keten-step="customer"><span class="keten-bol" aria-hidden="true"></span><strong>Klanturenstaat</strong><small data-keten-detail></small></li>
-            <li data-keten-step="done"><span class="keten-bol" aria-hidden="true"></span><strong>Afgerond</strong><small data-keten-detail></small></li>
-          </ol>
+          <!-- Gevuld door vulStatusKeten(); dezelfde bouwer die de stappen ook
+               onder elke opengeklapte maand in Mijn maanden zet. -->
+          <ol class="status-keten-lijst" id="employee-status-keten-list"></ol>
         </section>
         <section class="employee-customer-timesheet-card" id="employee-customer-timesheet-card">
           <div>

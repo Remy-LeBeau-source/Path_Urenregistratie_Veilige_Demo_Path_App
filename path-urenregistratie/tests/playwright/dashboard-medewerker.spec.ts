@@ -1341,3 +1341,71 @@ test('[DASH-H-030] de indienbevestiging noemt werkdagen die bewust op 0,0 staan'
     await expect(page.locator('#submit-deliberate-zero-note')).toHaveCount(0);
   });
 });
+
+// Ontwerpronde 13 sep: een opengeklapte maand in Mijn maanden toont zijn eigen
+// verloop in vijf stappen. In Klassiek is dat een uitklap onder de maandregel,
+// met dezelfde toggle-opzet als de maanden in "Open acties per maand" -- dat
+// patroon stond er al, dus er komt geen tweede manier van uitklappen bij.
+//
+// Twee dingen die deze case vastlegt en die stil kunnen omvallen. De uitklap
+// moet de hertekening overleven: de maandenlijst wordt bij elke render opnieuw
+// opgebouwd, dus de stand zit in de state en niet alleen in de DOM. En er staat
+// er hoogstens één open, want vijf stappen per maand maken de lijst anders
+// onleesbaar.
+test('[DASH-H-031] het verloop van een maand klapt open in Mijn maanden en overleeft een hertekening', async ({ page }) => {
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await suppressInstallBanner(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+
+  await test.step('Given de medewerker staat op Mijn maanden in Klassiek', async () => {
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+    await page.evaluate(() => { window.location.hash = 'historie'; });
+    await expect(page.locator('#view-historie')).toHaveClass(/is-active/);
+    await expect(page.locator('#employee-history .employee-history-row').first()).toBeVisible();
+  });
+
+  const eersteToggle = page.locator('#employee-history [data-history-verloop]').first();
+
+  await test.step('Then staat het verloop dicht tot je erom vraagt', async () => {
+    await expect(eersteToggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.locator('#employee-history .employee-history-verloop:visible')).toHaveCount(0);
+  });
+
+  await test.step('When het verloop van de eerste maand wordt opengeklapt', async () => {
+    await eersteToggle.click();
+  });
+
+  await test.step('Then toont die maand vijf stappen in de vaste volgorde', async () => {
+    await expect(eersteToggle).toHaveAttribute('aria-expanded', 'true');
+    const stappen = page.locator('#employee-history .employee-history-verloop:visible [data-keten-step]');
+    await expect(stappen).toHaveCount(5);
+    await expect(stappen.locator('strong')).toHaveText([
+      'Uren ingevuld', 'Maand ingediend', 'Uren goedgekeurd', 'Klanturenstaat', 'Afgerond',
+    ]);
+  });
+
+  await test.step('And blijft hij open staan na een hertekening van het scherm', async () => {
+    // Zonder de stand in de state klapte de uitklap hier weer dicht, want de
+    // maandenlijst wordt bij elke render opnieuw opgebouwd.
+    await page.evaluate(() => {
+      (window as unknown as { renderAll: () => void }).renderAll();
+    });
+    await expect(page.locator('#employee-history [data-history-verloop]').first()).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator('#employee-history .employee-history-verloop:visible [data-keten-step]')).toHaveCount(5);
+  });
+
+  await test.step('And staat er hoogstens één maand tegelijk open', async () => {
+    const tweedeToggle = page.locator('#employee-history [data-history-verloop]').nth(1);
+    await tweedeToggle.click();
+    await expect(tweedeToggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator('#employee-history [data-history-verloop]').first()).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.locator('#employee-history .employee-history-verloop:visible')).toHaveCount(1);
+  });
+
+  await test.step('And sluit een tweede tik op dezelfde maand hem weer', async () => {
+    await page.locator('#employee-history [data-history-verloop]').nth(1).click();
+    await expect(page.locator('#employee-history .employee-history-verloop:visible')).toHaveCount(0);
+  });
+});
