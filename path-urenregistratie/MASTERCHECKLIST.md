@@ -2243,8 +2243,10 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
     Er is ook bewust géén opbouw nodig: de `review_note`-controle draait vóór élke
     toestandsovergangscontrole, dus de 400 komt aantoonbaar uit de lege toelichting en de case
     schrijft niets weg.
-- [ ] Medewerkersbeheer (stamgegevens), mededelingen beheren + doelgroepen, instellingen +
-  mailinstellingen, notificaties, administratieve statussen. **Dekking in kaart gebracht 13 sep.**
+- [x] Medewerkersbeheer (stamgegevens), mededelingen beheren + doelgroepen, instellingen +
+  mailinstellingen, notificaties, administratieve statussen. **Dekking in kaart gebracht 13 sep;
+  alle vijf deelpunten afgerond.** Het enige dat hier openstond was de P0 bij de doelgroepkeuze, en
+  die is opgelost en nageverifieerd.
   - [x] *Medewerkersbeheer / stamgegevens:* `user-management.spec.ts` (11 cases: lijst,
     (de)activeren, force_password_change, 401/403, jezelf niet deactiveren, dubbel deactiveren 409,
     definitief verwijderen mét en zónder zakelijke historie, resetlink vanuit Teambeheer) plus
