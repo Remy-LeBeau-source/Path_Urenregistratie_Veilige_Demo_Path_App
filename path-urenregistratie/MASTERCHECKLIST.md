@@ -2153,8 +2153,21 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
     telling opleveren, dus is bewezen dat de server wint. `dashboard.spec.ts` volledig groen
     (19 cases). Rol: Beheerder. Design/thema: de tellers zijn dezelfde DOM-knopen in Klassiek en
     Nieuw; device-onafhankelijk.
-- [ ] Urenregistraties van medewerkers: goedkeuren, terugsturen (verplichte toelichting),
-  klanturenstaten controleren + status, correcties verwerken, markeren/verwerken verzonden items
+- [x] Urenregistraties van medewerkers: goedkeuren, terugsturen (verplichte toelichting),
+  klanturenstaten controleren + status, correcties verwerken, markeren/verwerken verzonden items.
+  **Alle vijf deelpunten gedekt (13 sep); twee gaten gevonden en gedicht, geen codewijziging nodig.**
+  - *Goedkeuren:* `[E2E-H-017]` legt de keten via het echte scherm af inclusief de sloten
+    (server weigert een wijziging door de medewerker met 409 `timesheet-locked`, versie blijft
+    gelijk); `[TS-REV-API-H-006]` bewijst dat twee gelijktijdige goedkeuringen exact één winnaar
+    opleveren.
+  - *Terugsturen met verplichte toelichting:* urenstaat al gedekt
+    (`timesheet-review-flow.spec.ts`), klanturenstaat was een gat en is nu `[CTS-API-N-013]`.
+  - *Klanturenstaten controleren + status:* `customer-timesheet-api.spec.ts` (20 cases: uploaden,
+    indienen, downloaden, goedkeuren, opnieuw laten uploaden, extern bevestigen en terugzetten,
+    overslaan/herstellen, brokerroute, bestandsgrenzen).
+  - *Correcties verwerken:* `[TS-REV-API-H-005]` (met optimistic locking) en de browserronde
+    `[TS-REV-UI-H-008]`, inclusief het intrekken van een goedkeuring en opnieuw indienen.
+  - *Markeren/verwerken verzonden items:* was een gat, nu `[CTS-API-H-017]` (zie hieronder).
   - [x] **Terugsturen met verplichte toelichting, beide kanten.** Urenstaat was al gedekt: een
     `request_correction` met lege toelichting geeft 400 `invalid-payload` en de urenstaat blijft op
     `submitted` (`timesheet-review-flow.spec.ts`, bewijst `timesheet_correction_message()`
@@ -2165,6 +2178,20 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
     te vervangen door een kale `trim()`: de case faalde exact zoals verwacht (200 in plaats van
     400, status sprong naar `resubmit`), bronbestand daarna schoon teruggezet (geen diff) en weer
     groen.
+  - [x] **Markeren/verwerken verzonden items** -- `[CTS-API-H-017]`, v2.0.36. Gat gevonden op
+    13 sep: `mark_sent` en `mark_sent_to_broker` kwamen in de héle suite alleen voor in de
+    type-unie van `CustomerTimesheetApi` en als *verboden* actie voor een medewerker
+    (`ROLE-N-006`). Geen enkele case bewees dat ze voor een beheerder werken, laat staan dat ze de
+    verkeerde volgorde weigeren. Geen codewijziging -- de server bewaakte het al goed.
+    De case legt de toegestane volgorde vast: `mark_sent` alleen vanaf `approved` -> `sent`;
+    `mark_sent_to_broker` vanaf `approved` of `sent` -> `sent_to_broker` mét een vastgelegd
+    tijdstip. Hij toetst de poort aan **beide** kanten: te vroeg (nog `received`) geeft 409
+    `invalid-customer-timesheet-transition` en laat de status ongemoeid, en ná `sent_to_broker`
+    weigert `mark_sent` opnieuw -- die tweede kant is er expliciet, want zonder haar zou de case
+    ook slagen als de controle simpelweg "alles behalve received" toeliet. Discriminerend bewezen
+    door de overgangscontrole van `mark_sent` tijdelijk uit te schakelen: de case faalde exact
+    zoals verwacht (200 in plaats van 409), bronbestand daarna schoon teruggezet (geen diff),
+    suite weer 20/20. Losstaande case met een eigen vrije maand, conform de les hieronder.
   - **Testopzetles, bewaard omdat hij geld kost:** deze assertie stond eerst als extra stap
     middenin `[CTS-API-H-001]`. Daarmee ging de suite van 18/18 groen naar wisselend één uitvaller
     (eerst `CTS-API-H-006`/`H-016`, daarna `H-013`) -- allemaal cases die los gewoon slagen, en
@@ -2196,8 +2223,18 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
     oudere response die een gewiste teller niet mag herstellen).
   - [ ] *Mededelingen beheren + doelgroepen:* **hier zit de P0 hierboven.** De doelgroepkeuze wordt
     client-side bepaald en stuurt de verkeerde id-soort mee; dat deel blijft open tot die fix er is.
-  - [ ] *Administratieve statussen:* deels geraakt via 17.3 (`[E2E-H-030]`, zie daar); de
-    factuur-/payrollstatussen nog apart doorlopen.
+  - [x] *Administratieve statussen:* doorgelicht 13 sep. In de echte app komt dit neer op de
+    **factuurcyclus**, en die is ruim gedekt: `invoices.spec.ts` (zichtbaarheid per rol, periodefilter,
+    bedrag berekend door de server uit uren x tarief, paginering bij 32 records, externe factuur
+    per PDF/JPG/PNG, medewerker mag dat niet, factuurcontrole blokkeert zolang de klanturenstaat
+    ontbreekt, ontbrekende serverfactuur wordt bij afronden aangemaakt), plus `invoice-lock.spec.ts`
+    en `invoice-company-identity.spec.ts`.
+    **`payrollStatus` blijkt géén administratieve status maar interne boekhouding van de client:**
+    hij wordt afgeleid van de factuurstatus (`app.js` ~220 en ~3861), gaat nooit naar de server
+    (`payroll_status` bestaat nergens in `server/`) en wordt nergens als statuspil getoond -- de
+    enige payroll-tekst in de UI is een privacynotitie over wat de salarisadministratie wél en niet
+    ontvangt. Er valt hier dus niets te dekken wat nog niet via de factuurstatus gedekt is; het
+    apart testen zou een veld bewaken dat geen gebruiker ziet.
 - [x] Mobiel: nooit desktoptabellen simpelweg verkleinen -- responsive tables/cards/detailweergave/
   inklapbaar, maar geen informatie of beheeractie laten verdwijnen. **Doorgemeten 13 sep, geen
   wijziging nodig.** Per beheerscherm (Dashboard, Goedkeuringen, Facturen, Medewerkers,
@@ -2250,9 +2287,22 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
     juist als gewenst gedrag vastleggen. De test hoort bij de fix.
 
 **17.3 Workflow-integriteit**
-- [ ] Concept -> Gereed -> Ingediend -> Goedgekeurd -> Verzonden (+ Teruggestuurd, Correctie,
+- [x] Concept -> Gereed -> Ingediend -> Goedgekeurd -> Verzonden (+ Teruggestuurd, Correctie,
   Klanturenstaat (opnieuw) uploaden) betekent voor Medewerker en Beheerder hetzelfde na elke
-  responsive wijziging
+  responsive wijziging. **Nagelopen 13 sep; de keten is op alle drie de assen gedekt.**
+  - *Dezelfde keten op desktop:* `[E2E-H-017]` loopt hem via het echte scherm af en toetst ook de
+    sloten (server weigert een wijziging na indienen met 409 `timesheet-locked`, versie ongewijzigd).
+  - *Dezelfde keten op een telefoon:* `[MOB-H-002]` (concept opslaan, indienen, documentupload
+    bereikbaar) en `[MOB-H-003]` (correctie, herindiening én administratieve goedkeuring
+    bereikbaar op telefoonbreedte). Dat is precies het "na elke responsive wijziging"-deel.
+  - *Teruggestuurd/correctie, heen en terug:* `[TS-REV-UI-H-008]`, inclusief het intrekken van een
+    goedkeuring en opnieuw indienen.
+  - *Klanturenstaat (opnieuw) uploaden en verzenden:* de `customer-timesheet-api`-suite, met
+    `[CTS-API-N-013]` (terugsturen vraagt een toelichting) en `[CTS-API-H-017]` (markeren als
+    verzonden volgt de toegestane volgorde) als de twee stukken die vannacht ontbraken.
+  - *Hetzelfde woord voor beide rollen:* `[E2E-H-030]` hierboven.
+  Wat hieronder open blijft is geen gat in de keten zelf maar één bewezen bevinding in de
+  mededelingen-workflow.
   - [x] **Statuswoorden zijn aan beide kanten gelijk** -- `[E2E-H-030]`, v2.0.33. Geen wijziging
     nodig: het klopt vandaag door de opzet. Er is één gedeelde `statusLabels`-map en één
     `timesheetStatusInfo()` die beide kanten voedt -- de medewerkerpil `#timesheet-status` op Mijn
@@ -2656,6 +2706,17 @@ op de achtergrond en draaide er gerichte Playwright-suites naast. Gevolg: twee c
 draaiden ze meteen groen. De suites delen de database en poort 8010; een tweede run erlangs
 vervuilt de uitslag. Regel: één testrun tegelijk, en bij een onverwachte uitvaller eerst nagaan of
 er nog iets anders liep -- vóór je een defect noteert.
+
+**Observatie voor Gio: `npm run check` kost ~15 minuten, bijna helemaal door de smoke-test
+(13 sep 2026, main).** Gemeten op een verder rustige machine: `node scripts/smoke-test.mjs` alleen
+al verbruikt ruim 900 CPU-seconden. De andere acht stappen samen zijn in een paar seconden klaar
+(`version:check`, `node --check`, taalcontrole, contrast, `test:design`, `test:bdd:design`,
+`test:db:config`, `test:ops` -- alle acht groen nagemeten op 2.0.32/2.0.33). De kosten zitten in
+wat de smoke doet: hij evalueert de volledige `assets/app.js` (878 KB) in JSDOM en draait daarna
+honderden `renderAll()`-rondes. Dat is geen defect en de test is waardevol, maar het botst wel met
+de afspraak "draai `check` vóór elke commit". Mogelijke richtingen als dit gaat knellen: de smoke
+opsplitsen in een snelle kern en een volledige variant, of hem uit de pre-commit-`check` halen en
+alleen in CI draaien. Niet zelf besloten -- dit raakt de kwaliteitspoort.
 
 **Een achtergrondtaak stoppen laat het kindproces draaien (13 sep 2026, main).** Twee gestopte
 runs bleken uren later nog `node scripts/smoke-test.mjs` te draaien (samen ruim 1800 CPU-seconden),

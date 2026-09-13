@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 512 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 513 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 512 unieke case-ID's
+- Playwright executable cases: 513 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 513 unieke case-ID's
+- Totaal executable cases: 514 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 552
-- Niet-mobile projectuitvoeringen: 472
+- Uitvoeringen: 553
+- Niet-mobile projectuitvoeringen: 473
 - Mobile functionele cases: 40
 - Pixel 7 / Chromium-uitvoeringen: 40
 - iPhone 13 / WebKit-uitvoeringen: 40
 
-De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 512 Playwright-functionele cases in totaal 552 resultaten op: 472 + (40 x 2) = 552.
+De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 513 Playwright-functionele cases in totaal 553 resultaten op: 473 + (40 x 2) = 553.
 
 ## Documentatieketen
 
@@ -174,13 +174,14 @@ De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 512 Playwri
 
 - Feature: `tests/playwright/features/customer-timesheets.feature`
 - Source: `tests/playwright/customer-timesheet-api.spec.ts`
-- Cases: 19
+- Cases: 20
 
 - [CTS-API-H-012] admin kan een ontbrekende klanturenstaat extern bevestigen en terugzetten — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 15
 - [CTS-API-H-009] brokerroute koppelt de officiële klanturenstaat aan dezelfde medewerker en periode — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 - [CTS-API-H-001] employee uploadt klanturenstaat, dient in en downloadt; admin kan goedkeuren en resubmit vragen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 28
 - [CTS-API-N-006] employee kan geen klanturenstaat voor andere medewerker wijzigen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [CTS-API-N-007] employee kan geen admin reviewactie uitvoeren op klanturenstaat — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
+- [CTS-API-H-017] markeren als verzonden en als naar de broker verzonden volgt de toegestane volgorde — Techniek: API-contract + equivalentieklasse · Assertions: 20
 - [CTS-API-N-013] request_resubmit zonder toelichting wordt door de server geweigerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 7
 - [CTS-API-H-004] employee kan mark_skipped registreren en restore_missing terugdraaien — Techniek: Toestandsovergang · Assertions: 15
 - [CTS-API-H-013] medewerker registreert rechtstreeks gemaild zichtbaar vanuit een lege actuele maand — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 20

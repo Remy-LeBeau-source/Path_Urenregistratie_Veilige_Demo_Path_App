@@ -122,6 +122,7 @@
 | CTS-API-H-001 | api | customer-timesheets.feature | employee uploadt klanturenstaat, dient in en downloadt; admin kan goedkeuren en resubmit vragen | Beslissingstabel rollen en autorisatie | 28 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Happy | 10 | Actueel |
 | CTS-API-N-006 | api | customer-timesheets.feature | employee kan geen klanturenstaat voor andere medewerker wijzigen | Beslissingstabel rollen en autorisatie | 4 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Negative | 10 | Actueel |
 | CTS-API-N-007 | api | customer-timesheets.feature | employee kan geen admin reviewactie uitvoeren op klanturenstaat | Beslissingstabel rollen en autorisatie | 12 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Negative | 10 | Actueel |
+| CTS-API-H-017 | api | customer-timesheets.feature | markeren als verzonden en als naar de broker verzonden volgt de toegestane volgorde | API-contract + equivalentieklasse | 20 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Happy | 10 | Actueel |
 | CTS-API-N-013 | api | customer-timesheets.feature | request_resubmit zonder toelichting wordt door de server geweigerd | Negatieve equivalentieklasse + error guessing | 7 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Negative | 10 | Actueel |
 | CTS-API-H-004 | api | customer-timesheets.feature | employee kan mark_skipped registreren en restore_missing terugdraaien | Toestandsovergang | 15 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Happy | 10 | Actueel |
 | CTS-API-H-013 | api | customer-timesheets.feature | medewerker registreert rechtstreeks gemaild zichtbaar vanuit een lege actuele maand | Beslissingstabel rollen en autorisatie | 20 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Happy | 10 | Actueel |
@@ -535,9 +536,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 512
+- Playwright executable cases: 513
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 513
+- Totaal unieke executable cases: 514
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30

@@ -52,6 +52,16 @@ Feature: Klanturenstaten en documentverwerking
     Then de medewerker ook geen request_resubmit mag uitvoeren
     And cleanup: sessie sluiten voor testisolatie
 
+  @happy
+  Scenario: [CTS-API-H-017] markeren als verzonden en als naar de broker verzonden volgt de toegestane volgorde
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 20
+    Given een ingediende klanturenstaat in een eigen vrije maand
+    When de beheerder als verzonden probeert te markeren vóór de goedkeuring
+    Then markeert de beheerder na goedkeuring wél als verzonden
+    And mag daarna nog naar de brokerroute, met een vastgelegd tijdstip
+    And weigert de server daarna opnieuw als verzonden markeren
+
   @negative
   Scenario: [CTS-API-N-013] request_resubmit zonder toelichting wordt door de server geweigerd
     # Testtechniek: Negatieve equivalentieklasse + error guessing
