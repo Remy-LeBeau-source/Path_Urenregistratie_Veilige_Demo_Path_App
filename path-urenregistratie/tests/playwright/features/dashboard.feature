@@ -203,6 +203,15 @@ Feature: Dashboard en open werkvoorraad
     And staat in Nieuw open acties in ieder geval boven de correctie- en archiefingang
 
   @happy
+  Scenario: [DASH-H-030] de indienbevestiging noemt werkdagen die bewust op 0,0 staan
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given twee werkdagen staan bewust op 0,0
+    When de medewerker de maand wil indienen
+    Then noemt de bevestiging die twee dagen bij naam
+    And blijft de melding weg zodra die dagen wel uren hebben
+
+  @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 1

@@ -1225,3 +1225,117 @@ test('[DASH-H-026] het medewerkerdashboard houdt op telefoonbreedte de afgesprok
 // telefoonprojecten (412 en 390px). De sprong komt terug zodra dat
 // herstelgedrag en het ontwerp op elkaar zijn afgestemd; dan hoort hier weer
 // een case te staan.
+
+// Ontwerpronde 13 sep (avond): de bevestiging bij "Maand indienen" noemt naast
+// het totaal en het aantal weken ook de werkdagen die nog op 0,0 staan. Deze
+// case dekt de helft die de app zelf nog niet had: dagen die de medewerker
+// BEWUST op 0,0 heeft gezet.
+//
+// Waarom dat nodig is. Sinds "Terugzetten" de week op 0,0 zet in plaats van op
+// standaarduren, gelden die dagen als ingevuld -- ze zijn immers geen gat meer.
+// Daarmee kon een maand met een hele week op nul worden ingediend terwijl de
+// bevestiging "Nog controleren: Geen" meldde. Het is dus een gat dat die
+// ontwerpwijziging zelf heeft gemaakt.
+//
+// De formulering komt uit handoff/medewerker-wild.bron.txt: maximaal drie dagen
+// bij naam, daarna "en nog N".
+test('[DASH-H-030] de indienbevestiging noemt werkdagen die bewust op 0,0 staan', async ({ page }) => {
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await page.addInitScript(() => {
+    localStorage.setItem('path-install-afgewezen', String(Date.now()));
+  });
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+
+  await test.step('Given twee werkdagen staan bewust op 0,0', async () => {
+    await page.evaluate(() => { window.location.hash = 'timesheet'; });
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+    // In één evaluate zetten en direct hertekenen. Een losse zet-stap gevolgd
+    // door een klik laat ruimte voor een achtergrond-sync die confirmedEntries
+    // alweer heeft overschreven -- dezelfde reden als bij [SKIN-H-028].
+    await page.evaluate(() => {
+      const runtime = window as unknown as {
+        currentEmployee: () => { id: number };
+        currentPeriod: () => { key: string; weekRows: unknown[] };
+        recordFor: (id: number, key?: string) => {
+          entries: number[][];
+          confirmedEntries?: boolean[][];
+          timesheetStatus: string;
+        };
+        renderHoursGrid: () => void;
+        persistState: () => void;
+      };
+      const period = runtime.currentPeriod();
+      const record = runtime.recordFor(runtime.currentEmployee().id, period.key);
+      record.timesheetStatus = 'draft';
+      if (!record.confirmedEntries) {
+        record.confirmedEntries = period.weekRows.map(() => [false, false, false, false, false]);
+      }
+      // Eerst de hele maand vullen, zodat er geen gewone gaten meer zijn en de
+      // melding die deze case toetst niet kan meeliften op de bestaande
+      // "nog niet volledig ingevuld"-waarschuwing.
+      record.entries.forEach((week, weekIndex) => {
+        week.forEach((_, dayIndex) => {
+          record.entries[weekIndex][dayIndex] = 8;
+          record.confirmedEntries![weekIndex][dayIndex] = false;
+        });
+      });
+      // Dan twee dagen bewust op nul.
+      record.entries[0][0] = 0;
+      record.confirmedEntries![0][0] = true;
+      record.entries[0][1] = 0;
+      record.confirmedEntries![0][1] = true;
+      runtime.persistState();
+      runtime.renderHoursGrid();
+    });
+  });
+
+  await test.step('When de medewerker de maand wil indienen', async () => {
+    // Naar "Hele maand": op telefoonbreedte is de indienknop in één-week-scope
+    // bewust verborgen (TS-REV-UI-H-015).
+    await page.locator('[data-hours-week-scope="all"]').click();
+    await expect(page.locator('#submit-timesheet')).toBeVisible({ timeout: 10_000 });
+    await page.locator('#submit-timesheet').click();
+    await expect(page.locator('#modal')).toBeVisible();
+  });
+
+  await test.step('Then noemt de bevestiging die twee dagen bij naam', async () => {
+    const melding = page.locator('#submit-deliberate-zero-note');
+    await expect(melding, 'de bevestiging hoort bewust op nul gezette werkdagen te noemen; anders dient een medewerker een week op nul in terwijl de modal "Nog controleren: Geen" meldt')
+      .toBeVisible();
+    await expect(melding).toContainText('2 werkdagen bewust op 0,0');
+    // Bij naam, niet als kaal aantal: de bron noemt maximaal drie dagen.
+    await expect(melding).toContainText('Ma ');
+    await expect(melding).toContainText('Di ');
+  });
+
+  await test.step('And blijft de melding weg zodra die dagen wel uren hebben', async () => {
+    // Zonder deze helft bewijst de case niet dat de melding aan de bewuste
+    // nullen hangt -- hij zou ook altijd kunnen verschijnen.
+    await page.locator('#modal-cancel').click();
+    await page.evaluate(() => {
+      const runtime = window as unknown as {
+        currentEmployee: () => { id: number };
+        currentPeriod: () => { key: string };
+        recordFor: (id: number, key?: string) => { entries: number[][]; confirmedEntries?: boolean[][] };
+        renderHoursGrid: () => void;
+        persistState: () => void;
+      };
+      const record = runtime.recordFor(runtime.currentEmployee().id, runtime.currentPeriod().key);
+      record.entries[0][0] = 8;
+      record.entries[0][1] = 8;
+      runtime.persistState();
+      runtime.renderHoursGrid();
+    });
+    // Opnieuw naar "Hele maand" en wachten tot de knop er is: het hertekenen na
+    // het annuleren zet de weekscope terug, en dan is de indienknop weer
+    // verborgen (TS-REV-UI-H-015).
+    await expect(page.locator('#modal')).toBeHidden();
+    await page.locator('[data-hours-week-scope="all"]').click();
+    await expect(page.locator('#submit-timesheet')).toBeVisible({ timeout: 10_000 });
+    await page.locator('#submit-timesheet').click();
+    await expect(page.locator('#modal')).toBeVisible();
+    await expect(page.locator('#submit-deliberate-zero-note')).toHaveCount(0);
+  });
+});

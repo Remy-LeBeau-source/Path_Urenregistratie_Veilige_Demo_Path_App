@@ -5408,6 +5408,40 @@ function incompleteTimesheetWeekLabels(record, period) {
   }, []);
 }
 
+// Werkdagen die de medewerker bewust op 0,0 heeft gezet. Die tellen nergens
+// als gat -- ze zijn ingevuld, alleen met nul -- en dat is precies waarom ze
+// apart genoemd moeten worden. Sinds "Terugzetten" de week op 0,0 zet in plaats
+// van op standaarduren (ontwerpronde 13 sep) kan een hele week op nul staan
+// terwijl de indienbevestiging "Nog controleren: Geen" meldt. Dat is een gat dat
+// die wijziging zelf heeft gemaakt, en het ontwerp lost het op door ze te noemen.
+//
+// De opsomming volgt de bron (handoff/medewerker-wild.bron.txt): maximaal drie
+// dagen bij naam, daarna "en nog N". De dagaanduiding staat daar als "Di 15-09";
+// hier is dat "Di 15 sep", de notatie die #hours-grid al gebruikt
+// (WEEKDAY_SHORT + dagnummer + afgekorte maand). Twee datumnotaties op hetzelfde
+// scherm zou een eigen foutje zijn, en de opdracht gaat over opmaak en tekst,
+// niet over het doorbreken van een bestaande conventie.
+function deliberateZeroWorkdayLabels(record, period) {
+  const labels = [];
+  period.weekRows.forEach((periodWeek, weekIndex) => {
+    periodWeek.days.forEach((day, dayIndex) => {
+      if (!day) return;
+      if (!record.confirmedEntries?.[weekIndex]?.[dayIndex]) return;
+      if (Number(record.entries?.[weekIndex]?.[dayIndex] || 0) > 0) return;
+      labels.push(WEEKDAY_SHORT[dayIndex] + " " + day.day + " " + period.month.slice(0, 3));
+    });
+  });
+  return labels;
+}
+
+function deliberateZeroSentence(labels) {
+  if (!labels.length) return "";
+  if (labels.length === 1) return "Je zette 1 werkdag bewust op 0,0 (" + labels[0] + ").";
+  const eerste = labels.slice(0, 3).join(", ");
+  const rest = labels.length > 3 ? " en nog " + (labels.length - 3) : "";
+  return "Je zette " + labels.length + " werkdagen bewust op 0,0 (" + eerste + rest + ").";
+}
+
 // Bouwt de bento-dagkaartjes-HTML voor één week. Gedeeld tussen het
 // Dashboard (#new-bento-days) en, sinds Mijn uren in Nieuw dezelfde stijl
 // kreeg bij een enkele week, ook #hours-grid-cards -- zo blijven beide
@@ -13993,6 +14027,8 @@ function showTimesheetSubmitConfirmation() {
   const correction = record.timesheetStatus === "correction";
   const remainingLabel = remainingWeeks === 1 ? "1 week" : remainingWeeks + " weken";
   const incompleteWeekLabels = incompleteTimesheetWeekLabels(record, period);
+  const bewustNulLabels = deliberateZeroWorkdayLabels(record, period);
+  const bewustNulRegel = deliberateZeroSentence(bewustNulLabels);
 
   showModal({
     label: correction ? "Opnieuw indienen" : "Definitief indienen",
@@ -14009,6 +14045,11 @@ function showTimesheetSubmitConfirmation() {
         ? '<div class="external-timesheet-warning" role="alert"><strong>Er zijn nog ' + remainingLabel + ' niet volledig ingevuld:</strong>'
           + '<ul>' + incompleteWeekLabels.map(label => '<li>' + escapeHtml(label) + '</li>').join('') + '</ul>'
           + '<p>Ga alleen verder wanneer nuluren voor die dagen bewust kloppen.</p></div>'
+        : '')
+      + (bewustNulRegel
+        ? '<div class="external-timesheet-warning" role="alert" id="submit-deliberate-zero-note"><strong>'
+          + escapeHtml(bewustNulRegel) + '</strong>'
+          + '<p>Die dagen gaan als nul mee de maand in. Klopt dat niet, vul ze dan eerst in.</p></div>'
         : ''),
     confirm: correction ? "Opnieuw indienen en vergrendelen" : "Indienen en vergrendelen",
     action: async () => {
