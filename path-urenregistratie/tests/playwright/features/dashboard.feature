@@ -194,6 +194,15 @@ Feature: Dashboard en open werkvoorraad
     And staat de focus op het eerste lege urenveld van die week
 
   @happy
+  Scenario: [DASH-H-026] het medewerkerdashboard houdt op telefoonbreedte de afgesproken prioriteitsvolgorde aan
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given een ingelogde medewerker op telefoonbreedte in Klassiek
+    When de flow voor DASH-H-026 wordt uitgevoerd
+    Then staat in Klassiek de volgende actie bovenaan, dan open acties, dan de klanturenstaat, dan de rest
+    And staat in Nieuw open acties in ieder geval boven de correctie- en archiefingang
+
+  @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 1
@@ -352,3 +361,13 @@ Feature: Dashboard en open werkvoorraad
     Given een echt ingelogde medewerker
     When de medewerker het profielmenu opent
     Then wordt met Playwright-assertions bevestigd dat het profielmenu verbergt "Ander account of rol" bij een echte login
+
+  @happy
+  Scenario: [DASH-H-027] de dashboardtellers van Backoffice komen exact uit de serverdata, niet uit een eigen berekening
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given de administrator heeft het dashboard open
+    When de serverwaarheid voor diezelfde maand wordt opgehaald
+    Then tonen de tellers exact de getallen van de server
+    And spreken de bijschriften de tellers niet tegen
+    And wint de server aantoonbaar van een eigen telling, ook bij getallen die lokaal onmogelijk zijn

@@ -1139,3 +1139,79 @@ test('[DASH-N-029] de pijl springt naar de eerstvolgende week met een leeg urenv
     expect(focusInfo.dayIndex).toBe(focusInfo.verwachtDagIndex);
   });
 });
+
+test('[DASH-H-026] het medewerkerdashboard houdt op telefoonbreedte de afgesproken prioriteitsvolgorde aan', async ({ page }) => {
+  // Checklistpunt 17.1: "Mobiele prioriteit: wat moet ik nu doen -> uren ->
+  // open acties -> klanturenstaat -> overig." Op 13 sep op 412px doorgemeten in
+  // beide vormgevingen, met de echte scrollpositie van elk blok.
+  //
+  // Klassiek klopt volledig en wordt hier vastgelegd: hero met de volgende actie
+  // (352px) -> open acties (715) -> klanturenstaat (1456) -> cijfers (1772) ->
+  // historie (2413). "Uren" heeft op dit dashboard geen eigen blok; de primaire
+  // knop in de hero IS de route ernaartoe, dus de volgorde klopt met die knop
+  // als stap 2.
+  //
+  // Nieuw wijkt af, en dat is BEWUST NIET in deze case als "goed" vastgelegd:
+  // gemeten stond `#employee-open-overview` op 2789px, dus na de klanturenstaat
+  // (1954) en zelfs na het puur uitleggende blok "Jouw uren in 4 stappen"
+  // (2349) -- ruim drie telefoonschermen naar beneden. De oorzaak is klein en
+  // duidelijk: `#view-employee-dashboard` is in Nieuw al een flex-kolom met
+  // expliciete `order`-waarden (open acties 1, correctie 2, historie 4), maar
+  // `.new-employee-bento` heeft er geen en valt dus als geheel op de
+  // standaard `order: 0` vóór alles. Het oplossen vraagt om het openbreken van
+  // de bento (`display: contents` + per artikel een eigen order) en dat is een
+  // zichtbare herschikking van het startscherm in door de vormgevingslane
+  // beheerde CSS -- volgens de opdracht eerst melden, niet zelf doorvoeren.
+  // Daarom asserteert deze case voor Nieuw alleen wat onbetwist is (open acties
+  // vóór correctie vóór historie) en staat de afwijking als bevinding in
+  // MASTERCHECKLIST 17.1. Zou hier de volle volgorde al geasserteerd worden,
+  // dan legde de test de afwijking juist vast als gewenst gedrag.
+  const loginPage = new LoginPage(page);
+  await suppressInstallBanner(page);
+  await page.setViewportSize({ width: 412, height: 915 });
+
+  const volgorde = async () => page.evaluate(() => {
+    const uit: Array<{ naam: string; top: number }> = [];
+    document.querySelectorAll<HTMLElement>('#view-employee-dashboard .employee-hero, #view-employee-dashboard #employee-open-overview, #view-employee-dashboard #employee-customer-timesheet-card, #view-employee-dashboard .employee-metrics, #view-employee-dashboard #employee-history-teaser, #view-employee-dashboard #employee-dashboard-correction').forEach(el => {
+      const r = el.getBoundingClientRect();
+      if (r.width < 1 || r.height < 1) return;
+      uit.push({ naam: el.id || el.className.split(' ')[0], top: Math.round(r.top + window.scrollY) });
+    });
+    return uit.sort((a, b) => a.top - b.top).map(b => b.naam);
+  });
+
+  await test.step('Given een ingelogde medewerker op telefoonbreedte in Klassiek', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 20_000 });
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  });
+
+  await test.step('Then staat in Klassiek de volgende actie bovenaan, dan open acties, dan de klanturenstaat, dan de rest', async () => {
+    const blokken = await volgorde();
+    const positie = (naam: string) => {
+      const i = blokken.indexOf(naam);
+      expect(i, `${naam} hoort zichtbaar op het medewerkerdashboard te staan (gevonden: ${blokken.join(' < ')})`).toBeGreaterThanOrEqual(0);
+      return i;
+    };
+    const hero = positie('employee-hero');
+    const openActies = positie('employee-open-overview');
+    const klanturenstaat = positie('employee-customer-timesheet-card');
+    const historie = positie('employee-history-teaser');
+    expect(hero, `de volgende actie hoort boven open acties te staan (${blokken.join(' < ')})`).toBeLessThan(openActies);
+    expect(openActies, `open acties hoort boven de klanturenstaat te staan (${blokken.join(' < ')})`).toBeLessThan(klanturenstaat);
+    expect(klanturenstaat, `de klanturenstaat hoort boven het archief te staan (${blokken.join(' < ')})`).toBeLessThan(historie);
+  });
+
+  await test.step('And staat in Nieuw open acties in ieder geval boven de correctie- en archiefingang', async () => {
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(page.locator('#new-employee-bento')).toBeVisible();
+    const blokken = await volgorde();
+    const openActies = blokken.indexOf('employee-open-overview');
+    const historie = blokken.indexOf('employee-history-teaser');
+    expect(openActies, `open acties hoort zichtbaar te zijn in Nieuw (gevonden: ${blokken.join(' < ')})`).toBeGreaterThanOrEqual(0);
+    expect(historie, `de archiefingang hoort zichtbaar te zijn in Nieuw (gevonden: ${blokken.join(' < ')})`).toBeGreaterThanOrEqual(0);
+    expect(openActies, `open acties hoort boven het archief te staan (${blokken.join(' < ')})`).toBeLessThan(historie);
+  });
+});

@@ -171,9 +171,22 @@ geen openstaand, onbehandeld GUI-issue in de lijst dat deze audit moest overdoen
 
 ## Prioriteitenlijst
 
-**P0 — data/autorisatie/gebroken functionaliteit:** geen gevonden. Alle
-rol-/autorisatiecontroles (`roles-api.spec.ts`, `SEC-H-009/010/011`) staan groen
-en zijn recent bevestigd (12 sep, login-picker-bug `AUTH-H-025`).
+**P0 — data/autorisatie/gebroken functionaliteit:** rol en autorisatie zijn schoon
+(`roles-api.spec.ts` incl. de nieuwe `ROLE-N-006` per-actie-gates, `SEC-H-009/010/011/012`,
+alles groen; 12 sep login-picker-bug `AUTH-H-025`). **Wél één gebroken workflow
+gevonden op 13 sep, bewezen en beschreven, wacht op go van Gio:** "Mededeling
+intrekken" doet in de echte app niet wat de app in diezelfde modal belooft. De
+bevestigingstekst zegt dat de ontvangers één intrekkingsmelding met de reden
+krijgen en dat de oorspronkelijke tekst uit hun lijst verdwijnt; demomodus doet
+dat ook, maar `server/api/announcements.php action=withdraw` maakt geen
+intrekkingsmelding en laat `hidden_from_employees` op 0. Gemeten gevolg op een
+verse database: de medewerker ziet het ingetrokken bericht nog steeds, alleen met
+de pil "Gelezen", zonder markering en zonder reden -- terwijl de API de reden wél
+meelevert. Backoffice denkt dus dat het bericht terug is. Volledige analyse plus
+de voorgestelde minimale server-side fix staan in MASTERCHECKLIST.md 17.3; niet
+zelf doorgevoerd omdat het een verzendende workflow verandert (nieuwe
+notificaties, mogelijk e-mail) en de betekenis van de bestaande losse
+`hide`-stap raakt.
 
 **P1 — mobiele/desktop-bediening die echt hindert:**
 1. Resterende iOS 17.5-punten afmaken (viewporthoogte, keyboard, datumvelden,
@@ -220,8 +233,48 @@ en zijn recent bevestigd (12 sep, login-picker-bug `AUTH-H-025`).
    volgende responsive fix: controleer de bronvolgorde, niet alleen of de
    media query "klopt".
 
+5. **Nieuwe, gemeten vondst (13 sep) — "Goedkeuren" staat op telefoonbreedte 8px
+   naast "Correctie vragen" en heeft geen bevestiging. Vraagt een beslissing van
+   Gio.** Op 412px staan de drie rij-acties op Goedkeuringen in één flexrij
+   (`.approval-actions`, `gap: 8px`, `flex-wrap: wrap`): knoppen van 100x62px met
+   8px ertussen, en "Correctie vragen" ingeklemd tussen "Bekijken" en
+   "Goedkeuren". De knopgroottes zijn ruim genoeg; de eis die dit raakt is de
+   scheiding van gevaarlijke van neutrale acties. Risico zit niet bij "Correctie
+   vragen" (die vraagt eerst een getypte reden, bewust zonder voorinvulling) maar
+   bij `data-approve`: dat gaat via één klik rechtstreeks naar
+   `approveEmployee()` zonder bevestiging, en zet urenstaat op goedgekeurd,
+   factuur op klaar plus twee meldingen. Volledige analyse en de drie mogelijke
+   richtingen staan in MASTERCHECKLIST.md 17.2. Bewust geen regressie vastgelegd:
+   een test die de huidige 8px asserteert zou de afwijking als gewenst gedrag
+   vastleggen.
+
 **P2 — inconsistentie/accessibility:** Android/Chrome- en PWA-blok van 17.5 nog
 scherm voor scherm doorlopen (gepland, nog niet gestart).
+
+4. **Nieuwe, gemeten vondst (13 sep) — mobiele prioriteitsvolgorde in Nieuw.
+   Vraagt een beslissing van Gio, bewust niet zelf doorgevoerd.** Afgesproken
+   volgorde op telefoonbreedte is: wat moet ik nu doen -> uren -> open acties ->
+   klanturenstaat -> overig. Op 412px gemeten met de echte scrollpositie van elk
+   blok klopt **Klassiek** volledig (hero 352 -> open acties 715 ->
+   klanturenstaat 1456 -> cijfers 1772 -> historie 2413; "uren" is hier de
+   primaire knop in de hero en geen eigen blok). **Nieuw wijkt af:** hero 255 ->
+   urenweek 688 -> voortgangsring 1576 -> klanturenstaat 1954 -> "Jouw uren in 4
+   stappen" 2349 -> **open acties 2789** -> historie 3550. Open acties staat dus
+   ruim drie telefoonschermen naar beneden, ná de klanturenstaat en zelfs ná een
+   puur uitleggend blok.
+   *Oorzaak:* `#view-employee-dashboard` is in Nieuw al een flex-kolom met
+   expliciete `order`-waarden (open acties 1, correctie 2, historie 4), maar
+   `.new-employee-bento` heeft er geen en valt dus als één geheel op de
+   standaard `order: 0` vóór alles.
+   *Waarom niet gefixt:* oplossen vraagt om het openbreken van de bento
+   (`display: contents` + per artikel een eigen order) in `assets/styles-new.css`
+   — een zichtbare herschikking van het startscherm, in een bestand van de
+   vormgevingslane. Dat valt onder "grotere wijziging: eerst stoppen en
+   uitleggen".
+   *Wat wél gedaan is:* regressie `[DASH-H-026]` legt de volgorde van Klassiek
+   vast en asserteert voor Nieuw alleen wat onbetwist is (open acties boven de
+   archiefingang) — juist om de afwijking niet als gewenst gedrag vast te
+   leggen.
 
 **P3 — puur cosmetisch:** geen nieuwe vondsten; het bestaande visuele-verfraaiingsspoor
 (zie `pilot/fase17-richtingpagina.html`) blijft een apart, expliciet

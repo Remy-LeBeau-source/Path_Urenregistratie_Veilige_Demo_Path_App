@@ -47,3 +47,11 @@ Feature: Rollen, rechten en gegevensafscherming
     Given een medewerker met een persoonlijke startmaand is ingelogd
     When de medewerker buiten de toegestane maandgrenzen rechtstreeks de API benadert
     Then blijft de eigen huidige maand wel bereikbaar
+
+  @negative
+  Scenario: [ROLE-N-006] beheerder-only acties op gedeelde endpoints weigeren ook op de eigen urenstaat
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given een ingelogde medewerker met zijn eigen lopende maand
+    When hij de beheerdersacties op zijn eigen urenstaat rechtstreeks aanroept
+    Then blijft zijn eigen medewerkersactie op dezelfde endpoints wel toegestaan

@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 505 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 510 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 505 unieke case-ID's
+- Playwright executable cases: 510 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 506 unieke case-ID's
+- Totaal executable cases: 511 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 545
-- Niet-mobile projectuitvoeringen: 465
+- Uitvoeringen: 550
+- Niet-mobile projectuitvoeringen: 470
 - Mobile functionele cases: 40
 - Pixel 7 / Chromium-uitvoeringen: 40
 - iPhone 13 / WebKit-uitvoeringen: 40
 
-De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 505 Playwright-functionele cases in totaal 545 resultaten op: 465 + (40 x 2) = 545.
+De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 510 Playwright-functionele cases in totaal 550 resultaten op: 470 + (40 x 2) = 550.
 
 ## Documentatieketen
 
@@ -198,7 +198,7 @@ De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 505 Playwri
 
 - Feature: `tests/playwright/features/dashboard.feature`
 - Source: `tests/playwright/dashboard*.spec.ts`
-- Cases: 40
+- Cases: 42
 
 - [DASH-H-002] employee dashboard opent zonder console errors — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
 - [DASH-H-025] "Mijn maanden" toont naast de urenstatus ook de klanturenstaat-status per maand — Techniek: Toestandsovergang · Assertions: 7
@@ -222,6 +222,7 @@ De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 505 Playwri
 - [DASH-N-026] het medewerkerdashboard blijft nooit op "Werkvoorraad laden" hangen, ook niet als de eerste serversync faalt — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [DASH-N-028] Mijn uren toont in het weekend de week waar vandaag in valt, niet de eerste week van de maand — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
 - [DASH-N-029] de pijl springt naar de eerstvolgende week met een leeg urenvak, ook terug in de tijd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
+- [DASH-H-026] het medewerkerdashboard houdt op telefoonbreedte de afgesproken prioriteitsvolgorde aan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 29
 - [DASH-N-022] een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
@@ -240,6 +241,7 @@ De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 505 Playwri
 - [DASH-N-019] een achtergrond-hertekening sluit het geopende profielmenu niet — Techniek: Toestandsovergang · Assertions: 6
 - [DASH-H-022] beheerder kan met de browser-terug/-vooruit-knop door alle eigen schermen navigeren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-N-027] het profielmenu verbergt "Ander account of rol" bij een echte login — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
+- [DASH-H-027] de dashboardtellers van Backoffice komen exact uit de serverdata, niet uit een eigen berekening — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 
 ### Relationele database-integriteit
 
@@ -570,19 +572,20 @@ De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 505 Playwri
 
 - Feature: `tests/playwright/features/roles-authorization.feature`
 - Source: `tests/playwright/roles-api.spec.ts`
-- Cases: 5
+- Cases: 6
 
 - [ROLE-N-003] zonder sessie geeft protected API 401 — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
 - [ROLE-H-001] admin ziet volledige data — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [ROLE-H-002] employee ziet alleen eigen data — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [ROLE-N-004] een medewerker krijgt 403 op elke beheerder-only schrijfactie — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [ROLE-N-005] medewerker kan maanden voor de startdatum en na de huidige maand ook niet via de API openen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
+- [ROLE-N-006] beheerder-only acties op gedeelde endpoints weigeren ook op de eigen urenstaat — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 
 ### Authenticatie- en API-beveiliging
 
 - Feature: `tests/playwright/features/security.feature`
 - Source: `tests/playwright/security.spec.ts`
-- Cases: 19
+- Cases: 20
 
 - [SEC-H-001] csrf token endpoint werkt — Techniek: API-contract + equivalentieklasse · Assertions: 4
 - [SEC-H-002] login met csrf werkt — Techniek: API-contract + equivalentieklasse · Assertions: 2
@@ -603,12 +606,13 @@ De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 505 Playwri
 - [SEC-H-009] medewerker die handmatig naar een beheerscherm navigeert komt terug op het eigen dashboard — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [SEC-H-010] medewerker die de pagina herlaadt met een beheer-URL in de adresbalk komt terug op het eigen dashboard — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [SEC-H-011] medewerker die naar Klanturenstaten (beheer) navigeert komt terug op het eigen dashboard — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
+- [SEC-H-012] een in localStorage naar beheerder gezette rol geeft geen beheerscherm — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 
 ### Vormgevingsschakelaar (klassiek / nieuw)
 
 - Feature: `tests/playwright/features/skin.feature`
 - Source: `tests/playwright/skin.spec.ts`
-- Cases: 28
+- Cases: 29
 
 - [SKIN-H-001] de app start standaard in de klassieke vormgeving — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [SKIN-H-002] Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
@@ -634,10 +638,11 @@ De 40 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 505 Playwri
 - [SKIN-H-021] de medewerker blijft op het Dashboard: de pijl springt naar vandaag in het weekkaartje, open maanden staan er zichtbaar bij, en een skinwissel hertekent Mijn uren direct — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 19
 - [SKIN-H-022] een tweede herlading zet de skin/thema-voorkeur niet terug naar standaard — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 8
 - [SKIN-H-023] "Standaardweek/-maand vullen" vult alleen lege dagen met het eigen werkpatroon, in Nieuw en Klassiek — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
-- [SKIN-H-028] "Week terugzetten" overschrijft ook een dag die bewust op 0 is bevestigd, na expliciete bevestiging — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
+- [SKIN-H-028] "Week terugzetten" overschrijft ook een dag die bewust op 0 is bevestigd, na expliciete bevestiging — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 5
 - [SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eerstvolgende stap en blijft op het Dashboard — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
 - [SKIN-H-025] de 0/8/9-snelkeuze bij elke dag staat altijd zichtbaar, in Klassiek en in Nieuw — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
 - [SKIN-H-027] Nieuw-skin beheer-topbar behoudt de safe-area-inset-top van de statusbalk — Techniek: Toestandsovergang · Assertions: 2
+- [SKIN-H-029] nog niet opgeslagen uren overleven rotatie, themawissel, modal, designwissel en browser-back — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 15
 
 ### Correctie- en goedkeuringsproces
 

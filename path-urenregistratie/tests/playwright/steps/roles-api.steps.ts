@@ -31,3 +31,6 @@ And("ook de leesbare beheerdersbronnen blijven dicht");
 Given("een medewerker met een persoonlijke startmaand is ingelogd");
 When("de medewerker buiten de toegestane maandgrenzen rechtstreeks de API benadert");
 Then("blijft de eigen huidige maand wel bereikbaar");
+Given("een ingelogde medewerker met zijn eigen lopende maand");
+When("hij de beheerdersacties op zijn eigen urenstaat rechtstreeks aanroept");
+Then("blijft zijn eigen medewerkersactie op dezelfde endpoints wel toegestaan");

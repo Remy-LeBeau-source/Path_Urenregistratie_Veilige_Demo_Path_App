@@ -1154,3 +1154,116 @@ test('[DASH-N-027] het profielmenu verbergt "Ander account of rol" bij een echte
     await expect(page.getByRole('button', { name: 'Ander account of rol' })).toHaveCount(0);
   });
 });
+
+test('[DASH-H-027] de dashboardtellers van Backoffice komen exact uit de serverdata, niet uit een eigen berekening', async ({ page }) => {
+  // Checklistpunt 17.2: "dashboardtellers (moeten kloppen met werkelijke data)".
+  // Er was hiervoor geen enkele test -- gecontroleerd op 13 sep: geen bestaande
+  // case raakte `#metric-submitted`, `#metric-approved` of hun notities.
+  //
+  // Wat hier precies bewezen wordt. De tellers hebben twee bronnen: de
+  // serverwaarheid uit `/server/api/dashboard.php` (`per_maand`, de rij van de
+  // actieve maand) en een lokale terugvaloptie die uit de gerenderde rijen
+  // wordt geteld (`fallbackSubmitted`/`fallbackApproved`/`fallbackOpen`,
+  // app.js ~7388). Zolang de API antwoordt hoort de server te winnen. Die
+  // twee kunnen uiteenlopen -- de API telt élke urenstaat van de maand, de
+  // rijen alleen wat het dashboard toont -- en dan liegt de teller. Deze case
+  // vergelijkt daarom de zichtbare getallen met de API-rij van precies de maand
+  // die de app open heeft staan, en niet met de rijen op het scherm.
+  //
+  // De relaties komen één-op-één uit app.js ~7391-7413:
+  //   #metric-submitted  = gecontroleerd + klaar_voor_controle  / medewerkers
+  //   #metric-approved   = gecontroleerd                        / medewerkers
+  //   #metric-approved-note noemt klaar_voor_controle
+  const loginPage = new LoginPage(page);
+  await suppressInstallBanner(page);
+
+  await test.step('Given de administrator heeft het dashboard open', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+    // Wacht tot de serverdata binnen is: zolang de teller nog het
+    // laadstreepje toont, is er niets te vergelijken.
+    await expect(page.locator('#metric-submitted')).not.toHaveText(/^\s*[–-]\s*$/, { timeout: 20_000 });
+  });
+
+  const periodeKey = await page.locator('#period-picker').inputValue();
+  expect(periodeKey, 'de app hoort een maand als JJJJ-MM open te hebben').toMatch(/^\d{4}-\d{2}$/);
+
+  const maand = await test.step('When de serverwaarheid voor diezelfde maand wordt opgehaald', async () => {
+    const response = await page.request.get('/server/api/dashboard.php');
+    expect(response.status()).toBe(200);
+    const body = await response.json();
+    expect(body.ok, JSON.stringify(body).slice(0, 200)).toBe(true);
+    const rij = (body.per_maand as Array<{ period_key: string; gecontroleerd: number; klaar_voor_controle: number; medewerkers: number }>)
+      .find(item => item.period_key === periodeKey);
+    // Geen rij voor deze maand betekent dat de app op de lokale terugvaloptie
+    // staat; dan is er geen serverwaarheid om tegen te vergelijken en bewijst
+    // doorgaan niets.
+    test.skip(!rij, `Geen serverrij voor ${periodeKey}; de tellers vallen dan terug op een lokale telling en zijn hier niet te vergelijken.`);
+    return rij!;
+  });
+
+  await test.step('Then tonen de tellers exact de getallen van de server', async () => {
+    const ingediend = Number(maand.gecontroleerd) + Number(maand.klaar_voor_controle);
+    const gecontroleerd = Number(maand.gecontroleerd);
+    const totaal = Math.max(0, Number(maand.medewerkers));
+
+    // De teller staat als "4 / 4" in de DOM (het tweede getal in een <small>),
+    // dus op de genormaliseerde tekst vergelijken.
+    const tellerTekst = async (selector: string) => (await page.locator(selector).innerText()).replace(/\s+/g, ' ').trim();
+    expect(await tellerTekst('#metric-submitted'), `#metric-submitted hoort ${ingediend} / ${totaal} te tonen voor ${periodeKey}`)
+      .toBe(`${ingediend} / ${totaal}`);
+    expect(await tellerTekst('#metric-approved'), `#metric-approved hoort ${gecontroleerd} / ${totaal} te tonen voor ${periodeKey}`)
+      .toBe(`${gecontroleerd} / ${totaal}`);
+  });
+
+  await test.step('And spreken de bijschriften de tellers niet tegen', async () => {
+    const open = Number(maand.klaar_voor_controle);
+    const ingediend = Number(maand.gecontroleerd) + open;
+    const totaal = Math.max(0, Number(maand.medewerkers));
+
+    const controleNote = await page.locator('#metric-approved-note').innerText();
+    if (open > 0) {
+      expect(controleNote, `bij ${open} openstaande controles hoort dat aantal in het bijschrift te staan`).toContain(String(open));
+    } else {
+      expect(controleNote, 'zonder openstaande controles hoort het bijschrift dat te zeggen').toMatch(/geen openstaande controles/i);
+    }
+
+    // Het bijschrift onder "ingediend" noemt hoeveel er nog NIET ingediend zijn.
+    // Dat getal is afgeleid van dezelfde twee cijfers; loopt het uit elkaar, dan
+    // vertellen kop en bijschrift twee verschillende verhalen.
+    const ingediendNote = await page.locator('#metric-submitted-note').innerText();
+    if (ingediend < totaal && !/nog geen invoer verwacht/i.test(ingediendNote)) {
+      expect(ingediendNote, `kop zegt ${ingediend}/${totaal}, dus het bijschrift hoort ${totaal - ingediend} nog-niet-ingediend te noemen`)
+        .toContain(String(totaal - ingediend));
+    }
+  });
+
+  await test.step('And wint de server aantoonbaar van een eigen telling, ook bij getallen die lokaal onmogelijk zijn', async () => {
+    // Zonder deze stap kan de vergelijking hierboven meeliften op toeval: als de
+    // serverwaarheid en de lokale terugvaltelling dezelfde getallen opleveren,
+    // zou de case ook slagen terwijl de app stilletjes lokaal rekent. Daarom
+    // hier een geantwoorde maandrij met aantallen die uit de gerenderde rijen
+    // nooit kunnen komen (99 medewerkers in de demodatabase bestaan niet). Staat
+    // er daarna "48 / 99" op het scherm, dan komt de teller bewijsbaar van de
+    // server.
+    await page.route('**/server/api/dashboard.php**', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          per_maand: [{ period_key: periodeKey, gecontroleerd: 41, klaar_voor_controle: 7, uren_blokkades: 0, medewerkers: 99 }],
+        }),
+      });
+    });
+    await page.reload();
+    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+    const tellerTekst = async (selector: string) => (await page.locator(selector).innerText()).replace(/\s+/g, ' ').trim();
+    await expect.poll(() => tellerTekst('#metric-submitted'), { timeout: 20_000 }).toBe('48 / 99');
+    expect(await tellerTekst('#metric-approved')).toBe('41 / 99');
+    await page.unroute('**/server/api/dashboard.php**');
+  });
+
+  await loginPage.logout();
+});

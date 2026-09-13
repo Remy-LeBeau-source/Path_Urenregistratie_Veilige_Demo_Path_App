@@ -90,6 +90,10 @@ Given("een medewerker op de week van vandaag (Week 37), met die week en de volge
 When("op de volgende-week-pijl wordt gedrukt");
 Then("springt de weergave terug naar de eerdere, nog lege week, niet naar Week 38");
 And("staat de focus op het eerste lege urenveld van die week");
+Given("een ingelogde medewerker op telefoonbreedte in Klassiek");
+When("de flow voor DASH-H-026 wordt uitgevoerd");
+Then("staat in Klassiek de volgende actie bovenaan, dan open acties, dan de klanturenstaat, dan de rest");
+And("staat in Nieuw open acties in ieder geval boven de correctie- en archiefingang");
 Given("de administrator is ingelogd");
 When("de administrator het dashboard opent");
 Then("het dashboard toont admin-overzicht zonder consolefouten");
@@ -160,3 +164,8 @@ Then("brengt browser-vooruit telkens het volgende scherm terug, in dezelfde volg
 Given("een echt ingelogde medewerker");
 When("de medewerker het profielmenu opent");
 Then("wordt met Playwright-assertions bevestigd dat het profielmenu verbergt \"Ander account of rol\" bij een echte login");
+Given("de administrator heeft het dashboard open");
+When("de serverwaarheid voor diezelfde maand wordt opgehaald");
+Then("tonen de tellers exact de getallen van de server");
+And("spreken de bijschriften de tellers niet tegen");
+And("wint de server aantoonbaar van een eigen telling, ook bij getallen die lokaal onmogelijk zijn");

@@ -2004,9 +2004,47 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   redenering leidde in `093ec97d` tot het weghalen van de nog wél gebruikte `.status-draft`-regel
   (zie v2.0.10 hierboven). Dus eerst aantonen met een test of live-observatie, pas daarna opruimen.
   Nog te doen: correctie-afhandeling vanuit de medewerkerkant in Mijn uren zelf.
-- [ ] Mobiele prioriteit: wat moet ik nu doen -> uren -> open acties -> klanturenstaat -> overig
-- [ ] Data mag nooit verloren gaan door rerender, schermrotatie, browser-back, modal sluiten,
-  toetsenbord openen, thema-/designwissel
+- [x] Mobiele prioriteit: wat moet ik nu doen -> uren -> open acties -> klanturenstaat -> overig.
+  **Doorgemeten 13 sep op 412px in beide vormgevingen, met de echte scrollpositie van elk blok.**
+  Regressie `[DASH-H-026]`, v2.0.26. Geen codewijziging (zie hieronder waarom niet).
+  - **Klassiek klopt volledig:** hero met de volgende actie (352px) -> open acties (715) ->
+    klanturenstaat (1456) -> cijfers (1772) -> historie (2413). "Uren" heeft op dit dashboard geen
+    eigen blok; de primaire knop in de hero *is* de route ernaartoe, dus dat is stap 2. Deze volgorde
+    staat nu onder de regressie.
+  - **Nieuw wijkt af -- openstaande beslissing voor Gio, bewust niet zelf doorgevoerd.** Gemeten:
+    hero (255) -> urenweek (688) -> voortgangsring (1576) -> klanturenstaat (1954) -> "Jouw uren in
+    4 stappen" (2349) -> **open acties (2789)** -> historie (3550). Open acties staat dus ruim drie
+    telefoonschermen naar beneden, ná de klanturenstaat en zelfs ná een puur uitleggend blok.
+    Oorzaak is klein en duidelijk: `#view-employee-dashboard` is in Nieuw al een flex-kolom met
+    expliciete `order`-waarden (open acties 1, correctie 2, historie 4), maar `.new-employee-bento`
+    heeft er geen en valt dus als één geheel op de standaard `order: 0` vóór alles. Oplossen vraagt
+    om het openbreken van de bento (`display: contents` + per artikel een eigen order) in
+    `assets/styles-new.css`. Dat is (a) een zichtbare herschikking van het startscherm en (b)
+    een bestand van de vormgevingslane -- volgens de opdracht dus eerst melden, niet zelf doen.
+  - De regressie asserteert voor Nieuw daarom **alleen wat onbetwist is** (open acties boven de
+    archiefingang). Zou de volle volgorde nu al voor Nieuw geasserteerd worden, dan legde de test de
+    afwijking juist vast als gewenst gedrag.
+- [x] Data mag nooit verloren gaan door rerender, schermrotatie, browser-back, modal sluiten,
+  toetsenbord openen, thema-/designwissel. **Doorgemeten 13 sep: er is geen dataverlies, dus geen
+  codewijziging** -- alleen de ontbrekende regressie `[SKIN-H-029]`, v2.0.25. Een nog niet
+  opgeslagen uurveld overleeft vier viewportwissels (412x915, 915x412, 768x1024, 1280x800), een
+  themawissel via Voorkeuren -> Uiterlijk, een geopende en geannuleerde modal, de designwissel naar
+  Klassiek (ook na rotatie binnen Klassiek) en browser-back.
+  **Eén meetfout onderweg, leerzaam genoeg om te bewaren:** een eerste meting leek wél dataverlies
+  te tonen. Klassiek en Nieuw houden voor dezelfde dag élk hun eigen invoerveld in de DOM
+  (`#hours-grid .hours-input` resp. `#new-bento-days .new-bento-hours-input`), beide gesleuteld op
+  `data-week-index` + `data-day-index`. Simpelweg het eerste veld lezen gaf 9 waar 7 stond -- maar
+  dat was een andere dag (Klassiek toont de hele maand, de bento alleen de huidige week) én een
+  verouderde render van een inactieve view. Zodra de gebruiker in Klassiek echt naar Mijn uren
+  navigeert, wordt dat blok uit de state herbouwd en staat de ingevulde waarde er wel. **De state is
+  gezaghebbend, niet de DOM.** Daarom meet de case per dagsleutel en pas nadat de doelview actief is.
+  Discriminerend zonder `app.js` aan te raken (peer-eigendom): de case kiest de in te vullen waarde
+  bewust ánders dan wat het Klassieke veld op dat moment toont, en asserteert vóór de designwissel
+  expliciet dat die twee verschillen -- zo meet de eindassertie aantoonbaar de herbouw uit de state
+  en niet een toevallig al gelijk getal. `skin.spec.ts` volledig groen (28 cases).
+  **Niet gedekt, eerlijk benoemd:** "toetsenbord openen". Een echt mobiel toetsenbord valt in
+  Chromium niet op te roepen; het waarneembare gevolg (krimpende viewport) wordt wel gedekt. Rol:
+  Medewerker. Design: Klassiek én Nieuw. Thema: licht én donker (de themawissel zit in de case).
 - [x] **Live/visuele bevestiging van de vier hierboven (13 sep, main).** De vier items zijn op
   13 sep van herontwerp aan main overgedragen (zie de werkverdeling op die tak, commit
   `bdd49ec3`); de code-audit was daar al gedaan en concludeerde "geen wijziging nodig", met als
@@ -2033,26 +2071,159 @@ Medewerker nooit stilzwijgend Beheer kan breken (of andersom).
   bouwen bovenop v1.2.4** na het herstellen van deze checkout; vorige poging was ongetest/oud.
 - [ ] Beheer-dashboard: openstaande goedkeuringen, dashboardtellers (moeten kloppen met werkelijke
   data), recente serverfouten, rolwissel
+  - [x] **Dashboardtellers kloppen met de werkelijke data** -- `[DASH-H-027]`, v2.0.28. Er was
+    hiervoor geen énkele test: geen bestaande case raakte `#metric-submitted`, `#metric-approved`
+    of hun bijschriften (gecontroleerd 13 sep). Geen codewijziging nodig, de tellers bleken correct.
+    De tellers hebben twee bronnen: de serverwaarheid uit `/server/api/dashboard.php` (`per_maand`,
+    de rij van de actieve maand) en een lokale terugvaltelling uit de gerenderde rijen
+    (`fallbackSubmitted`/`fallbackApproved`/`fallbackOpen`, `app.js` ~7388). Die twee kunnen
+    uiteenlopen -- de API telt élke urenstaat van de maand, de rijen alleen wat het dashboard toont
+    -- en dán liegt de teller. De case vergelijkt daarom met de API-rij van precies de maand die de
+    app open heeft (`#period-picker`), niet met het scherm, en controleert ook dat de bijschriften
+    de koppen niet tegenspreken (`totaal - ingediend`, en het aantal openstaande controles).
+    **Discriminerend in de case zelf ingebouwd**, want een simpele vergelijking kan meeliften op
+    toeval als server en terugvaltelling hetzelfde getal geven: de laatste stap antwoordt
+    `dashboard.php` met een maandrij die lokaal onmogelijk is (41 gecontroleerd, 7 open, 99
+    medewerkers) en eist daarna letterlijk "48 / 99" op het scherm. Dat getal kan geen lokale
+    telling opleveren, dus is bewezen dat de server wint. `dashboard.spec.ts` volledig groen
+    (19 cases). Rol: Beheerder. Design/thema: de tellers zijn dezelfde DOM-knopen in Klassiek en
+    Nieuw; device-onafhankelijk.
 - [ ] Urenregistraties van medewerkers: goedkeuren, terugsturen (verplichte toelichting),
   klanturenstaten controleren + status, correcties verwerken, markeren/verwerken verzonden items
 - [ ] Medewerkersbeheer (stamgegevens), mededelingen beheren + doelgroepen, instellingen +
   mailinstellingen, notificaties, administratieve statussen
-- [ ] Mobiel: nooit desktoptabellen simpelweg verkleinen -- responsive tables/cards/detailweergave/
-  inklapbaar, maar geen informatie of beheeractie laten verdwijnen
+- [x] Mobiel: nooit desktoptabellen simpelweg verkleinen -- responsive tables/cards/detailweergave/
+  inklapbaar, maar geen informatie of beheeractie laten verdwijnen. **Doorgemeten 13 sep, geen
+  wijziging nodig.** Per beheerscherm (Dashboard, Goedkeuringen, Facturen, Medewerkers,
+  Mededelingen, Instellingen) is op 1280px én op 412px de volledige inventaris opgehaald --
+  zichtbare knoppen/links, `<th>`-koppen, `data-label`-waarden -- en tegen elkaar afgezet.
+  - **Geen enkele beheeractie verdwijnt op telefoonbreedte.** Het verschil in knoppen was op elk
+    scherm nul of positief (mobiel heeft er soms méér, doordat de onderste navigatiebalk meetelt).
+  - **De dashboardtabel doet precies wat het punt vraagt:** op 412px zijn de zes `<th>`-koppen weg
+    en staan diezelfde zes als `data-label` op de cellen -- de kolomnamen verhuizen dus mee de
+    kaartweergave in in plaats van te verdwijnen. Extra bevestiging dat er niet simpelweg verkleind
+    wordt: op déze schermen is juist de *desktopweergave* degene met een horizontale scroller
+    (1 stuk), en op telefoon nul.
+  - **Nul horizontale pagina-overflow** op alle zes de schermen
+    (`documentElement.scrollWidth === clientWidth === 412`).
+  - **Eén vals alarm, waard om te onthouden.** De eerste meting meldde 13 horizontaal overlopende
+    elementen in Instellingen tegen 5 op desktop. Nagemeten bleken het negen
+    `settings-card-heading`-koppen met 5-6px "overloop", allemaal `display: block` met
+    `padding-right: 34px`. Per kind gemeten kwam er niets voorbij de rand van de kop
+    (`voorbijOuder` negatief) en was niets afgekapt (`eigenAfkapping: 0`), en de pagina zelf
+    scrolde niet. **`scrollWidth > clientWidth` telt padding mee en geeft dus vals alarm op elk
+    blok met padding-right.** Alleen de pagina-brede controle
+    (`documentElement.scrollWidth` vs `clientWidth`) zegt echt iets. Dat raakt ook de
+    overflow-steekproef in AUDIT-GUI-FASE17.md P1-punt 3, die dezelfde techniek gebruikt -- daar
+    was de conclusie toevallig wél juist, omdat die op documentniveau meet.
+  - Rol: Beheerder. Design: gemeten in de actieve skin; de kaartomzetting zit op de gedeelde
+    `data-label`-opmaak. Devices: 1280x900 en 412x915.
 - [ ] Gevaarlijke acties (Terugsturen) nooit te dicht naast neutrale acties (Controleren/Verzonden)
   op mobiel/action-sheet-indeling
+  - **BEVINDING 13 sep, gemeten, wacht op go van Gio. Geen wijziging doorgevoerd.** Op 412px
+    (telefoon) staan de drie rij-acties op Goedkeuringen in één flexrij:
+    `.approval-actions` = `display:flex; gap:8px; flex-wrap:wrap`. Gemeten per rij: elke knop is
+    100x62px en de tussenruimte is **8px**, met **"Correctie vragen" ingeklemd tussen "Bekijken" en
+    "Goedkeuren"** (beide buren op 8px, zelfde regel). De knoppen zelf zijn ruim genoeg (62px hoog,
+    boven de 44/48px-richtlijn); het probleem is puur de scheiding die dit checklistpunt eist.
+  - **Waarom dit echt risico is, en in welke richting.** "Correctie vragen" is veilig ontworpen:
+    die opent een modal waarin de bevestigknop uitgeschakeld blijft tot er een reden is getypt, en
+    er wordt bewust niets voorgevuld (`showCorrectionEditor`, met dat argument expliciet in een
+    comment). De gevaarlijke kant is de andere: `data-approve` gaat via één klik rechtstreeks naar
+    `approveEmployee()` (`app.js` ~13556), **zonder bevestiging**. Eén mistik van 8px naar rechts
+    zet dus `timesheetStatus = "approved"` en `invoiceStatus = "ready"`, stuurt de medewerker een
+    "uren goedgekeurd"-melding en zet een factuurmelding klaar. Dat is de stap die je niet per
+    ongeluk wil doen, en juist die heeft geen drempel.
+  - **Drie mogelijke richtingen (niet zelf gekozen):** (a) op telefoonbreedte de gevaarlijke/
+    definitieve actie visueel en ruimtelijk losmaken van de neutrale (grotere gap of eigen regel) --
+    `assets/styles.css`, vormgevingslane; (b) de rij-"Goedkeuren" dezelfde bevestigingsdrempel
+    geven die de modalvariant al heeft -- `assets/app.js`, verandert een workflow; (c) de volgorde
+    zo zetten dat de gevaarlijke actie niet tussen twee andere staat. Allemaal in bestanden van de
+    andere lane en/of een workflowwijziging, dus eerst melden.
+  - **Bewust geen regressie vastgelegd:** een test die de huidige 8px asserteert zou de afwijking
+    juist als gewenst gedrag vastleggen. De test hoort bij de fix.
 
 **17.3 Workflow-integriteit**
 - [ ] Concept -> Gereed -> Ingediend -> Goedgekeurd -> Verzonden (+ Teruggestuurd, Correctie,
   Klanturenstaat (opnieuw) uploaden) betekent voor Medewerker en Beheerder hetzelfde na elke
   responsive wijziging
+- [ ] **BEVINDING 13 sep, bewezen, wacht op go van Gio -- "Mededeling intrekken" doet in de echte
+  app niet wat de app zelf belooft.** Gevonden bij het uitzoeken van het openstaande 17.1-punt over
+  de `withdrawn`-tak in `renderEmployeeAnnouncementArchive`. Geen wijziging doorgevoerd: de fix zit
+  in de workflow zelf en dat is per opdracht "eerst stoppen en uitleggen".
+  - **Wat de app belooft.** De bevestigingsmodal bij intrekken zegt letterlijk: *"Dezelfde
+    ontvangers krijgen één nieuwe intrekkingsmelding met de reden. De oorspronkelijke tekst
+    verdwijnt direct uit hun bel en mededelingenlijst en blijft alleen intern voor beheerders
+    bewaard."* (`assets/app.js` ~8482). De meldingstekst erna herhaalt dat: *"medewerkers zien
+    alleen de nieuwe intrekkingsmelding"* (~8502).
+  - **Wat demomodus doet: exact dat.** De demotak (~8507-8530) zet `status = "withdrawn"` (waarmee
+    de basisfilter in `renderEmployeeAnnouncementArchive` het origineel uitsluit) én maakt een
+    tweede mededeling `kind: "withdrawal"` met `"Een eerdere mededeling is ingetrokken.\nReden: " +
+    reason`.
+  - **Wat de echte server doet: geen van beide.** `server/api/announcements.php` `action=withdraw`
+    zet alleen `status='withdrawn'` + de intrekkingsvelden op de rij en zet de bestaande
+    notificaties op *gelezen*. Er wordt geen intrekkingsmelding aangemaakt en `hidden_from_employees`
+    blijft 0. Het aanvinkvakje `#announcement-withdrawal-email` wordt in deze tak helemaal niet
+    gebruikt. Alleen de losse `action=hide` verwijdert de notificaties, en die roept de UI hier niet
+    aan.
+  - **Gemeten gevolg (verse database, lijst echt gerenderd).** Beheerder verstuurt, medewerker ziet
+    het bericht, beheerder trekt in zonder verbergen. De medewerker ziet de kaart dan nog steeds,
+    met als enige verschil de pil "Gelezen": geen intrekkingsmarkering, geen reden. Terwijl
+    `announcements.php` voor die medewerker de rij wél teruggeeft met `status: "withdrawn"` en de
+    volledige `withdrawal_reason` -- de gegevens zijn er, de medewerkerlijst gebruikt ze niet, want
+    die rendert uit notificaties met een hard gezette `status: "sent"`
+    (`employeeAnnouncementItemsFromNotifications`, ~10310).
+  - **Gebruikersgevolg.** Backoffice ziet "Ingetrokken" en denkt dat het bericht terug is; de
+    medewerker leest het nog steeds als een gewoon bericht en krijgt de reden nooit. Dat is precies
+    het soort stille tegenspraak waar dit checklistpunt over gaat.
+  - **Voorgestelde fix (nog niet gedaan), minimaal en server-side:** laat `action=withdraw`
+    hetzelfde doen als de demotak -- `hidden_from_employees = 1` zetten en de notificaties van het
+    origineel verwijderen (wat `action=hide` al doet), plus één nieuwe `kind='withdrawal'`-rij met
+    de reden en notificaties voor dezelfde ontvangers. **Waarom dit niet zomaar gedaan is:** het
+    verandert een verzendende workflow (nieuwe notificaties, mogelijk e-mail via het
+    aanvinkvakje) en raakt de betekenis van de bestaande losse `hide`-stap en de tests die
+    intrekken+verbergen nu als twee stappen bewijzen. Daarom eerst deze uitleg, dan de go.
+  - **Zijconclusie voor het openstaande 17.1-punt:** de `withdrawalNote`-tak op regel ~8161 is
+    inderdaad onbereikbaar (de basisfilter een regel eerder sluit `status === "withdrawn"` al uit),
+    en de tak `kind === "withdrawal"` ernaast is dat níet. **Toch niet opgeruimd** -- exact zo'n
+    redenering leidde in `093ec97d` tot het weghalen van een nog wél gebruikte regel. Bovendien
+    wordt die tak juist wél zinvol zodra de fix hierboven is doorgevoerd. Het punt is daarmee
+    beantwoord: geen dode code weghalen, wel een echt defect gevonden.
 
 **17.4 Security en rollen (verplicht, sectie 20)**
 - [x] Handmatige URL/hash naar een beheerscherm: API-403 al gedekt (ROLE-N-004/005), nu ook UI-niveau
   bewezen -- medewerker komt zowel bij live hash-navigatie als bij herladen met een beheer-URL al in
   de adresbalk terug op het eigen dashboard. `[SEC-H-009]`/`[SEC-H-010]`, v2.0.1, skin-onafhankelijk.
-- [ ] Verborgen knop, directe API-call vanaf de medewerkerkant, oude browserstate/localStorage-state
-  (resterende deelpunten van sectie 20, nog te doen)
+- [x] Oude browserstate / localStorage-state: een medewerker die zijn bewaarde staat opent en
+  `currentRole` handmatig op `admin` zet, krijgt na herladen geen beheerscherm. `[SEC-H-012]`,
+  v2.0.23. **Eerlijke notitie bij deze case:** hij bewaakt géén enkele regel code. Gemeten:
+  met `saved.currentRole = null` (app.js bij het inlezen) uitgecommentarieerd slaagt hij nog
+  steeds. Dat komt doordat localStorage hier structureel niet gezaghebbend is -- `persistState()`
+  schrijft de rol nooit weg (`copy.currentRole = null`) en na het inloggen zet de server-profielrespons
+  `state.currentRole` onvoorwaardelijk. Drie lagen dus, met de geauthenticeerde sessie als
+  beslissende. Dit item is daarmee veilig-door-ontwerp, niet veilig-door-één-vangnetregel. De
+  waarde van de case zit in de toekomst: zou een herschrijving de client tóch op de bewaarde
+  staat laten vertrouwen -- het echte risico -- dan valt hij om.
+- [x] Verborgen knop / directe API-call vanaf de medewerkerkant. ROLE-N-004 dekte alleen endpoints
+  die in hun geheel beheerder-only zijn -- daar houdt `auth_require_role()` de medewerker al bij de
+  deur tegen. Het echte gat zat bij de gedeelde endpoints: `timesheets.php`,
+  `customer-timesheets.php` en `invoices.php` laten de medewerker bewust binnen (hij heeft ze nodig
+  voor zijn eigen uren) en bewaken de beheerdersacties pas per actie, middenin het bestand. Juist
+  die per-actie-gates zijn wat er valt als iemand een in de UI verborgen knop weer zichtbaar maakt
+  of de POST nabouwt, en ze waren nergens afgedekt. Doorgelicht en alle negen gates blijken correct
+  (`approve`, `request_correction`; `approve`, `request_resubmit`, `mark_sent`,
+  `mark_sent_to_broker`, `send_to_broker`, `confirm_external`; `lock`) -- **geen codewijziging,
+  alleen de ontbrekende regressie** `[ROLE-N-006]`, v2.0.24. Testontwerp: de case gebruikt bewust
+  de *eigen* medewerker en de *eigen lopende maand*, omdat in beide urenstaat-endpoints
+  `require_employee_period_access()` vóór de rolcheck draait -- op andermans urenstaat komt er ook
+  een 403, maar dan van de eigendomspoort, en dan bewijst de case niets over de rol. Daarom wordt
+  ook de foutcode `forbidden-action` geasserteerd (de periodepoort geeft `period-not-accessible`).
+  Tegenproef in de case zelf: `save_draft` op hetzelfde endpoint en dezelfde maand komt aantoonbaar
+  voorbij de rolgate. Discriminerend bewezen door de gate in `timesheets.php` tijdelijk om te
+  draaien naar `!== 'employee'`: de case faalde exact op de `approve`-regel (de medewerker kwam de
+  actie binnen), bronbestand daarna schoon teruggezet (geen diff) en de hele `roles-api.spec.ts`
+  weer groen (6 cases). Rol: Medewerker. Design/thema/device: niet van toepassing, dit is een
+  server-API-contract onder elke skin en elk toestel gelijk.
 - [x] **Live TEST-bevinding (12 sep, gemeld door Gio met screenshot), opgelost door main.** Eerste
   hypothese (live-configuratiedrift, `PLAYWRIGHT_EMPLOYEE_PASSWORD` ontbreekt op de server) bleek
   onjuist -- de echte oorzaak zat client-side: `employeeEmailOverrides` in `local-login-hints.php`
