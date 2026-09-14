@@ -3046,6 +3046,20 @@ zinloos was geweest.
   (paneel blijft `hidden`, eerst drie keer "element is not stable"). Ook een klik op het inlogscherm
   zonder effect, maar daar in demo-modus en zonder formulier.
 
+**OPEN (app-fout, bij herontwerp): een render zet "Hele maand" terug naar één week en verbergt de indienknop (E2E-N-019).**
+- CI 984cd06a, mobile-safari: de time-out op waitForResponse was een gevolg. De echte fout was de klik op
+  `#submit-timesheet`, die `hidden` en `disabled` stond in de correctiemaand augustus.
+- Oorzaak: `renderNewEmployeeBento()` (app.js:5824, sinds 06-09) schrijft bij elke render
+  `state.hoursWeekScope = "week-" + weekIndex`. `renderEmployeeDashboard()` roept hem altijd aan, ook in
+  Klassiek. `updateTimesheetSubmitUi()` toont de knop alleen bij scope `all`.
+- Bewijs, lokaal op mobile-safari: na "Hele maand" is de knop zichtbaar. Eén `renderAll()` later is hij
+  `hidden`. Met `renderNewEmployeeBento` als no-op blijft hij zichtbaar.
+- Gevolg voor een gebruiker: kiest die Hele maand en typt die uren, dan springt de weergave na de
+  conceptopslag terug naar een week en is de indienknop weg. In CI treedt het alleen op als de render
+  tussen de twee klikken valt, dus vaker op het tragere WebKit.
+- Overgedragen aan de herontwerplane (bento is hun regio), inclusief de eis van een regressiecase die
+  zonder fix rood is.
+
 **OPEN: accountkiezer opent op mobile-safari soms niet na een rolwissel (DASH-H-008, E2E-H-002).**
 - Gezien in de releases op 5e0bfbda (DASH-H-008, twee pogingen) en 984cd06a (E2E-H-002, pas bij de
   herhaling groen). In beide gevallen: klik op `#login-*-trigger` direct na `logout()`, daarna blijft
