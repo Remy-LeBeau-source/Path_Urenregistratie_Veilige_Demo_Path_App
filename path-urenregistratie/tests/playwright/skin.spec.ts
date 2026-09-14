@@ -2399,6 +2399,14 @@ test('[SKIN-H-035] op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vr
     // verhuizing meebeweegt met de breedte en niet alleen bij de eerste render.
     await page.setViewportSize({ width: 1280, height: 900 });
     await expect(acties).toBeVisible();
+    // De verhuizing loopt via een matchMedia-melding, en die komt ná de
+    // breedtewissel binnen. Meet pas als de DOM-volgorde is bijgewerkt: in de
+    // release op 984cd06a mat mobile-chrome anders nog de telefoonvolgorde
+    // (Bekijken op 1124, Correctie op 957), en slaagde pas bij de herhaling.
+    // De eis zelf verandert niet; er wordt alleen niet te vroeg gemeten.
+    await expect.poll(() => acties.evaluate(el => Array.from(el.querySelectorAll('button')).map(knop =>
+      knop.hasAttribute('data-approve') ? 'goedkeuren' : knop.hasAttribute('data-request-correction') ? 'correctie' : 'bekijken')))
+      .toEqual(['bekijken', 'correctie', 'goedkeuren']);
     const desktop = await acties.evaluate(el => {
       const r = (sel: string) => el.querySelector(sel)!.getBoundingClientRect();
       const soort = (knop: Element) => knop.hasAttribute('data-approve') ? 'goedkeuren' : knop.hasAttribute('data-request-correction') ? 'correctie' : 'bekijken';
