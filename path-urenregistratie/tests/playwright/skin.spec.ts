@@ -1728,7 +1728,9 @@ test('[SKIN-H-025] de 0/8/9-snelkeuze bij elke dag staat altijd zichtbaar, in Kl
   await loginPage.open();
   await loginPage.loginAsEmployee();
   await page.locator('button[data-view="timesheet"]').click();
-  await expect(page.locator('#timesheet-status')).toBeVisible();
+  // De statuspil staat in Klassiek op desktop niet meer in de kop (gui r319-371);
+  // de schermtitel is hetzelfde signaal dat Mijn uren open is.
+  await expect(page.locator('#timesheet-period-title')).toBeVisible();
 
   await test.step('Given Klassiek: minstens twee losse dagcellen tonen allebei hun eigen 0/8/9, zonder te focussen', async () => {
     await expect(page.locator('#hours-grid .hours-input').first()).toBeVisible({ timeout: 10_000 });

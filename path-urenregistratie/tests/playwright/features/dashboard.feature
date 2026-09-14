@@ -483,7 +483,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 24
+    # Aantoonbare Playwright-assertions in deze case: 26
     Given de lokale demo toont alle 12 beginacties en tellerverdeling
     When medewerkers alle vijf wachtende acties via de zichtbare interface afronden
     And Backoffice bevestigt iedere resterende zichtbare taak tot de werkvoorraad 0 is

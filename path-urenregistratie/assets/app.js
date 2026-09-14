@@ -5229,6 +5229,9 @@ function applySkin(hostname = window.location.hostname) {
   }
   plaatsKopBediening();
   plaatsTestknoppen();
+  if (document.body.dataset.scherm !== "customer-timesheet" && !document.querySelector("#new-bento-customer[data-open=\"true\"]")) {
+    restoreCustomerTimesheetPanelHome();
+  }
 }
 
 // Op desktop in Klassiek heeft de medewerker één kopregel (gui r83-113 en
@@ -7490,7 +7493,10 @@ function restoreCustomerTimesheetPanelHome() {
   const expand = document.querySelector("#new-bento-customer-expand");
   const button = card?.querySelector("[data-new-bento-customer]");
   const label = button?.querySelector("[data-new-bento-customer-label]");
-  const anchor = document.querySelector("#customer-timesheet-upload-panel-anchor");
+  // In Klassiek is de vaste plek het eigen Klanturenstaat-scherm, niet Mijn uren
+  // (DESIGN-BESLUITEN "Klanturenstaatpaneel hoort niet op Mijn uren", 14 sep).
+  const klassiek = document.documentElement.dataset.skin !== "new";
+  const anchor = document.querySelector(klassiek ? "#customer-timesheet-view-anchor" : "#customer-timesheet-upload-panel-anchor");
   const panel = document.querySelector("#customer-timesheet-upload-panel");
   if (anchor && panel && panel.parentElement !== anchor.parentElement) {
     anchor.after(panel);

@@ -539,12 +539,21 @@ test('[MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documen
     // kant. De oude balk hoort dus juist te zijn verdwenen.
     const weekfilter = page.locator('#hours-week-filter');
     await expect(page.locator('#hours-week-filter + .segmented-control-scroll-track')).toHaveCount(0);
-    await expect(weekfilter).toHaveAttribute('data-schuifrand', 'rechts');
-    // En na doorschuiven wijst de rand de andere kant op, in plaats van te
-    // blijven staan zoals de balk deed.
-    await weekfilter.evaluate(el => { el.scrollLeft = el.scrollWidth; });
-    await expect(weekfilter).toHaveAttribute('data-schuifrand', 'links');
-    await weekfilter.evaluate(el => { el.scrollLeft = 0; });
+    // Sinds 14 sep tonen de weekknoppen in Klassiek alleen het weeknummer (gui
+    // r326-330), zodat de vijf weken vaak zonder schuiven passen. Past alles, dan
+    // hoort er ook geen vervaagde rand te staan; schuift de rij wel, dan geldt de
+    // eis hierboven.
+    const schuift = await weekfilter.evaluate(el => el.scrollWidth - el.clientWidth > 1);
+    if (!schuift) {
+      await expect(weekfilter).not.toHaveAttribute('data-schuifrand', /.+/);
+    } else {
+      await expect(weekfilter).toHaveAttribute('data-schuifrand', 'rechts');
+      // En na doorschuiven wijst de rand de andere kant op, in plaats van te
+      // blijven staan zoals de balk deed.
+      await weekfilter.evaluate(el => { el.scrollLeft = el.scrollWidth; });
+      await expect(weekfilter).toHaveAttribute('data-schuifrand', 'links');
+      await weekfilter.evaluate(el => { el.scrollLeft = 0; });
+    }
   });
 
   await test.step('When uren als concept worden gewijzigd en daarna ingediend', async () => {
@@ -561,6 +570,11 @@ test('[MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documen
   });
 
   await test.step('Then klanturenstaat en notificaties blijven mobiel bereikbaar', async () => {
+    // Het paneel staat sinds 14 sep op het eigen Klanturenstaat-scherm, bereikbaar
+    // via de kaart op Vandaag.
+    await page.locator('button[data-view="employee-dashboard"]:visible').first().click();
+    await page.locator('#employee-customer-timesheet-card [data-go="customer-timesheet"]').click();
+    await expect(page.locator('#view-customer-timesheet')).toHaveClass(/is-active/);
     await expect(page.locator('#customer-timesheet-upload-panel')).toBeVisible();
     await expect(page.locator('#customer-timesheet-file')).toBeAttached();
     await expect(page.locator('#customer-timesheet-submit')).toBeVisible();

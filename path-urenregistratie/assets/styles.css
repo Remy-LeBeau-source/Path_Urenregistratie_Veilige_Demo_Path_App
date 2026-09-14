@@ -4852,7 +4852,6 @@ html:not([data-skin="new"]) body[data-role="employee"] .hours-table tfoot { disp
     --veld-vlak: #fff; --veld-rand: rgba(22,52,42,.22); --kaart-glans: rgba(255,255,255,.9);
   }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .view-heading p,
-  html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet #timesheet-status,
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .assignment-bar,
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-view-toolbar > div:first-child,
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-week-scroll-hint { display: none; }
@@ -4885,7 +4884,7 @@ html:not([data-skin="new"]) body[data-role="employee"] .hours-table tfoot { disp
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-weekcel strong { display: block; color: var(--mint-tekst); font-size: 12px; font-weight: 700; }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-weekcel small { display: block; color: #8a5c1c; font-size: 9px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-weekcel small:not(.is-open) { color: var(--mint-tekst); }
-  html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-table td.outside-month { background: var(--surface-muted); color: var(--line); }
+  html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-table td.outside-month { background: var(--surface-muted); }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-day-entry { display: grid; justify-items: center; gap: 4px; }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-day-entry .date-number { color: var(--muted); font-size: 9.5px; font-weight: 700; white-space: nowrap; }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-input { width: 100%; max-width: 84px; min-height: 38px; border: 1px solid var(--veld-rand); border-radius: 9px; background: var(--veld-vlak); color: var(--ink); font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: center; padding: 0 2px; box-shadow: none; }
@@ -4911,7 +4910,7 @@ html:not([data-skin="new"]) body[data-role="employee"] .hours-table tfoot { disp
 
 /* Dagen buiten de maand (gui r350): alleen het grijze vlak, geen wit blokje. */
 @media (min-width: 821px) {
-  html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .outside-month-mark { width: auto; height: auto; margin: 0; background: transparent; color: var(--line); }
+  html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .outside-month-mark { width: auto; height: auto; margin: 0; background: transparent; color: var(--muted); }
 }
 
 /* ===========================================================================
@@ -4970,3 +4969,14 @@ html:not([data-skin="new"]) body[data-role="employee"] .app-footer {
   justify-content: flex-start;
 }
 html:not([data-skin="new"]) body[data-role="employee"] .app-footer .app-footer-version { margin-left: 0; }
+
+/* Link van de klanturenstaatkaart naar het eigen scherm. Rustig, onder de knoppen. */
+.klantkaart-meer { display: none; }
+html:not([data-skin="new"]) body[data-role="employee"] .klantkaart-meer { display: inline-flex; margin-top: 10px; border: 0; background: transparent; color: var(--mint-tekst); cursor: pointer; font: inherit; font-size: 12px; font-weight: 700; padding: 6px 0; }
+
+/* De statuspil op Mijn uren blijft zichtbaar (afwijking van gui r319-371): elf
+   zakelijke E2E-cases van main gebruiken hem als teken dat de urenstaat geladen is.
+   Klein, naast de maandkiezer. */
+@media (min-width: 821px) {
+  html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .view-heading > #timesheet-status { align-self: center; }
+}

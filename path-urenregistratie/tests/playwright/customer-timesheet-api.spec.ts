@@ -757,8 +757,9 @@ test.describe('customer timesheet api', () => {
       await page.locator('#period-month-picker').click();
       await page.locator('[data-period-month="12"][data-month-control="#period-month-picker"]').click();
       await expect(page.locator('#period-picker')).toHaveValue(period);
-      await page.locator('button[data-view="timesheet"]').click();
-      await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+      // Sinds 14 sep staat het paneel op het eigen Klanturenstaat-scherm, niet op Mijn uren.
+      await page.evaluate(() => { window.location.hash = 'customer-timesheet'; });
+      await expect(page.locator('#view-customer-timesheet')).toHaveClass(/is-active/);
 
       const uploadPanel = page.locator('#customer-timesheet-upload-panel');
       await expect(uploadPanel).toContainText('PDF blijft ongewijzigd; JPG en PNG worden automatisch als PDF opgeslagen.');
@@ -1246,8 +1247,9 @@ test('[CTS-API-H-016] de knop wisselt zichtbaar tussen "Concept opslaan" en "Con
     await page.locator('#period-month-picker').click();
     await page.locator('[data-period-month="03"][data-month-control="#period-month-picker"]').click();
     await expect(page.locator('#period-picker')).toHaveValue(period);
-    await page.locator('button[data-view="timesheet"]').click();
-    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+    // Sinds 14 sep staat het paneel op het eigen Klanturenstaat-scherm, niet op Mijn uren.
+    await page.evaluate(() => { window.location.hash = 'customer-timesheet'; });
+    await expect(page.locator('#view-customer-timesheet')).toHaveClass(/is-active/);
     await expect(page.locator('#customer-timesheet-save-draft')).toHaveText('Concept opslaan');
   });
 

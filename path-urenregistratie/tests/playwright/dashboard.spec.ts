@@ -610,7 +610,9 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
     await page.locator('#submit-timesheet').click();
     await page.locator('#modal-confirm').click();
 
-    await page.locator('button[data-view="timesheet"]').click();
+    // Het klanturenstaatpaneel staat sinds 14 sep op zijn eigen scherm.
+    await page.evaluate(() => { window.location.hash = 'customer-timesheet'; });
+    await expect(page.locator('#view-customer-timesheet')).toHaveClass(/is-active/);
     await chooseMonth('07');
     await page.locator('#customer-timesheet-file').setInputFiles(demoPdf);
     await page.locator('#customer-timesheet-submit').click();
@@ -624,7 +626,8 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
     await expect(page.locator('#employee-open-task-total')).toHaveText('0 open acties');
 
     await openDemoEmployee(3);
-    await page.locator('button[data-view="timesheet"]').click();
+    await page.evaluate(() => { window.location.hash = 'customer-timesheet'; });
+    await expect(page.locator('#view-customer-timesheet')).toHaveClass(/is-active/);
     await chooseMonth('06');
     await page.locator('#customer-timesheet-file').setInputFiles(demoPdf);
     await page.locator('#customer-timesheet-submit').click();
