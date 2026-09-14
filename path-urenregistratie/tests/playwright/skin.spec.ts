@@ -2049,99 +2049,89 @@ test('[SKIN-H-032] Klassiek en Modern tonen dezelfde statusketen, uit dezelfde b
   // Zelfde reden als bij [SKIN-H-031]: deze case laat de maand ingediend
   // achter en dat verandert wat latere cases zien.
   const herstelUrenstaat = await bewaarUrenstaat(page);
-  try {
 
-  await test.step('Given een maand die nog concept is terwijl de factuurstatus al op verwerkt staat', async () => {
-    // Dezelfde toestand als in [SKIN-H-031]: die liet de oude keten een groene
-    // eindstap tonen boven een openstaande klanturenstaat.
-    await page.evaluate(() => {
-      const runtime = window as unknown as {
-        currentEmployee: () => { id: number };
-        currentPeriod: () => { key: string; weekRows: unknown[] };
-        recordFor: (id: number, key?: string) => {
-          entries: number[][];
-          confirmedEntries?: boolean[][];
-          timesheetStatus: string;
-          invoiceStatus: string;
-        };
-        persistState: () => void;
-        renderAll: () => void;
+  // Zet de toestand, rendert en leest beide ketens in één evaluate.
+  //
+  // Eerder las deze case eerst Klassiek, wisselde dan van vormgeving en las
+  // daarna Modern. Die wissel liet een serversync ertussen: in een volle run
+  // meldde Klassiek "5 weken open" en Modern "2 weken open" -- niet omdat de
+  // twee iets anders uitrekenden, maar omdat de maand tussen de twee metingen
+  // opnieuw uit de server was geladen. Beide weergaven worden altijd
+  // gerenderd, ongeacht de skin (renderEmployeeDashboard roept vulStatusKeten
+  // en renderNewEmployeeBento allebei aan); de skin bepaalt alleen wat
+  // zichtbaar is. Dus kunnen ze op hetzelfde moment worden vergeleken, en dat
+  // is precies wat "uit dezelfde bron" betekent.
+  const zetEnLees = async (toestand: 'concept' | 'ingediend') => page.evaluate(stand => {
+    const runtime = window as unknown as {
+      currentEmployee: () => { id: number };
+      currentPeriod: () => { key: string; weekRows: unknown[] };
+      recordFor: (id: number, key?: string) => {
+        entries: number[][];
+        confirmedEntries?: boolean[][];
+        timesheetStatus: string;
+        invoiceStatus: string;
       };
-      const period = runtime.currentPeriod();
-      const record = runtime.recordFor(runtime.currentEmployee().id, period.key);
+      persistState: () => void;
+      renderAll: () => void;
+    };
+    const period = runtime.currentPeriod();
+    const record = runtime.recordFor(runtime.currentEmployee().id, period.key);
+    if (stand === 'concept') {
+      // De toestand die de oude keten een groene eindstap liet tonen boven
+      // een openstaande klanturenstaat.
       record.timesheetStatus = 'draft';
       record.invoiceStatus = 'simulated';
       record.entries = record.entries.map(() => [0, 0, 0, 0, 0]);
       record.confirmedEntries = period.weekRows.map(() => [false, false, false, false, false]);
-      runtime.persistState();
-      runtime.renderAll();
-    });
-  });
-
-  const klassiekeKeten = async () => page.evaluate(() =>
-    Array.from(document.querySelectorAll('#employee-status-keten-list [data-keten-step]')).map(li => ({
-      key: (li as HTMLElement).dataset.ketenStep,
-      stand: li.classList.contains('is-af') ? 'af' : li.classList.contains('is-nu') ? 'nu' : 'wacht',
-      detail: String(li.querySelector('[data-keten-detail]')?.textContent || '').trim(),
-    })));
-
-  const modernKeten = async () => page.evaluate(() =>
-    Array.from(document.querySelectorAll('#new-bento-steps [data-step]')).map(li => ({
-      key: (li as HTMLElement).dataset.step,
-      stand: li.classList.contains('is-done') ? 'af' : li.classList.contains('is-current') ? 'nu' : 'wacht',
-      detail: String(li.querySelector('[data-step-detail]')?.textContent || '').trim(),
-    })));
-
-  let klassiek: Array<{ key?: string; stand: string; detail: string }> = [];
-
-  await test.step('Then toont Klassiek vijf stappen met "Uren ingevuld" als huidige en niets erna groen', async () => {
-    klassiek = await klassiekeKeten();
-    expect(klassiek.map(s => s.key)).toEqual(['fill', 'submit', 'review', 'customer', 'done']);
-    expect(klassiek.map(s => s.stand), 'geen stap mag groen staan zolang "Uren ingevuld" nog de huidige is')
-      .toEqual(['nu', 'wacht', 'wacht', 'wacht', 'wacht']);
-    await expect(page.locator('#employee-status-keten-nu')).toHaveText('Stap 1 van 5 · Uren ingevuld');
-  });
-
-  await test.step('And geeft Modern bij dezelfde toestand exact dezelfde keten', async () => {
-    await page.locator('#quick-skin-toggle').click();
-    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
-    const modern = await modernKeten();
-    expect(modern, 'Klassiek en Modern horen dezelfde keten te tonen; wijkt dit af, dan rekent een van de twee zijn eigen standen uit in plaats van statusKetenStappen te gebruiken')
-      .toEqual(klassiek);
-  });
-
-  await test.step('And schuiven beide mee zodra de maand is ingediend', async () => {
-    // De andere kant: zonder deze helft zou een keten die in beide
-    // vormgevingen altijd hetzelfde verkeerde antwoord geeft ook slagen.
-    await page.evaluate(() => {
-      const runtime = window as unknown as {
-        currentEmployee: () => { id: number };
-        currentPeriod: () => { key: string; weekRows: unknown[] };
-        recordFor: (id: number, key?: string) => {
-          entries: number[][];
-          confirmedEntries?: boolean[][];
-          timesheetStatus: string;
-        };
-        persistState: () => void;
-        renderAll: () => void;
-      };
-      const period = runtime.currentPeriod();
-      const record = runtime.recordFor(runtime.currentEmployee().id, period.key);
+    } else {
       record.entries = record.entries.map(() => [8, 8, 8, 8, 8]);
       record.confirmedEntries = period.weekRows.map(() => [true, true, true, true, true]);
       record.timesheetStatus = 'submitted';
-      runtime.persistState();
-      runtime.renderAll();
-    });
-    const modernNa = await modernKeten();
-    expect(modernNa.map(s => s.stand)).toEqual(['af', 'af', 'nu', 'wacht', 'wacht']);
-    await page.locator('#quick-skin-toggle').click();
-    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
-    const klassiekNa = await klassiekeKeten();
-    expect(klassiekNa, 'ook na een statuswissel horen beide vormgevingen gelijk te lopen').toEqual(modernNa);
-    await expect(page.locator('#employee-status-keten-nu')).toHaveText('Stap 3 van 5 · Uren goedgekeurd');
-  });
+    }
+    runtime.persistState();
+    runtime.renderAll();
+    const lees = (lijst: string, sleutel: string, af: string, nu: string, detail: string) =>
+      Array.from(document.querySelectorAll(lijst)).map(li => ({
+        key: (li as HTMLElement).dataset[sleutel],
+        stand: li.classList.contains(af) ? 'af' : li.classList.contains(nu) ? 'nu' : 'wacht',
+        detail: String(li.querySelector(detail)?.textContent || '').trim(),
+      }));
+    return {
+      klassiek: lees('#employee-status-keten-list [data-keten-step]', 'ketenStep', 'is-af', 'is-nu', '[data-keten-detail]'),
+      modern: lees('#new-bento-steps [data-step]', 'step', 'is-done', 'is-current', '[data-step-detail]'),
+      huidigeStap: String(document.querySelector('#employee-status-keten-nu')?.textContent || '').trim(),
+    };
+  }, toestand);
 
+  try {
+    await test.step('Given een maand die nog concept is terwijl de factuurstatus al op verwerkt staat', async () => {
+      const { klassiek, modern, huidigeStap } = await zetEnLees('concept');
+      expect(klassiek.map(stap => stap.key)).toEqual(['fill', 'submit', 'review', 'customer', 'done']);
+      expect(klassiek.map(stap => stap.stand), 'geen stap mag groen staan zolang "Uren ingevuld" nog de huidige is')
+        .toEqual(['nu', 'wacht', 'wacht', 'wacht', 'wacht']);
+      expect(huidigeStap).toBe('Stap 1 van 5 · Uren ingevuld');
+      expect(modern, 'Klassiek en Modern horen dezelfde keten te tonen; wijkt dit af, dan rekent een van de twee zijn eigen standen uit in plaats van statusKetenStappen te gebruiken')
+        .toEqual(klassiek);
+    });
+
+    await test.step('And lopen beide gelijk mee zodra de maand is ingediend', async () => {
+      // De andere kant: zonder deze helft zou een keten die in beide
+      // vormgevingen altijd hetzelfde verkeerde antwoord geeft ook slagen.
+      const { klassiek, modern, huidigeStap } = await zetEnLees('ingediend');
+      expect(modern.map(stap => stap.stand)).toEqual(['af', 'af', 'nu', 'wacht', 'wacht']);
+      expect(klassiek, 'ook na een statuswissel horen beide vormgevingen gelijk te lopen').toEqual(modern);
+      expect(huidigeStap).toBe('Stap 3 van 5 · Uren goedgekeurd');
+    });
+
+    await test.step('And is de Klassieke keten zichtbaar in Klassiek en de bento in Modern', async () => {
+      // De vergelijking hierboven leest de DOM, niet het beeld. Deze stap
+      // controleert dat elke skin ook echt zijn eigen weergave toont.
+      await expect(page.locator('#employee-status-keten')).toBeVisible();
+      await page.locator('#quick-skin-toggle').click();
+      await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+      await expect(page.locator('#new-bento-steps')).toBeVisible();
+      await expect(page.locator('#employee-status-keten')).toBeHidden();
+    });
   } finally {
     await herstelUrenstaat();
   }
@@ -2155,7 +2145,7 @@ test('[SKIN-H-032] Klassiek en Modern tonen dezelfde statusketen, uit dezelfde b
 // bijt pas boven ongeveer 1378px vensterbreedte. Alle vier de bestaande
 // projecten draaien smaller (1280, 768, 412, 390), dus geen enkele bestaande
 // case komt er ooit langs. Deze zet de viewport daarom expliciet breder.
-test('[SKIN-H-033] het medewerkerdashboard rekt op een breed scherm niet verder uit dan 1060px', async ({ page }) => {
+test('[SKIN-H-033] de medewerkerschermen rekken op een breed scherm niet verder uit dan 1060px en staan gecentreerd', async ({ page }) => {
   test.setTimeout(120_000);
   const loginPage = new LoginPage(page);
   await loginPage.open();
@@ -2169,6 +2159,31 @@ test('[SKIN-H-033] het medewerkerdashboard rekt op een breed scherm niet verder 
       .evaluate(el => Math.round(el.getBoundingClientRect().width));
     expect(breedte, 'zonder bovengrens loopt dit scherm door tot de volle vensterbreedte')
       .toBeLessThanOrEqual(1060);
+  });
+
+  await test.step('And staat de kolom gecentreerd, en geldt dat ook voor Mijn uren en Mijn maanden', async () => {
+    // Ontwerpronde 14 sep (tweede): kopbalk, paginakop en inhoud gecentreerd op
+    // --pagina. De eerste versie van deze grens lijnde links uit en gold alleen
+    // voor het dashboard; deze case toetste toen alleen de breedte, en zou dus
+    // groen zijn gebleven met een links uitgelijnde kolom. Daarom nu ook de
+    // verdeling van de ruimte links en rechts, op alle drie de schermen.
+    for (const scherm of ['employee-dashboard', 'timesheet', 'historie']) {
+      await page.evaluate(v => { window.location.hash = v; }, scherm);
+      await expect(page.locator(`#view-${scherm}`)).toHaveClass(/is-active/);
+      const maat = await page.locator(`#view-${scherm}`).evaluate(el => {
+        const view = el.getBoundingClientRect();
+        const ouder = el.parentElement!.getBoundingClientRect();
+        const cs = getComputedStyle(el.parentElement!);
+        const binnenLinks = ouder.left + parseFloat(cs.paddingLeft);
+        const binnenRechts = ouder.right - parseFloat(cs.paddingRight);
+        return { breedte: view.width, links: view.left - binnenLinks, rechts: binnenRechts - view.right };
+      });
+      expect(maat.breedte, `${scherm} hoort binnen 1060px te blijven`).toBeLessThanOrEqual(1060);
+      expect(Math.abs(maat.links - maat.rechts), `${scherm} hoort gecentreerd te staan (links ${Math.round(maat.links)}px, rechts ${Math.round(maat.rechts)}px)`)
+        .toBeLessThanOrEqual(2);
+    }
+    await page.evaluate(() => { window.location.hash = 'employee-dashboard'; });
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
   });
 
   await test.step('And blijft er op een gewoon desktopvenster niets afgeknepen', async () => {
@@ -2191,8 +2206,23 @@ test('[SKIN-H-033] het medewerkerdashboard rekt op een breed scherm niet verder 
 // aanraakscherm en bij toetsenbordbediening gebeurde er niets. Deze case toetst
 // daarom niet dat er "een regel bestaat" maar dat de knop bij indrukken echt
 // van maat verandert.
-test('[SKIN-H-034] een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgloed', async ({ page }) => {
+test('[SKIN-H-034] een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgloed', async ({ page, browserName }, testInfo) => {
   test.setTimeout(120_000);
+  // Niet op projecten met aanraakemulatie (mobile-chrome, mobile-safari). Daar
+  // zet page.mouse.down() geen betrouwbare :active-stand: op CI bleef de schaal
+  // op mobile-safari twee keer op 1, en in een volle lokale run op mobile-chrome
+  // ook. Eerst leek het WebKit-specifiek; dat bleek het niet te zijn. Het is de
+  // combinatie van muisgebeurtenissen met een aanraakapparaat, niet de opmaak --
+  // op desktop-chromium en tablet-chromium (geen aanraakemulatie) komt :active
+  // wel door en blijft deze case lopen.
+  //
+  // Wat dit wél zegt over de echte iPhone: iOS Safari zet :active alleen als er
+  // op het element of een voorouder een touchstart-luisteraar hangt. Zonder die
+  // luisteraar is de indrukgloed op een iPhone dus waarschijnlijk onzichtbaar.
+  // Dat is geen testprobleem maar een productvraag, en hij hoort bij het
+  // iOS-punt dat met main is afgestemd -- niet hier stil opgelost.
+  test.skip(Boolean(testInfo.project.use.hasTouch),
+    `aanraakemulatie (${browserName}) zet geen betrouwbare :active via page.mouse.down()`);
   const loginPage = new LoginPage(page);
   await loginPage.open();
   await loginPage.loginAsEmployee();
@@ -2236,5 +2266,168 @@ test('[SKIN-H-034] een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgl
     const ingedrukt = await stijlNu();
     expect(ingedrukt.schaduw, 'de hoofdactie hoort bij indrukken de mintgloed te tonen').toContain('58, 189, 157');
     await page.mouse.up();
+  });
+});
+
+// Beslissing van Gio (14 sep) voor de goedkeurkaart: Goedkeuren bovenaan, mint
+// met donkere tekst; Correctie vragen eronder met alleen een rand; 10px
+// ertussen; volle breedte; minimaal 44px hoog.
+//
+// Twee dingen worden getoetst, en ze zijn allebei nodig. De posities op het
+// scherm, gemeten op 360px -- de smalste breedte waar de kaart moet werken.
+// En de volgorde in de DOM, want die bepaalt de tabvolgorde: een versie die
+// de knoppen alleen via CSS `order` verplaatste, zou er goed uitzien en toch
+// een toetsenbordgebruiker eerst naar de onderste knop sturen.
+test('[SKIN-H-035] op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle breedte', async ({ page }) => {
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await page.setViewportSize({ width: 360, height: 740 });
+  await loginPage.loginAsAdmin();
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  await page.evaluate(() => { window.location.hash = 'approvals'; });
+  await expect(page.locator('#view-approvals')).toHaveClass(/is-active/);
+
+  const acties = page.locator('#view-approvals .approval-actions').first();
+  await expect(acties).toBeVisible();
+
+  await test.step('Then staan de knoppen onder elkaar in de afgesproken volgorde, met 10px ertussen', async () => {
+    const maten = await acties.evaluate(el => {
+      const box = (sel: string) => {
+        const knop = el.querySelector(sel);
+        if (!knop) return null;
+        const r = knop.getBoundingClientRect();
+        return { top: r.top, bottom: r.bottom, height: r.height, width: r.width };
+      };
+      const houder = el.getBoundingClientRect();
+      return {
+        houderBreedte: houder.width,
+        goedkeuren: box('[data-approve]'),
+        correctie: box('[data-request-correction]'),
+      };
+    });
+    expect(maten.goedkeuren, 'de kaart hoort een Goedkeuren-knop te hebben').toBeTruthy();
+    expect(maten.correctie, 'de kaart hoort een Correctie vragen-knop te hebben').toBeTruthy();
+    expect(maten.goedkeuren!.top, 'Goedkeuren hoort boven Correctie vragen te staan').toBeLessThan(maten.correctie!.top);
+    expect(Math.round(maten.correctie!.top - maten.goedkeuren!.bottom), 'tussen de twee knoppen hoort 10px te zitten').toBe(10);
+    expect(maten.goedkeuren!.height, 'Goedkeuren hoort minstens 44px hoog te zijn').toBeGreaterThanOrEqual(44);
+    expect(maten.correctie!.height, 'Correctie vragen hoort minstens 44px hoog te zijn').toBeGreaterThanOrEqual(44);
+    expect(Math.round(maten.goedkeuren!.width), 'Goedkeuren hoort de volle breedte te nemen').toBe(Math.round(maten.houderBreedte));
+    expect(Math.round(maten.correctie!.width), 'Correctie vragen hoort de volle breedte te nemen').toBe(Math.round(maten.houderBreedte));
+  });
+
+  await test.step('And staat Goedkeuren ook in de DOM eerst, zodat de tabvolgorde klopt', async () => {
+    const volgorde = await acties.evaluate(el => Array.from(el.querySelectorAll('button')).map(knop =>
+      knop.hasAttribute('data-approve') ? 'goedkeuren' : knop.hasAttribute('data-request-correction') ? 'correctie' : knop.hasAttribute('data-review') ? 'bekijken' : 'anders'));
+    expect(volgorde, 'de DOM-volgorde bepaalt de tabvolgorde en hoort gelijk te lopen met wat je ziet').toEqual(['goedkeuren', 'correctie', 'bekijken']);
+  });
+
+  const correctieStijl = async () => acties.locator('[data-request-correction]').evaluate(el => {
+    const cs = getComputedStyle(el);
+    return { achtergrond: cs.backgroundColor, rand: cs.borderTopWidth };
+  });
+
+  await test.step('And heeft Correctie vragen alleen een rand, geen vlak', async () => {
+    const stijl = await correctieStijl();
+    expect(stijl.achtergrond, 'Correctie vragen hoort geen gevuld vlak te hebben').toMatch(/rgba\(0, 0, 0, 0\)|transparent/);
+    expect(stijl.rand, 'Correctie vragen hoort een zichtbare rand te hebben').not.toBe('0px');
+  });
+
+  await test.step('And blijft dat zo in het donkere thema', async () => {
+    // Het donkere thema zet html[data-theme="dark"] .button-ghost op een gevuld
+    // vlak, met een hogere specificiteit dan een eenvoudige regel op deze knop.
+    // Zonder deze stap zou een versie die alleen in licht klopt groen blijven.
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+    const stijl = await correctieStijl();
+    expect(stijl.achtergrond, 'ook in donker hoort Correctie vragen geen gevuld vlak te hebben').toMatch(/rgba\(0, 0, 0, 0\)|transparent/);
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
+  });
+
+  await test.step('And houdt de desktopkaart zijn bestaande beeld: een rij, rechts uitgelijnd, Goedkeuren achteraan', async () => {
+    // Het besluit ging over de telefoon. Op desktop is niets gevraagd, dus daar
+    // hoort het bestaande beeld te blijven -- ook al is de DOM-volgorde nu
+    // omgedraaid voor de tabvolgorde op de telefoon.
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await expect(acties).toBeVisible();
+    const desktop = await acties.evaluate(el => {
+      const r = (sel: string) => el.querySelector(sel)!.getBoundingClientRect();
+      return { review: r('[data-review]'), correctie: r('[data-request-correction]'), goedkeuren: r('[data-approve]') };
+    });
+    expect(Math.round(desktop.goedkeuren.top), 'op desktop horen de knoppen op één rij te staan').toBe(Math.round(desktop.correctie.top));
+    expect(desktop.review.left, 'op desktop hoort Bekijken vooraan te staan').toBeLessThan(desktop.correctie.left);
+    expect(desktop.correctie.left, 'op desktop hoort Goedkeuren achteraan te staan').toBeLessThan(desktop.goedkeuren.left);
+  });
+});
+
+// Besluit van Gio (14 sep): elke dialoog blijft met open softwaretoetsenbord
+// volledig bruikbaar -- indienknop binnen bereik, goed scrollen, sluitactie
+// zichtbaar, niets achter de browserbalk.
+//
+// Een echt iOS-toetsenbord kan Playwright niet openen. Deze case geeft
+// volgZichtbaarGebiedVoorDialoog() daarom zelf wat een iPhone met open
+// toetsenbord meet: nog 300px zichtbaar. En hij toetst in dezelfde run de
+// andere kant -- zonder die aanpassing past de dialoog níét in die 300px. Anders
+// is "past" niet te onderscheiden van "de dialoog was toevallig al klein".
+test('[SKIN-H-036] een dialoog met open toetsenbord houdt de knoppen, de sluitactie en het typveld in beeld', async ({ page }) => {
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+
+  await test.step('Given een lange dialoog met onderaan een invoerveld', async () => {
+    await page.evaluate(() => {
+      const regels = Array.from({ length: 14 }, (_, i) => '<p>Regel ' + (i + 1) + ' van de toelichting die de dialoog lang maakt.</p>').join('');
+      (window as unknown as { showModal: (o: Record<string, unknown>) => void }).showModal({
+        label: 'Controle',
+        title: 'Dialoog met toetsenbord',
+        summary: regels + '<label>Opmerking<input id="toetsenbord-veld" type="text"></label>',
+        confirm: 'Versturen',
+        initialFocus: '#toetsenbord-veld',
+      });
+    });
+    await expect(page.locator('#modal')).toBeVisible();
+  });
+
+  const meet = async () => page.evaluate(() => {
+    const r = (sel: string) => {
+      const el = document.querySelector(sel);
+      return el ? el.getBoundingClientRect() : null;
+    };
+    const scroll = r('#modal-scroll')!;
+    const veld = r('#toetsenbord-veld')!;
+    return {
+      bevestigOnder: r('#modal-confirm')!.bottom,
+      sluitBoven: r('.modal-close')!.top,
+      veldZichtbaar: veld.top >= scroll.top && veld.bottom <= scroll.bottom,
+    };
+  });
+
+  await test.step('Then passen zonder aanpassing de knoppen niet in 300px -- de uitgangssituatie op iOS', async () => {
+    await page.evaluate(() => {
+      (window as unknown as { volgZichtbaarGebiedVoorDialoog: (g: unknown) => void }).volgZichtbaarGebiedVoorDialoog(null);
+    });
+    const zonder = await meet();
+    expect(zonder.bevestigOnder, 'zonder aanpassing hoort de knop voorbij de 300px te vallen, anders bewijst deze case niets').toBeGreaterThan(300);
+  });
+
+  await test.step('When het toetsenbord het zichtbare deel verkleint tot 300px', async () => {
+    await page.evaluate(() => {
+      (window as unknown as { volgZichtbaarGebiedVoorDialoog: (g: unknown) => void })
+        .volgZichtbaarGebiedVoorDialoog({ height: 300, offsetTop: 0 });
+    });
+  });
+
+  await test.step('Then blijven de indienknop, de sluitactie en het typveld binnen dat deel', async () => {
+    const met = await meet();
+    expect(met.bevestigOnder, 'de indienknop hoort boven het toetsenbord te blijven').toBeLessThanOrEqual(300);
+    expect(met.sluitBoven, 'de sluitactie hoort niet achter de browserbalk te vallen').toBeGreaterThanOrEqual(0);
+    expect(met.veldZichtbaar, 'het veld waarin getypt wordt hoort zichtbaar te zijn in de scrollende laag').toBe(true);
+  });
+
+  await test.step('And ruimt het sluiten van de dialoog de aanpassing op', async () => {
+    await page.locator('.modal-close').click();
+    await expect(page.locator('#modal')).toBeHidden();
+    await expect(page.locator('#modal')).not.toHaveAttribute('data-zichtbaar', '');
   });
 });

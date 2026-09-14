@@ -65,15 +65,24 @@ ronde herhaald te worden.
 
 ## Versie waartegen nu gebouwd wordt
 
-Opgehaald 2026-09-14T00:30Z, sha256 (eerste 16 tekens):
+Opgehaald 2026-09-14T03:25Z (tweede ronde van 14 september, vervangt de zip-ronde), sha256 (eerste 16 tekens):
 
 | Bestand | sha256 |
 | --- | --- |
-| `handoff/OPDRACHT.md` | `1cf3d01b08d89782` |
-| `handoff/medewerker-wild.html` | `5519739a77f57ae1` |
-| `handoff/medewerker-gui.html` | `5e91b22912c69fa6` |
+| `handoff/OPDRACHT.md` | `cd338bea64379011` |
+| `handoff/medewerker-wild.html` | `697a39618c20eece` |
+| `handoff/medewerker-gui.html` | `a0e07c6820e594be` |
 | `handoff/HANDOFF-MEDEWERKER-MOBIEL.md` | `b8f2fb27cb7e87c7` |
-| `handoff/DESIGN-BESLUITEN.md` | `7d5cfca1a691a823` |
+| `handoff/DESIGN-BESLUITEN.md` | `1fcd3ff9aae55427` |
+
+Tussendoor kwam een ronde als zip (`App 2026.zip`) in plaats van via links. Die bevatte ook
+`KLASSIEK-MEDEWERKER.md`, `AGENTS-AANVULLING.md` en drie extra referentie-HTML's, die hier zijn
+blijven staan. `OPDRACHT-CLAUDE-CODE.md` en `BRIEF.md` uit die zip zijn op aanwijzing van Gio
+verwijderd: verouderd, en in tegenspraak met de actuele opdracht.
+
+Ronde daarvoor (2026-09-14T00:30Z): `OPDRACHT.md 1cf3d01b08d89782`, `medewerker-wild.html 5519739a77f57ae1`,
+`medewerker-gui.html 5e91b22912c69fa6`, `HANDOFF-MEDEWERKER-MOBIEL.md b8f2fb27cb7e87c7`,
+`DESIGN-BESLUITEN.md 7d5cfca1a691a823`.
 
 Vorige ronde (2026-09-13T20:35Z): `OPDRACHT.md 58ea58c5ce4ec826`,
 `medewerker-wild.html c21b7ff3e1cc6b40`, `medewerker-gui.html 8c8f46c7e4099059`,

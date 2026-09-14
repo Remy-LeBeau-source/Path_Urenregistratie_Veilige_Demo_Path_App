@@ -7910,7 +7910,11 @@ function renderApprovals() {
         '<div class="approval-person"><span class="mini-avatar">' + initials(employee.name) + "</span><span><strong>" + escapeHtml(employee.name) + "</strong><small>" + escapeHtml(employee.client) + " · " + escapeHtml(employee.role) + "</small></span></div>" +
         '<div class="approval-data"><small>Declarabele uren</small><strong>' + hoursFormat.format(total) + " uur</strong></div>" +
         '<div class="approval-data"><small>Verwacht factuurbedrag</small><strong>' + currency.format(total * employee.rate) + "</strong></div>" +
-        '<div class="approval-actions"><button class="button button-ghost" data-review="' + employee.id + '" data-period-key="' + item.periodKey + '">Bekijken</button><button class="button button-ghost" data-request-correction="' + employee.id + '" data-period-key="' + item.periodKey + '">Correctie vragen</button><button class="button button-primary" data-approve="' + employee.id + '" data-period-key="' + item.periodKey + '">Goedkeuren</button></div>' +
+        // Volgorde in de DOM: Goedkeuren, Correctie vragen, Bekijken. Besluit van
+        // Gio (14 sep). Bewust in de markup en niet alleen via CSS `order` --
+        // `order` verplaatst het beeld maar niet de tabvolgorde, dan springt
+        // een toetsenbordgebruiker eerst naar de knop die onderaan staat.
+        '<div class="approval-actions"><button class="button button-primary" data-approve="' + employee.id + '" data-period-key="' + item.periodKey + '">Goedkeuren</button><button class="button button-ghost" data-request-correction="' + employee.id + '" data-period-key="' + item.periodKey + '">Correctie vragen</button><button class="button button-ghost" data-review="' + employee.id + '" data-period-key="' + item.periodKey + '">Bekijken</button></div>' +
         "</article>";
     }).join("");
     return '<section class="approval-period-group"><div class="approval-period-heading"><div><span class="section-label">Periode</span><h3>' + escapeHtml(period.label) + '</h3></div><span class="status-pill status-submitted">' + items.length + " open</span></div>" + cards + "</section>";
@@ -9264,9 +9268,33 @@ function updateTimesheetSubmitUi(record) {
   if (submit) {
     submit.hidden = !showSubmit;
     submit.disabled = !showSubmit;
-    submit.textContent = normalizedStatus === "draft"
-      ? "Uren " + currentPeriod().month + " indienen"
-      : "Uren " + currentPeriod().month + " opnieuw indienen";
+    // Zolang er nog lege werkdagen zijn zegt de knop hoeveel het er zijn, en
+    // staat hij gedempt. Ontwerpronde 14 sep: "grijs met Nog N dagen zolang er
+    // gaten zijn".
+    //
+    // Gedempt, niet uitgeschakeld -- en dat is een bewuste lezing van "grijs".
+    // Uitschakelen zou een workflowpoort toevoegen die er nu niet is: de
+    // indienbevestiging waarschuwt al over niet volledig ingevulde weken en
+    // laat je daarna bewust doorgaan, en #submit-timesheet wordt op 21 plekken
+    // in 15 spec-bestanden aangeklikt. Een knop die niet meer klikt, keert dat
+    // gedrag om. Dat staat als vraag in github.md.
+    // Bij een correctie blijft "opnieuw indienen" staan, ook met gaten. Het
+    // ontwerp beschrijft alleen de gewone indienknop; een correctie vervangen
+    // door "Nog N dagen" zou het onderscheid tussen een eerste indiening en een
+    // herindiening wissen, en dat onderscheid is bestaand gedrag dat
+    // [DASH-N-015] en [DASH-N-016] vastleggen. De knop wordt dan wel gedempt en
+    // het aantal staat in de tooltip.
+    const gaten = ontbrekendeWerkdagen(record, currentPeriod());
+    const opnieuw = normalizedStatus !== "draft";
+    submit.classList.toggle("is-gedempt", gaten.length > 0);
+    submit.textContent = gaten.length > 0 && !opnieuw
+      ? "Nog " + gaten.length + (gaten.length === 1 ? " dag" : " dagen")
+      : opnieuw
+        ? "Uren " + currentPeriod().month + " opnieuw indienen"
+        : "Uren " + currentPeriod().month + " indienen";
+    submit.title = gaten.length > 0
+      ? gaten.length + (gaten.length === 1 ? " werkdag staat" : " werkdagen staan") + " nog leeg. Je kunt de maand wel indienen; je krijgt eerst een bevestiging te zien."
+      : "";
   }
   const submitNote = document.querySelector("#submit-timesheet-note");
   if (submitNote) {
@@ -11210,6 +11238,57 @@ function showModal(options) {
   const initialFocus = settings.initialFocus ? dialog.querySelector(settings.initialFocus) : null;
   (initialFocus || document.querySelector("#modal-confirm")).focus({ preventScroll: true });
   if (modalScroll) modalScroll.scrollTop = 0;
+  volgZichtbaarGebiedVoorDialoog();
+}
+
+// De dialoog laten passen in wat er echt zichtbaar is als het
+// softwaretoetsenbord openstaat. Besluit van Gio (14 sep): elke dialoog blijft
+// met open toetsenbord volledig bruikbaar -- indienknop binnen bereik, goed
+// scrollen, sluitactie zichtbaar, niets achter de browserbalk.
+//
+// Waarom dit niet met CSS alleen kan. De dialoog begrenst zich op
+// `calc(100dvh - 40px)`, maar `dvh` volgt alleen de browserbalken en niet het
+// toetsenbord. Op iOS Safari krimpt bij een open toetsenbord het zichtbare deel
+// terwijl de dialoog even hoog blijft, en dan valt de knoppenbalk erachter. Een
+// teruggreep op `100vh` maakt het juist erger: dat is op mobiel Safari de
+// hoogte zónder browserbalken. En `interactive-widget=resizes-content` in de
+// viewport-meta helpt alleen Chrome/Android, en verandert app-breed hoe elke
+// pagina zich gedraagt bij een toetsenbord -- te grof voor dit probleem.
+//
+// `window.visualViewport` meet wél het deel dat overblijft. Die hoogte en de
+// verschuiving vanaf boven gaan als custom properties op de achtergrondlaag,
+// plus het attribuut data-zichtbaar. De CSS gebruikt ze alleen als dat attribuut
+// er is, dus een browser zonder visualViewport houdt exact het oude gedrag --
+// er is geen var()-teruggreep die bij een ongeldige waarde de hele max-height
+// zou laten vervallen.
+//
+// `gebied` is alleen overschrijfbaar voor de test, die geen echt toetsenbord
+// kan openen.
+function volgZichtbaarGebiedVoorDialoog(gebied = window.visualViewport) {
+  const achtergrond = document.querySelector("#modal");
+  if (!achtergrond) return;
+  if (achtergrond.hidden || !gebied) {
+    achtergrond.removeAttribute("data-zichtbaar");
+    achtergrond.style.removeProperty("--zichtbaar-hoogte");
+    achtergrond.style.removeProperty("--zichtbaar-boven");
+    return;
+  }
+  achtergrond.setAttribute("data-zichtbaar", "");
+  achtergrond.style.setProperty("--zichtbaar-hoogte", Math.round(gebied.height) + "px");
+  achtergrond.style.setProperty("--zichtbaar-boven", Math.round(gebied.offsetTop || 0) + "px");
+  // Het veld waarin getypt wordt, in beeld houden binnen de scrollende laag.
+  // "nearest" en niet "center": bij een veld dat al zichtbaar is springt er
+  // dan niets, en dat voorkomt een schokkende dialoog bij elke toetsaanslag die
+  // een resize veroorzaakt.
+  const actief = document.activeElement;
+  if (actief && achtergrond.contains(actief) && actief.matches("input, textarea, select, [contenteditable='true']")) {
+    actief.scrollIntoView({ block: "nearest" });
+  }
+}
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", () => volgZichtbaarGebiedVoorDialoog());
+  window.visualViewport.addEventListener("scroll", () => volgZichtbaarGebiedVoorDialoog());
 }
 
 function closeModal(runCloseAction = false) {
@@ -11217,6 +11296,7 @@ function closeModal(runCloseAction = false) {
   const modal = document.querySelector("#modal");
   if (modal.contains(document.activeElement)) document.activeElement.blur();
   modal.hidden = true;
+  volgZichtbaarGebiedVoorDialoog();
   document.querySelector(".modal").classList.remove("is-wide");
   document.querySelector("#modal-secondary").hidden = true;
   const confirmButton = document.querySelector("#modal-confirm");

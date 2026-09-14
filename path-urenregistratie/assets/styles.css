@@ -936,7 +936,26 @@ html:not([data-skin="new"]) .button-primary:active:not(:disabled) { transform: s
 .approval-person strong, .approval-person small, .approval-data strong, .approval-data small { display: block; }
 .approval-person strong, .approval-data strong { font-size: 12px; }
 .approval-person small, .approval-data small { margin-top: 4px; color: var(--muted); font-size: 10px; }
+/* Goedkeurkaart. Besluit van Gio (14 sep), voor de telefoon: Goedkeuren
+   bovenaan, mint met donkere tekst; Correctie vragen eronder met alleen een
+   rand; 10px ertussen; volle breedte; minimaal 44px. Dat staat in het
+   590px-blok verderop.
+
+   De volgorde Goedkeuren, Correctie vragen, Bekijken zit in de markup
+   (app.js), want CSS `order` verplaatst alleen het beeld en niet de
+   tabvolgorde. Op desktop is om dit besluit niets gevraagd, dus daar zet
+   `order` het bestaande beeld exact terug: Bekijken, Correctie vragen,
+   Goedkeuren, rechts uitgelijnd. Kanttekening die daarbij hoort: op desktop
+   loopt de tabvolgorde daardoor van rechts naar links door deze groep. Rechttrekken
+   betekent daar de zichtbare volgorde omdraaien, en dat is niet gevraagd.
+
+   Niet met flex-direction: row-reverse. Dat keert de hoofdas om, en dan pakt
+   justify-content: flex-end (onder 1100px) links in plaats van rechts.
+   Analyse deels van de main-sessie. */
 .approval-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.approval-actions [data-review] { order: 1; }
+.approval-actions [data-request-correction] { order: 2; }
+.approval-actions [data-approve] { order: 3; }
 .empty-state { border: 1px dashed #b9d9d1; border-radius: 20px; background: var(--vlak-zacht); padding: 70px 25px; text-align: center; }
 .empty-check { display: grid; width: 48px; height: 48px; place-items: center; margin: 0 auto 15px; border-radius: 50%; background: var(--mint); color: var(--navy); font-weight: 900; }
 .empty-state h3 { margin: 0; font-family: var(--letter-kop); }
@@ -1283,6 +1302,17 @@ html:not([data-skin="new"]) .button-primary:active:not(:disabled) { transform: s
    browserchrome. `dvh` volgt het zichtbare gebied. `vh` blijft als fallback. */
 .modal { position: relative; display: flex; flex-direction: column; width: min(470px, 100%); max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); overflow: hidden; border-radius: 22px; background: var(--vlak); box-shadow: 0 30px 80px rgba(0,0,0,.26); animation: modalIn .2s ease; }
 .modal.is-wide { width: min(780px, 100%); }
+/* Met open softwaretoetsenbord: passen in wat er echt zichtbaar is. De
+   waarden komen uit window.visualViewport via volgZichtbaarGebiedVoorDialoog()
+   in app.js; waarom `dvh` en `100vh` hier allebei tekortschieten staat daar.
+
+   Alleen onder [data-zichtbaar]. Dat attribuut zet de JavaScript pas als de
+   browser visualViewport kent, dus een browser zonder houdt de regels
+   hierboven. Een var() met teruggreep in de gewone regel had dat risico niet
+   weggenomen: een ongeldige waarde maakt de hele declaratie ongeldig op
+   rekentijd, en dan valt de max-height weg in plaats van terug te vallen. */
+.modal-backdrop[data-zichtbaar] { inset: auto 0; top: var(--zichtbaar-boven); height: var(--zichtbaar-hoogte); }
+.modal-backdrop[data-zichtbaar] .modal { max-height: calc(var(--zichtbaar-hoogte) - 40px); }
 @keyframes modalIn { from { opacity: 0; transform: scale(.97) translateY(8px); } to { opacity: 1; transform: none; } }
 /* Alleen deze binnenlaag scrollt; de dialoogrampartij (.modal) staat stil,
    zodat het kruisje er absoluut op vastgezet kan worden en nooit meewegscrolt.
@@ -1500,8 +1530,19 @@ html:not([data-skin="new"]) .button-primary:active:not(:disabled) { transform: s
   .timesheet-action-buttons .button { width: 100%; }
   .summary-card { display: block; }
   .approval-card { grid-template-columns: minmax(0, 1fr); }
-  .approval-actions { justify-content: stretch; }
-  .approval-actions .button { flex: 1; }
+  /* Het besluit van Gio. order: 0 zet de DOM-volgorde terug, dus hier klopt
+     de tabvolgorde wel met het beeld. flex: none en niet flex: 1 -- in een kolom
+     rekt flex: 1 de knoppen in de hoogte op. De basis-.button heeft
+     min-height: 42px, dus 44 moet expliciet.
+
+     De tweede selector heeft specificiteit (0,3,0) met opzet: het donkere thema
+     zet html[data-theme="dark"] .button-ghost op een gevuld vlak (0,2,1), en
+     dat wint van een eenvoudiger regel. Bekijken krijgt dezelfde randstijl als
+     Correctie vragen: met alleen Correctie transparant zou Bekijken, de
+     zijweg, zwaarder ogen dan de correctie. */
+  .approval-actions { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 10px; }
+  .approval-actions .button { order: 0; width: 100%; min-height: 44px; flex: none; }
+  .approval-card .approval-actions .button-ghost { background: transparent; border: 1px solid var(--line); box-shadow: none; }
   .invoice-toolbar { align-items: flex-start; flex-direction: column; }
   /* Hier stapelt de factuurbalk tot een kolom, en dan is de vaste
      `width: min(320px, 40vw)` van het zoekveld juist knellend: op een telefoon
@@ -1616,8 +1657,20 @@ html:not([data-skin="new"]) .button-primary:active:not(:disabled) { transform: s
    precies waar het probleem zit.
 
    Alleen Klassiek: de bento in Modern heeft een eigen driekolomsraster met een
-   eigen maatvoering, en die hoort hier niet onder te vallen. */
-html:not([data-skin="new"]) #view-employee-dashboard { max-width: 1060px; }
+   eigen maatvoering, en die hoort hier niet onder te vallen.
+
+   Gecentreerd, niet links uitgelijnd. Correctie van 14 sep: de eerste versie
+   hiervan lijnde links uit, maar de bron zet alle drie de lagen (kopbalk,
+   paginakop, inhoud) op `max-width:var(--pagina);margin:0 auto`. De tokennaam
+   is die uit de bron overgenomen.
+
+   De topbalk blijft ongemoeid: die is van de hele app en niet van de
+   medewerkerschermen, dus die centreren zou ook de beheerderskant verschuiven.
+   Dat is een aparte beslissing. */
+:root { --pagina: 1060px; }
+html:not([data-skin="new"]) #view-employee-dashboard,
+html:not([data-skin="new"]) #view-timesheet,
+html:not([data-skin="new"]) #view-historie { max-width: var(--pagina); margin-inline: auto; }
 .employee-hero { display: grid; grid-template-columns: minmax(0, 720px); gap: 34px; align-items: center; margin: 30px 0 18px; border-radius: 24px; background: linear-gradient(135deg, #0d1b38, #174b55); color: #fff; padding: 36px 40px; box-shadow: 0 18px 45px rgba(13,27,56,.14); }
 .employee-hero.is-complete { padding-block: 28px; }
 /* Shawn's punt (WhatsApp, screenshot met "MIJN OPEN ACTIES" rood omcirkeld):
@@ -2946,6 +2999,10 @@ html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d
     border-radius: 20px 20px 16px 16px;
   }
 
+  /* Zelfde toetsenbordregel als bovenin, met de marge van deze breedte: de
+     achtergrond heeft hier 10px padding in plaats van 20px. */
+  .modal-backdrop[data-zichtbaar] .modal { max-height: calc(var(--zichtbaar-hoogte) - 20px); }
+
   .modal-scroll {
     padding: 24px 18px 18px;
   }
@@ -4054,3 +4111,9 @@ body.toont-installatieaanbod .main-content {
     border-color: #3abd9d;
   }
 }
+
+/* Een indienknop met nog openstaande dagen. Gedempt, niet uitgeschakeld: de
+   bevestiging blijft de poort, de knop vertelt alleen hoeveel er nog open
+   staat. Ontwerpronde 14 sep, "grijs met Nog N dagen". */
+.button.is-gedempt { background: var(--surface-muted); color: var(--muted); box-shadow: none; }
+.button.is-gedempt:hover { background: var(--vlak-zacht); color: var(--navy-tekst); box-shadow: none; }

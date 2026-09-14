@@ -3,9 +3,64 @@ branch: main
 path: path-urenregistratie
 
 ## Last sync
-date: 2026-09-14T02:35:00Z
+date: 2026-09-14T04:00:00Z
+
+### Ronde 14 sep (tweede) — vervangt de zip-ronde van eerder vandaag
+Zeven punten in `OPDRACHT.md`. Stand per punt aan de repo-kant:
+
+1. **Lopende maand start open en leeg; een week kan niet ingediend zijn terwijl
+   de maand open staat.** Niets te bouwen: dat was een onmogelijke demostand in
+   het artefact. De app kent geen weekstatus -- `timesheetStatus` hangt aan het
+   maandrecord, dus alle weken van een maand delen die status al.
+2. **Elke lege werkdag telt als ontbrekend, ook in de toekomst; een bewuste 0
+   telt als ingevuld.** Gebouwd, zie hieronder.
+3. **GUI Mijn uren: "Maand indienen" grijs met "Nog N dagen" zolang er gaten
+   zijn.** Gebouwd als gedempte knop met dat label. Bewust níét uitgeschakeld:
+   de indienbevestiging waarschuwt al en laat je bewust doorgaan, en
+   `#submit-timesheet` wordt op 21 plekken in 15 spec-bestanden aangeklikt. Bij
+   een correctie blijft "opnieuw indienen" staan -- dat onderscheid leggen
+   [DASH-N-015] en [DASH-N-016] vast en het ontwerp noemt het niet.
+4. **GUI Maanden start dichtgeklapt.** Klopt al: het maandverloop in Mijn maanden
+   staat standaard dicht.
+5. **Kopbalk, paginakop en inhoud gecentreerd op `--pagina` (1060px).** Mijn
+   eerdere versie lijnde links uit; nu gecentreerd, met de tokennaam uit de bron,
+   op dashboard, Mijn uren en Mijn maanden. De topbalk is van de hele app en blijft
+   ongemoeid.
+6. **Web app Mijn uren: vijf gelijke weekchips, geen onderbalk, geen vullijn per
+   dagrij.** Nog niet gebouwd -- dat is Modern, en Klassiek had voorrang.
+7. **`OPDRACHT-CLAUDE-CODE.md` en `BRIEF.md` verwijderen.** Gedaan.
+
+### Twee besluiten van Gio die via main binnenkwamen (14 sep)
+
+**Goedkeurkaart, op telefoon.** Goedkeuren bovenaan, mint met donkere tekst;
+Correctie vragen eronder met alleen een rand; 10px ertussen; volle breedte;
+minimaal 44px. De volgorde zit in de markup en niet alleen in CSS `order`, want
+`order` verplaatst het beeld maar niet de tabvolgorde. Op desktop is niets
+gevraagd; daar zet `order` het bestaande beeld terug (Bekijken, Correctie vragen,
+Goedkeuren, rechts uitgelijnd). Twee keuzes die het besluit niet specificeerde:
+Bekijken staat onderaan met dezelfde randstijl als Correctie vragen, anders oogt de
+zijweg zwaarder dan de correctie; en in Modern blijft de hoofdknop amber, want
+mint afdwingen breekt daar het eigen palet. Open punt voor Gio: op desktop loopt
+de tabvolgorde nu van rechts naar links door deze groep. [SKIN-H-035] meet op
+360px, in licht én donker, toetst de DOM-volgorde en controleert dat desktop
+ongewijzigd is.
+
+**iOS-toetsenbord in dialogen.** Elke dialoog blijft met open toetsenbord
+volledig bruikbaar. `dvh` volgt het toetsenbord niet en `100vh` is op mobiel
+Safari juist te hoog, dus de dialoog past zich nu aan `window.visualViewport`
+aan -- alleen als de browser die kent, zodat oudere browsers hun huidige gedrag
+houden. Analyse deels van de main-sessie. [SKIN-H-036] geeft de functie een
+zichtbaar deel van 300px en toetst beide kanten.
+
+Bijvangst die bij dat iOS-punt hoort en nog openstaat: iOS Safari zet `:active`
+alleen als er een touchstart-luisteraar hangt. De indrukgloed (glanslaag 5) is op
+een echte iPhone daardoor waarschijnlijk onzichtbaar.
+
+## Sync history
 
 ### Ronde 14 sep — aangeleverd als zip, niet via links
+date: 2026-09-14T02:35:00Z
+
 Deze ronde kwam als `App 2026.zip` in plaats van via signed URLs. De zip bevatte
 meer dan de vier bestanden, waaronder drie documenten die hier nog niet lagen:
 `KLASSIEK-MEDEWERKER.md` (leidend voor de vormgeving), `AGENTS-AANVULLING.md` en
@@ -58,8 +113,6 @@ omkeren. Vraagt een besluit.
   gebruikt. Twee datumnotaties op één scherm is een eigen fout.
 - `[DASH-H-032]` legt het vast, inclusief de terugdraaiing: een toekomstige lege
   werkdag telt mee, een bewust op 0,0 gezette dag niet.
-
-## Sync history
 
 ### Ronde 13 sep (nacht) — vastgesteld uit de diff van de exports
 date: 2026-09-14T00:30:00Z

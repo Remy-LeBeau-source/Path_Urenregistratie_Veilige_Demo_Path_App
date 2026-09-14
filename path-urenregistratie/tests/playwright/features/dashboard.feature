@@ -178,7 +178,7 @@ Feature: Dashboard en open werkvoorraad
   @negative
   Scenario: [DASH-N-028] Mijn uren toont in het weekend de week waar vandaag in valt, niet de eerste week van de maand
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 5
+    # Aantoonbare Playwright-assertions in deze case: 6
     Given een medewerker inlogt op een zaterdag
     When de flow voor DASH-N-028 wordt uitgevoerd
     Then toont de weekkaart de week van vandaag (7-11 sep), niet de eerste week van de maand
@@ -205,9 +205,9 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-030] de indienbevestiging noemt werkdagen die bewust op 0,0 staan
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 11
-    Given twee werkdagen staan bewust op 0,0
-    When de medewerker de maand wil indienen
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given twee werkdagen staan bewust op 0,0, When de medewerker de maand wil indienen
+    When de flow voor DASH-H-030 wordt uitgevoerd
     Then noemt de bevestiging die twee dagen bij naam
     And blijft de melding weg zodra die dagen wel uren hebben
 
@@ -226,11 +226,12 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-032] "Hele maand" noemt de ontbrekende werkdagen bij naam, inclusief dagen die nog moeten komen
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 12
+    # Aantoonbare Playwright-assertions in deze case: 18
     Given de medewerker staat op Mijn uren in de maandweergave
     When de hele maand leeg is op één bewust op 0,0 gezette dag na
     Then staan de ontbrekende dagen er bij naam, niet als kaal aantal
     And telt de bewust op 0,0 gezette dag niet mee, ook al ligt hij aan het eind van de maand
+    And zegt de indienknop hoeveel dagen er nog open staan, gedempt maar niet op slot
     And brengt een chip je naar de week waar die dag in zit
     And verdwijnt de waarschuwing zodra alles is ingevuld
 

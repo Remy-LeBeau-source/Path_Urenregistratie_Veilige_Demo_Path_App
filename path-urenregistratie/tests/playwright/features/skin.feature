@@ -285,20 +285,21 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
   @happy
   Scenario: [SKIN-H-032] Klassiek en Modern tonen dezelfde statusketen, uit dezelfde bron
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 10
+    # Aantoonbare Playwright-assertions in deze case: 12
     Given een maand die nog concept is terwijl de factuurstatus al op verwerkt staat
-    And geeft Modern bij dezelfde toestand exact dezelfde keten
-    And schuiven beide mee zodra de maand is ingediend
+    And lopen beide gelijk mee zodra de maand is ingediend
+    And is de Klassieke keten zichtbaar in Klassiek en de bento in Modern
     When de flow voor SKIN-H-032 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat klassiek en Modern tonen dezelfde statusketen, uit dezelfde bron
 
   @happy
-  Scenario: [SKIN-H-033] het medewerkerdashboard rekt op een breed scherm niet verder uit dan 1060px
+  Scenario: [SKIN-H-033] de medewerkerschermen rekken op een breed scherm niet verder uit dan 1060px en staan gecentreerd
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 4
+    # Aantoonbare Playwright-assertions in deze case: 8
     Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
     When de flow voor SKIN-H-033 wordt uitgevoerd
     Then blijft het dashboard op een breed venster binnen 1060px
+    And staat de kolom gecentreerd, en geldt dat ook voor Mijn uren en Mijn maanden
     And blijft er op een gewoon desktopvenster niets afgeknepen
 
   @happy
@@ -308,3 +309,25 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
     When de hoofdactie ingedrukt wordt gehouden
     Then krimpt hij zichtbaar en licht de mintschaduw op
+
+  @happy
+  Scenario: [SKIN-H-035] op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle breedte
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 19
+    Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
+    When de flow voor SKIN-H-035 wordt uitgevoerd
+    Then staan de knoppen onder elkaar in de afgesproken volgorde, met 10px ertussen
+    And staat Goedkeuren ook in de DOM eerst, zodat de tabvolgorde klopt
+    And heeft Correctie vragen alleen een rand, geen vlak
+    And blijft dat zo in het donkere thema
+    And houdt de desktopkaart zijn bestaande beeld: een rij, rechts uitgelijnd, Goedkeuren achteraan
+
+  @happy
+  Scenario: [SKIN-H-036] een dialoog met open toetsenbord houdt de knoppen, de sluitactie en het typveld in beeld
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given een lange dialoog met onderaan een invoerveld
+    Then passen zonder aanpassing de knoppen niet in 300px -- de uitgangssituatie op iOS
+    When het toetsenbord het zichtbare deel verkleint tot 300px
+    Then blijven de indienknop, de sluitactie en het typveld binnen dat deel
+    And ruimt het sluiten van de dialoog de aanpassing op

@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 525 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 527 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 525 unieke case-ID's
+- Playwright executable cases: 527 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 526 unieke case-ID's
+- Totaal executable cases: 528 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 567
-- Niet-mobile projectuitvoeringen: 483
+- Uitvoeringen: 569
+- Niet-mobile projectuitvoeringen: 485
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 525 Playwright-functionele cases in totaal 567 resultaten op: 483 + (42 x 2) = 567.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 527 Playwright-functionele cases in totaal 569 resultaten op: 485 + (42 x 2) = 569.
 
 ## Documentatieketen
 
@@ -223,12 +223,12 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 525 Playwri
 - [DASH-H-024] startdatum verbergt procesmaand zonder uren of klanturenstaatactie te wissen — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 13
 - [DASH-H-023] medewerker kan met de browser-terug/-vooruit-knop door alle eigen schermen navigeren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-N-026] het medewerkerdashboard blijft nooit op "Werkvoorraad laden" hangen, ook niet als de eerste serversync faalt — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
-- [DASH-N-028] Mijn uren toont in het weekend de week waar vandaag in valt, niet de eerste week van de maand — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
+- [DASH-N-028] Mijn uren toont in het weekend de week waar vandaag in valt, niet de eerste week van de maand — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [DASH-N-029] de pijl springt naar de eerstvolgende week met een leeg urenvak, ook terug in de tijd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [DASH-H-026] het medewerkerdashboard houdt op telefoonbreedte de afgesproken prioriteitsvolgorde aan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
-- [DASH-H-030] de indienbevestiging noemt werkdagen die bewust op 0,0 staan — Techniek: Toestandsovergang · Assertions: 11
+- [DASH-H-030] de indienbevestiging noemt werkdagen die bewust op 0,0 staan — Techniek: Toestandsovergang · Assertions: 9
 - [DASH-H-031] het verloop van een maand klapt open in Mijn maanden en overleeft een hertekening — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 14
-- [DASH-H-032] "Hele maand" noemt de ontbrekende werkdagen bij naam, inclusief dagen die nog moeten komen — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 12
+- [DASH-H-032] "Hele maand" noemt de ontbrekende werkdagen bij naam, inclusief dagen die nog moeten komen — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
 - [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 29
 - [DASH-N-022] een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
@@ -622,7 +622,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 525 Playwri
 
 - Feature: `tests/playwright/features/skin.feature`
 - Source: `tests/playwright/skin.spec.ts`
-- Cases: 34
+- Cases: 36
 
 - [SKIN-H-001] de app start standaard in de klassieke vormgeving — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [SKIN-H-002] Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
@@ -655,9 +655,11 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 525 Playwri
 - [SKIN-H-029] nog niet opgeslagen uren overleven rotatie, themawissel, modal, designwissel en browser-back — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 15
 - [SKIN-H-030] een lang e-mailadres duwt de statuspil niet buiten beeld op 360px — Techniek: Toestandsovergang · Assertions: 6
 - [SKIN-H-031] de vijf stappen lopen in volgorde en geen stap staat groen terwijl een eerdere nog open is — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
-- [SKIN-H-032] Klassiek en Modern tonen dezelfde statusketen, uit dezelfde bron — Techniek: Toestandsovergang · Assertions: 10
-- [SKIN-H-033] het medewerkerdashboard rekt op een breed scherm niet verder uit dan 1060px — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
+- [SKIN-H-032] Klassiek en Modern tonen dezelfde statusketen, uit dezelfde bron — Techniek: Toestandsovergang · Assertions: 12
+- [SKIN-H-033] de medewerkerschermen rekken op een breed scherm niet verder uit dan 1060px en staan gecentreerd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [SKIN-H-034] een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgloed — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
+- [SKIN-H-035] op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle breedte — Techniek: Toestandsovergang · Assertions: 19
+- [SKIN-H-036] een dialoog met open toetsenbord houdt de knoppen, de sluitactie en het typveld in beeld — Techniek: Toestandsovergang · Assertions: 7
 
 ### Correctie- en goedkeuringsproces
 

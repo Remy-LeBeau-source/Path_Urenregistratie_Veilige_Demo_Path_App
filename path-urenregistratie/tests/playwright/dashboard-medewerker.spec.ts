@@ -1053,10 +1053,45 @@ test('[DASH-N-028] Mijn uren toont in het weekend de week waar vandaag in valt, 
   });
 
   await test.step('And telt Volgende week vanaf de juiste week verder, niet vanaf de eerste week van de maand', async () => {
-    // #hours-week-nav (Mijn uren) heeft dezelfde data-new-bento-week-knoppen;
-    // scopen naar het dashboardkaartje, anders matcht de klik op twee.
-    await page.locator('#new-employee-bento [data-new-bento-week="next"]').click();
-    await expect(page.locator('#new-bento-week-title')).toHaveText('Week 38');
+    // De pijl springt sinds v2.0.4 naar de eerstvolgende week met nog een leeg
+    // urenvak, niet blind naar de volgende index. Staat week 38 in de gedeelde
+    // demodata al vol, dan slaat hij hem over. Op CI gebeurde dat twee keer op
+    // rij (verwacht Week 38, gekregen Week 39), terwijl deze case los op een
+    // verse database groen was: de uitkomst hing af van wat een eerdere case in
+    // dezelfde shard had achtergelaten. Dezelfde val als [SKIN-H-017].
+    //
+    // Daarom zet de case de week na die van vandaag hier zelf leeg, en doet hij
+    // leegzetten, opslaan, hertekenen en klikken in één evaluate zodat er geen
+    // sync tussen kan komen. De eis is ongewijzigd: vanaf week 37 is de
+    // volgende week 38, niet week 37 van de eerste week van de maand af geteld.
+    const herstelUrenstaat = await bewaarUrenstaat(page);
+    try {
+      const volgendeWeek = await page.evaluate(() => {
+        const runtime = window as unknown as {
+          currentEmployee: () => { id: number };
+          currentPeriod: () => { key: string; weekRows: Array<{ number: number }> };
+          recordFor: (id: number, key?: string) => { entries: number[][]; confirmedEntries?: boolean[][] };
+          persistState: () => void;
+          renderAll: () => void;
+        };
+        const period = runtime.currentPeriod();
+        const record = runtime.recordFor(runtime.currentEmployee().id, period.key);
+        const huidig = period.weekRows.findIndex(week => week.number === 37);
+        const volgende = huidig + 1;
+        if (record.entries[volgende]) record.entries[volgende] = [0, 0, 0, 0, 0];
+        if (record.confirmedEntries?.[volgende]) record.confirmedEntries[volgende] = [false, false, false, false, false];
+        runtime.persistState();
+        runtime.renderAll();
+        // #hours-week-nav (Mijn uren) heeft dezelfde data-new-bento-week-knoppen;
+        // scopen naar het dashboardkaartje, anders matcht de klik op twee.
+        (document.querySelector('#new-employee-bento [data-new-bento-week="next"]') as HTMLElement | null)?.click();
+        return 'Week ' + period.weekRows[volgende].number;
+      });
+      expect(volgendeWeek, 'de week na die van vandaag hoort week 38 te zijn').toBe('Week 38');
+      await expect(page.locator('#new-bento-week-title')).toHaveText(volgendeWeek);
+    } finally {
+      await herstelUrenstaat();
+    }
   });
 });
 
@@ -1250,97 +1285,81 @@ test('[DASH-H-030] de indienbevestiging noemt werkdagen die bewust op 0,0 staan'
   });
   await loginPage.open();
   await loginPage.loginAsEmployee();
+  await page.evaluate(() => { window.location.hash = 'timesheet'; });
+  await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
 
-  await test.step('Given twee werkdagen staan bewust op 0,0', async () => {
-    await page.evaluate(() => { window.location.hash = 'timesheet'; });
-    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
-    // In één evaluate zetten en direct hertekenen. Een losse zet-stap gevolgd
-    // door een klik laat ruimte voor een achtergrond-sync die confirmedEntries
-    // alweer heeft overschreven -- dezelfde reden als bij [SKIN-H-028].
-    await page.evaluate(() => {
-      const runtime = window as unknown as {
-        currentEmployee: () => { id: number };
-        currentPeriod: () => { key: string; weekRows: unknown[] };
-        recordFor: (id: number, key?: string) => {
-          entries: number[][];
-          confirmedEntries?: boolean[][];
-          timesheetStatus: string;
-        };
-        renderHoursGrid: () => void;
-        persistState: () => void;
-      };
-      const period = runtime.currentPeriod();
-      const record = runtime.recordFor(runtime.currentEmployee().id, period.key);
-      record.timesheetStatus = 'draft';
-      if (!record.confirmedEntries) {
-        record.confirmedEntries = period.weekRows.map(() => [false, false, false, false, false]);
-      }
-      // Eerst de hele maand vullen, zodat er geen gewone gaten meer zijn en de
-      // melding die deze case toetst niet kan meeliften op de bestaande
-      // "nog niet volledig ingevuld"-waarschuwing.
-      record.entries.forEach((week, weekIndex) => {
-        week.forEach((_, dayIndex) => {
-          record.entries[weekIndex][dayIndex] = 8;
-          record.confirmedEntries![weekIndex][dayIndex] = false;
-        });
-      });
-      // Dan twee dagen bewust op nul.
+  // Opzetten en indienen in één evaluate. Deze case zette de uren eerst in een
+  // losse stap en klikte daarna pas op Hele maand en de indienknop. Op
+  // tabletbreedte haalde een serversync hem daartussen in: de bevestiging
+  // toonde augustus als correctie met 4,0 uur in plaats van de maand die de
+  // case had gevuld, en de melding over bewuste nullen ontbrak. Dezelfde race
+  // als bij [SKIN-H-017] en [SKIN-H-028].
+  //
+  // Klikken via de DOM in plaats van via Playwright heeft een tweede reden. Op
+  // 721-820px staat onderaan een vaste navigatiebalk, en Playwright scrolde de
+  // indienknop net onder die balk, waarna de klik werd onderschept. Voor een
+  // gebruiker speelt dat niet: .main-content heeft in die band 95px ruimte
+  // onderaan, dus de knop is altijd boven de balk te scrollen. Deze case gaat
+  // over de inhoud van de bevestiging, niet over de klikmechaniek.
+  const zetEnDienIn = async (bewusteNullen: boolean) => page.evaluate(nullen => {
+    const runtime = window as unknown as {
+      currentEmployee: () => { id: number };
+      currentPeriod: () => { key: string; weekRows: unknown[] };
+      recordFor: (id: number, key?: string) => { entries: number[][]; confirmedEntries?: boolean[][]; timesheetStatus: string };
+      renderHoursGrid: () => void;
+      persistState: () => void;
+    };
+    const period = runtime.currentPeriod();
+    const record = runtime.recordFor(runtime.currentEmployee().id, period.key);
+    record.timesheetStatus = 'draft';
+    record.confirmedEntries = period.weekRows.map(() => [false, false, false, false, false]);
+    // Eerst de hele maand vullen, zodat er geen gewone gaten zijn en de melding
+    // die deze case toetst niet kan meeliften op de bestaande waarschuwing.
+    record.entries = period.weekRows.map(() => [8, 8, 8, 8, 8]);
+    if (nullen) {
       record.entries[0][0] = 0;
-      record.confirmedEntries![0][0] = true;
+      record.confirmedEntries[0][0] = true;
       record.entries[0][1] = 0;
-      record.confirmedEntries![0][1] = true;
-      runtime.persistState();
-      runtime.renderHoursGrid();
+      record.confirmedEntries[0][1] = true;
+    }
+    runtime.persistState();
+    runtime.renderHoursGrid();
+    // Naar Hele maand: in één-week-scope is de indienknop bewust verborgen
+    // (TS-REV-UI-H-015).
+    (document.querySelector('[data-hours-week-scope="all"]') as HTMLElement | null)?.click();
+    (document.querySelector('#submit-timesheet') as HTMLElement | null)?.click();
+  }, bewusteNullen);
+
+  const herstelUrenstaat = await bewaarUrenstaat(page);
+  try {
+    await test.step('Given twee werkdagen staan bewust op 0,0, When de medewerker de maand wil indienen', async () => {
+      await zetEnDienIn(true);
+      await expect(page.locator('#modal')).toBeVisible();
     });
-  });
 
-  await test.step('When de medewerker de maand wil indienen', async () => {
-    // Naar "Hele maand": op telefoonbreedte is de indienknop in één-week-scope
-    // bewust verborgen (TS-REV-UI-H-015).
-    await page.locator('[data-hours-week-scope="all"]').click();
-    await expect(page.locator('#submit-timesheet')).toBeVisible({ timeout: 10_000 });
-    await page.locator('#submit-timesheet').click();
-    await expect(page.locator('#modal')).toBeVisible();
-  });
-
-  await test.step('Then noemt de bevestiging die twee dagen bij naam', async () => {
-    const melding = page.locator('#submit-deliberate-zero-note');
-    await expect(melding, 'de bevestiging hoort bewust op nul gezette werkdagen te noemen; anders dient een medewerker een week op nul in terwijl de modal "Nog controleren: Geen" meldt')
-      .toBeVisible();
-    await expect(melding).toContainText('2 werkdagen bewust op 0,0');
-    // Bij naam, niet als kaal aantal: de bron noemt maximaal drie dagen.
-    await expect(melding).toContainText('Ma ');
-    await expect(melding).toContainText('Di ');
-  });
-
-  await test.step('And blijft de melding weg zodra die dagen wel uren hebben', async () => {
-    // Zonder deze helft bewijst de case niet dat de melding aan de bewuste
-    // nullen hangt -- hij zou ook altijd kunnen verschijnen.
-    await page.locator('#modal-cancel').click();
-    await page.evaluate(() => {
-      const runtime = window as unknown as {
-        currentEmployee: () => { id: number };
-        currentPeriod: () => { key: string };
-        recordFor: (id: number, key?: string) => { entries: number[][]; confirmedEntries?: boolean[][] };
-        renderHoursGrid: () => void;
-        persistState: () => void;
-      };
-      const record = runtime.recordFor(runtime.currentEmployee().id, runtime.currentPeriod().key);
-      record.entries[0][0] = 8;
-      record.entries[0][1] = 8;
-      runtime.persistState();
-      runtime.renderHoursGrid();
+    await test.step('Then noemt de bevestiging die twee dagen bij naam', async () => {
+      const melding = page.locator('#submit-deliberate-zero-note');
+      await expect(melding, 'de bevestiging hoort bewust op nul gezette werkdagen te noemen; anders dient een medewerker een week op nul in terwijl de modal "Nog controleren: Geen" meldt')
+        .toBeVisible();
+      await expect(melding).toContainText('2 werkdagen bewust op 0,0');
+      // Bij naam, niet als kaal aantal: de bron noemt maximaal drie dagen.
+      await expect(melding).toContainText('Ma ');
+      await expect(melding).toContainText('Di ');
     });
-    // Opnieuw naar "Hele maand" en wachten tot de knop er is: het hertekenen na
-    // het annuleren zet de weekscope terug, en dan is de indienknop weer
-    // verborgen (TS-REV-UI-H-015).
-    await expect(page.locator('#modal')).toBeHidden();
-    await page.locator('[data-hours-week-scope="all"]').click();
-    await expect(page.locator('#submit-timesheet')).toBeVisible({ timeout: 10_000 });
-    await page.locator('#submit-timesheet').click();
-    await expect(page.locator('#modal')).toBeVisible();
-    await expect(page.locator('#submit-deliberate-zero-note')).toHaveCount(0);
-  });
+
+    await test.step('And blijft de melding weg zodra die dagen wel uren hebben', async () => {
+      // Zonder deze helft bewijst de case niet dat de melding aan de bewuste
+      // nullen hangt -- hij zou ook altijd kunnen verschijnen.
+      await page.locator('#modal-cancel').click();
+      await expect(page.locator('#modal')).toBeHidden();
+      await zetEnDienIn(false);
+      await expect(page.locator('#modal')).toBeVisible();
+      await expect(page.locator('#submit-deliberate-zero-note')).toHaveCount(0);
+    });
+  } finally {
+    if (await page.locator('#modal').isVisible()) await page.locator('#modal-cancel').click();
+    await herstelUrenstaat();
+  }
 });
 
 // Ontwerpronde 13 sep: een opengeklapte maand in Mijn maanden toont zijn eigen
@@ -1499,6 +1518,18 @@ test('[DASH-H-032] "Hele maand" noemt de ontbrekende werkdagen bij naam, inclusi
       .toBe(werkdagen - 1);
   });
 
+  await test.step('And zegt de indienknop hoeveel dagen er nog open staan, gedempt maar niet op slot', async () => {
+    // Ontwerpronde 14 sep (tweede): "grijs met Nog N dagen zolang er gaten
+    // zijn". Gedempt en niet uitgeschakeld -- de indienbevestiging blijft de
+    // poort. Deze stap toetst beide helften, want een uitgeschakelde knop met
+    // hetzelfde label zou er hetzelfde uitzien en toch een workflow blokkeren.
+    const knop = page.locator('#submit-timesheet');
+    await expect(knop).toBeVisible();
+    await expect(knop).toHaveText(/^Nog \d+ dagen$/);
+    await expect(knop).toHaveClass(/is-gedempt/);
+    await expect(knop, 'de knop hoort klikbaar te blijven; de bevestiging is de poort').toBeEnabled();
+  });
+
   await test.step('And brengt een chip je naar de week waar die dag in zit', async () => {
     await page.locator('#hours-missing-days-chips .hours-missing-day').first().click();
     await expect(page.locator('#hours-week-filter button.is-active')).not.toHaveText('Hele maand');
@@ -1526,6 +1557,9 @@ test('[DASH-H-032] "Hele maand" noemt de ontbrekende werkdagen bij naam, inclusi
     await expect(page.locator('#hours-missing-days')).toHaveClass(/is-compleet/);
     await expect(page.locator('#hours-missing-days-title')).toHaveText('Geen ontbrekende werkdagen.');
     await expect(page.locator('#hours-missing-days-chips .hours-missing-day')).toHaveCount(0);
+    // En de indienknop valt terug op zijn gewone label en is niet meer gedempt.
+    await expect(page.locator('#submit-timesheet')).toHaveText(/indienen$/);
+    await expect(page.locator('#submit-timesheet')).not.toHaveClass(/is-gedempt/);
   });
 
   } finally {
