@@ -1,5 +1,86 @@
 # Copilot handoff — lokale mailpreview en regressieherstel
 
+## Actuele overdracht — 14 september 2026, 15:50 (GitHub Copilot)
+
+### Aanvulling 15:55 — actieve reparatie
+- Diagnose berichtbreedte bevestigd: de gedeelde Klassiek-regel met
+  `max-width: var(--pagina)` bevatte Dashboard, Mijn uren en Maanden, maar
+  niet `#view-employee-announcements`. Daardoor was uitsluitend Berichten op
+  brede schermen vrijwel vensterbreed. Toegevoegd aan `assets/styles.css`;
+  gerichte Playwright-assertion volgt voordat de volledige regressie start.
+- Diagnose dark-menu bevestigd: de recente Klassiek-herontwerpregels zijn
+  expliciet beperkt tot `:not([data-theme="dark"])`; donker viel daardoor
+  terug op de oude verticale sidebar. Gebruiker heeft gevraagd om dezelfde
+  horizontale kopnavigatie ook in donker. Reparatie is nu in uitvoering.
+- Nog niet committen/pushen voordat handoff, gerichte assertions en lokale
+  volledige regressie zijn bijgewerkt en uitgevoerd.
+
+### Status
+- Branch `herontwerp` lokaal up-to-date met origin, HEAD `a32233a4`, `package.json`
+  versie `2.0.62`.
+- `npm ci` en `node scripts/smoke-test.mjs` lokaal groen: "Path v2.0.62 volledige
+  smoke test: geslaagd".
+- Lokale PHP-server (`start-path-app.ps1 -Mode desktop`) opnieuw gestart op
+  `http://localhost:8000/`; serverlogs tonen assets die met `?v=2.0.62` worden
+  opgehaald (bv. `GET /assets/app.js?v=2.0.62`), dus de server levert de nieuwe
+  build correct uit.
+- Volledige lokale Playwright-regressie (1050 tests, `--workers=2`) was gestart
+  ter validatie van de `TopbarMenu.openPaneel()`-fix (zie eerdere sessie); status
+  bij overdracht nog niet volledig bevestigd/afgerond in dit gesprek.
+
+### Bug gemeld door gebruiker (nog open)
+1. **Versiemismatch 2.0.61 vs 2.0.62**: gebruiker ziet in eigen browser
+   "VERSIE 2.0.61", terwijl de assistent-sessie op dezelfde lokale server
+   "2.0.62" ziet. Serverlogs bevestigen dat de server zelf alleen `v=2.0.62`
+   assets serveert — sterke aanwijzing voor **browsercache of een actieve
+   service worker** bij de gebruiker (PWA `sw.js` cachet mogelijk een oudere
+   `index.html`/asset-set), niet een serverprobleem. Nog niet reproduceerd of
+   opgelost; voorgestelde vervolgstappen:
+   - Hard refresh (Ctrl+F5) en DevTools → Application → Service Workers →
+     Unregister + Cache Storage legen.
+   - Zo niet opgelost: `sw.js`/cache-versioning nakijken op een ontbrekende
+     cache-bust bij versiewissel.
+2. **Donker thema — menu-indeling wijkt af** (medewerkerdashboard/topbar):
+   gebruiker meldt dat in dark mode het menu er anders/anders geplaatst
+   uitziet dan in licht thema. Nog niet gelokaliseerd in CSS; nader onderzoek
+   nodig in `assets/styles.css` / `assets/styles-new.css` (dark-mode
+   topbar/nav-regels).
+3. **"Berichten" (aankondigingen) pagina te breed**: op het scherm
+   `#employee-announcements` ("Mijn mededelingen" / berichtenarchief) is de
+   layout merkbaar breder dan de andere schermen (zie screenshot: content
+   loopt vrijwel edge-to-edge zonder de gebruikelijke gecentreerde
+   kaartbreedte die dashboard/topbar wel hebben). Vermoedelijk ontbreekt een
+   max-width/container-klasse op de announcements-pagina in
+   `assets/styles.css` / `assets/styles-new.css` of in de bijbehorende HTML-
+   template in `assets/app.js`. Nog niet gefixt.
+
+### Bewijs
+- Screenshots van gebruiker (dark mode, dashboard vs. berichtenpagina) tonen
+  het breedteverschil duidelijk; berichtenpagina heeft geen zichtbare
+  kaartrand/marge zoals de rest van de app.
+- `grep` op "Versie 2.0.61" toont alleen treffers in oude `test-results/*`
+  playwright-artifacts (verouderde testruns), niet in actuele broncode
+  (`index.html` bevat overal `Versie 2.0.62`). Dit bevestigt dat de broncode
+  zelf consistent 2.0.62 is.
+
+### Volgende stap / vraag aan Codex of vervolgsessie
+- Reproduceer de versiemismatch met een schone/incognito-browsersessie zonder
+  service worker om cache als oorzaak te bevestigen of uit te sluiten.
+- Onderzoek en fix de bredere layout van de `#employee-announcements`-pagina
+  (ontbrekende container/max-width).
+- Onderzoek dark-mode menu-indeling t.o.v. licht thema op medewerkerdashboard.
+- Vervolg en bevestig eindresultaat van de lokale volledige Playwright-
+  regressie (1050 tests) die deze sessie werd gestart.
+
+### Handoff-opdracht van gebruiker — 14 september 2026, 16:05
+
+- De gebruiker heeft gevraagd het werk hier te pauzeren vanwege lage
+  gebruiksdruk. Laat de huidige wijzigingen en observaties in deze
+  handoff achter als overdracht.
+- Kan Codex/Codex-agent dit verder oppakken en de resterende taken uitvoeren?
+  Richting: reproduceer versiemismatch (cache/sw), fix `#employee-announcements`
+  layout, onderzoek dark-mode topbar en rond de volledige Playwright-regressie af.
+
 ## Codex handoff — 14 september 2026, medewerker Klassiek licht
 
 - Scope: alleen medewerker; beheer, Modern en donker niet herontworpen.
