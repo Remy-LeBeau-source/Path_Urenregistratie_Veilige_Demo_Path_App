@@ -1341,8 +1341,27 @@ test('[SKIN-H-023] "Standaardweek/-maand vullen" vult alleen lege dagen met het 
       await expect(page.locator('#auth-reset-complete-form')).toBeVisible();
       await page.locator('#auth-reset-new-password').fill(nieuwWachtwoord);
       await page.locator('#auth-reset-confirm-password').fill(nieuwWachtwoord);
+      // Diagnose bij falen, geen extra eis (14 sep 2026).
+      //
+      // Deze case viel wisselvallig om met "De link is ongeldig of verlopen".
+      // Die tekst bewijst niets over het token: de client (app.js, de .catch
+      // na reset-password.php) geeft alleen `token-already-used` en
+      // `token-expired` een eigen melding, en vangt ALLES anders met deze ene
+      // tekst af -- `invalid-token`, maar ook een CSRF-weigering, een
+      // netwerkfout of een 5xx. Welke het was, stond nergens. Nu staat de echte
+      // status en foutcode van de server in de melding, zodat de volgende
+      // uitval zegt wát er misging in plaats van dat we ernaar raden.
+      const resetAntwoord = page.waitForResponse(
+        response => response.url().includes('/server/auth/reset-password.php') && response.request().method() === 'POST',
+        { timeout: 20_000 },
+      ).catch(() => null);
       await page.locator('#auth-reset-complete-submit').click();
-      await expect(page.locator('#auth-reset-complete-feedback')).toContainText('Je wachtwoord is ingesteld');
+      const antwoord = await resetAntwoord;
+      const serverDiagnose = antwoord
+        ? `${antwoord.status()} ${(await antwoord.text().catch(() => '')).slice(0, 200)}`
+        : 'geen antwoord van reset-password.php ontvangen (netwerkfout of time-out)';
+      await expect(page.locator('#auth-reset-complete-feedback'), `reset-password.php antwoordde: ${serverDiagnose}`)
+        .toContainText('Je wachtwoord is ingesteld');
       await page.locator('#auth-reset-goto-login').click();
     });
 

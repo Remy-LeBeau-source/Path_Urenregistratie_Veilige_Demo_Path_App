@@ -43,6 +43,14 @@ Feature: Dashboard en open werkvoorraad
     Then blijft de maand op augustus staan en verschijnt een duidelijke melding
 
   @negative
+  Scenario: [DASH-N-030] ook vóórdat de serverdata binnen is, opent een medewerker geen maand vóór zijn indiensttreding
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given een ingelogde medewerker vóórdat de serverdata binnen is
+    When de medewerker april 2026 kiest, een maand vóór zijn indiensttreding in mei
+    Then wordt met Playwright-assertions bevestigd dat ook vóórdat de serverdata binnen is, opent een medewerker geen maand vóór zijn indiensttreding
+
+  @negative
   Scenario: [DASH-N-024] een lokaal record van vóór indiensttreding verschijnt niet in Mijn maanden
     # Testtechniek: Toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 2

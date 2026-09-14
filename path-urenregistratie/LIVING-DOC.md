@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 528 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 529 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 528 unieke case-ID's
+- Playwright executable cases: 529 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 529 unieke case-ID's
+- Totaal executable cases: 530 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 570
-- Niet-mobile projectuitvoeringen: 486
+- Uitvoeringen: 571
+- Niet-mobile projectuitvoeringen: 487
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 528 Playwright-functionele cases in totaal 570 resultaten op: 486 + (42 x 2) = 570.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 529 Playwright-functionele cases in totaal 571 resultaten op: 487 + (42 x 2) = 571.
 
 ## Documentatieketen
 
@@ -201,12 +201,13 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 528 Playwri
 
 - Feature: `tests/playwright/features/dashboard.feature`
 - Source: `tests/playwright/dashboard*.spec.ts`
-- Cases: 46
+- Cases: 47
 
 - [DASH-H-002] employee dashboard opent zonder console errors — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
 - [DASH-H-025] "Mijn maanden" toont naast de urenstatus ook de klanturenstaat-status per maand — Techniek: Toestandsovergang · Assertions: 7
 - [DASH-H-021] de medewerker keert zowel via Dashboard als via Mijn uren terug naar de actuele maand na een blik op een oudere maand — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
 - [DASH-N-023] een medewerker kan niet naar een maand vóór de eigen indiensttreding bladeren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
+- [DASH-N-030] ook vóórdat de serverdata binnen is, opent een medewerker geen maand vóór zijn indiensttreding — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [DASH-N-024] een lokaal record van vóór indiensttreding verschijnt niet in Mijn maanden — Techniek: Toestandsovergang · Assertions: 2
 - [DASH-N-025] een gekozen klanturenstaat-bestand blijft niet hangen na een gewone maandwissel — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
 - [DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties toe en houdt de kalendermaand in beeld — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 10

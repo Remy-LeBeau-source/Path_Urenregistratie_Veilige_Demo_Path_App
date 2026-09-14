@@ -11,13 +11,40 @@ import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
 import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErrors';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator } from '@playwright/test';
 import { join } from 'node:path';
 import { openPaneel, openProfielmenu } from './pages/TopbarMenu';
 import { readFileSync } from 'node:fs';
 import { staleServerStateWith132OpenActions, verwachtAlleenSchermActief } from './fixtures/dashboardGedeeld';
 import { suppressInstallBanner } from './fixtures/suppressInstallBanner';
 import { useFixedDemoClock } from './fixtures/fixedDemoClock';
+
+// Scrolt het element eerst in beeld en klikt daarna pas.
+//
+// Waarom dit bestaat, en waarom het géén verhoogde time-out is (14 sep 2026).
+// `[DASH-H-017]` hield de uitrol drie keer tegen met een klik die na 15 s
+// afliep, telkens op het beheertakenpaneel en telkens alleen op
+// `tablet-chromium` (768x1024). De verleiding was om die 15 s te verhogen --
+// dat was vandaag al twee keer het antwoord geweest. De vormgevingslane stelde
+// terecht de betere vraag: waarom wordt dat paneel op díé breedte zo traag
+// klikbaar?
+//
+// Gemeten, en het is geen traagheid. Op 768x1024 staat `#admin-task-panel` op
+// y=1046 bij een scherm van 1024 hoog, dus volledig onder de vouw. De knop
+// `[data-admin-task-filter="waiting"]` staat na het openen van het paneel op
+// **y=1408** en springt na het uitklappen van een maandblok naar **y=287** --
+// ruim 1100 pixels. Elke klik daar hangt dus af van een automatische scroll die
+// op tijd tot rust komt; Playwright eist twee opeenvolgende frames op dezelfde
+// plek voordat hij klikt. Op desktop speelt dit niet, want daar past het paneel
+// gewoon in beeld.
+//
+// Deze helper haalt die afhankelijkheid weg: eerst bewust in beeld scrollen, dan
+// klikken. Geen enkele assertie verandert, en een knop die echt nooit
+// verschijnt laat de klik nog steeds aflopen.
+async function klikNaScroll(element: Locator): Promise<void> {
+  await element.scrollIntoViewIfNeeded();
+  await element.click();
+}
 
 test.beforeEach(async ({ page }) => {
   await useFixedDemoClock(page);
@@ -770,14 +797,14 @@ test('[DASH-H-012] GUI-smoke scheidt werkacties van medewerkers- en beheerdersac
     await expect(page.locator('#admin-task-list [data-admin-task-row]')).toHaveCount(7);
     await expect(page.locator('#admin-task-list [data-admin-task-row]:visible')).toHaveCount(0);
     await expect(page.locator('[data-admin-task-month-toggle][aria-expanded="true"]')).toHaveCount(0);
-    await page.locator('[data-admin-task-month-toggle]').first().click();
+    await klikNaScroll(page.locator('[data-admin-task-month-toggle]').first());
     await expect(page.locator('#admin-task-list [data-admin-task-row]:visible').first()).toHaveClass(/is-actionable/);
     await page.locator('#hero-employee-filter').click();
     await expect(page.locator('[data-admin-task-filter="waiting"]')).toHaveClass(/is-active/);
     await expect(page.locator('#admin-task-list [data-admin-task-row]')).toHaveCount(5);
     await expect(page.locator('#admin-task-list [data-admin-task-row]:visible')).toHaveCount(0);
     await expect(page.locator('[data-admin-task-month-toggle][aria-expanded="true"]')).toHaveCount(0);
-    await page.locator('[data-admin-task-month-toggle]').first().click();
+    await klikNaScroll(page.locator('[data-admin-task-month-toggle]').first());
     await expect(page.locator('#admin-task-list [data-admin-task-row]:visible').first()).toHaveClass(/is-waiting/);
   });
 
@@ -989,22 +1016,22 @@ test('[DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij 
     await expect(page.locator('#admin-task-list .admin-task-row.is-waiting')).toHaveCount(0);
     await expect(page.locator('#admin-task-list [data-admin-task-row]:visible')).toHaveCount(0);
     await expect(page.locator('[data-admin-task-month-toggle][aria-expanded="true"]')).toHaveCount(0);
-    await page.locator('[data-admin-task-month-toggle]').first().click();
+    await klikNaScroll(page.locator('[data-admin-task-month-toggle]').first());
     await expect(page.locator('#admin-task-list [data-admin-task-row]:visible').first()).toHaveClass(/is-actionable/);
 
-    await page.locator('[data-admin-task-filter="waiting"]').click();
+    await klikNaScroll(page.locator('[data-admin-task-filter="waiting"]'));
     await expect(page.locator('#admin-task-list [data-admin-task-row]')).toHaveCount(baseline.waiting);
     await expect(page.locator('#admin-task-list .admin-task-row.is-actionable')).toHaveCount(0);
     await expect(page.locator('#admin-task-list [data-admin-task-row]:visible')).toHaveCount(0);
     await expect(page.locator('[data-admin-task-month-toggle][aria-expanded="true"]')).toHaveCount(0);
-    await page.locator('[data-admin-task-month-toggle]').first().click();
+    await klikNaScroll(page.locator('[data-admin-task-month-toggle]').first());
     await expect(page.locator('#admin-task-list [data-admin-task-row]:visible').first()).toHaveClass(/is-waiting/);
   });
 
   await test.step('And opnieuw openen zet alle maandblokken terug naar ingeklapt', async () => {
-    await page.locator('[data-admin-task-filter="all"]').click();
+    await klikNaScroll(page.locator('[data-admin-task-filter="all"]'));
     const julyToggle = page.locator('[data-admin-task-month-toggle="2026-07"]');
-    await julyToggle.click();
+    await klikNaScroll(julyToggle);
     await expect(julyToggle).toHaveAttribute('aria-expanded', 'true');
 
     await page.locator('#admin-task-panel-toggle').click();
@@ -1095,7 +1122,7 @@ test('[DASH-H-020] de actieteller benoemt dat de rij over alle maanden loopt', a
   });
 
   await test.step('When Backoffice een actie vanuit de maandlijst opent', async () => {
-    await page.locator('[data-admin-task-month-toggle]').first().click();
+    await klikNaScroll(page.locator('[data-admin-task-month-toggle]').first());
     const actie = page.locator('#admin-task-list .admin-task-row.is-actionable .admin-task-action button').first();
     await expect(actie).toBeVisible();
     await actie.click();

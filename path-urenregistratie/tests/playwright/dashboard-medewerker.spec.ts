@@ -129,6 +129,62 @@ test('[DASH-N-023] een medewerker kan niet naar een maand vóór de eigen indien
   });
 });
 
+test('[DASH-N-030] ook vóórdat de serverdata binnen is, opent een medewerker geen maand vóór zijn indiensttreding', async ({ page }) => {
+  // Waarom deze case bestaat (14 sep 2026).
+  // [DASH-N-023] hierboven viel wisselvallig om met "April 2026" waar augustus
+  // verwacht werd. Oorzaak: setPeriod() weigert een maand vóór
+  // currentEmployee().startDate, maar vóór de bootstrap-hydratatie gebruikt de
+  // app de ingebouwde catalogus. Die stond voor Marc, Stasjo en Brian op
+  // 2026-01-01, terwijl de server 2026-05-01 zegt (database/seed-demo-data.sql).
+  // In dat venster liet de beveiliging april door. Was de server snel, dan
+  // slaagde DASH-N-023; was de run trager, dan niet.
+  //
+  // DASH-N-023 hoopt op dat venster; deze case dwingt het af: de bootstrap wordt
+  // tegengehouden, dus de app zit aantoonbaar vóór de hydratatie wanneer de
+  // maand gekozen wordt. Staat lezen en handelen gebeurt in één evaluate, zodat
+  // er geen sync tussen twee losse stappen door kan glippen.
+  const loginPage = new LoginPage(page);
+  let laatBootstrapDoor: () => void = () => {};
+  const bootstrapPoort = new Promise<void>(resolve => { laatBootstrapDoor = resolve; });
+  let bootstrapTegengehouden = false;
+
+  await page.route('**/server/api/bootstrap.php*', async route => {
+    bootstrapTegengehouden = true;
+    await bootstrapPoort;
+    await route.continue().catch(() => {});
+  });
+
+  try {
+    await test.step('Given een ingelogde medewerker vóórdat de serverdata binnen is', async () => {
+      await loginPage.open();
+      await loginPage.loginAsEmployee();
+      await expect.poll(() => bootstrapTegengehouden, { timeout: 20_000 }).toBe(true);
+    });
+
+    await test.step('When de medewerker april 2026 kiest, een maand vóór zijn indiensttreding in mei', async () => {
+      const uitkomst = await page.evaluate(() => {
+        const w = window as typeof window & {
+          setPeriod: (key: string) => boolean;
+          currentEmployee: () => { name?: string; startDate?: string; dbEmployeeId?: number };
+        };
+        const medewerker = w.currentEmployee();
+        // Zelfcontrole: zonder dbEmployeeId is dit nog de catalogusrij, dus
+        // zitten we echt vóór de hydratatie. Anders meet deze case niets.
+        const vóórHydratatie = medewerker.dbEmployeeId === undefined;
+        const geaccepteerd = w.setPeriod('2026-04');
+        const label = String(document.querySelector('#period-label')?.textContent || '').trim();
+        return { vóórHydratatie, naam: medewerker.name, startDate: medewerker.startDate, geaccepteerd, label };
+      });
+
+      expect(uitkomst.vóórHydratatie, 'de bootstrap hoort tegengehouden te zijn; anders meet deze case het racevenster niet').toBe(true);
+      expect(uitkomst.geaccepteerd, `april hoort geweigerd te worden, ook vóór hydratatie (${uitkomst.naam}, catalogus-startdatum ${uitkomst.startDate})`).toBe(false);
+      expect(uitkomst.label, 'de maand hoort niet naar april te verspringen').not.toBe('April 2026');
+    });
+  } finally {
+    laatBootstrapDoor();
+  }
+});
+
 test('[DASH-N-024] een lokaal record van vóór indiensttreding verschijnt niet in Mijn maanden', async ({ page }) => {
   const loginPage = new LoginPage(page);
 

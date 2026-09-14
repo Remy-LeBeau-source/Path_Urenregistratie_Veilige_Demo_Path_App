@@ -2780,9 +2780,22 @@ ons dan handmatig weer aanzetten. Concrete regels:
 op de achtergrond en draaide er gerichte Playwright-suites naast. Gevolg: twee cases in
 `customer-timesheet-api.spec.ts` vielen om met een fout die niets met de wijziging te maken had
 (een toast die niet verscheen), en ik was even op weg dat als bevinding op te schrijven. Los
-draaiden ze meteen groen. De suites delen de database en poort 8010; een tweede run erlangs
-vervuilt de uitslag. Regel: één testrun tegelijk, en bij een onverwachte uitvaller eerst nagaan of
-er nog iets anders liep -- vóór je een defect noteert.
+draaiden ze meteen groen. Regel: één testrun tegelijk, en bij een onverwachte uitvaller eerst
+nagaan of er nog iets anders liep -- vóór je een defect noteert.
+**Correctie op de oorzaak (14 sep, nagemeten).** Hier stond eerst dat de suites de database en
+poort 8010 delen. Dat klopt niet voor onze opzet en het is de moeite waard om te weten waaróm niet:
+de databasenaam komt uit `PATH_APP_DB_NAME`/`PLAYWRIGHT_DB_NAME`/`DB_NAME` en valt zonder die
+variabelen terug op `path_urenregistratie_test`. Main draait op
+`path_urenregistratie_main_test`, de vormgevingslane op de standaardnaam -- **twee verschillende
+databases, dus we hebben nooit in elkaars data gezeten.** Ook de poorten verschillen (8010 via de
+runner, 8000 handmatig). **De botsing was dus puur CPU.** De regel blijft identiek, alleen de reden
+verandert: twee zware suites naast elkaar op één machine maken elkaars timing onbetrouwbaar, en
+juist deze suites hangen van timing aan elkaar.
+**Wat wél echte datavervuiling geeft:** `npx playwright test` rechtstreeks draaien. De runner
+`scripts/run-playwright-e2e.mjs` roept eerst `bootstrap-playwright-db.mjs` aan, en die doet
+`DROP DATABASE` + `CREATE DATABASE` + alle migraties, dus elke run start vers. Sla je de runner over,
+dan stapelt vervuiling zich op over runs heen -- dat verklaarde bij de andere lane een case die
+lokaal omviel op een dag die op 0 stond terwijl CI groen was.
 
 **OPGELOST: `[DASH-N-007]` was tijdgevoelig, niet stuk (13 sep 2026, main).** v2.0.43.
 Het begon als "main is rood na de merge" en eindigde ergens anders. De route erheen is het bewaren
@@ -2896,6 +2909,107 @@ de deploy-job zelf te kijken in plaats van naar de testpoort ervóór -- en daar
   viel hij hierop om. We repareerden dus echte problemen, maar niet het probleem. Een rode pijplijn
   vertelt je wáár hij stopte, niet waaróm hij al dagen niet aankwam -- kijk bij een langdurige
   blokkade eerst naar de laatste stap die ooit geslaagd is, niet naar de eerste die nu faalt.
+
+**`[DASH-H-017]`: de derde uitval op een tijdsbegroting, en deze keer niet met een hogere waarde
+opgelost (14 sep).** De case hield de uitrol drie keer tegen met een klik die na 15 s afliep, telkens
+in het beheertakenpaneel en telkens alleen op `tablet-chromium` (768x1024). Twee keer eerder was het
+antwoord die dag "venster ruimer" geweest (5 s -> 20 s op een assertie, 45 s -> 150 s op een case).
+De vormgevingslane stelde de betere vraag: *waarom* wordt dat paneel op díé breedte zo traag
+klikbaar?
+**Gemeten met een probe die de echte klikvolgorde volgt, en het is geen traagheid:**
+- `#admin-task-panel` staat op **y=1046** bij een scherm van 1024 hoog -- volledig onder de vouw.
+- `[data-admin-task-filter="waiting"]` staat na het openen van het paneel op **y=1408**.
+- Na het uitklappen van een maandblok springt diezelfde knop naar **y=287**.
+Ruim 1100 pixels verspringing tussen twee stappen. Elke klik hangt daar dus af van een automatische
+scroll die op tijd tot rust komt, en Playwright eist twee opeenvolgende frames op dezelfde plek
+voordat hij klikt. Op desktop past het paneel gewoon in beeld -- precies waarom dit uitsluitend op
+tabletbreedte omvalt.
+**Fix:** een `klikNaScroll()`-helper die het element eerst bewust in beeld scrollt en dan pas klikt;
+acht plekken in `dashboard.spec.ts` gebruiken hem. Geen enkele assertie verandert, en een knop die
+echt nooit verschijnt laat de klik nog steeds aflopen. **Verificatie staat nog open** -- zie de
+notitie hieronder over botsende testruns; de eerste meting (klik in 337 ms, positie 2 s stabiel) was
+bemoedigend maar niet schoon.
+**Les:** twee keer op een dag een venster verruimen is een signaal, geen oplossing. De derde keer
+hoort de vraag te zijn wat er beweegt, niet hoe lang je erop wacht.
+
+**DE ONDERLIGGENDE OORZAAK VAN ALLE "FLAKINESS" VAN VANNACHT: de machine heeft te weinig geheugen
+(gemeten 14 sep 03:0x).** Dit verklaart meer dan alle losse testfixes samen, en het is met cijfers
+te onderbouwen:
+- **1,37 GB vrij van 15,8 GB**, met een toegewezen geheugen (commit charge) van **33,3 GB** -- meer
+  dan het dubbele van het fysieke geheugen. Windows wisselt dus continu naar schijf.
+- Grootverbruikers: VS Code (33 processen, 3,87 GB), claude (13, 2,05 GB), Chrome (29, 1,50 GB),
+  msedgewebview2 (19, 1,17 GB). Vier fysieke kernen, acht logische.
+- Momentmeting van de CPU: ~14,3 CPU-seconden in 8 seconden wandklok, dus bijna twee kernen
+  permanent bezet door achtergrondbrowsers die niets met onze tests te maken hebben.
+**Het bewijs zit in de correlatie.** Dezelfde `tablet-chromium`-suite, drie keer gedraaid:
+12,6 min -> **0** uitvallers; 19,8 min -> **2**; 32,6 min -> **9**. Hoe trager de machine, hoe meer
+cases omvallen, en telkens andere. Dat is de handtekening van een omgeving die te krap zit, niet van
+negen defecten.
+**Wat dit betekent voor de conclusies van vannacht.** De fixes die we deden zijn op zichzelf goed en
+onderbouwd (`klikNaScroll` na een gemeten verspringing van 1100px, de wachtvensters op assertions,
+de `wachtTot`-helper in de smoke). Maar een deel van wat wij als "tijdgevoelige case" behandelden,
+was in werkelijkheid een machine die aan het wisselbestand hing. **Voor een betrouwbare meting hoort
+de machine eerst opgeruimd te worden** -- browsers en editorvensters sluiten, of herstarten -- en pas
+daarna een suite draaien. Zonder dat blijft elke uitslag een gok, en dat heeft ons vannacht vier
+keer een verkeerde conclusie opgeleverd.
+
+**Hermeting na de herstart (14 sep 03:48, machine opgeruimd door Gio).** Geheugen van 1,4 GB vrij /
+33 GB toegewezen naar 3,3 GB vrij / 16 GB toegewezen. Dezelfde `tablet-chromium`-suite:
+**79 groen, 3 rood, 1 overgeslagen, 16,9 min** -- tegen 9 rood in 32,6 min ervóór. Daarmee is de
+geheugendiagnose bevestigd: zes van de negen uitvallers (DASH-N-007, DASH-N-029, SKIN-H-009, -016,
+-018, -022, -028) zijn groen en waren dus ruis. **Drie blijven, elk met een specifieke, niet-willekeurige
+melding -- dus vermoedelijk echt, in onderzoek (sessie -ad):**
+- `[DASH-N-023]` -- `#period-label` verwacht "Augustus 2026", kreeg "April 2026" (medewerker vóór
+  startdatum). **Oorzaak gevonden (sessie -ad, door main nageverifieerd): een echte race in de app.**
+  `setPeriod()` weigert voor een medewerker een maand vóór `currentEmployee().startDate`. Maar de
+  ingebouwde catalogus zet Marc, Stasjo en Brian op `startDate: "2026-01-01"` (app.js r543/579/615),
+  terwijl de server `employment_start_date = '2026-05-01'` heeft (seed-demo-data.sql r62-64). Zolang
+  de bootstrap-hydratatie niet binnen is, toetst de grens dus tegen januari en laat hij april door;
+  daarna weigert hij april wél. Snelle run: groen; trage run: "April 2026" -- en bij -ad was hij in
+  een tweede meting inderdaad groen. Geen datarisico (de server weigert die maand toch,
+  `period-not-accessible`, zie `[ROLE-N-005]`), maar wel verkeerd gedrag bij een trage verbinding.
+  Voor echte accounts buiten de catalogus is de startdatum vóór hydratatie zelfs leeg en staat de
+  grens helemaal uit. **Fixrichtingen:** (a) catalogusdatums gelijktrekken met de seed -- klein, maar
+  eerst toetsen of `mobile-ui.spec.ts` (`MOBILE_PERIOD = '2026-01'` voor Stasjo) niet juist op dit
+  race-venster leunt; (b) terugbladeren blokkeren tot het serverprofiel binnen is -- gedragswijziging
+  voor elk echt account, dus aan Gio.
+  **Fix (a) doorgevoerd en bewezen (sessie -ad, commit 2cf62034).** Nieuwe regressie `[DASH-N-030]`
+  houdt de bootstrap bewust tegen en kiest dan april: **rood zonder fix** ("Stasjo van Bakel,
+  catalogus-startdatum 2026-01-01", april geaccepteerd), **groen met fix** (catalogus Marc, Stasjo en
+  Brian naar 2026-05-01; Shawn klopte al). De race wordt dus afgedwongen in plaats van gehoopt.
+  `dashboard-medewerker.spec.ts` 26/26 groen. Het risico dat de mobiele cases op het race-venster
+  leunden is uitgesloten: `mobile-ui.spec.ts` op mobile-chrome 31/31 groen, inclusief MOB-H-002/003
+  met januari 2026. Smoke-test (demomodus, waar de catalogus leidend is) geslaagd. **Fix (b) --
+  terugbladeren blokkeren tot het serverprofiel binnen is, nodig voor echte accounts buiten de
+  catalogus -- blijft een beslissing voor Gio.**
+- `[DASH-H-030]` -- klik op `#submit-timesheet` loopt af terwijl het element "visible, enabled and
+  stable" is: iets onderschept de klik. Op 768px zit je in de 721-820px-band; overlay vermoed.
+- `[SKIN-H-023]` -- resettoken "ongeldig of verlopen" waar "wachtwoord ingesteld" verwacht werd.
+  **De melding bewijst niets over het token** (sessie -ad, door main nageverifieerd). In app.js
+  r15376-15380 onderscheidt de `.catch` alleen `token-already-used` en `token-expired`; élke andere
+  fout -- `invalid-token`, maar ook een CSRF-weigering, netwerkfout, 5xx of parsefout -- krijgt
+  dezelfde tekst. Oorzaak dus nog onbekend. Volgende stap: de case laten melden welke status en
+  `error`-code `reset-password.php` teruggaf, zonder extra eis (`skin.spec.ts` is in gebruik bij de
+  herontwerp-lane, dus in overleg).
+  **Diagnose ingebouwd en bewezen (sessie -ad, commit 2cf62034, akkoord van -cb).** De case meldt bij
+  een mislukte reset nu status en foutcode van de server. Groen bij een normale run; een proef met een
+  bewust kapot token gaf letterlijk `reset-password.php antwoordde: 400 {"error":"invalid-token",...}`
+  in de melding, daarna teruggedraaid. De oorzaak van de eerdere uitval is daarmee nog niet bekend,
+  maar de volgende uitval noemt hem.
+  **Voor Gio, los van de test:** een medewerker met een gewoon geldige link die door een netwerk- of
+  CSRF-hapering "ongeldig of verlopen" te zien krijgt, vraagt een nieuwe link aan -- en maakt daarmee
+  zijn eerste link ongeldig. De tekst zegt iets anders dan wat er gebeurde.
+Een eerste poging na de herstart telde niet: MySQL deed er 5,5 minuut over om InnoDB te
+initialiseren, en de run liep op `ECONNREFUSED 3306` stuk vóór er één case draaide.
+
+**Herhaald probleem: onze twee sessies draaien tests door elkaar heen (vier keer op 13/14 sep).**
+Telkens hetzelfde gevolg: een meting die geldig lijkt omdat hij reproduceerbaar is, terwijl de
+vervuiling elke herhaling meereist. **Herkenningsteken dat het contention is en geen defect:**
+meerdere runs van dezelfde case geven *verschillende* fouten, vaak in de opstartfase (inlogknop
+blijft uitgeschakeld, `#view-dashboard` blijft verborgen, `waitForFunction` op de login loopt af).
+Een echt defect geeft steeds dezelfde fout op dezelfde plek. **Werkafspraak:** wie een run start
+meldt "machine bezet" en bij het eind "machine vrij" -- geen tijdsinschatting, alleen bezet of vrij.
+Voor het laatst gebroken doordat ik "vrij" meldde en daarna zelf opnieuw begon zonder het te zeggen.
 
 **NOG OPEN: `dashboard.spec.ts` heeft wisselwerking tussen cases, in beide richtingen.** In de run
 waarin DASH-N-007 groen werd, viel `[DASH-N-012]` om op `#modal-confirm`: verwacht "Controle
