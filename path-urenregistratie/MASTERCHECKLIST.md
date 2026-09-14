@@ -2780,9 +2780,22 @@ ons dan handmatig weer aanzetten. Concrete regels:
 op de achtergrond en draaide er gerichte Playwright-suites naast. Gevolg: twee cases in
 `customer-timesheet-api.spec.ts` vielen om met een fout die niets met de wijziging te maken had
 (een toast die niet verscheen), en ik was even op weg dat als bevinding op te schrijven. Los
-draaiden ze meteen groen. De suites delen de database en poort 8010; een tweede run erlangs
-vervuilt de uitslag. Regel: één testrun tegelijk, en bij een onverwachte uitvaller eerst nagaan of
-er nog iets anders liep -- vóór je een defect noteert.
+draaiden ze meteen groen. Regel: één testrun tegelijk, en bij een onverwachte uitvaller eerst
+nagaan of er nog iets anders liep -- vóór je een defect noteert.
+**Correctie op de oorzaak (14 sep, nagemeten).** Hier stond eerst dat de suites de database en
+poort 8010 delen. Dat klopt niet voor onze opzet en het is de moeite waard om te weten waaróm niet:
+de databasenaam komt uit `PATH_APP_DB_NAME`/`PLAYWRIGHT_DB_NAME`/`DB_NAME` en valt zonder die
+variabelen terug op `path_urenregistratie_test`. Main draait op
+`path_urenregistratie_main_test`, de vormgevingslane op de standaardnaam -- **twee verschillende
+databases, dus we hebben nooit in elkaars data gezeten.** Ook de poorten verschillen (8010 via de
+runner, 8000 handmatig). **De botsing was dus puur CPU.** De regel blijft identiek, alleen de reden
+verandert: twee zware suites naast elkaar op één machine maken elkaars timing onbetrouwbaar, en
+juist deze suites hangen van timing aan elkaar.
+**Wat wél echte datavervuiling geeft:** `npx playwright test` rechtstreeks draaien. De runner
+`scripts/run-playwright-e2e.mjs` roept eerst `bootstrap-playwright-db.mjs` aan, en die doet
+`DROP DATABASE` + `CREATE DATABASE` + alle migraties, dus elke run start vers. Sla je de runner over,
+dan stapelt vervuiling zich op over runs heen -- dat verklaarde bij de andere lane een case die
+lokaal omviel op een dag die op 0 stond terwijl CI groen was.
 
 **OPGELOST: `[DASH-N-007]` was tijdgevoelig, niet stuk (13 sep 2026, main).** v2.0.43.
 Het begon als "main is rood na de merge" en eindigde ergens anders. De route erheen is het bewaren
