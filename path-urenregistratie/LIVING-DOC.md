@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 544 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 546 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 544 unieke case-ID's
+- Playwright executable cases: 546 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 545 unieke case-ID's
+- Totaal executable cases: 547 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 586
-- Niet-mobile projectuitvoeringen: 502
+- Uitvoeringen: 588
+- Niet-mobile projectuitvoeringen: 504
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 544 Playwright-functionele cases in totaal 586 resultaten op: 502 + (42 x 2) = 586.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 546 Playwright-functionele cases in totaal 588 resultaten op: 504 + (42 x 2) = 588.
 
 ## Documentatieketen
 
@@ -201,7 +201,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 544 Playwri
 
 - Feature: `tests/playwright/features/dashboard.feature`
 - Source: `tests/playwright/dashboard*.spec.ts`
-- Cases: 62
+- Cases: 64
 
 - [DASH-H-002] employee dashboard opent zonder console errors — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
 - [DASH-H-025] "Mijn maanden" toont naast de urenstatus ook de klanturenstaat-status per maand — Techniek: Toestandsovergang · Assertions: 7
@@ -231,9 +231,9 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 544 Playwri
 - [DASH-H-034] de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 32
 - [DASH-H-035] Mijn uren op desktop toont alleen Ma–Vr, de datum boven elk veld, 0/8/9 eronder en het weektotaal rechts — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
 - [DASH-N-031] de volgende actie is één zin zonder aangeplakte maand, en de maand staat in de regel eronder — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
-- [DASH-H-036] Vandaag staat op desktop in Klassiek volgens de referentie, en hero, ring en Nog te doen kloppen met elkaar — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 31
-- [DASH-H-037] Vandaag ververst het restcijfer meteen na ureninvoer en na terugnavigeren — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 8
-- [DASH-H-038] Nog te doen in Vandaag opent per maand de juiste route, ook voor een correctie, en blijft leesbaar in donker — Techniek: Toestandsovergang · Assertions: 17
+- [DASH-H-036] Vandaag gebruikt in Klassiek de ene kopkaart op desktop en de Wild-opbouw op telefoon — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 44
+- [DASH-H-037] Vandaag ververst de urenregel in de kopkaart meteen na ureninvoer en na terugnavigeren — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 8
+- [DASH-H-038] Eerdere maanden in Vandaag opent per maand de juiste route, ook voor een correctie, en blijft leesbaar in donker — Techniek: Toestandsovergang · Assertions: 17
 - [DASH-H-039] het verloop in Vandaag volgt de volgorderegel en is gelijk aan de stappen in Modern — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
 - [DASH-N-032] een hertekening op de achtergrond zet "Hele maand" in Mijn uren niet terug naar één week — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 12
 - [DASH-H-040] Standaardmaand vullen vult elke werkdag van de maand volgens het werkpatroon uit beheer, ook de vrije dag, en laat geen gaten — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
@@ -242,9 +242,11 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 544 Playwri
 - [DASH-H-043] een vrije dag uit beheer telt als ingevuld en staat niet in het rode blok; een 0 op een werkdag wel — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 10
 - [DASH-H-044] bij een zelf gemailde klanturenstaat zegt het verloop "wacht op Backoffice" en "Volgt na bevestiging", met ongewijzigde standen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
 - [DASH-N-033] geen misleidend bericht aan Backoffice, en zelf gemaild in medewerkertaal terwijl Backoffice zijn eigen term houdt — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
-- [DASH-H-045] de tabbalk van de medewerker heeft Vandaag · Mijn uren · Maanden · Berichten, en Maanden opent Mijn maanden — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
+- [DASH-H-045] de tabbalk van de medewerker heeft Vandaag · Mijn uren · Maanden · Berichten, en Maanden opent Mijn maanden — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 19
 - [DASH-H-046] op telefoon zweeft "Andere rol kiezen" niet over de inhoud; de actie staat in de topbalk — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbalk, en Vandaag begint met de begroeting — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 19
+- [DASH-H-048] het maandspoor heeft per kalenderdag een streep en de weken zijn zo breed als hun dagen, en ze leiden naar die week — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 16
+- [DASH-H-049] licht Klassiek heeft bij de medewerker één vast veld over de pagina en een doorschijnende menubalk — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
 - [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 29
 - [DASH-N-022] een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8

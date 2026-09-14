@@ -4309,7 +4309,16 @@ function applyOrganizationBranding() {
     // gemeld).
     const opMerkpilInNieuw = document.documentElement.dataset.skin === "new"
       && Boolean(image.closest(".mobile-brand-home"));
-    const onDarkSurface = Boolean(image.closest("#sidebar-brand")) || opMerkpilInNieuw;
+    // De Klassieke medewerker heeft vanaf 821px geen donkere zijbalk meer:
+    // hetzelfde element is daar de lichte, doorschijnende horizontale kopbalk.
+    // Kies in precies die stand dus ook het donkere woordmerk uit de lichte
+    // logovariant. Beheer, donker, Modern en de mobiele onderbalk blijven zoals
+    // ze waren.
+    const lichteEmployeeKop = state.currentRole === "employee"
+      && document.documentElement.dataset.skin !== "new"
+      && !donkereModusActief()
+      && window.matchMedia("(min-width: 821px)").matches;
+    const onDarkSurface = (Boolean(image.closest("#sidebar-brand")) && !lichteEmployeeKop) || opMerkpilInNieuw;
     image.src = brandLogoUrl(onDarkSurface || donkereModusActief() ? "donker" : "licht");
     image.alt = organizationName + " logo";
     // Van het meegeleverde logo bestaat een witte variant, die rechtstreeks op
@@ -6105,6 +6114,94 @@ function vandaagLegeWeken(record, period) {
   return Math.max(0, period.weekRows.length - completedTimesheetWeeks(record, period));
 }
 
+// De kop van Vandaag (DESIGN-BESLUITEN "Kop van het dashboard: maandspoor",
+// 14 sep): per kalenderdag van de gekozen maand één streepje, en de weken als
+// kaarten zo breed als ze dagen in die maand hebben. Eén functie voor desktop
+// en telefoon, zoals kopDagen/kopVals in beide referenties.
+//
+// Waar de app een eigen regel heeft, geldt die: "gevuld" is
+// werkdagTeltAlsIngevuld (uren, een bewuste 0 of een vrije dag uit beheer), en
+// het aantal open dagen is ontbrekendeWerkdagen -- dezelfde telling als Hele
+// maand, het verloop en het indienlabel. De weekstand volgt de maandstatus: in
+// de app wordt per maand ingediend, dus alle weken hebben dezelfde status.
+function vandaagKopWaarden(record, employee, period) {
+  const maandKort = period.month.slice(0, 3);
+  const dicht = ["submitted", "approved"].includes(String(record.timesheetStatus || ""));
+  const aantalDagen = new Date(Date.UTC(period.year, period.monthIndex + 1, 0)).getUTCDate();
+  const rijVanDag = new Map();
+  period.weekRows.forEach((rij, wi) => rij.days.forEach((dag, di) => { if (dag) rijVanDag.set(dag.day, { wi, di }); }));
+  const dagen = [];
+  const weken = [];
+  let week = null;
+  for (let dag = 1; dag <= aantalDagen; dag += 1) {
+    const weekdag = new Date(Date.UTC(period.year, period.monthIndex, dag)).getUTCDay();
+    const di = (weekdag + 6) % 7;
+    if (!week || di === 0) {
+      week = { nummer: isoWeekInfo(new Date(Date.UTC(period.year, period.monthIndex, dag))).week, dagen: [], wi: null };
+      weken.push(week);
+    }
+    const plek = rijVanDag.get(dag);
+    if (plek && week.wi === null) week.wi = plek.wi;
+    const vrij = di > 4;
+    const gevuld = !vrij && Boolean(plek) && werkdagTeltAlsIngevuld(record, plek.wi, plek.di, employee);
+    const item = { dag, di, vrij, gevuld, uren: plek ? Number(record.entries?.[plek.wi]?.[plek.di] || 0) : 0, vrijBeheer: !vrij && isVrijeDagVolgensBeheer(employee, di) };
+    dagen.push(item);
+    week.dagen.push(item);
+  }
+  weken.forEach(w => { if (w.wi === null) w.wi = 0; });
+  const werk = dagen.filter(d => !d.vrij).length;
+  const open = ontbrekendeWerkdagen(record, period).length;
+  const maandNaam = period.month.toLowerCase();
+  return {
+    dagen: dagen.map(d => ({
+      ...d,
+      wi: rijVanDag.get(d.dag)?.wi ?? weken.find(w => w.dagen.includes(d))?.wi ?? 0,
+      titel: (d.vrij ? "Vrij " : d.vrijBeheer ? "Vrije dag volgens je werkpatroon " : d.gevuld ? hoursFormat.format(d.uren) + " uur ingevuld " : "Nog leeg ") + d.dag + " " + maandNaam,
+      wijsTekst: d.vrij ? "Vrije dag" : d.vrijBeheer ? "Vrije dag volgens je werkpatroon" : d.gevuld ? hoursFormat.format(d.uren) + " uur ingevuld" : "Nog niets ingevuld"
+    })),
+    weken: weken.map(w => {
+      const werkdagen = w.dagen.filter(d => !d.vrij);
+      const vol = werkdagen.filter(d => d.gevuld).length;
+      const klaar = werkdagen.length > 0 && vol === werkdagen.length;
+      const eerste = w.dagen[0].dag;
+      const laatste = w.dagen[w.dagen.length - 1].dag;
+      return {
+        nummer: w.nummer,
+        wi: w.wi,
+        groei: Math.max(1, w.dagen.length),
+        bereik: eerste + "–" + laatste + " " + maandKort,
+        stand: dicht ? (record.timesheetStatus === "approved" ? "Goedgekeurd" : "Ingediend") : werkdagen.length === 0 ? "Vrij" : klaar ? "Compleet" : (werkdagen.length - vol) + " open",
+        soort: dicht ? "dicht" : werkdagen.length === 0 ? "vrij" : klaar ? "compleet" : "open"
+      };
+    }),
+    werk,
+    open,
+    dagWoord: open === 1 ? "dag open" : "dagen open",
+    noemer: open + " van " + werk + " werkdagen",
+    uren: hoursFormat.format(totalEntries(record.entries) + Number(record.leave || 0) + Number(record.sick || 0)) + " van " + hoursFormat.format(defaultContractHours(employee, period.key)) + " uur",
+    standaardDatum: period.label,
+    standaardTekst: "Elke streep is een dag — beweeg erover",
+    standaardTekstTelefoon: "Elke streep is een dag"
+  };
+}
+
+// De streepjes en weekkaarten als HTML. Hoogte, kleur en dikte uit kopVals
+// (gui r551-563): vrij 8px lijnkleur, gevuld 18px mint met gloed, leeg 26px
+// amber met de puls "aandacht".
+function vandaagSpoorHtml(kop) {
+  return kop.dagen.map(d => {
+    const soort = d.vrij ? "vrij" : d.gevuld ? "gevuld" : "leeg";
+    return '<span class="vd-streep is-' + soort + '" title="' + escapeHtml(d.titel) + '" data-vd-dag="' + d.dag + '" data-vd-week="' + d.wi + '" data-vd-wijs="' + escapeHtml(d.wijsTekst) + '">'
+      + '<span style="animation-delay:' + (d.dag * 22) + 'ms"></span></span>';
+  }).join("");
+}
+function vandaagWekenHtml(kop, klasse) {
+  return kop.weken.map(w =>
+    '<button type="button" class="' + klasse + ' is-' + w.soort + '" data-vd-week="' + w.wi + '" style="flex:' + w.groei + ' 1 0">'
+      + '<strong>Week ' + w.nummer + '</strong><small>' + escapeHtml(w.bereik) + '</small><small class="vd-weekstand">' + escapeHtml(w.stand) + '</small></button>'
+  ).join("");
+}
+
 // De klanturenstaatkaart staat op desktop in Vandaag, onder de hero (referentie
 // r233-274), en daarbuiten op zijn eigen plek in het dashboard. Verplaatsen in
 // plaats van dupliceren: de kaart heeft zijn eigen upload- en mailflow en een
@@ -6129,6 +6226,28 @@ function plaatsVandaagKlantKaart() {
     vandaagKlantKaartThuis.ouder.insertBefore(kaart, vandaagKlantKaartThuis.volgende);
   }
 }
+// De regel boven het spoor volgt de muis (gui r213-218): datum en wat er die dag
+// staat, en terug naar de maand zodra de muis het spoor verlaat.
+document.addEventListener("mouseover", event => {
+  const streep = event.target.closest?.("#vd-spoor [data-vd-dag]");
+  if (!streep) return;
+  const datum = document.querySelector("#vd-wijs-datum");
+  const tekst = document.querySelector("#vd-wijs-tekst");
+  if (datum) datum.textContent = streep.dataset.vdDag + " " + (currentPeriod().month || "").toLowerCase();
+  if (tekst) {
+    tekst.textContent = streep.dataset.vdWijs || "";
+    tekst.classList.toggle("is-leeg", streep.classList.contains("is-leeg"));
+  }
+});
+document.addEventListener("mouseout", event => {
+  const spoor = event.target.closest?.("#vd-spoor");
+  if (!spoor || spoor.contains(event.relatedTarget)) return;
+  const periode = currentPeriod();
+  const datum = document.querySelector("#vd-wijs-datum");
+  const tekst = document.querySelector("#vd-wijs-tekst");
+  if (datum) datum.textContent = periode.label;
+  if (tekst) { tekst.textContent = "Elke streep is een dag — beweeg erover"; tekst.classList.remove("is-leeg"); }
+});
 if (VANDAAG_BREED && typeof VANDAAG_BREED.addEventListener === "function") {
   VANDAAG_BREED.addEventListener("change", plaatsVandaagKlantKaart);
 }
@@ -6151,18 +6270,28 @@ function renderVandaag(record, employee, period) {
   // 14 sep). Dezelfde telling als Hele maand, het verloop en het indienlabel.
   const gaten = ontbrekendeWerkdagen(record, period).length;
 
-  // Paginakop, r139-153
+  // Kopkaart, gui r189-256
+  const kop = vandaagKopWaarden(record, employee, period);
   zet("#vd-kop-label", greetingForNow());
   zet("#vd-kop-titel", employee.name || "");
   zet("#vd-spreuk", VANDAAG_GEZEGDES[VANDAAG_GEZEGDE_INDEX % VANDAAG_GEZEGDES.length]);
   zet("#vd-periode", period.label);
+  zet("#vd-kop-open", String(kop.open));
+  zet("#vd-kop-dagwoord", kop.dagWoord);
+  zet("#vd-kop-noemer", kop.noemer);
+  zet("#vd-kop-uren", kop.uren);
+  zet("#vd-wijs-datum", kop.standaardDatum);
+  zet("#vd-wijs-tekst", kop.standaardTekst);
+  document.querySelector("#vd-wijs-tekst")?.classList.remove("is-leeg");
+  document.querySelector("#vd-spoor").innerHTML = vandaagSpoorHtml(kop);
+  document.querySelector("#vd-kopweken").innerHTML = vandaagWekenHtml(kop, "vd-weekkaart");
 
-  // Nog te doen, r185-195 en r588-612: de maanden met open acties, oudste eerst,
-  // de eerste uitgelicht. De chip zegt wat er in die maand nog moet.
+  // Eerdere maanden, gui r238-247 en r750-753: de open maanden behalve de
+  // gekozen, oudste eerst. Navy omlijnd; amber is voorbehouden aan lege dagen.
   const openMaanden = employeeOpenMonthSummaries(employee.id, period.key);
-  document.querySelector("#vd-nogtedoen").hidden = openMaanden.length === 0;
-  zet("#vd-nogtedoen-kop", openMaanden.length === 1 ? "Nog te doen" : "Nog te doen — " + openMaanden.length + " maanden");
-  document.querySelector("#vd-nogtedoen-chips").innerHTML = openMaanden.map((maand, index) => {
+  const eerdere = openMaanden.filter(maand => maand.periodKey !== period.key);
+  document.querySelector("#vd-nogtedoen-kop").hidden = eerdere.length === 0;
+  document.querySelector("#vd-nogtedoen-chips").innerHTML = eerdere.map(maand => {
     const uren = maand.actions.find(actie => actie.type === "hours");
     const maandRecord = recordFor(employee.id, maand.periodKey);
     const wat = uren
@@ -6170,38 +6299,31 @@ function renderVandaag(record, employee, period) {
         : ontbrekendeWerkdagen(maandRecord, maand.period).length > 0 ? "uren invullen" : "maand indienen")
       : "urenstaat";
     const naam = maand.period.month.charAt(0).toUpperCase() + maand.period.month.slice(1);
-    return '<button type="button" class="vd-maandchip' + (index === 0 ? ' is-eerste' : '') + '" data-vd-open-maand="' + escapeHtml(maand.periodKey) + '" data-vd-open-soort="' + (uren ? 'uren' : 'klant') + '">'
-      + '<span>' + escapeHtml(naam) + '</span><small>' + escapeHtml(wat) + '</small><span aria-hidden="true">›</span></button>';
+    return '<button type="button" class="vd-maandchip" data-vd-open-maand="' + escapeHtml(maand.periodKey) + '" data-vd-open-soort="' + (uren ? 'uren' : 'klant') + '">'
+      + '<span>' + escapeHtml(naam) + '</span><small>' + escapeHtml(wat) + '</small><span aria-hidden="true">→</span></button>';
   }).join("");
 
-  // Hero, r197-231 en r615-697
+  // Hero-teksten: op desktop vervallen, op telefoon (wild r119-137) staan ze nog.
   const alleenIndienen = gaten === 0 && nietIngediend;
-  zet("#vd-antwoord", heeftTaak
+  const antwoord = heeftTaak
     ? (gaten > 0 ? "Nog " + gaten + (gaten === 1 ? " dag" : " dagen") + " in te vullen." : "Bijna rond. Nog één ding.")
-    : maandNaam + " is klaar.");
-  document.querySelector("#vd-oog").classList.toggle("is-taak", heeftTaak);
-  zet("#vd-oog-label", heeftTaak ? "Jij bent aan zet" : "Het ligt bij ons");
-  zet("#vd-pct", Math.round(ingevuld * 100) + "%");
-  const boog = document.querySelector("#vd-ring-boog");
-  if (boog) boog.style.strokeDashoffset = (229.3 * (1 - ingevuld)).toFixed(1);
+    : maandNaam + " is klaar.";
+  const pct = Math.round(ingevuld * 100) + "%";
   // Afwijking van de referentie: r697 zegt bij "alle weken vol" altijd "Alleen de
   // klanturenstaat ontbreekt nog", ook als de maand nog niet is ingediend (r563
   // telt dat wél als taak). Statuscopy hoort bij de werkelijke toestand
   // (HANDOFF punt 10), dus dan staat hier de indienstap. Teruggemeld.
-  zet("#vd-toelichting", heeftTaak
+  const toelichting = heeftTaak
     ? (gaten > 0 ? "Eén tik vult een hele week met je standaardweek."
       : alleenIndienen ? "Je uren staan erin. Dien de maand in."
       : "Alleen de klanturenstaat ontbreekt nog.")
     : klantDocument.status === "skipped"
       ? "Je uren staan erin en je gaf aan de urenstaat zelf te hebben gemaild. De Backoffice pakt het op."
-      : "Alles is binnen en goedgekeurd. We laten het weten als er iets nodig is.");
+      : "Alles is binnen en goedgekeurd. We laten het weten als er iets nodig is.";
   const contract = defaultContractHours(employee, period.key);
-  document.querySelector("#vd-kpi").hidden = !heeftTaak;
-  zet("#vd-kpi-waarde", hoursFormat.format(Math.max(0, contract - totalEntries(record.entries))) + "u");
-  zet("#vd-kpi-label", "Nog in te vullen (van " + hoursFormat.format(contract) + "u)");
 
-  // Hoofdknop, r621-623: zonder taak deze maand wijst hij naar de oudste open
-  // maand (de eerste chip), anders naar Mijn maanden.
+  // Hoofdknop, r250: zonder taak deze maand wijst hij naar de oudste open
+  // maand, anders naar Mijn maanden.
   const hoofdknop = document.querySelector("#vd-hoofdknop");
   const oudste = openMaanden[0] || null;
   if (heeftTaak) {
@@ -6218,7 +6340,7 @@ function renderVandaag(record, employee, period) {
     hoofdknop.dataset.vdActie = "maanden";
     delete hoofdknop.dataset.vdMaand;
   }
-  // r624: de mailknop naast de hoofdknop alleen als de klanturenstaat het enige
+  // r251: de mailknop naast de hoofdknop alleen als de klanturenstaat het enige
   // is dat nog open staat.
   document.querySelector("#vd-mailknop").hidden = !(heeftTaak && gaten === 0 && !nietIngediend && klantOpen && !klantKaartKeuze);
 
@@ -6237,15 +6359,15 @@ function renderVandaag(record, employee, period) {
   zet("#vdt-maanduren", hoursFormat.format(totalEntries(record.entries) + Number(record.leave || 0) + Number(record.sick || 0)));
   // r707: "van 158,4 uur contract · 3 van 5 weken ingevuld".
   zet("#vdt-contractregel", "van " + hoursFormat.format(contract) + " uur contract · " + (nWeken - leeg) + " van " + nWeken + " " + (nWeken === 1 ? "week" : "weken") + " ingevuld");
-  zet("#vdt-antwoord", document.querySelector("#vd-antwoord")?.textContent || "");
-  zet("#vdt-pct", document.querySelector("#vd-pct")?.textContent || "");
+  zet("#vdt-antwoord", antwoord);
+  zet("#vdt-pct", pct);
   const boogTel = document.querySelector("#vdt-ring-boog");
   if (boogTel) boogTel.style.strokeDashoffset = (229.3 * (1 - ingevuld)).toFixed(1);
   // r137: de toelichting alleen zolang er een taak is.
   const toelichtingTel = document.querySelector("#vdt-toelichting");
   if (toelichtingTel) {
     toelichtingTel.hidden = !heeftTaak;
-    toelichtingTel.textContent = document.querySelector("#vd-toelichting")?.textContent || "";
+    toelichtingTel.textContent = toelichting;
   }
   zet("#vdt-spreuk", document.querySelector("#vd-spreuk")?.textContent || "");
   const hoofdknopTel = document.querySelector("#vdt-hoofdknop");
@@ -6256,6 +6378,13 @@ function renderVandaag(record, employee, period) {
       else hoofdknopTel.dataset[sleutel] = hoofdknop.dataset[sleutel];
     });
   }
+  // Spoorkaart, wild r152-182.
+  zet("#vdt-wijs-datum", kop.standaardDatum);
+  zet("#vdt-wijs-tekst", kop.standaardTekstTelefoon);
+  zet("#vdt-kop-open", String(kop.open));
+  zet("#vdt-kop-dagwoord", kop.dagWoord);
+  document.querySelector("#vdt-spoor").innerHTML = vandaagSpoorHtml(kop);
+  document.querySelector("#vdt-kopweken").innerHTML = vandaagWekenHtml(kop, "vd-tel-weekkaart");
   const mailknopTel = document.querySelector("#vdt-mailknop");
   if (mailknopTel) mailknopTel.hidden = document.querySelector("#vd-mailknop").hidden;
   // Verloop als lijst, r150-162, met de huidige stap rechts in de kop (r153).
@@ -13837,7 +13966,12 @@ function toonInstallatieAanbod() {
   // [data-view="..."]-locator (app en tests) eenduidig naar de ene echte
   // sidebar-knop wijzen, ook als de pilot-tab in de DOM aanwezig maar
   // (in Classic, of buiten skin=new) onzichtbaar is.
-  const nav = event.target.closest("[data-view], [data-pilot-view]");
+  // Alleen echte navigatieknoppen. <body> draagt ook data-view zodat CSS weet
+  // welk scherm actief is; met de brede [data-view]-selector werd daardoor
+  // iedere klik in het scherm eerst als een dashboardnavigatie behandeld. Die
+  // hertekening koppelde dynamische knoppen (zoals de Vandaag-weekkaarten) los
+  // voordat hun eigen handler verderop de klik kon afhandelen.
+  const nav = event.target.closest("button[data-view], button[data-pilot-view]");
   if (nav) {
     const targetView = nav.dataset.view || nav.dataset.pilotView;
     if (targetView === "approvals") {
@@ -14266,6 +14400,15 @@ function toonInstallatieAanbod() {
   if (event.target.closest("[data-vd-maand-terug]")) {
     state.historyVerloopOpen = shiftPeriodKey(currentPeriod().key, -1);
     showView("historie");
+    return;
+  }
+  // Een streepje of weekkaart in de kop opent Mijn uren op die week (gui r223,
+  // r231: view "uren", actief = die week, geen maandmodus).
+  const vandaagWeek = event.target.closest("#vd-spoor [data-vd-week], #vd-kopweken [data-vd-week], #vdt-kopweken [data-vd-week]");
+  if (vandaagWeek) {
+    state.hoursWeekScope = "week-" + Number(vandaagWeek.dataset.vdWeek || 0);
+    state.hoursWeekScopeTouched = true;
+    showView("timesheet");
     return;
   }
   const vandaagHoofdknop = event.target.closest("#vd-hoofdknop, #vdt-hoofdknop");

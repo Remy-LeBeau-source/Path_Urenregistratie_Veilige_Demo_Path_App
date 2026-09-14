@@ -31,6 +31,16 @@ productieflow wordt gebouwd en geaccepteerd.
 - verwerkt een correctieverzoek en dient opnieuw in;
 - kan geen goedkeuring, facturatie, gebruikersbeheer of testreset uitvoeren.
 
+In de lichte Klassieke vormgeving gebruikt de medewerker vier vaste routes:
+**Vandaag**, **Mijn uren**, **Maanden** en **Berichten**. Op desktop staan die in
+een horizontale kopbalk; op telefoon in de veilige onderste tabbalk. Vandaag
+heeft geen losse paginatitel. De dashboardkop is één kaart met begroeting,
+maandkeuze, open-dagentelling, het maandspoor, weekkaarten, eerdere open maanden
+en de primaire urenactie. De oude losse hero en de teksten “Nog N dagen in te
+vullen” en “Jij bent aan zet” worden daar niet naast herhaald. Het lichte veld
+loopt vast over de hele pagina door; kaarten hebben geen eigen verloop en de
+kopbalk is doorschijnend met blur. Deze ronde wijzigt donker en Modern niet.
+
 ### Beheerder / Backoffice
 
 - ziet de volledige werkvoorraad van de eigen organisatie;
@@ -327,6 +337,7 @@ Minimaal de volgende ketens zijn releaseblokkerend:
 | een nieuwe ontvanger komt bij andere medewerkers ongevinkt binnen | `admin-writes.spec.ts` (`ADM-WR-H-018`) |
 | het instellingenscherm toont de tekst die de ontvanger werkelijk krijgt | `invoice-company-identity.spec.ts` (`INV-ID-H-010`) |
 | mobiele hoofdketen | `mobile-ui.spec.ts` |
+| medewerker-Klassiek toont één dashboardkop, een correct dag-/weekspoor en werkende desktop-/mobielnavigatie | `dashboard-medewerker.spec.ts` (`DASH-H-036`, `DASH-H-045`, `DASH-H-048`, `DASH-H-049`) |
 | precies één zichtbaar hoofdscherm bij beheer- en medewerkernavigatie in Nieuw | `skin.spec.ts` (`SKIN-H-008`, `SKIN-H-009`) |
 | iedere medewerker en beheerder ziet na inloggen de eigen naam, nooit die van een collega | `auth.spec.ts` (`AUTH-H-020`, `AUTH-H-021`) |
 | één factuuractie maakt drie gescheiden mailroutes met het juiste bijlagenbeleid | `email-queue.spec.ts` (`EQ-H-022`) |

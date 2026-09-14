@@ -29,7 +29,14 @@ export async function staatVandaagInBeeld(page: Page): Promise<boolean> {
 // Mijn uren van die maand.
 export async function openUrenactieVanMaand(page: Page, periodKey: string, verwacht: { chip: string | RegExp; knop: string | RegExp }): Promise<void> {
   const route = await dashboardRoute(page);
-  if (route === 'chips') {
+  const gekozen = await page.evaluate(() => ((0, eval)('currentPeriod') as () => { key: string })().key);
+  if (route === 'chips' && gekozen === periodKey) {
+    // De gekozen maand staat niet als pil onder "Eerdere maanden" maar in de
+    // kopkaart zelf; daar is de hoofdknop de weg naar de urenactie.
+    const knop = page.locator('#vd-hoofdknop');
+    await expect(knop).toHaveAttribute('data-vd-actie', 'uren');
+    await knop.click();
+  } else if (route === 'chips') {
     const chip = page.locator(`#vd-nogtedoen-chips [data-vd-open-maand="${periodKey}"]`);
     await expect(chip).toBeVisible();
     await expect(chip).toHaveAttribute('data-vd-open-soort', 'uren');

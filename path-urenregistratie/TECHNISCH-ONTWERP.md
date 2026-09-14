@@ -29,6 +29,16 @@ skinregel die de display-layout van een hoofdweergave wijzigt, moet ook op
 daarom alleen voor `#view-employee-dashboard.is-active`; anders overrulet zijn
 ID-specificiteit de algemene `.view { display: none }` op andere routes.
 
+De lichte Klassieke medewerkerweergave projecteert dezelfde navigatie-DOM op
+twee plekken via CSS: boven 820px als horizontale, sticky kopbalk en daaronder
+als onderste tabbalk. Modern, beheer en donker vallen buiten deze selectors.
+Vandaag wisselt exact op 720/721px tussen `#vd-tel` en `#vandaag`. Beide worden
+door `renderVandaag()` uit dezelfde statusbron gevuld. Dagstrepen en weekkaarten
+dragen `data-vd-week`; de gedelegeerde handler opent `timesheet` met de gekozen
+weekscope. Generieke navigatie accepteert uitsluitend echte
+`button[data-view]`/`button[data-pilot-view]`-doelen, omdat `body[data-view]`
+alleen de actieve route voor opmaak beschrijft en geen klikdoel is.
+
 `state.records[periode][medewerker]` bevat de geprojecteerde uren-, document-, factuur- en salarisstatus. In servermodus wordt na bootstrap voor een beheerder de volledige bekende combinatie van perioden en actieve medewerkers gehydrateerd voordat de globale werkvoorraad als gezaghebbend geldt.
 
 Belangrijke regels:

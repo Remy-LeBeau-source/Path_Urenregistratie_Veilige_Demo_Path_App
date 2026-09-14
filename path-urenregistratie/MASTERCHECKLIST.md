@@ -3,6 +3,23 @@
 Dit is vanaf nu de volledige masterchecklist en vaste technische bron van waarheid.
 Na iedere stap wordt deze lijst bijgewerkt met wat klaar, gedeeltelijk klaar, open of geblokkeerd is.
 
+### 2026-09-14 avond · Medewerker Klassiek licht naar GUI + Wild
+
+- [x] Verse handoff en alle vier bronnen opgehaald en geverifieerd.
+- [x] Desktop: horizontale vier-tabsnavigatie en één dashboardkopkaart zonder
+  paginatitel, losse hero of dubbele actieteksten.
+- [x] Licht: exact desktop-/mobielpalet, één vast paginaveld, transparante
+  blurkop en kaarten zonder eigen verloop; donker en Modern afgebakend.
+- [x] Dagspoor en getinte weken projecteren de echte urenstand en openen de
+  juiste week; eerdere maanden en hoofdactie behouden hun routes.
+- [x] Webapp/PWA: Wild-opbouw, vier tabs, veilige rolactie, 390px en 720/721px.
+- [x] Klikregressie door `body[data-view]` opgelost en met weeknavigatie gedekt.
+- [x] FO/TO, featuremapping en gerichte DASH-H-036/-045/-048/-049-dekking.
+- [x] Versie 2.0.62 en gerichte desktop-/mobile-, syntax-, design-, BDD- en
+  diffchecks groen (DASH-H-045 t/m -049: 10/10).
+- [-] Commit/push en volledige CI-regressie volgen als sluitstuk van deze
+  ronde; PROD blijft een aparte handmatige poort.
+
 ## Betekenis van de statussen
 
 ### Vervolg 10 september 2026

@@ -3,7 +3,27 @@ branch: main
 path: path-urenregistratie
 
 ## Last sync
-date: 2026-09-14T07:10:00Z
+date: 2026-09-14T12:13:01Z
+
+### Ronde 14 sep (avond) — Klassiek licht medewerker afgerond naar verse handoff
+
+- Verse `OPDRACHT.md`, GUI-, Wild- en designbronnen opgehaald en hashes
+  gecontroleerd; de bestanden waren gelijk aan de al aanwezige overdracht.
+- Dashboardkop samengebracht tot één kaart: begroeting, maandkiezer, open dagen,
+  dagspoor, getinte weekkaarten, eerdere maanden en hoofdactie. Losse hero,
+  paginatitel, “Nog N dagen in te vullen” en “Jij bent aan zet” zijn weg.
+- Licht gebruikt het vaste viewportveld en de exacte GUI/Wild-tokens; kaarten
+  hebben geen eigen verloop. De lichte desktopmenubalk is horizontaal,
+  doorschijnend en geblurd. Donker, Modern en beheer zijn niet herontworpen.
+- Mobiel gebruikt de Wild-opbouw en vier tabs; 390px en de grens 720/721px zijn
+  gecontroleerd. Dag- en weekkeuzes openen de juiste week in Mijn uren.
+- Een bestaande click-delegationfout is hersteld: `body[data-view]` werd ten
+  onrechte als navigatieknop gezien en tekende Vandaag opnieuw vóór de weekklik.
+- Nieuwe/uitgebreide dekking: DASH-H-036, -045, -048 en -049. Gerichte browser-
+  checks en design-/BDD-audits zijn groen; de volledige regressie volgt één keer
+  in CI om lokaal tijd en gebruik te sparen.
+
+## Sync history
 
 ### Ronde 14 sep (vierde) — scope rechtgezet: de referentie ís Klassiek, export 04:40:22Z
 **Waar het misging.** Op 13 sep om 14:14 zei Gio dat de ontwerpen voor Klassiek
@@ -196,7 +216,7 @@ Volgorde verder:
 [DASH-N-033] toetst alle vier; de tegenproef viel om. CTS-API-H-013 en de
 smoke-test zijn mee aangepast. DESIGN-BESLUITEN.md is vers opgehaald.
 
-## Sync history
+### Eerdere synchronisaties
 
 ### Ronde 14 sep (derde, vervolg) — terugmeldingen verwerkt, export 04:07:28Z
 Vier van de vijf terugmeldingen waren fouten in de referentie; die zijn daar

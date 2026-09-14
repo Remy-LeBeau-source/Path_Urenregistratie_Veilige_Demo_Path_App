@@ -4153,10 +4153,10 @@ html:not([data-skin="new"]) #vandaag {
   /* r12-28 */
   --navy: #0d1b38; --mint: #3abd9d; --mint-tekst: #037f63; --mint-dark-tekst: #037f63;
   --ink: #172332; --muted: #485651; --line: #bfcec8; --line-zacht: #d0dcd6;
-  --surface: #eaf2ee; --surface-muted: #d5e0da; --vlak: #eaf2ee;
+  --surface: rgba(255,255,255,.78); --surface-muted: rgba(255,255,255,.46); --vlak: rgba(255,255,255,.78);
   --warning: #bb7623; --warning-bg: #fff5e8; --warning-tekst: #a5600d; --warning-rand: #edc58f;
   --hero-ring-leeg: rgba(16,34,53,.1);
-  --kaart-glans: rgba(255,255,255,.9); --halo: rgba(58,189,157,.42);
+  --kaart-ring: #ffffff; --kaart-glans: rgba(255,255,255,.9); --halo: rgba(58,189,157,.2);
   --schaduw: 0 6px 18px rgba(16,34,53,.07);
   --oog-taak: #8a5c1c; --oog-klaar: #1f6b4f;
   --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
@@ -4175,69 +4175,91 @@ html[data-theme="dark"]:not([data-skin="new"]) #vandaag {
   --mint-tekst: #5fd3b3; --mint-dark-tekst: #5fd3b3;
   --warning-bg: #2d2313; --warning-tekst: #f0bd7a; --warning-rand: #5a4526;
   --hero-ring-leeg: rgba(255,255,255,.13);
-  --kaart-glans: rgba(255,255,255,.07); --halo: rgba(58,189,157,.5);
+  --kaart-ring: #0a131a; --kaart-glans: rgba(255,255,255,.07); --halo: rgba(58,189,157,.5);
   --schaduw: 0 6px 20px rgba(0,0,0,.3);
   --oog-taak: #f0bd7a; --oog-klaar: #7fe0c0;
 }
 
-/* Paginakop, r139-153 */
-#vandaag .vd-kop { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 18px; margin-bottom: clamp(18px, 2.4vw, 26px); }
-#vandaag .vd-kop-tekst { min-width: 0; flex: 0 1 auto; }
-#vandaag .vd-kop-label { display: block; color: var(--mint-tekst); font-size: 10px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
-#vandaag .vd-kop-titel { margin: 5px 0 0; color: var(--ink); font-family: var(--kop); font-size: clamp(25px, 2.7vw, 33px); font-weight: 700; letter-spacing: -.022em; line-height: 1.12; }
-#vandaag .vd-spreuk { display: flex; align-items: baseline; gap: 7px; margin: 8px 0 0; color: var(--muted); font-size: 12.5px; font-style: italic; }
-#vandaag .vd-spreuk-lijn { flex: 0 0 auto; width: 2px; align-self: stretch; border-radius: 2px; background: var(--mint); opacity: .5; font-style: normal; }
-#vandaag .vd-maandpil { display: flex; flex: 0 0 auto; align-items: center; gap: 2px; border: 1px solid var(--line-zacht); border-radius: 999px; background: var(--surface); padding: 3px; box-shadow: inset 0 1px 0 var(--kaart-glans); }
+/* Kopkaart, gui r189-256 (DESIGN-BESLUITEN "Kop van het dashboard: maandspoor").
+   Eén kaart: begroeting, maandkiezer, open dagen, spoor, weken, eerdere maanden
+   en de hoofdknop. Geen eigen verloop op de kaart, alleen de mintgloed. */
+@keyframes vd-ademen { 0%, 100% { opacity: .45; transform: scale(1); } 50% { opacity: .68; transform: scale(1.07); } }
+@keyframes vd-aandacht { 0%, 100% { opacity: 1; } 50% { opacity: .42; } }
+@keyframes vd-rijzen { from { transform: scaleY(.06); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
+#vandaag .vd-kopkaart { position: relative; border-radius: 22px; background: var(--surface); padding: 20px clamp(18px, 3vw, 26px) 18px; overflow: hidden; box-shadow: inset 0 1px 0 var(--kaart-glans), var(--schaduw); }
+#vandaag .vd-kopkaart-halo { position: absolute; top: -110px; right: -40px; width: 300px; height: 300px; border-radius: 50%; background: var(--halo); filter: blur(32px); opacity: .5; animation: vd-ademen 10s ease-in-out infinite; pointer-events: none; }
+#vandaag .vd-kopkaart-boven { position: relative; display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 18px; }
+#vandaag .vd-kop-tekst { min-width: 0; }
+#vandaag .vd-kop-label { display: block; color: var(--mint-tekst); font-size: 9.5px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
+#vandaag .vd-kop-titel { margin: 8px 0 0; color: var(--ink); font-family: var(--kop); font-size: clamp(24px, 2.5vw, 31px); font-weight: 600; letter-spacing: -.03em; line-height: 1.04; }
+#vandaag .vd-spreuk { margin: 10px 0 0; color: var(--muted); font-size: 12.5px; font-style: italic; }
+#vandaag .vd-kop-rechts { display: flex; flex: 0 0 auto; flex-direction: column; align-items: flex-end; gap: 12px; }
+#vandaag .vd-maandpil { display: flex; align-items: center; gap: 2px; border-radius: 999px; background: var(--surface); padding: 3px; box-shadow: inset 0 1px 0 var(--kaart-glans), 0 1px 2px rgba(16,34,53,.05); }
 #vandaag .vd-maandpil button { display: grid; width: 36px; height: 36px; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; font-size: 17px; }
 #vandaag .vd-maandpil button:hover:not(:disabled) { background: var(--surface-muted); color: var(--ink); }
 #vandaag .vd-maandpil button:disabled { color: var(--line); cursor: default; }
-#vandaag .vd-maandpil strong { min-width: 112px; text-align: center; font-size: 12.5px; font-weight: 800; letter-spacing: .01em; }
-
-/* Nog te doen, r186-195. De referentie zet de achtergrond op var(--warning-vlak),
-   een token dat in de referentie niet bestaat; die declaratie vervalt daar en
-   het vlak is transparant. Zo overgenomen. */
-#vandaag .vd-nogtedoen { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border: 1px solid var(--warning-rand); border-radius: 14px; background: transparent; padding: 12px 15px; box-shadow: inset 0 1px 0 var(--kaart-glans); }
-#vandaag .vd-nogtedoen[hidden] { display: none; }
-#vandaag .vd-nogtedoen > strong { flex: 0 0 auto; color: var(--warning-tekst); font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
-#vandaag .vd-nogtedoen-chips { display: flex; flex-wrap: wrap; flex: 1; min-width: 0; gap: 7px; }
-#vandaag .vd-maandchip { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--muted); cursor: pointer; min-height: 34px; font: inherit; font-size: 12px; font-weight: 700; padding: 0 11px; white-space: nowrap; }
-#vandaag .vd-maandchip.is-eerste { border-color: var(--warning-rand); background: rgba(187,118,35,.2); color: var(--warning-tekst); }
+#vandaag .vd-maandpil strong { min-width: 118px; text-align: center; font-size: 12.5px; font-weight: 800; }
+#vandaag .vd-kopcijfer { display: flex; align-items: flex-end; gap: 11px; }
+#vandaag .vd-kopcijfer > strong { color: var(--ink); font-family: var(--kop); font-size: 46px; font-weight: 300; font-variant-numeric: tabular-nums; letter-spacing: -.055em; line-height: .82; }
+#vandaag .vd-kopcijfer > span { padding-bottom: 5px; text-align: left; }
+#vandaag .vd-kopcijfer small { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+#vandaag .vd-kopcijfer small:first-child { margin-top: 0; font-size: 9.5px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+#vandaag .vd-kopcijfer .vd-kop-uren { color: var(--mint-tekst); font-weight: 700; }
+#vandaag .vd-wijs { position: relative; display: flex; align-items: baseline; gap: 9px; margin-top: 20px; min-height: 17px; }
+#vandaag .vd-wijs strong { color: var(--ink); font-size: 11.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
+#vandaag .vd-wijs small { color: var(--muted); font-size: 11.5px; }
+#vandaag .vd-wijs small.is-leeg { color: var(--warning-tekst); }
+#vandaag .vd-spoorvak { position: relative; margin-top: 14px; }
+#vandaag .vd-spoorlijn { position: absolute; bottom: 0; left: 0; right: 0; height: 1.5px; border-radius: 1px; background: var(--line-zacht); }
+#vandaag .vd-spoor { display: flex; align-items: flex-end; gap: 0; height: 26px; }
+#vandaag .vd-streep { display: grid; flex: 1; height: 26px; place-items: end center; cursor: pointer; }
+#vandaag .vd-streep:hover { opacity: .55; }
+/* Het streepje zelf, kopVals r551-558. */
+.vd-streep > span, .vd-tel-streep > span { width: 2px; height: 26px; border-radius: 1px; background: var(--warning); box-shadow: none; transform-origin: bottom; animation: vd-rijzen .45s cubic-bezier(.22,1,.36,1) both, vd-aandacht 2.6s ease-in-out infinite; transition: height .45s cubic-bezier(.22,1,.36,1), background .45s ease; }
+.vd-streep.is-gevuld > span, .vd-tel-streep.is-gevuld > span { height: 18px; background: #2f9e80; box-shadow: 0 0 10px rgba(58,189,157,.55); animation: vd-rijzen .45s cubic-bezier(.22,1,.36,1) both; }
+.vd-streep.is-vrij > span, .vd-tel-streep.is-vrij > span { width: 1.5px; height: 8px; background: var(--line); animation: vd-rijzen .45s cubic-bezier(.22,1,.36,1) both; }
+/* Weken, r229-237 en kopVals r594-596: elke kaart zo breed als hij dagen in de
+   maand heeft (flex: <dagen> 1 0, in de markup gezet). */
+#vandaag .vd-kopweken { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 13px; }
+#vandaag .vd-weekkaart { display: grid; gap: 3px; border: 0; border-radius: 12px; background: rgba(187,118,35,.12); color: var(--ink); cursor: pointer; min-width: 0; min-height: 60px; padding: 10px 12px; font: inherit; text-align: left; }
+#vandaag .vd-weekkaart:hover { background: var(--surface-muted); }
+#vandaag .vd-weekkaart:active { transform: scale(.985); }
+#vandaag .vd-weekkaart strong { font-size: 12px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#vandaag .vd-weekkaart small { color: var(--muted); font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#vandaag .vd-weekkaart .vd-weekstand { color: var(--warning-tekst); font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+#vandaag .vd-weekkaart.is-compleet { background: rgba(58,189,157,.16); }
+#vandaag .vd-weekkaart.is-compleet .vd-weekstand { color: var(--mint-tekst); }
+#vandaag .vd-weekkaart.is-dicht { background: var(--surface-muted); }
+#vandaag .vd-weekkaart.is-dicht .vd-weekstand { color: var(--muted); }
+/* Eerdere maanden en de hoofdknop, r238-255. */
+#vandaag .vd-nogtedoen { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-top: 16px; border-top: 1px solid var(--line-zacht); padding-top: 14px; }
+#vandaag .vd-eerder { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+#vandaag .vd-eerder > small[hidden] { display: none; }
+#vandaag .vd-eerder > small { color: var(--muted); font-size: 9.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+#vandaag .vd-nogtedoen-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+#vandaag .vd-maandchip { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--ink); cursor: pointer; min-height: 36px; font: inherit; font-size: 12px; font-weight: 700; padding: 0 14px; white-space: nowrap; }
+#vandaag .vd-maandchip:hover { border-color: var(--mint); }
 #vandaag .vd-maandchip:active { transform: scale(.97); }
-#vandaag .vd-maandchip small { font-weight: 600; opacity: .75; }
+#vandaag .vd-maandchip small { color: var(--muted); font-weight: 600; }
 #vandaag .vd-maandchip span[aria-hidden] { opacity: .5; }
-
-/* Hero, r197-231 */
-@keyframes vd-ademen { 0%, 100% { opacity: .45; transform: scale(1); } 50% { opacity: .68; transform: scale(1.07); } }
-#vandaag .vd-hero { position: relative; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); background-image: linear-gradient(122deg, rgba(58,189,157,.1), rgba(58,189,157,0) 52%); padding: 0; overflow: hidden; box-shadow: inset 0 1px 0 var(--kaart-glans), var(--schaduw); }
-#vandaag .vd-hero-halo { position: absolute; top: -40px; right: -30px; width: 150px; height: 150px; border-radius: 50%; background: var(--halo); filter: blur(34px); opacity: .55; animation: vd-ademen 7s ease-in-out infinite; pointer-events: none; }
-#vandaag .vd-hero-kop { position: relative; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; padding: 22px clamp(18px, 3vw, 28px) 16px; }
-#vandaag .vd-hero-kop-tekst { min-width: 0; }
-#vandaag .vd-hero h2 { margin: 0; color: var(--ink); font-family: var(--kop); font-size: clamp(21px, 2.2vw, 26px); font-weight: 700; letter-spacing: -.015em; line-height: 1.25; text-wrap: balance; }
-#vandaag .vd-oog { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 7px; border: 1px solid rgba(47,106,76,.36); border-radius: 999px; background: rgba(47,106,76,.14); color: var(--oog-klaar); font-size: 10px; font-weight: 800; white-space: nowrap; letter-spacing: .1em; padding: 6px 10px; text-transform: uppercase; }
-#vandaag .vd-oog.is-taak { border-color: rgba(187,118,35,.4); background: rgba(187,118,35,.16); color: var(--oog-taak); }
-#vandaag .vd-oog-stip { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-#vandaag .vd-hero-midden { display: flex; flex-wrap: wrap; border-top: 1px solid var(--line-zacht); border-bottom: 1px solid var(--line-zacht); }
-#vandaag .vd-ringblok { display: flex; flex: 1 1 260px; min-width: 0; align-items: center; gap: 14px; padding: 16px clamp(18px, 3vw, 28px); }
-#vandaag .vd-ring { position: relative; display: grid; width: 52px; height: 52px; flex: 0 0 auto; place-items: center; }
-#vandaag .vd-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
-#vandaag .vd-ring circle { fill: none; stroke-width: 10; }
-#vandaag .vd-ring-leeg { stroke: var(--hero-ring-leeg); }
-#vandaag .vd-ring-boog { stroke: #2f9e80; stroke-linecap: round; stroke-dasharray: 229.3; stroke-dashoffset: 229.3; transition: stroke-dashoffset .8s cubic-bezier(.22,1,.36,1); }
-#vandaag .vd-ring strong { position: relative; color: var(--ink); font-family: var(--kop); font-size: 12.5px; font-variant-numeric: tabular-nums; }
-#vandaag .vd-ringblok p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; text-wrap: pretty; }
-#vandaag .vd-kpi { display: flex; flex: 1 1 180px; flex-direction: column; justify-content: center; padding: 16px 24px; }
-#vandaag .vd-kpi[hidden] { display: none; }
-#vandaag .vd-kpi strong { color: var(--ink); font-family: var(--kop); font-size: 22px; font-variant-numeric: tabular-nums; line-height: 1; }
-#vandaag .vd-kpi small { margin-top: 4px; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
-#vandaag .vd-hero-acties { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 14px clamp(18px, 3vw, 28px); }
-#vandaag .vd-knop-hoofd { min-height: 46px; border: 0; border-radius: 12px; background: var(--mint); color: var(--navy); cursor: pointer; font: inherit; font-size: 13.5px; font-weight: 700; padding: 0 22px; flex: 0 0 auto; white-space: nowrap; box-shadow: 0 8px 20px rgba(58,189,157,.3); transition: transform .16s cubic-bezier(.22,1,.36,1), box-shadow .16s; }
+#vandaag .vd-kop-acties { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+#vandaag .vd-knop-hoofd { min-height: 44px; border: 0; border-radius: 999px; background: var(--mint); color: var(--navy); cursor: pointer; font: inherit; font-size: 13px; font-weight: 700; padding: 0 22px; flex: 0 0 auto; white-space: nowrap; box-shadow: 0 8px 20px rgba(58,189,157,.3); transition: transform .16s cubic-bezier(.22,1,.36,1), box-shadow .16s; }
 #vandaag .vd-knop-hoofd:hover { box-shadow: 0 11px 26px rgba(58,189,157,.44); }
 #vandaag .vd-knop-hoofd:active { transform: scale(.97); box-shadow: 0 2px 22px rgba(58,189,157,.55); }
-#vandaag .vd-knop-mail { min-height: 46px; border: 1px solid var(--line); border-radius: 12px; background: transparent; color: var(--ink); cursor: pointer; font: inherit; font-size: 13px; font-weight: 700; padding: 0 18px; flex: 0 0 auto; white-space: nowrap; transition: border-color .16s; }
+#vandaag .vd-knop-mail { min-height: 44px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--ink); cursor: pointer; font: inherit; font-size: 12.5px; font-weight: 700; padding: 0 18px; flex: 0 0 auto; white-space: nowrap; transition: border-color .16s; }
 #vandaag .vd-knop-mail:hover { border-color: var(--mint); }
 #vandaag .vd-knop-mail[hidden] { display: none; }
+/* gui r66-73: tot 780px breed wrappen de weken per twee en staat de onderrij
+   onder elkaar. */
+@media (max-width: 780px) {
+  #vandaag .vd-kopweken > button { flex: 1 1 46% !important; min-height: 54px; }
+  #vandaag .vd-streep { cursor: default; pointer-events: none; }
+  #vandaag .vd-nogtedoen { flex-direction: column; align-items: stretch; gap: 9px; }
+  #vandaag .vd-eerder { gap: 6px; }
+  #vandaag .vd-nogtedoen button { flex: 1 1 auto; justify-content: space-between; min-height: 46px; font-size: 13px; padding: 0 13px; }
+}
 
-/* Onder de hero, r233-234: één kolom met de klanturenstaatkaart en het verloop. */
+/* Onder de kopkaart, r258-259: de klanturenstaatkaart en het verloop. */
 #vandaag .vd-onder { display: grid; gap: 16px; align-content: start; min-width: 0; }
 #vandaag .vd-klant-plek:empty { display: none; }
 
@@ -4271,8 +4293,8 @@ html[data-theme="dark"]:not([data-skin="new"]) #vandaag {
 #vandaag .vd-stap.is-nu strong { color: var(--warning-tekst); }
 
 @media (prefers-reduced-motion: reduce) {
-  #vandaag .vd-hero-halo { animation: none; }
-  #vandaag .vd-ring-boog, #vandaag .vd-knop-hoofd { transition: none; }
+  #vandaag .vd-kopkaart-halo, .vd-streep > span, .vd-tel-streep > span { animation: none; }
+  #vandaag .vd-knop-hoofd, .vd-streep > span, .vd-tel-streep > span { transition: none; }
 }
 
 /* Welke opbouw waar: Vandaag in Klassiek vanaf 721px, en de blokken die de
@@ -4345,6 +4367,30 @@ html[data-theme="dark"]:not([data-skin="new"]) #vd-tel {
 #vd-tel .vd-tel-knop-mail { min-height: 50px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; font-size: 14px; font-weight: 700; }
 #vd-tel .vd-tel-knop-mail[hidden] { display: none; }
 
+/* Spoorkaart, wild r152-182: tussen hero en verloop. */
+#vd-tel .vd-tel-spoorkaart { margin-bottom: 12px; border: 1px solid var(--line-zacht); border-radius: 18px; background: var(--surface); padding: 14px 15px 13px; box-shadow: inset 0 1px 0 var(--kaart-glans), var(--kaart-schaduw); }
+#vd-tel .vd-tel-spoorkop { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px; }
+#vd-tel .vd-tel-wijs { display: flex; align-items: baseline; gap: 8px; min-height: 16px; }
+#vd-tel .vd-tel-wijs strong { font-size: 11.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
+#vd-tel .vd-tel-wijs small { color: var(--muted); font-size: 11.5px; }
+#vd-tel .vd-tel-open { display: flex; flex: 0 0 auto; align-items: flex-end; gap: 8px; }
+#vd-tel .vd-tel-open strong { font-family: var(--display); font-size: 30px; font-weight: 400; font-variant-numeric: tabular-nums; letter-spacing: -.04em; line-height: .84; }
+#vd-tel .vd-tel-open small { padding-bottom: 3px; color: var(--muted); font-size: 9.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+#vd-tel .vd-tel-spoorvak { position: relative; margin-top: 12px; }
+#vd-tel .vd-tel-spoorlijn { position: absolute; bottom: 0; left: 0; right: 0; height: 1.5px; border-radius: 1px; background: var(--line-zacht); }
+#vd-tel .vd-tel-spoor { display: flex; align-items: flex-end; gap: 0; height: 24px; }
+#vd-tel .vd-streep { display: grid; flex: 1; height: 24px; place-items: end center; }
+#vd-tel .vd-tel-weken { display: flex; gap: 5px; margin-top: 11px; }
+#vd-tel .vd-tel-weekkaart { display: grid; flex: 1 !important; gap: 2px; border: 0; border-radius: 11px; background: rgba(187,118,35,.12); color: var(--ink); cursor: pointer; min-width: 0; min-height: 46px; padding: 7px 6px; font: inherit; text-align: center; }
+#vd-tel .vd-tel-weekkaart:active { transform: scale(.97); }
+#vd-tel .vd-tel-weekkaart strong { font-size: 11px; font-weight: 800; white-space: nowrap; }
+#vd-tel .vd-tel-weekkaart small:not(.vd-weekstand) { display: none; }
+#vd-tel .vd-tel-weekkaart .vd-weekstand { color: var(--warning-tekst); font-size: 9.5px; font-weight: 800; letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#vd-tel .vd-tel-weekkaart.is-compleet { background: rgba(58,189,157,.16); }
+#vd-tel .vd-tel-weekkaart.is-compleet .vd-weekstand { color: var(--mint-tekst); }
+#vd-tel .vd-tel-weekkaart.is-dicht { background: var(--surface-muted); }
+#vd-tel .vd-tel-weekkaart.is-dicht .vd-weekstand { color: var(--muted); }
+
 /* Verloop als lijst, r150-162 */
 #vd-tel .vd-tel-verloop { display: grid; gap: 1px; border: 1px solid var(--line-zacht); border-radius: 18px; background: var(--line-zacht); overflow: hidden; box-shadow: var(--kaart-schaduw); }
 #vd-tel .vd-tel-verloop-kop { display: flex; width: 100%; align-items: center; gap: 10px; background: var(--surface); color: var(--ink); padding: 13px 16px 12px; text-align: left; }
@@ -4380,9 +4426,7 @@ html[data-theme="dark"]:not([data-skin="new"]) #vd-tel {
 @media (max-width: 720px) {
   html:not([data-skin="new"]) #vandaag { display: block; }
   html:not([data-skin="new"]) #vd-tel { display: block; }
-  html:not([data-skin="new"]) #vandaag > .vd-kop,
-  html:not([data-skin="new"]) #vandaag > .vd-nogtedoen,
-  html:not([data-skin="new"]) #vandaag > .vd-hero,
+  html:not([data-skin="new"]) #vandaag > .vd-kopkaart,
   html:not([data-skin="new"]) #vandaag > .vd-onder { display: none !important; }
   html:not([data-skin="new"]) #view-employee-dashboard > .employee-hero,
   html:not([data-skin="new"]) #view-employee-dashboard > #employee-open-overview,
@@ -4435,4 +4479,192 @@ html:not([data-skin="new"]) body[data-role="employee"][data-view="employee-dashb
    max-width:720px-query in dit bestand. */
 @media (max-width: 720px) {
   html:not([data-skin="new"]) #switch-role { display: none; }
+}
+
+/* ===========================================================================
+   Eén veld over de hele pagina (DESIGN-BESLUITEN "Licht samenhangend houden",
+   14 sep avond). Alleen licht; donker bleef deze ronde ongemoeid.
+   - Het verloop hangt aan het venster (background-attachment: fixed, size cover),
+     niet aan de inhoud: anders zit elke kaart in een andere toon.
+   - Kaarten hebben geen eigen verloop; de menubalk is doorschijnend met blur,
+     zodat het veld vanaf de bovenrand doorloopt.
+   Desktop: gui r14 en r26 (--bg #cfe1d8). Telefoon: wild r6 en r20 (--bg #dfe9e4).
+   ======================================================================== */
+html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] {
+  background-color: #cfe1d8;
+  background-image: linear-gradient(176deg, #a9cbbb 0%, #bfd8cc 22%, #d5e7df 52%, #e8f2ed 78%, #f7fbf9 100%);
+  background-attachment: fixed;
+  background-size: cover;
+}
+html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .topbar {
+  border-bottom-color: #bfcec8;
+  background: transparent;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+/* Desktopnavigatie uit medewerker-gui.html r83-113. Op de lichte Klassieke
+   medewerkerskant is dit een horizontale, doorschijnende menubalk boven het
+   veld; de oude donkerblauwe zijbalk hoort bij de vorige vorm. Beheer, Modern,
+   donker en de bestaande onderste navigatie tot 820px blijven ongemoeid.
+
+   De bestaande sidebar-markup blijft bewust staan: dezelfde vier knoppen en
+   telbolletjes houden daardoor hun gedrag, focusvolgorde en toegankelijke naam.
+   Alleen hun plaats en vorm veranderen. */
+@media (min-width: 821px) {
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .sidebar {
+    position: sticky;
+    inset: 0 auto auto;
+    z-index: 20;
+    display: flex;
+    width: 100%;
+    height: 64px;
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 24px;
+    border-bottom: 1px solid #bfcec8;
+    background: transparent;
+    color: var(--ink);
+    padding: 6px max(14px, calc((100vw - var(--pagina)) / 2)) 0;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .brand {
+    flex: 0 0 auto;
+    align-self: stretch;
+    color: var(--ink);
+    padding-bottom: 11px;
+  }
+
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .brand img {
+    width: 68px;
+  }
+
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .brand span {
+    display: none;
+  }
+
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .nav-list,
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .nav-group:not([hidden]) {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 4px;
+    margin: 0;
+  }
+
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .nav-item {
+    min-height: 42px;
+    flex: 0 0 auto;
+    gap: 7px;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 0 4px;
+    margin-right: 12px;
+    white-space: nowrap;
+  }
+
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .nav-item:hover {
+    background: transparent;
+    color: var(--ink);
+  }
+
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .nav-item.is-active {
+    border-bottom-color: var(--mint);
+    background: transparent;
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .nav-item.is-active::before,
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .nav-marker {
+    display: none;
+  }
+
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .nav-count {
+    margin-left: 0;
+    font-size: 9.5px;
+    padding: 1px 6px;
+  }
+
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .sidebar-footer {
+    position: relative;
+    display: block;
+    width: 32px;
+    height: 42px;
+    flex: 0 0 32px;
+    border: 0;
+    padding: 5px 0;
+  }
+
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .sidebar-footer .workspace-user {
+    display: block;
+  }
+
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .workspace-user .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background-color: rgba(58,189,157,.16);
+    color: var(--mint-tekst);
+    font-size: 11px;
+  }
+
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .workspace-user > span:last-child,
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .sidebar-footer .demo-badge {
+    display: none;
+  }
+
+  /* De avatar is tegelijk de bestaande, toegankelijke rolwisselactie. */
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] #switch-role {
+    position: absolute;
+    inset: 5px 0;
+    z-index: 1;
+    display: block;
+    width: 32px;
+    min-height: 32px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    color: transparent;
+    font-size: 0;
+    padding: 0;
+  }
+
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] #switch-role:hover {
+    background: rgba(58,189,157,.1);
+  }
+
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .main-content {
+    margin-left: 0;
+    padding-inline: clamp(18px, 3vw, 36px);
+  }
+
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .topbar,
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .testbalk {
+    max-width: var(--pagina);
+    margin-inline: auto;
+  }
+
+  /* Vandaag heeft zijn maandbediening en begroeting in de ene kopkaart. Een
+     tweede koprij erboven zou die informatie opnieuw tonen. */
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"][data-view="employee-dashboard"] .topbar {
+    display: none;
+  }
+
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"][data-view="employee-dashboard"] #view-employee-dashboard {
+    padding-top: clamp(18px, 3vw, 30px);
+  }
+}
+@media (max-width: 720px) {
+  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] {
+    background-color: #dfe9e4;
+    background-image: linear-gradient(176deg, #c4dbd1 0%, #d6e8e0 26%, #e9f3ef 58%, #f8fcfa 82%, #ffffff 100%);
+  }
 }

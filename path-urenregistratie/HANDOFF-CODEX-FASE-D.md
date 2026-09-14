@@ -1,5 +1,19 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## 14 september 2026 (avond) — actuele overdracht medewerker Klassiek licht
+
+De verse Claude-designhandoff is uitgevoerd voor uitsluitend de medewerkerkant.
+Desktop gebruikt nu de horizontale vier-tabskop en het ene samengestelde
+Vandaag-paneel; mobiel blijft de Wild-opbouw met onderste vier-tabsnavigatie.
+Het lichte veld loopt vast over het venster door, met transparante blurkop en de
+exacte bron-tokens. Donker, Modern en beheer zijn bewust afgebakend.
+
+Belangrijk herstel: de generieke click-handler zoekt alleen nog echte
+`button[data-view]`/`button[data-pilot-view]`; anders werd `body[data-view]` als
+navigatiedoel gezien en raakte een aangeklikte week vóór zijn eigen handler los
+van de DOM. DASH-H-036, -045, -048 en -049 dekken layout, data, navigatie,
+mobiel en 720/721px. Gerichte checks zijn groen; volledige regressie via CI.
+
 ## (mogelijke taak, nog geen opdracht) 10 september — designstijl app vs. marketingwebsite
 
 Gebruiker vroeg naar het verschil in opmaak tussen www.pathconsultancy.nl

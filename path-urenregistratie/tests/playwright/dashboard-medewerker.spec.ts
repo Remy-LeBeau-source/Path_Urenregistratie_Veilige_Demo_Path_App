@@ -402,10 +402,10 @@ test('[DASH-N-009] medewerker teller blijft stabiel bij aug-juli-aug en dashboar
 
 test('[DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar', async ({ page }) => {
   // Draait op elke projectbreedte. Het maandcijfer staat in Vandaag op desktop in
-  // de KPI (restcijfer) en op telefoon groot in de hero; welke zichtbaar is, hangt
-  // van de breedte af. Het restcijfer op desktop toetst ook [DASH-H-037].
+  // de kopkaart ("32,0 van 160,0 uur") en op telefoon groot in de hero; welke
+  // zichtbaar is, hangt van de breedte af. Desktop toetst ook [DASH-H-037].
   const loginPage = new LoginPage(page);
-  const maandcijfer = page.locator('#vd-kpi-waarde:visible, #vdt-maanduren:visible').first();
+  const maandcijfer = page.locator('#vd-kop-uren:visible, #vdt-maanduren:visible').first();
 
   await page.route('**/server/api/timesheets.php**', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ ok: false }) }));
 
@@ -1785,7 +1785,7 @@ test('[DASH-N-031] de volgende actie is één zin zonder aangeplakte maand, en d
 // 2. De opbouw uit de referentie, met het gezegde uit de letterlijke lijst.
 // 3. Dat hero, ring en "Nog te doen" elkaar niet tegenspreken. Een eerdere nabouw
 //    toonde "Nog 4 weken" boven een verloop dat meer open liet zien.
-test('[DASH-H-036] Vandaag staat op desktop in Klassiek volgens de referentie, en hero, ring en Nog te doen kloppen met elkaar', async ({ page }) => {
+test('[DASH-H-036] Vandaag gebruikt in Klassiek de ene kopkaart op desktop en de Wild-opbouw op telefoon', async ({ page }) => {
   test.setTimeout(120_000);
   await page.setViewportSize({ width: 1280, height: 900 });
   const loginPage = new LoginPage(page);
@@ -1802,6 +1802,7 @@ test('[DASH-H-036] Vandaag staat op desktop in Klassiek volgens de referentie, e
       await expect(page.locator(oud), `${oud} hoort op desktop plaats te maken voor Vandaag`).toBeHidden();
     }
     await expect(page.locator('#vd-klant-plek > #employee-customer-timesheet-card'), 'de klanturenstaatkaart hoort onder de hero te staan').toBeVisible();
+    await expect(page.locator('#vd-kopkaart')).toBeVisible();
     await expect(page.locator('#vd-kop-titel')).not.toBeEmpty();
     await expect(page.locator('#vd-periode')).toHaveText(await page.locator('#period-label').textContent() || '');
     await expect(page.locator('#vd-verloop-lijst .vd-stap')).toHaveCount(5);
@@ -1817,49 +1818,54 @@ test('[DASH-H-036] Vandaag staat op desktop in Klassiek volgens de referentie, e
     expect(stand.inLijst, `"${stand.gezegde}" hoort uit de lijst te komen`).toBe(true);
   });
 
-  // Eén eenheid voor wat open is: dagen (DESIGN-BESLUITEN, 14 sep). De ring
-  // blijft het aandeel complete weken, zoals de referentie.
-  await test.step('And noemt de hero de open dagen uit dezelfde telling als Hele maand, en toont de ring de complete weken', async () => {
+  // De kop is één kaart (DESIGN-BESLUITEN "Kop van het dashboard: maandspoor",
+  // 14 sep): het cijfer zegt hoeveel dagen open staan, uit dezelfde telling als
+  // Hele maand. De losse hero, "Nog N dagen in te vullen" en "Jij bent aan zet"
+  // horen weg te zijn.
+  await test.step('And noemt de kopkaart de open dagen uit dezelfde telling als Hele maand, zonder losse hero', async () => {
     const stand = await page.evaluate(() => {
       const w = window as unknown as {
-        currentEmployee: () => { id: number }; currentPeriod: () => { key: string; weekRows: unknown[] };
+        currentEmployee: () => { id: number }; currentPeriod: () => { key: string; businessDays: number };
         recordFor: (id: number, key: string) => unknown;
-        completedTimesheetWeeks: (r: unknown, p: unknown) => number;
         ontbrekendeWerkdagen: (r: unknown, p: unknown) => unknown[];
       };
       const periode = w.currentPeriod();
       const record = w.recordFor(w.currentEmployee().id, periode.key);
       return {
-        totaal: periode.weekRows.length,
-        compleet: w.completedTimesheetWeeks(record, periode),
+        werkdagen: periode.businessDays,
         openDagen: w.ontbrekendeWerkdagen(record, periode).length,
-        antwoord: (document.querySelector('#vd-antwoord')?.textContent || '').trim(),
-        pct: (document.querySelector('#vd-pct')?.textContent || '').trim(),
+        open: (document.querySelector('#vd-kop-open')?.textContent || '').trim(),
+        woord: (document.querySelector('#vd-kop-dagwoord')?.textContent || '').trim(),
+        noemer: (document.querySelector('#vd-kop-noemer')?.textContent || '').trim(),
         fillStand: document.querySelector('#vd-verloop-lijst [data-vd-stap="fill"]')?.className || '',
+        tekst: document.querySelector('#vandaag')?.textContent || '',
       };
     });
-    expect(stand.pct, 'de ring hoort het aandeel complete weken te tonen').toBe(Math.round((stand.compleet / stand.totaal) * 100) + '%');
-    const open = stand.openDagen;
-    if (open > 0) {
-      expect(stand.antwoord).toBe('Nog ' + open + (open === 1 ? ' dag' : ' dagen') + ' in te vullen.');
-      expect(stand.fillStand, 'met open dagen hoort "Uren ingevuld" de huidige stap te zijn').toContain('is-nu');
-    }
+    expect(stand.open).toBe(String(stand.openDagen));
+    expect(stand.woord).toBe(stand.openDagen === 1 ? 'dag open' : 'dagen open');
+    expect(stand.noemer).toBe(stand.openDagen + ' van ' + stand.werkdagen + ' werkdagen');
+    if (stand.openDagen > 0) expect(stand.fillStand, 'met open dagen hoort "Uren ingevuld" de huidige stap te zijn').toContain('is-nu');
+    await expect(page.locator('#vd-kopkaart')).not.toContainText('in te vullen.');
+    await expect(page.locator('#vd-kopkaart')).not.toContainText(/Jij bent aan zet/i);
+    await expect(page.locator('#page-title')).toBeHidden();
   });
 
-  await test.step('And toont Nog te doen een chip per open maand, oudste eerst en uitgelicht', async () => {
+  await test.step('And toont Eerdere maanden een pil per open maand behalve de gekozen, oudste eerst', async () => {
     const verwacht = await page.evaluate(() => {
       const w = window as unknown as {
         currentEmployee: () => { id: number }; currentPeriod: () => { key: string };
         employeeOpenMonthSummaries: (id: number, key: string) => Array<{ periodKey: string }>;
       };
-      return w.employeeOpenMonthSummaries(w.currentEmployee().id, w.currentPeriod().key).map(m => m.periodKey);
+      const key = w.currentPeriod().key;
+      return w.employeeOpenMonthSummaries(w.currentEmployee().id, key).map(m => m.periodKey).filter(k => k !== key);
     });
     const chips = page.locator('#vd-nogtedoen-chips .vd-maandchip');
     await expect(chips).toHaveCount(verwacht.length);
     if (verwacht.length > 0) {
       expect(await chips.evaluateAll(els => els.map(el => (el as HTMLElement).dataset.vdOpenMaand))).toEqual(verwacht);
-      await expect(chips.first()).toHaveClass(/is-eerste/);
-      await expect(page.locator('#vd-nogtedoen-kop')).toHaveText(verwacht.length === 1 ? 'Nog te doen' : `Nog te doen — ${verwacht.length} maanden`);
+      await expect(page.locator('#vd-nogtedoen-kop')).toHaveText('Eerdere maanden');
+    } else {
+      await expect(page.locator('#vd-nogtedoen-kop')).toBeHidden();
     }
   });
 
@@ -1886,12 +1892,30 @@ test('[DASH-H-036] Vandaag staat op desktop in Klassiek volgens de referentie, e
     // 5-7). De oude hero en "Open acties per maand" zijn daar weg.
     await page.setViewportSize({ width: 390, height: 850 });
     await expect(page.locator('#vd-tel')).toBeVisible();
-    await expect(page.locator('#vd-hero')).toBeHidden();
+    await expect(page.locator('#vd-kopkaart')).toBeHidden();
+    await expect(page.locator('#vdt-spoorkaart')).toBeVisible();
+    await expect(page.locator('#vdt-kop-open')).toHaveText(await page.locator('#vd-kop-open').textContent() || '');
     await expect(page.locator('#vdt-klant-plek > #employee-customer-timesheet-card')).toBeVisible();
     await expect(page.locator('#view-employee-dashboard > .employee-hero')).toBeHidden();
     await expect(page.locator('#employee-open-overview')).toBeHidden();
     await expect(page.locator('#vdt-spreuk')).toHaveText(await page.locator('#vd-spreuk').textContent() || '');
     await expect(page.locator('#vdt-verloop-lijst .vd-tel-stap')).toHaveCount(5);
+  });
+
+  await test.step('And opent ook een mobiele week de juiste urenweek, met de omslag exact tussen 720 en 721px', async () => {
+    const laatste = page.locator('#vdt-kopweken .vd-tel-weekkaart').last();
+    const wi = await laatste.getAttribute('data-vd-week');
+    await laatste.click();
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+    expect(await page.evaluate(() => (0, eval)('state').hoursWeekScope)).toBe('week-' + wi);
+    await page.locator('button[data-view="employee-dashboard"]:visible').first().click();
+
+    await page.setViewportSize({ width: 720, height: 850 });
+    await expect(page.locator('#vd-tel')).toBeVisible();
+    await expect(page.locator('#vd-kopkaart')).toBeHidden();
+    await page.setViewportSize({ width: 721, height: 850 });
+    await expect(page.locator('#vd-tel')).toBeHidden();
+    await expect(page.locator('#vd-kopkaart')).toBeVisible();
   });
 });
 
@@ -1906,7 +1930,7 @@ test('[DASH-H-036] Vandaag staat op desktop in Klassiek volgens de referentie, e
 //   DASH-H-039 <- SKIN-H-031, SKIN-H-032 (verloop volgt de regel en is gelijk
 //                 aan de Modern-bento)
 
-test('[DASH-H-037] Vandaag ververst het restcijfer meteen na ureninvoer en na terugnavigeren', async ({ page }) => {
+test('[DASH-H-037] Vandaag ververst de urenregel in de kopkaart meteen na ureninvoer en na terugnavigeren', async ({ page }) => {
   test.setTimeout(120_000);
   await page.setViewportSize({ width: 1280, height: 900 });
   const loginPage = new LoginPage(page);
@@ -1916,13 +1940,15 @@ test('[DASH-H-037] Vandaag ververst het restcijfer meteen na ureninvoer en na te
   await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
   const herstelUrenstaat = await bewaarUrenstaat(page);
 
-  // Het restcijfer hoort contracturen min geboekte uren te zijn, uit dezelfde
-  // bron als de rest van de app. In één evaluate gelezen: een serversync tussen
-  // twee losse metingen zou twee verschillende standen vergelijken.
+  // De urenregel in de kopkaart ("32,0 van 160,0 uur") hoort de geboekte uren
+  // (met verlof en ziekte, zoals #hours-total) tegen het contract te zetten, uit
+  // dezelfde bron als de rest van de app. Sinds de kopkaart van 14 sep vervangt
+  // die regel het restcijfer uit de vervallen hero. In één evaluate gelezen: een
+  // serversync tussen twee losse metingen zou twee verschillende standen vergelijken.
   const stand = () => page.evaluate(() => {
     const w = window as unknown as {
       currentEmployee: () => { id: number }; currentPeriod: () => { key: string };
-      recordFor: (id: number, key: string) => { entries: number[][] };
+      recordFor: (id: number, key: string) => { entries: number[][]; leave?: number; sick?: number };
       totalEntries: (e: number[][]) => number;
       defaultContractHours: (emp: unknown, key: string) => number;
     };
@@ -1930,14 +1956,15 @@ test('[DASH-H-037] Vandaag ververst het restcijfer meteen na ureninvoer en na te
     const hoursFormat = (0, eval)('hoursFormat') as Intl.NumberFormat;
     const emp = w.currentEmployee();
     const key = w.currentPeriod().key;
-    const verwacht = Math.max(0, w.defaultContractHours(emp, key) - w.totalEntries(w.recordFor(emp.id, key).entries));
-    return { getoond: (document.querySelector('#vd-kpi-waarde')?.textContent || '').trim(), verwacht: hoursFormat.format(verwacht) + 'u' };
+    const record = w.recordFor(emp.id, key);
+    const geboekt = w.totalEntries(record.entries) + Number(record.leave || 0) + Number(record.sick || 0);
+    return { getoond: (document.querySelector('#vd-kop-uren')?.textContent || '').trim(), verwacht: hoursFormat.format(geboekt) + ' van ' + hoursFormat.format(w.defaultContractHours(emp, key)) + ' uur' };
   });
 
   try {
-    await test.step('Given het restcijfer klopt met contract en geboekte uren', async () => {
+    await test.step('Given de urenregel klopt met geboekte uren en contract', async () => {
       const s = await stand();
-      expect(s.getoond, 'het restcijfer hoort contract min geboekte uren te zijn').toBe(s.verwacht);
+      expect(s.getoond, 'de urenregel hoort geboekte uren van het contract te noemen').toBe(s.verwacht);
     });
 
     let voor = '';
@@ -1953,8 +1980,8 @@ test('[DASH-H-037] Vandaag ververst het restcijfer meteen na ureninvoer en na te
       await expect(page.locator('#vandaag')).toBeVisible();
     });
 
-    await test.step('Then is het restcijfer lager en klopt het nog steeds met de bron', async () => {
-      await expect(page.locator('#vd-kpi-waarde')).not.toHaveText(voor, { timeout: 15_000 });
+    await test.step('Then is de urenregel veranderd en klopt hij nog steeds met de bron', async () => {
+      await expect(page.locator('#vd-kop-uren')).not.toHaveText(voor, { timeout: 15_000 });
       const s = await stand();
       expect(s.getoond).toBe(s.verwacht);
     });
@@ -1963,7 +1990,7 @@ test('[DASH-H-037] Vandaag ververst het restcijfer meteen na ureninvoer en na te
   }
 });
 
-test('[DASH-H-038] Nog te doen in Vandaag opent per maand de juiste route, ook voor een correctie, en blijft leesbaar in donker', async ({ page }) => {
+test('[DASH-H-038] Eerdere maanden in Vandaag opent per maand de juiste route, ook voor een correctie, en blijft leesbaar in donker', async ({ page }) => {
   test.setTimeout(120_000);
   await page.setViewportSize({ width: 1280, height: 900 });
   const loginPage = new LoginPage(page);
@@ -1979,14 +2006,16 @@ test('[DASH-H-038] Nog te doen in Vandaag opent per maand de juiste route, ook v
       recordFor: (id: number, key: string) => { timesheetStatus: string };
     };
     const emp = w.currentEmployee();
-    return w.employeeOpenMonthSummaries(emp.id, w.currentPeriod().key).map(m => ({
+    const key = w.currentPeriod().key;
+    // De gekozen maand zelf staat in de kopkaart, niet als pil (gui r750).
+    return w.employeeOpenMonthSummaries(emp.id, key).filter(m => m.periodKey !== key).map(m => ({
       key: m.periodKey, label: m.period.label, uren: m.actions.some(a => a.type === 'hours'),
       correctie: w.recordFor(emp.id, m.periodKey).timesheetStatus === 'correction',
     }));
   });
-  expect(maanden.length, 'de demodata hoort open maanden te hebben, anders toetst deze case niets').toBeGreaterThan(0);
+  expect(maanden.length, 'de demodata hoort eerdere open maanden te hebben, anders toetst deze case niets').toBeGreaterThan(0);
 
-  await test.step('Then leidt de eerste chip, de geprioriteerde maand, naar precies die maand en de juiste route', async () => {
+  await test.step('Then leidt de eerste pil, de oudste open maand, naar precies die maand en de juiste route', async () => {
     const eerste = maanden[0];
     const chip = page.locator(`#vd-nogtedoen-chips [data-vd-open-maand="${eerste.key}"]`);
     await expect(page.locator('#vd-nogtedoen-chips .vd-maandchip').first()).toHaveAttribute('data-vd-open-maand', eerste.key);
@@ -2564,6 +2593,33 @@ test('[DASH-H-045] de tabbalk van de medewerker heeft Vandaag · Mijn uren · Ma
     await expect(tabs.nth(2)).toHaveAttribute('data-view', 'historie');
   });
 
+  await test.step('And staat die navigatie op een lichte desktop als horizontale, doorschijnende kopbalk zonder oude zijmarge', async () => {
+    if ((page.viewportSize()?.width ?? 0) < 821) return;
+    const vorm = await page.evaluate(() => {
+      const zij = document.querySelector('.sidebar') as HTMLElement;
+      const hoofd = document.querySelector('.main-content') as HTMLElement;
+      const knoppen = Array.from(document.querySelectorAll<HTMLElement>('.nav-group.role-employee-only .nav-item'));
+      const s = getComputedStyle(zij);
+      return {
+        balk: zij.getBoundingClientRect().toJSON(),
+        positie: s.position,
+        achtergrond: s.backgroundColor,
+        blur: s.backdropFilter || (s as unknown as Record<string, string>).webkitBackdropFilter,
+        hoofdmarge: getComputedStyle(hoofd).marginLeft,
+        rijen: [...new Set(knoppen.map(knop => Math.round(knop.getBoundingClientRect().top)))],
+      };
+    });
+    expect(vorm.balk.x).toBe(0);
+    expect(vorm.balk.width).toBe(page.viewportSize()!.width);
+    expect(vorm.balk.height).toBeLessThanOrEqual(70);
+    expect(vorm.positie).toBe('sticky');
+    expect(vorm.achtergrond).toBe('rgba(0, 0, 0, 0)');
+    expect(vorm.blur).toContain('blur(12px)');
+    expect(vorm.hoofdmarge).toBe('0px');
+    expect(vorm.rijen).toHaveLength(1);
+    await expect(page.locator('.topbar')).toBeHidden();
+  });
+
   await test.step('When de medewerker op Maanden tikt, then staat Mijn maanden open en is die tab actief', async () => {
     await page.locator('button[data-view="historie"]:visible').first().click();
     await expect(page.locator('#view-historie')).toHaveClass(/is-active/);
@@ -2675,5 +2731,116 @@ test('[DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbal
     await loginPage.loginAsAdmin();
     await expect(balk).toBeHidden();
     await expect(page.locator('.topbar-actions #quick-reset-demo')).toHaveCount(1);
+  });
+});
+
+test('[DASH-H-048] het maandspoor heeft per kalenderdag een streep en de weken zijn zo breed als hun dagen, en ze leiden naar die week', async ({ page }) => {
+  // DESIGN-BESLUITEN "Kop van het dashboard: maandspoor" (14 sep): per
+  // kalenderdag één streep, mint als de dag gevuld is, amber als hij leeg is,
+  // een stipje voor het weekend. De weken als kaarten met flex:<dagen> 1 0,
+  // getint naar hun stand. Een streep of week opent Mijn uren op die week.
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('#vd-kopkaart')).toBeVisible();
+  await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
+
+  await test.step('Then heeft het spoor per dag een streep met de stand uit dezelfde regel als Hele maand', async () => {
+    const stand = await page.evaluate(() => {
+      const w = window as unknown as {
+        currentEmployee: () => { id: number }; currentPeriod: () => { key: string; year: number; monthIndex: number; weekRows: Array<{ days: Array<{ day: number } | null> }> };
+        recordFor: (id: number, key: string) => unknown;
+        werkdagTeltAlsIngevuld: (r: unknown, wi: number, di: number) => boolean;
+      };
+      const p = w.currentPeriod();
+      const record = w.recordFor(w.currentEmployee().id, p.key);
+      const dagen = new Date(Date.UTC(p.year, p.monthIndex + 1, 0)).getUTCDate();
+      const verwacht: string[] = [];
+      for (let dag = 1; dag <= dagen; dag += 1) {
+        const di = (new Date(Date.UTC(p.year, p.monthIndex, dag)).getUTCDay() + 6) % 7;
+        if (di > 4) { verwacht.push('vrij'); continue; }
+        const wi = p.weekRows.findIndex(r => r.days[di]?.day === dag);
+        verwacht.push(w.werkdagTeltAlsIngevuld(record, wi, di) ? 'gevuld' : 'leeg');
+      }
+      const getoond = Array.from(document.querySelectorAll('#vd-spoor .vd-streep')).map(el => el.classList.contains('is-vrij') ? 'vrij' : el.classList.contains('is-gevuld') ? 'gevuld' : 'leeg');
+      const leegHoogte = getComputedStyle(document.querySelector('#vd-spoor .vd-streep.is-leeg > span') || document.body).height;
+      const gevuldHoogte = getComputedStyle(document.querySelector('#vd-spoor .vd-streep.is-gevuld > span') || document.body).height;
+      return { verwacht, getoond, leegHoogte, gevuldHoogte };
+    });
+    expect(stand.getoond).toEqual(stand.verwacht);
+    if (stand.verwacht.includes('leeg')) expect(stand.leegHoogte, 'een lege dag is 26px hoog').toBe('26px');
+    if (stand.verwacht.includes('gevuld')) expect(stand.gevuldHoogte, 'een gevulde dag is 18px hoog').toBe('18px');
+  });
+
+  await test.step('And zijn de weken samen de hele maand, elk zo breed als zijn dagen, met bereik en stand', async () => {
+    const weken = await page.locator('#vd-kopweken .vd-weekkaart').evaluateAll(els => els.map(el => ({
+      groei: getComputedStyle(el).flexGrow,
+      tekst: (el.textContent || '').replace(/\s+/g, ' ').trim(),
+      soort: el.className,
+    })));
+    const dagen = await page.locator('#vd-spoor .vd-streep').count();
+    expect(weken.length).toBeGreaterThan(3);
+    expect(weken.reduce((som, w) => som + Number(w.groei), 0), 'de weken samen horen alle dagen van de maand te dekken').toBe(dagen);
+    for (const w of weken) {
+      expect(w.tekst).toMatch(/^Week \d+\d*[–-]\d+ [a-z]{3}(Compleet|\d+ open|Vrij|Ingediend|Goedgekeurd)$/);
+      if (/open$/.test(w.tekst)) expect(w.soort).toContain('is-open');
+      if (/Compleet$/.test(w.tekst)) expect(w.soort).toContain('is-compleet');
+    }
+  });
+
+  await test.step('And zegt de regel boven het spoor wat er op een dag staat zolang de muis erop staat', async () => {
+    await expect(page.locator('#vd-wijs-tekst')).toHaveText('Elke streep is een dag — beweeg erover');
+    const tweede = page.locator('#vd-spoor .vd-streep').nth(1);
+    await tweede.hover();
+    await expect(page.locator('#vd-wijs-datum')).toHaveText(/^2 [a-z]+$/);
+    await expect(page.locator('#vd-wijs-tekst')).toHaveText(await tweede.getAttribute('data-vd-wijs') || '');
+    await page.mouse.move(5, 5);
+    await expect(page.locator('#vd-wijs-tekst')).toHaveText('Elke streep is een dag — beweeg erover');
+  });
+
+  await test.step('When de medewerker op de laatste week tikt, then opent Mijn uren op die week', async () => {
+    const laatste = page.locator('#vd-kopweken .vd-weekkaart').last();
+    const wi = await laatste.getAttribute('data-vd-week');
+    await laatste.click();
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+    expect(await page.evaluate(() => (0, eval)('state').hoursWeekScope)).toBe('week-' + wi);
+  });
+});
+
+test('[DASH-H-049] licht Klassiek heeft bij de medewerker één vast veld over de pagina en een doorschijnende menubalk', async ({ page }) => {
+  // DESIGN-BESLUITEN "Licht samenhangend houden" (14 sep, avond): het verloop
+  // hangt aan het venster, de menubalk laat het veld doorlopen met blur, en de
+  // kopkaart heeft geen eigen verloop. Donker is deze ronde niet gewijzigd.
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  const breed = (page.viewportSize()?.width ?? 0) >= 721;
+
+  await test.step('Then hangt het veld aan het venster, met de waarden van de referentie voor deze breedte', async () => {
+    const veld = await page.evaluate(() => {
+      const s = getComputedStyle(document.body);
+      const balk = getComputedStyle(document.querySelector('.topbar')!);
+      return { kleur: s.backgroundColor, beeld: s.backgroundImage, vast: s.backgroundAttachment, balk: balk.backgroundColor, blur: balk.backdropFilter || (balk as unknown as Record<string, string>).webkitBackdropFilter };
+    });
+    expect(veld.vast).toBe('fixed');
+    expect(veld.kleur).toBe(breed ? 'rgb(207, 225, 216)' : 'rgb(223, 233, 228)');
+    expect(veld.beeld).toContain(breed ? 'rgb(169, 203, 187)' : 'rgb(196, 219, 209)');
+    expect(veld.balk).toBe('rgba(0, 0, 0, 0)');
+    expect(veld.blur).toContain('blur(12px)');
+  });
+
+  await test.step('And heeft de kopkaart geen eigen verloop', async () => {
+    const kaart = page.locator('#vd-kopkaart:visible, #vdt-spoorkaart:visible').first();
+    await expect(kaart).toBeVisible();
+    expect(await kaart.evaluate(el => getComputedStyle(el).backgroundImage)).toBe('none');
+  });
+
+  await test.step('And blijft donker zoals het was: geen veldverloop', async () => {
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+    expect(await page.evaluate(() => getComputedStyle(document.body).backgroundImage)).toBe('none');
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
   });
 });

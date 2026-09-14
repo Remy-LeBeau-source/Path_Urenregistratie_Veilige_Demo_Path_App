@@ -1981,7 +1981,7 @@ test('[SKIN-H-031] de vijf stappen lopen in volgorde en geen stap staat groen te
   const loginPage = new LoginPage(page);
   await loginPage.open();
   await loginPage.loginAsEmployee();
-  await expect(page.locator('#vd-antwoord')).not.toBeEmpty();
+  await expect(page.locator('#vd-kop-open')).not.toBeEmpty();
   await page.locator('#quick-skin-toggle').click();
   await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
   // Deze case zet de gedeelde demomedewerker in een extreme toestand (hele

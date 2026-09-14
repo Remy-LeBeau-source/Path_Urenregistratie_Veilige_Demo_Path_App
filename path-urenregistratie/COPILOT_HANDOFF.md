@@ -1,5 +1,16 @@
 # Copilot handoff — lokale mailpreview en regressieherstel
 
+## Codex handoff — 14 september 2026, medewerker Klassiek licht
+
+- Scope: alleen medewerker; beheer, Modern en donker niet herontworpen.
+- Desktop: horizontale kopnavigatie en één kaart voor begroeting, maand,
+  open dagen, dagspoor, weken, eerdere maanden en hoofdactie.
+- Mobiel/PWA: Wild-layout, vier tabs en gerichte 390px/720-721px-controle.
+- Exacte lichte tokens en één vast paginaverloop; kaarten zonder eigen verloop.
+- Click-delegation naar `body[data-view]` begrensd tot echte navigatieknoppen.
+- Bewijs: DASH-H-036/-045/-048/-049 plus design- en BDD-audits; volledige suite
+  hoort één keer in de pipeline te draaien.
+
 ## Claude handoff — 10 september 2026, 2026-09-10 14:52
 
 Vervolgsessie op main. Kort samengevat:

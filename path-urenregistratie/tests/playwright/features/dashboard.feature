@@ -257,34 +257,35 @@ Feature: Dashboard en open werkvoorraad
     Then wordt met Playwright-assertions bevestigd dat de volgende actie is één zin zonder aangeplakte maand, en de maand staat in de regel eronder
 
   @happy
-  Scenario: [DASH-H-036] Vandaag staat op desktop in Klassiek volgens de referentie, en hero, ring en Nog te doen kloppen met elkaar
+  Scenario: [DASH-H-036] Vandaag gebruikt in Klassiek de ene kopkaart op desktop en de Wild-opbouw op telefoon
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 31
+    # Aantoonbare Playwright-assertions in deze case: 44
     Given dashboard en open werkvoorraad is voorbereid
     When de flow voor DASH-H-036 wordt uitgevoerd
     Then staat Vandaag er in Klassiek, en zijn de oude blokken en de klanturenstaatkaart verhuisd of weg
     And komt het gezegde letterlijk uit de lijst van de referentie
-    And noemt de hero de open dagen uit dezelfde telling als Hele maand, en toont de ring de complete weken
-    And toont Nog te doen een chip per open maand, oudste eerst en uitgelicht
+    And noemt de kopkaart de open dagen uit dezelfde telling als Hele maand, zonder losse hero
+    And toont Eerdere maanden een pil per open maand behalve de gekozen, oudste eerst
     And brengt de hoofdknop je naar Mijn uren zolang er weken open staan
     And staat Vandaag niet in Modern, en daar blijft de bento
     And toont Vandaag op telefoon de opbouw uit medewerker-wild.html, met de kaart onder het verloop
+    And opent ook een mobiele week de juiste urenweek, met de omslag exact tussen 720 en 721px
 
   @happy
-  Scenario: [DASH-H-037] Vandaag ververst het restcijfer meteen na ureninvoer en na terugnavigeren
+  Scenario: [DASH-H-037] Vandaag ververst de urenregel in de kopkaart meteen na ureninvoer en na terugnavigeren
     # Testtechniek: Herstelbaarheid + toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 8
-    Given het restcijfer klopt met contract en geboekte uren
+    Given de urenregel klopt met geboekte uren en contract
     When de medewerker via de hoofdknop een uur invult en terug naar het dashboard gaat
-    Then is het restcijfer lager en klopt het nog steeds met de bron
+    Then is de urenregel veranderd en klopt hij nog steeds met de bron
 
   @happy
-  Scenario: [DASH-H-038] Nog te doen in Vandaag opent per maand de juiste route, ook voor een correctie, en blijft leesbaar in donker
+  Scenario: [DASH-H-038] Eerdere maanden in Vandaag opent per maand de juiste route, ook voor een correctie, en blijft leesbaar in donker
     # Testtechniek: Toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 17
     Given dashboard en open werkvoorraad is voorbereid
     When de flow voor DASH-H-038 wordt uitgevoerd
-    Then leidt de eerste chip, de geprioriteerde maand, naar precies die maand en de juiste route
+    Then leidt de eerste pil, de oudste open maand, naar precies die maand en de juiste route
     And opent een correctiemaand Mijn uren als bewerkbare correctie
     And is de tekst op elke chip leesbaar in donker (4,5:1 tegen het werkelijke vlak)
 
@@ -361,9 +362,10 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-045] de tabbalk van de medewerker heeft Vandaag · Mijn uren · Maanden · Berichten, en Maanden opent Mijn maanden
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 10
+    # Aantoonbare Playwright-assertions in deze case: 19
     Given dashboard en open werkvoorraad is voorbereid
     Then staan de vier tabs in de volgorde van de referentie
+    And staat die navigatie op een lichte desktop als horizontale, doorschijnende kopbalk zonder oude zijmarge
     When de medewerker op Maanden tikt, then staat Mijn maanden open en is die tab actief
     And toont Berichten een telbolletje gelijk aan het aantal ongelezen berichten
 
@@ -385,6 +387,26 @@ Feature: Dashboard en open werkvoorraad
     And begint Vandaag met de begroeting, zonder paginatitel; Mijn uren houdt zijn titel
     When de medewerker naar Modern wisselt, then staan de knoppen weer in de topbalk en is de balk weg
     And houdt beheer de knoppen in zijn eigen topbalk
+
+  @happy
+  Scenario: [DASH-H-048] het maandspoor heeft per kalenderdag een streep en de weken zijn zo breed als hun dagen, en ze leiden naar die week
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 16
+    Given dashboard en open werkvoorraad is voorbereid
+    Then heeft het spoor per dag een streep met de stand uit dezelfde regel als Hele maand
+    And zijn de weken samen de hele maand, elk zo breed als zijn dagen, met bereik en stand
+    And zegt de regel boven het spoor wat er op een dag staat zolang de muis erop staat
+    When de medewerker op de laatste week tikt, then opent Mijn uren op die week
+
+  @happy
+  Scenario: [DASH-H-049] licht Klassiek heeft bij de medewerker één vast veld over de pagina en een doorschijnende menubalk
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given dashboard en open werkvoorraad is voorbereid
+    When de flow voor DASH-H-049 wordt uitgevoerd
+    Then hangt het veld aan het venster, met de waarden van de referentie voor deze breedte
+    And heeft de kopkaart geen eigen verloop
+    And blijft donker zoals het was: geen veldverloop
 
   @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors
