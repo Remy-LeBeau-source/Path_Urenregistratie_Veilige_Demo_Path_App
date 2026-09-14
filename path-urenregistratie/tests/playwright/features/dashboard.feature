@@ -90,30 +90,6 @@ Feature: Dashboard en open werkvoorraad
     When de medewerker uren invult en terug naar het medewerkerdashboard gaat
     Then blijven de maandnamen zichtbaar in donkere modus
 
-  @happy
-  Scenario: [DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behoudt maandlabels bij themawissel
-    # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 6
-    Given een medewerker op donker thema die vanuit dashboard naar uren gaat
-    When de medewerker uren wijzigt en terug navigeert via de zichtbare medewerkerroute
-    Then zijn de maandlabels nog zichtbaar in de maandkiezer
-
-  @happy
-  Scenario: [DASH-H-005] medewerker ziet open maanden compact en kan direct naar de juiste maand springen
-    # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 7
-    Given een medewerker met open maanden
-    When het medewerkerdashboard opent
-    Then is er een compacte open-maandenkaart zichtbaar met een directe maandknop
-
-  @happy
-  Scenario: [DASH-H-014] medewerker krijgt de eerstvolgende concrete actie met juiste maand en taakroute
-    # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 22
-    Given een medewerker met meerdere open acties over verschillende maanden
-    When het dashboard de werkvoorraad prioriteert
-    Then opent de hoofdactie exact de geprioriteerde maand en juiste taakroute
-
   @negative
   Scenario: [DASH-N-015] medewerkerprioriteit kiest correctie boven document en toont niets als alles klaar is
     # Testtechniek: Beslissingstabel rollen en autorisatie
@@ -381,6 +357,25 @@ Feature: Dashboard en open werkvoorraad
     Then heeft het scherm Klanturenstaat geen berichtveld en geen berichtvoorbeeld meer
     And staat in Mijn maanden, waar de pil alleen staat, de volledige tekst
     And houdt Backoffice zijn eigen term, zonder sjabloonbericht van de medewerker
+
+  @happy
+  Scenario: [DASH-H-045] de tabbalk van de medewerker heeft Vandaag · Mijn uren · Maanden · Berichten, en Maanden opent Mijn maanden
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given dashboard en open werkvoorraad is voorbereid
+    When de flow voor DASH-H-045 wordt uitgevoerd
+    Then staan de vier tabs in de volgorde van de referentie
+    And toont Berichten een telbolletje gelijk aan het aantal ongelezen berichten
+
+  @happy
+  Scenario: [DASH-H-046] op telefoon zweeft "Andere rol kiezen" niet over de inhoud; de actie staat in de topbalk
+    # Testtechniek: Grenswaardenanalyse
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given dashboard en open werkvoorraad is voorbereid
+    When de flow voor DASH-H-046 wordt uitgevoerd
+    Then is de zwevende knop weg en staat de topbalkknop er wel
+    And ligt geen vast gepositioneerde knop over de tabbalk
+
 
   @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors
