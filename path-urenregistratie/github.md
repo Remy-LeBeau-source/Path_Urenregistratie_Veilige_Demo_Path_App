@@ -3,9 +3,67 @@ branch: main
 path: path-urenregistratie
 
 ## Last sync
-date: 2026-09-14T00:30:00Z
+date: 2026-09-14T02:35:00Z
+
+### Ronde 14 sep — aangeleverd als zip, niet via links
+Deze ronde kwam als `App 2026.zip` in plaats van via signed URLs. De zip bevatte
+meer dan de vier bestanden, waaronder drie documenten die hier nog niet lagen:
+`KLASSIEK-MEDEWERKER.md` (leidend voor de vormgeving), `AGENTS-AANVULLING.md` en
+drie extra referentie-HTML's (`medewerker-klassiek.html`,
+`medewerker-telefoon.html`, `weekstaat-vergelijking.html`).
+
+Twee bestanden uit de zip zijn op aanwijzing van Gio verwijderd:
+`OPDRACHT-CLAUDE-CODE.md` en `BRIEF.md`. Die waren verouderd — de eerste ging
+over het Klassiek-artefact en niet over de app, de tweede over de 1919-pilots.
+`handoff/OPDRACHT.md` is de enige geldige opdracht.
+
+**Besluit van 14 sep, en het is een terugdraaiing:** elke lege werkdag in de
+maand telt als ontbrekend, óók dagen die nog moeten komen. Een eerdere ronde
+sloeg toekomstige dagen over; dat is teruggedraaid omdat je de hele maand
+indient en niet de dagen tot vandaag. Een dag die bewust op 0,0 is gezet telt
+wél als ingevuld.
+
+Daarmee is het openstaande punt uit de vorige ronde beslist: de app hoeft
+`isTimesheetWeekComplete` niet aan te passen, want die rekent al precies zo.
+
+### Terugmelding uit de repo (14 sep)
+
+**Het verouderde `OPDRACHT-CLAUDE-CODE.md` beschreef het artefact, niet de app.**
+Punt 1 daarvan ("Mijn uren desktop bestaat niet, de zijbalkknoppen zijn dood,
+`naarDashboard: () => {}`") is voor deze repo onjuist: `naarDashboard` komt in
+`index.html` en `app.js` niet voor, de zijbalkknop is `data-view="timesheet"` met
+een volledig `#view-timesheet` erachter, en de 0/8/9-knoppen staan op
+`styles.css:887` zonder breedtevoorwaarde en dus ook op desktop. Ook "zeven dagen
+op één scherm" past niet: `periodFromKey` slaat het weekend over. Gio heeft dat
+bevestigd en het bestand verwijderd.
+
+**Niet gebouwd: de indienknop vergrendelen zolang er gaten zijn.** Het ontwerp
+vraagt "Nog N dagen invullen" met een vergrendelde knop. Dat is geen opmaak maar
+een workflowpoort: `#submit-timesheet` wordt op 21 plekken in 15 spec-bestanden
+aangeklikt, en de bestaande indienbevestiging waarschuwt al over niet volledig
+ingevulde weken en laat je bewust doorgaan. Vergrendelen zou dat gedrag
+omkeren. Vraagt een besluit.
+
+### Wat er is nagebouwd (14 sep)
+
+- Blok met **concrete ontbrekende werkdagen** bij "Hele maand"
+  (`#hours-missing-days`), conform `TS-REV-UI-H-015`: nooit een kaal aantal maar
+  de dagen zelf als amberchips die naar hun week springen. Maximaal zes chips,
+  daarna "en nog N dagen deze maand". Bij nul gaten wordt hetzelfde blok mint met
+  "Geen ontbrekende werkdagen." — zelfde plek, zodat het scherm niet verspringt.
+- Alleen zichtbaar in de maandweergave: kijk je naar één week, dan is de
+  weekkaart zelf al het overzicht.
+- Eén bewuste afwijking van de bron: de chips tonen "Di 15 sep" en niet
+  "Di 15-09", omdat ze pal boven een raster staan dat de eerste notatie al
+  gebruikt. Twee datumnotaties op één scherm is een eigen fout.
+- `[DASH-H-032]` legt het vast, inclusief de terugdraaiing: een toekomstige lege
+  werkdag telt mee, een bewust op 0,0 gezette dag niet.
+
+## Sync history
 
 ### Ronde 13 sep (nacht) — vastgesteld uit de diff van de exports
+date: 2026-09-14T00:30:00Z
+
 GUI: 254 gewijzigde regels, Wild: 10.
 
 **De GUI-weekstaat volgt nu de bestaande app.** Het handoff-document zegt het
@@ -60,8 +118,6 @@ productbeslissing en geen opmaakwijziging.
 - `[SKIN-H-033]` bewaakt dat, met de viewport expliciet op 1800px — geen van de
   vier bestaande projecten komt anders ooit langs die grens. Tegenproef: zonder
   de regel meet hij 1482px.
-
-## Sync history
 
 ### Ronde 13 sep (laat) — vastgesteld uit de diff van de exports
 date: 2026-09-13T20:34:50Z

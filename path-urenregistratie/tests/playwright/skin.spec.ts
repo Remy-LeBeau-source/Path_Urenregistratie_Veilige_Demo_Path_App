@@ -2,6 +2,7 @@ import { expect, test, request as playwrightRequest, type Locator } from '@playw
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { LoginPage } from './pages/LoginPage';
+import { bewaarUrenstaat } from './fixtures/urenstaatHerstel';
 import { openProfielmenu } from './pages/TopbarMenu';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 
@@ -36,41 +37,6 @@ async function genormaliseerdeTekst(locator: Locator): Promise<string> {
   return locator.evaluate(element => String(element.textContent || '').replace(/\s+/g, ' ').trim());
 }
 
-// Bewaart de urenstaat van de gedeelde demomedewerker en geeft een functie
-// terug die hem terugzet. Nodig voor cases die een hele maand vullen of
-// indienen: die toestand blijft anders staan en verandert wat latere cases in
-// dezelfde run zien. Gemeten, niet bedacht -- zonder terugzetten viel
-// [DASH-H-025] om op een augustus die geen correctie meer nodig had en
-// [DASH-N-021] op een open-actieteller die op 1 uitkwam. Aanroepen in een
-// try/finally, zodat het ook gebeurt als de case faalt.
-async function bewaarUrenstaat(page: import('@playwright/test').Page): Promise<() => Promise<void>> {
-  type Runtime = {
-    currentEmployee: () => { id: number };
-    currentPeriod: () => { key: string };
-    recordFor: (id: number, key?: string) => Record<string, unknown>;
-    persistState: () => void;
-    renderAll: () => void;
-  };
-  const vooraf = await page.evaluate(() => {
-    const runtime = window as unknown as Runtime;
-    const record = runtime.recordFor(runtime.currentEmployee().id, runtime.currentPeriod().key);
-    return JSON.stringify({
-      entries: record.entries,
-      confirmedEntries: record.confirmedEntries,
-      timesheetStatus: record.timesheetStatus,
-      invoiceStatus: record.invoiceStatus,
-    });
-  });
-  return async () => {
-    await page.evaluate(bewaard => {
-      const runtime = window as unknown as Runtime;
-      const record = runtime.recordFor(runtime.currentEmployee().id, runtime.currentPeriod().key);
-      Object.assign(record, JSON.parse(bewaard));
-      runtime.persistState();
-      runtime.renderAll();
-    }, vooraf);
-  };
-}
 
 test('[SKIN-H-001] de app start standaard in de klassieke vormgeving', async ({ page }) => {
   const loginPage = new LoginPage(page);

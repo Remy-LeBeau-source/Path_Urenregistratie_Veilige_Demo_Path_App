@@ -5402,6 +5402,45 @@ function newEmployeeBentoWeekIndex(period) {
 // met hele weken (isTimesheetWeekComplete), dus hier staat "N weken open".
 // Gaten per dag hangen aan een besluit dat nog openstaat -- zie de terugmelding
 // over toekomstige werkdagen in github.md.
+// Toont die ontbrekende dagen als chips onder de weekkiezer. Alleen in de
+// maandweergave: kijk je naar één week, dan is de weekkaart zelf al het
+// overzicht en zou een tweede lijst dat verdubbelen.
+//
+// Maximaal zes chips, daarna een regel "en nog N dagen deze maand" -- zonder
+// die grens wordt dit bij een verse maand een muur van tweeëntwintig knoppen.
+const MISSING_WORKDAY_CHIP_MAX = 6;
+
+function renderMissingWorkdays(record, period) {
+  const blok = document.querySelector("#hours-missing-days");
+  if (!blok) return;
+  const titel = document.querySelector("#hours-missing-days-title");
+  const chips = document.querySelector("#hours-missing-days-chips");
+  const rest = document.querySelector("#hours-missing-days-rest");
+  if (state.hoursWeekScope !== "all" || !isTimesheetEditableForEmployee(record)) {
+    blok.hidden = true;
+    return;
+  }
+  blok.hidden = false;
+  const dagen = ontbrekendeWerkdagen(record, period);
+  blok.classList.toggle("is-compleet", dagen.length === 0);
+  if (!dagen.length) {
+    titel.textContent = "Geen ontbrekende werkdagen.";
+    chips.innerHTML = "";
+    rest.hidden = true;
+    return;
+  }
+  titel.textContent = dagen.length === 1
+    ? "1 werkdag is nog niet ingevuld:"
+    : dagen.length + " werkdagen zijn nog niet ingevuld:";
+  chips.innerHTML = dagen.slice(0, MISSING_WORKDAY_CHIP_MAX).map(dag =>
+    '<button class="hours-missing-day" type="button" data-hours-missing-week="' + dag.weekIndex + '">'
+      + escapeHtml(dag.label) + '</button>'
+  ).join("");
+  const over = dagen.length - MISSING_WORKDAY_CHIP_MAX;
+  rest.hidden = over <= 0;
+  if (over > 0) rest.textContent = "en nog " + over + (over === 1 ? " dag" : " dagen") + " deze maand";
+}
+
 function statusKetenStappen(record, period) {
   const customerDocument = customerTimesheetFor(record);
   const submitted = ["submitted", "approved", "invoiced"].includes(record.timesheetStatus);
@@ -5527,6 +5566,39 @@ function incompleteTimesheetWeekLabels(record, period) {
     labels.push("Week " + periodWeek.number + " (" + range + ")");
     return labels;
   }, []);
+}
+
+// Elke werkdag in de gekozen maand die nog leeg is. "Leeg" betekent: nul uur én
+// niet bewust opgeslagen -- een dag die de medewerker zelf op 0,0 heeft gezet
+// telt dus als ingevuld, precies zoals isTimesheetWeekComplete() het al rekent.
+//
+// Toekomstige werkdagen tellen gewoon mee. Dat is een besluit van 14 sep, en het
+// is een terugdraaiing: een eerdere ontwerpronde sloeg dagen na vandaag over.
+// De reden om dat terug te draaien is dat je de héle maand indient, niet de
+// dagen tot vandaag -- dus hoort een lege dag verderop in de maand net zo goed
+// in dit lijstje.
+//
+// Alleen dagen die in de gekozen maand vallen: periodFromKey() bouwt de
+// weekrijen al zo op dat een dag buiten de maand null is, dus dat volgt hier
+// vanzelf uit de day-check.
+function ontbrekendeWerkdagen(record, period) {
+  const dagen = [];
+  period.weekRows.forEach((periodWeek, weekIndex) => {
+    periodWeek.days.forEach((day, dayIndex) => {
+      if (!day) return;
+      if (Number(record.entries?.[weekIndex]?.[dayIndex] || 0) > 0) return;
+      if (record.confirmedEntries?.[weekIndex]?.[dayIndex]) return;
+      dagen.push({
+        weekIndex,
+        // "Di 15 sep" -- de notatie die #hours-grid al gebruikt. De
+        // ontwerpreferentie schrijft "Di 15-09"; daarvan is bewust afgeweken,
+        // want die chips staan pal boven een raster dat de andere notatie
+        // toont en twee datumnotaties op één scherm is een eigen fout.
+        label: WEEKDAY_SHORT[dayIndex] + " " + day.day + " " + period.month.slice(0, 3)
+      });
+    });
+  });
+  return dagen;
 }
 
 // Werkdagen die de medewerker bewust op 0,0 heeft gezet. Die tellen nergens
@@ -9266,6 +9338,7 @@ function updateHoursTotal(markDraft) {
     ? "Dit blokkeert indienen nooit -- alleen " + currentPeriod().label + " wordt ingediend."
     : "Deze maand is vergrendeld (ingediend, goedgekeurd of gefactureerd) en kan niet meer worden aangepast.";
   updateTimesheetSubmitUi(record);
+  renderMissingWorkdays(record, currentPeriod());
   if (markDraft) {
     renderDashboard();
     renderApprovals();
@@ -13570,6 +13643,20 @@ function toonInstallatieAanbod() {
   // wordt bij elke render opnieuw opgebouwd -- zonder die stand klapte hij bij
   // de eerstvolgende hertekening weer dicht. Eén maand tegelijk: de vijf
   // stappen zijn hoog genoeg dat twee open maanden de lijst onleesbaar maken.
+  // Een chip met een ontbrekende werkdag brengt je naar de week waar die dag in
+  // zit. Niet naar de dag zelf: de weekweergave is de kleinste eenheid die
+  // Mijn uren kent, en daarbinnen staat de dag in beeld.
+  const missingWorkday = event.target.closest("[data-hours-missing-week]");
+  if (missingWorkday) {
+    const weekIndex = Number(missingWorkday.dataset.hoursMissingWeek);
+    if (!Number.isInteger(weekIndex) || weekIndex < 0) return;
+    state.hoursWeekScope = "week-" + weekIndex;
+    persistState();
+    renderHoursGrid();
+    updateHoursTotal(false);
+    return;
+  }
+
   const historyVerloopToggle = event.target.closest("[data-history-verloop]");
   if (historyVerloopToggle) {
     const periodKey = historyVerloopToggle.dataset.historyVerloop;

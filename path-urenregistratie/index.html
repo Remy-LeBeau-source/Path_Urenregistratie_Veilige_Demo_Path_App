@@ -675,6 +675,16 @@
               </div>
               <div class="hours-visible-total"><span id="hours-visible-total-label">Hele maand</span><strong id="hours-visible-total">0,0 uur</strong></div>
             </div>
+            <!-- Concrete ontbrekende werkdagen bij "Hele maand", conform
+                 TS-REV-UI-H-015: nooit een kaal aantal maar de dagen zelf, als
+                 chips die naar hun week springen. Gevuld door renderMissingWorkdays();
+                 staat alleen in de maandweergave, want in één week is de weekkaart
+                 zelf al het overzicht. -->
+            <div class="hours-missing-days" id="hours-missing-days" hidden>
+              <strong id="hours-missing-days-title"></strong>
+              <div class="hours-missing-days-chips" id="hours-missing-days-chips"></div>
+              <small id="hours-missing-days-rest" hidden></small>
+            </div>
             <div class="new-bento-week" id="hours-week-nav" hidden>
               <header>
                 <button type="button" data-new-bento-week="previous" aria-label="Vorige week">‹</button>

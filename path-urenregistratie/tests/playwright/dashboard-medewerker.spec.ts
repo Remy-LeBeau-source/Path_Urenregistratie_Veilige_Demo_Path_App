@@ -9,6 +9,7 @@ import { ALLE_SCHERMEN, verwachtAlleenSchermActief } from './fixtures/dashboardG
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
+import { bewaarUrenstaat } from './fixtures/urenstaatHerstel';
 import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErrors';
 import { expect, test } from '@playwright/test';
 import { openPaneel, openProfielmenu } from './pages/TopbarMenu';
@@ -1408,4 +1409,126 @@ test('[DASH-H-031] het verloop van een maand klapt open in Mijn maanden en overl
     await page.locator('#employee-history [data-history-verloop]').nth(1).click();
     await expect(page.locator('#employee-history .employee-history-verloop:visible')).toHaveCount(0);
   });
+});
+
+// TS-REV-UI-H-015 eist dat "Hele maand" niet een kaal aantal toont maar de
+// concrete ontbrekende werkdagen. Dat ontbrak: de app noemde alleen op
+// weekniveau iets, en pas in de indienbevestiging.
+//
+// Deze case legt ook de regel van 14 sep vast, en die is een terugdraaiing:
+// toekomstige werkdagen tellen gewoon mee als ontbrekend. Een eerdere
+// ontwerpronde sloeg dagen na vandaag over; dat is teruggedraaid omdat je de
+// hele maand indient en niet de dagen tot vandaag. Zonder deze case zou een
+// volgende ronde die terugdraaiing stil ongedaan kunnen maken.
+//
+// Een dag die de medewerker bewust op 0,0 zette telt wél als ingevuld --
+// dezelfde regel die isTimesheetWeekComplete() al hanteert.
+test('[DASH-H-032] "Hele maand" noemt de ontbrekende werkdagen bij naam, inclusief dagen die nog moeten komen', async ({ page }) => {
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await suppressInstallBanner(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+
+  // Deze case leegt de hele maand en vult hem daarna weer. Zonder terugzetten
+  // ziet een latere case in dezelfde run een maand die niet van haar is; zie de
+  // toelichting bij de helper voor de drie keren dat dat vannacht misging.
+  const herstelUrenstaat = await bewaarUrenstaat(page);
+  try {
+
+  await test.step('Given de medewerker staat op Mijn uren in de maandweergave', async () => {
+    await page.evaluate(() => { window.location.hash = 'timesheet'; });
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+    await page.locator('[data-hours-week-scope="all"]').click();
+  });
+
+  await test.step('When de hele maand leeg is op één bewust op 0,0 gezette dag na', async () => {
+    await page.evaluate(() => {
+      const runtime = window as unknown as {
+        currentEmployee: () => { id: number };
+        currentPeriod: () => { key: string; weekRows: Array<{ days: Array<unknown> }> };
+        recordFor: (id: number, key?: string) => {
+          entries: number[][];
+          confirmedEntries?: boolean[][];
+          timesheetStatus: string;
+        };
+        persistState: () => void;
+        renderHoursGrid: () => void;
+        updateHoursTotal: (markDraft: boolean) => void;
+      };
+      const period = runtime.currentPeriod();
+      const record = runtime.recordFor(runtime.currentEmployee().id, period.key);
+      record.timesheetStatus = 'draft';
+      record.entries = period.weekRows.map(() => [0, 0, 0, 0, 0]);
+      record.confirmedEntries = period.weekRows.map(() => [false, false, false, false, false]);
+      // De laatste werkdag van de maand bewust op 0,0. Bewust de laatste, want
+      // dat is met zekerheid een dag die nog moet komen of net is geweest --
+      // zo toetst deze case meteen dat "bewust op 0" zwaarder weegt dan "ligt
+      // in de toekomst".
+      const laatsteWeek = period.weekRows.length - 1;
+      const laatsteDag = period.weekRows[laatsteWeek].days.reduce(
+        (gevonden: number, dag: unknown, index: number) => (dag ? index : gevonden), -1);
+      record.confirmedEntries[laatsteWeek][laatsteDag] = true;
+      runtime.persistState();
+      runtime.renderHoursGrid();
+      runtime.updateHoursTotal(false);
+    });
+  });
+
+  await test.step('Then staan de ontbrekende dagen er bij naam, niet als kaal aantal', async () => {
+    const blok = page.locator('#hours-missing-days');
+    await expect(blok).toBeVisible();
+    const chips = page.locator('#hours-missing-days-chips .hours-missing-day');
+    // Maximaal zes chips, daarna een restregel. Een maand heeft altijd meer dan
+    // zes werkdagen, dus beide horen hier te staan.
+    await expect(chips).toHaveCount(6);
+    await expect(page.locator('#hours-missing-days-rest')).toBeVisible();
+    await expect(page.locator('#hours-missing-days-rest')).toContainText('deze maand');
+    // Bij naam: een chip noemt een dagafkorting en een datum.
+    await expect(chips.first()).toHaveText(/^(Ma|Di|Wo|Do|Vr) \d{1,2} \w{3}$/);
+  });
+
+  await test.step('And telt de bewust op 0,0 gezette dag niet mee, ook al ligt hij aan het eind van de maand', async () => {
+    const gemeld = await page.locator('#hours-missing-days-title').textContent();
+    const aantal = Number(/^(\d+)/.exec(String(gemeld || '').trim())?.[1] || 0);
+    const werkdagen = await page.evaluate(() => {
+      const runtime = window as unknown as { currentPeriod: () => { weekRows: Array<{ days: Array<unknown> }> } };
+      return runtime.currentPeriod().weekRows.reduce((som, week) => som + week.days.filter(Boolean).length, 0);
+    });
+    expect(aantal, 'alle werkdagen op één na horen als ontbrekend te tellen; toekomstige dagen tellen mee, een bewuste 0,0 niet')
+      .toBe(werkdagen - 1);
+  });
+
+  await test.step('And brengt een chip je naar de week waar die dag in zit', async () => {
+    await page.locator('#hours-missing-days-chips .hours-missing-day').first().click();
+    await expect(page.locator('#hours-week-filter button.is-active')).not.toHaveText('Hele maand');
+    await expect(page.locator('#hours-missing-days')).toBeHidden();
+  });
+
+  await test.step('And verdwijnt de waarschuwing zodra alles is ingevuld', async () => {
+    await page.locator('[data-hours-week-scope="all"]').click();
+    await page.evaluate(() => {
+      const runtime = window as unknown as {
+        currentEmployee: () => { id: number };
+        currentPeriod: () => { key: string; weekRows: Array<{ days: Array<unknown> }> };
+        recordFor: (id: number, key?: string) => { entries: number[][] };
+        persistState: () => void;
+        renderHoursGrid: () => void;
+        updateHoursTotal: (markDraft: boolean) => void;
+      };
+      const period = runtime.currentPeriod();
+      const record = runtime.recordFor(runtime.currentEmployee().id, period.key);
+      record.entries = period.weekRows.map(() => [8, 8, 8, 8, 8]);
+      runtime.persistState();
+      runtime.renderHoursGrid();
+      runtime.updateHoursTotal(false);
+    });
+    await expect(page.locator('#hours-missing-days')).toHaveClass(/is-compleet/);
+    await expect(page.locator('#hours-missing-days-title')).toHaveText('Geen ontbrekende werkdagen.');
+    await expect(page.locator('#hours-missing-days-chips .hours-missing-day')).toHaveCount(0);
+  });
+
+  } finally {
+    await herstelUrenstaat();
+  }
 });

@@ -863,6 +863,19 @@ html:not([data-skin="new"]) .button-primary:active:not(:disabled) { transform: s
 .hours-week-filter { width: fit-content; }
 .hours-week-scroll-hint { display: none; }
 .hours-visible-total { text-align: right; }
+/* De ontbrekende werkdagen bij "Hele maand". Amber, want dit is een openstaande
+   taak en geen fout -- dezelfde kleurtaal als de waarschuwingspillen elders.
+   Bij nul ontbrekende dagen wordt hetzelfde blok mint met één regel, zodat de
+   plek op het scherm niet verspringt zodra de laatste dag is ingevuld. */
+.hours-missing-days { grid-column: 1 / -1; margin-top: 14px; border: 1px solid var(--warning-rand); border-radius: 14px; background: var(--warning-bg); padding: 12px 14px; }
+.hours-missing-days.is-compleet { border-color: var(--mint); background: var(--green-light); }
+#hours-missing-days-title { display: block; color: var(--warning-tekst); font-size: 11.5px; font-weight: 800; }
+.hours-missing-days.is-compleet #hours-missing-days-title { color: var(--teal); }
+.hours-missing-days-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
+.hours-missing-days-chips:empty { display: none; }
+.hours-missing-day { min-height: 32px; border: 1px solid var(--warning-rand); border-radius: 999px; background: var(--vlak); color: var(--warning-tekst); cursor: pointer; font-size: 11.5px; font-weight: 700; padding: 0 12px; transition: background .16s ease, border-color .16s ease; }
+.hours-missing-day:hover { border-color: var(--warning-tekst); background: var(--warning-bg); }
+#hours-missing-days-rest { display: block; margin-top: 8px; color: var(--warning-tekst); font-size: 11px; }
 .hours-visible-total span, .hours-visible-total strong { display: block; }
 .hours-visible-total span { color: var(--muted); font-size: 9px; text-transform: uppercase; }
 .hours-visible-total strong { margin-top: 3px; color: var(--navy-tekst); font-size: 13px; }

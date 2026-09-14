@@ -224,6 +224,17 @@ Feature: Dashboard en open werkvoorraad
     And sluit een tweede tik op dezelfde maand hem weer
 
   @happy
+  Scenario: [DASH-H-032] "Hele maand" noemt de ontbrekende werkdagen bij naam, inclusief dagen die nog moeten komen
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given de medewerker staat op Mijn uren in de maandweergave
+    When de hele maand leeg is op één bewust op 0,0 gezette dag na
+    Then staan de ontbrekende dagen er bij naam, niet als kaal aantal
+    And telt de bewust op 0,0 gezette dag niet mee, ook al ligt hij aan het eind van de maand
+    And brengt een chip je naar de week waar die dag in zit
+    And verdwijnt de waarschuwing zodra alles is ingevuld
+
+  @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 1
