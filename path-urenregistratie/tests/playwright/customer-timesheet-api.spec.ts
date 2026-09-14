@@ -588,6 +588,8 @@ test.describe('customer timesheet api', () => {
       await expect(page.locator('#toast')).toContainText('rechtstreeks gemaild geregistreerd');
       await expect(page.locator('#employee-customer-timesheet-title')).toHaveText('Als rechtstreeks gemaild geregistreerd');
       await expect(page.locator('#employee-customer-timesheet-skip')).toHaveText('Toch een bestand toevoegen');
+      // Medewerkertaal (opdracht 14 sep, punt 4), niet de vastgelegde Backoffice-reden.
+      await expect(page.locator('#employee-customer-timesheet-note')).toContainText('Je gaf aan de urenstaat zelf te hebben gemaild. De Backoffice verwerkt hem zodra hij binnen is.');
     });
 
     await test.step('Then serverreadback en F5 dezelfde status tonen en herstel opnieuw werkt', async () => {
