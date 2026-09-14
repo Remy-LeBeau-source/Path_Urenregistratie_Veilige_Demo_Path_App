@@ -6282,7 +6282,7 @@ function vandaagKopWaarden(record, employee, period) {
     werk,
     open,
     dagWoord: open === 1 ? "dag open" : "dagen open",
-    noemer: "van " + werk + " werkdagen",
+    noemer: "",
     uren: hoursFormat.format(totalEntries(record.entries) + Number(record.leave || 0) + Number(record.sick || 0)) + " van " + hoursFormat.format(defaultContractHours(employee, period.key)) + " uur",
     standaardDatum: period.label,
     standaardTekst: "Elke dag is een vakje — houd je muis erboven",

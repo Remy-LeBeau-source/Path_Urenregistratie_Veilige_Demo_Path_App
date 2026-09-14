@@ -1842,7 +1842,7 @@ test('[DASH-H-036] Vandaag gebruikt in Klassiek de ene kopkaart op desktop en de
     });
     expect(stand.open).toBe(String(stand.openDagen));
     expect(stand.woord).toBe(stand.openDagen === 1 ? 'dag open' : 'dagen open');
-    expect(stand.noemer).toBe('van ' + stand.werkdagen + ' werkdagen');
+    expect(stand.noemer, 'het grote aantal staat al direct onder DAGEN OPEN; geen tweede keer "van N werkdagen" tonen').toBe('');
     if (stand.openDagen > 0) expect(stand.fillStand, 'met open dagen hoort "Uren ingevuld" de huidige stap te zijn').toContain('is-nu');
     await expect(page.locator('#vd-kopkaart')).not.toContainText('in te vullen.');
     await expect(page.locator('#vd-kopkaart')).not.toContainText(/Jij bent aan zet/i);
