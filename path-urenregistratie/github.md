@@ -171,6 +171,31 @@ Volgorde verder:
 - punt 1 en 8: tabbalk met vier tabs en de testomgevingsbalk;
 - punt 9: "Andere rol kiezen".
 
+**"Bericht aan Backoffice" weg, zelf gemaild in medewerkertaal (besluiten Gio, 14 sep).**
+- **Veld A weg.** Het onderwerp- en tekstveld op het scherm Klanturenstaat
+  (knop "Bericht aanpassen" en het berichtvoorbeeld) is weg. Op TEST en productie
+  stuurde indienen alleen het bestand, dus de tekst kwam nooit bij Backoffice aan.
+- **Sjabloonblok bij Backoffice weg.** Het detailscherm toonde een blok "Van
+  [medewerker] aan Path Backoffice" met een sjabloon; dat is weg.
+- **Blijft: sjabloontekst in beheer.** Onderwerp en tekst in de instellingen
+  zijn niet verwijderd. Ze zitten in de instellingen-UI, het opslaan naar de
+  server en drie specs, en dat is meer dan een paar regels. Nu ongebruikt; later
+  oppakken.
+- **Blijft: dode opmaak in `styles-new.css`** voor `.customer-timesheet-mail-preview`,
+  omdat Modern niet aangeraakt wordt. Uit `styles.css` is die opmaak wel weg.
+- **Blijft: veld B.** De "Reden" bij "Die heb ik al gemaild" komt aan bij
+  Backoffice.
+- **Zelf gemaild op medewerkerschermen:**
+  - de kaart heeft titel "Zelf gemaild" en pil "Wacht op Backoffice";
+  - in Mijn maanden en op het scherm Klanturenstaat staat de pil
+    "Door jou gemaild · wacht op Backoffice";
+  - de regel op de kaart is "Je gaf aan de urenstaat zelf te hebben gemaild. De
+    Backoffice verwerkt hem zodra hij binnen is."
+- **Backoffice** houdt "Al rechtstreeks gemaild".
+
+[DASH-N-033] toetst alle vier; de tegenproef viel om. CTS-API-H-013 en de
+smoke-test zijn mee aangepast. DESIGN-BESLUITEN.md is vers opgehaald.
+
 ## Sync history
 
 ### Ronde 14 sep (derde, vervolg) — terugmeldingen verwerkt, export 04:07:28Z

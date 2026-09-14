@@ -4523,10 +4523,16 @@ function timesheetStatusPill(employee, record) {
   return '<span class="status-pill ' + info[1] + '">' + escapeHtml(info[0]) + "</span>";
 }
 
+// De statuspil voor medewerkerschermen (Mijn maanden, scherm Klanturenstaat).
+// Bij zelf gemaild staat hier geen titel naast die zegt wie gemaild heeft, dus
+// de volledige tekst (besluit Gio 14 sep). Backoffice gebruikt
+// customerTimesheetStatusLabels rechtstreeks en houdt "Al rechtstreeks gemaild".
+const MEDEWERKER_ZELF_GEMAILD_VOLLEDIG = ["Door jou gemaild · wacht op Backoffice", "status-warning"];
 function customerTimesheetStatusPill(documentRecord) {
   const current = customerTimesheetFor(documentRecord);
   const status = customerTimesheetExternallyConfirmed(current)
     ? ["Extern bevestigd", "status-success"]
+    : current.status === "skipped" ? MEDEWERKER_ZELF_GEMAILD_VOLLEDIG
     : customerTimesheetStatusLabels[current.status] || customerTimesheetStatusLabels.missing;
   return '<span class="status-pill ' + status[1] + '">' + status[0] + '</span>';
 }
@@ -4551,16 +4557,6 @@ function formatCustomerTimesheetTemplate(template, employee, periodKey) {
     organisatie: state.settings.organizationName || "Path Consultancy"
   };
   return String(template || "").replace(/\{([a-z]+)\}/gi, (match, key) => values[key] === undefined ? match : values[key]);
-}
-
-function customerTimesheetSubmissionMail(employee, periodKey) {
-  const record = customerTimesheetFor(recordFor(employee.id, periodKey));
-  const defaultSubject = formatCustomerTimesheetTemplate(state.settings.customerTimesheetSubmissionSubject || DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_SUBJECT, employee, periodKey);
-  const defaultBody = formatCustomerTimesheetTemplate(state.settings.customerTimesheetSubmissionBody || DEFAULT_CUSTOMER_TIMESHEET_SUBMISSION_BODY, employee, periodKey);
-  return {
-    subject: record.submissionSubject || defaultSubject,
-    body: record.submissionBody || defaultBody
-  };
 }
 
 function customerTimesheetBrokerMail(employee, periodKey) {
@@ -5339,7 +5335,7 @@ function renderEmployeeCustomerTimesheet(record, employee, period) {
     title = "Klanturenstaat is verwerkt";
     note = "Backoffice heeft ook de brokerroute gecontroleerd.";
   } else if (documentRecord.status === "skipped") {
-    title = "Als rechtstreeks gemaild geregistreerd";
+    title = "Zelf gemaild";
     // Medewerkertaal (opdracht 14 sep, punt 4). De vastgelegde reden blijft voor
     // Backoffice bewaard en zichtbaar in de maanddetails; hier leest de medewerker
     // wat er gebeurt en wie aan zet is.
@@ -5349,8 +5345,11 @@ function renderEmployeeCustomerTimesheet(record, employee, period) {
   document.querySelector("#employee-customer-timesheet-title").textContent = title;
   document.querySelector("#employee-customer-timesheet-note").textContent = note;
   const statusElement = document.querySelector("#employee-customer-timesheet-status");
-  statusElement.className = "status-pill " + status[1];
-  statusElement.textContent = status[0];
+  // Naast de titel "Zelf gemaild" hoeft de pil niet te herhalen wie mailde.
+  const kaartStatus = documentRecord.status === "skipped" && !customerTimesheetExternallyConfirmed(documentRecord)
+    ? ["Wacht op Backoffice", "status-warning"] : status;
+  statusElement.className = "status-pill " + kaartStatus[1];
+  statusElement.textContent = kaartStatus[0];
   card.classList.toggle("is-open", needsAction);
   card.classList.toggle("is-complete", !needsAction);
   skipButton.hidden = !needsAction && documentRecord.status !== "skipped";
@@ -7265,13 +7264,9 @@ function renderCustomerTimesheetPanel() {
   syncPeriodControls("#customer-timesheet-month", "#customer-timesheet-year", period.key);
   document.querySelector("#customer-timesheet-status").className = "status-pill " + status[1];
   document.querySelector("#customer-timesheet-status").textContent = status[0];
-  const mail = customerTimesheetSubmissionMail(employee, period.key);
-  document.querySelector("#customer-timesheet-mail-route").textContent = "Van " + employee.name + " aan " + (state.settings.supportName || "Path Backoffice") + " · " + (state.settings.supportEmail || SUPPORT_EMAIL);
-  document.querySelector("#customer-timesheet-subject").textContent = mail.subject;
-  document.querySelector("#customer-timesheet-body").textContent = mail.body;
   const current = document.querySelector("#customer-timesheet-current");
   current.innerHTML = documentRecord.status === "skipped"
-    ? '<div><div><strong>Als rechtstreeks gemaild geregistreerd</strong><small>' + escapeHtml(documentRecord.skippedReason || "De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.") + (documentRecord.skippedBy ? " · door " + escapeHtml(documentRecord.skippedBy) : "") + (documentRecord.skippedAt ? " · " + escapeHtml(documentRecord.skippedAt) : "") + '</small></div>' + customerTimesheetStatusPill(record) + '<button class="small-button" data-restore-customer-timesheet>Toch een bestand toevoegen</button></div>'
+    ? '<div><div><strong>Zelf gemaild</strong><small>' + "Je gaf aan de urenstaat zelf te hebben gemaild. De Backoffice verwerkt hem zodra hij binnen is." + (documentRecord.skippedAt ? " · " + escapeHtml(documentRecord.skippedAt) : "") + '</small></div>' + customerTimesheetStatusPill(record) + '<button class="small-button" data-restore-customer-timesheet>Toch een bestand toevoegen</button></div>'
     : documentRecord.fileName
       ? '<div><div><strong>' + escapeHtml(documentRecord.fileName) + '</strong><small>' + (documentRecord.isExample ? "Voorbeeldbestand · geen echt klantdocument" : "Opgeslagen " + escapeHtml(documentRecord.uploadedAt || "datum onbekend") + (documentRecord.mimeType === "application/pdf" && /\.(jpe?g|png)$/i.test(documentRecord.originalFileName || "") ? " · " + escapeHtml(documentRecord.originalFileName) + " omgezet naar PDF" : "")) + (documentRecord.status === "received" ? " · Backoffice heeft een melding in de app" : "") + (documentRecord.reviewNote ? " · " + escapeHtml(documentRecord.reviewNote) : "") + '</small></div><span class="status-pill ' + status[1] + '">' + escapeHtml(status[0]) + '</span>' + (documentRecord.fileData ? '<button class="small-button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Klanturenstaat bekijken</button>' : '<span></span>') + '</div>'
       : '<div><div><strong>Nog geen klanturenstaat voor ' + escapeHtml(period.label) + '</strong><small>De urenregistratie kan wel gewoon worden ingevuld en ingediend.</small></div>' + customerTimesheetStatusPill(record) + '<span></span></div>';
@@ -7279,7 +7274,6 @@ function renderCustomerTimesheetPanel() {
   const saveButton = document.querySelector("#customer-timesheet-save-draft");
   const submitButton = document.querySelector("#customer-timesheet-submit");
   const skipButton = document.querySelector("#customer-timesheet-skip");
-  document.querySelector("#customer-timesheet-edit-mail").disabled = locked;
   saveButton.textContent = ["draft", "resubmit"].includes(documentRecord.status) ? "Concept vervangen" : "Concept opslaan";
   submitButton.textContent = documentRecord.status === "draft" ? "Concept indienen bij Backoffice" : "Indienen bij Backoffice";
   skipButton.hidden = !customerTimesheetNeedsEmployeeAction(documentRecord.status) && documentRecord.status !== "skipped";
@@ -7383,7 +7377,6 @@ function showCustomerTimesheetDetails(employeeId, periodKey, reviewMode, adminTa
   const documentRecord = customerTimesheetFor(record);
   const externallyConfirmed = customerTimesheetExternallyConfirmed(documentRecord);
   const status = externallyConfirmed ? ["Extern bevestigd", "status-success"] : customerTimesheetStatusLabels[documentRecord.status] || customerTimesheetStatusLabels.missing;
-  const submissionMail = customerTimesheetSubmissionMail(employee, period.key);
   const brokerMail = customerTimesheetBrokerMail(employee, period.key);
   const route = employee.customerTimesheetBrokerEnabled === false
     ? "Geen brokerverzending ingesteld"
@@ -7391,13 +7384,10 @@ function showCustomerTimesheetDetails(employeeId, periodKey, reviewMode, adminTa
   const skippedSummary = documentRecord.status === "skipped"
     ? '<div><span>Reden</span><strong>' + escapeHtml(externallyConfirmed ? documentRecord.reviewNote.replace(/^Extern bevestigd:\s*/, "") : documentRecord.skippedReason || documentRecord.reviewNote || "De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.") + '</strong></div><div><span>' + (externallyConfirmed ? "Bevestigd door" : "Geregistreerd door") + '</span><strong>' + escapeHtml(documentRecord.reviewedBy || documentRecord.skippedBy || employee.name) + '</strong></div><div><span>' + (externallyConfirmed ? "Bevestigd op" : "Geregistreerd op") + '</span><strong>' + escapeHtml(documentRecord.reviewedAt || documentRecord.skippedAt || "Datum onbekend") + '</strong></div>'
     : '';
-  const submissionSummary = documentRecord.status === "skipped"
-    ? ''
-    : '<div class="customer-timesheet-submission-review"><span>Van ' + escapeHtml(employee.name) + ' aan ' + escapeHtml(state.settings.supportName || "Path Backoffice") + '</span><strong>' + escapeHtml(submissionMail.subject) + '</strong><pre>' + escapeHtml(submissionMail.body) + '</pre></div>';
   const externalAction = documentRecord.status === "skipped"
     ? '<div><span>Externe controle</span><button class="small-button" ' + (externallyConfirmed ? 'data-restore-customer-timesheet-external="' + employee.id + '"' : 'data-confirm-customer-timesheet-external="' + employee.id + '"') + ' data-period-key="' + period.key + '">' + (externallyConfirmed ? "Externe bevestiging intrekken" : "Extern bevestigen") + '</button></div>'
     : '';
-  const summary = '<div><span>Status</span><strong>' + escapeHtml(status[0]) + '</strong></div><div><span>Bestand</span><strong>' + escapeHtml(documentRecord.fileName || (documentRecord.status === "skipped" ? "Niet via de app ontvangen" : "Nog niet ontvangen")) + '</strong></div>' + skippedSummary + externalAction + (documentRecord.fileData ? '<div><span>Document controleren</span><button class="small-button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Klanturenstaat bekijken</button></div>' : '') + submissionSummary + '<div><span>Deadline</span><strong>Werkdag ' + Number(employee.customerTimesheetDueWorkday || 5) + '</strong></div><div><span>Brokerroute na goedkeuring</span><strong>' + escapeHtml(route) + '</strong></div><div><span>Factuurblokkade</span><strong>Actief tot de klanturenstaat gereed is</strong></div><div><span>Onderwerp naar broker</span><strong>' + escapeHtml(brokerMail.subject) + '</strong></div>';
+  const summary = '<div><span>Status</span><strong>' + escapeHtml(status[0]) + '</strong></div><div><span>Bestand</span><strong>' + escapeHtml(documentRecord.fileName || (documentRecord.status === "skipped" ? "Niet via de app ontvangen" : "Nog niet ontvangen")) + '</strong></div>' + skippedSummary + externalAction + (documentRecord.fileData ? '<div><span>Document controleren</span><button class="small-button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Klanturenstaat bekijken</button></div>' : '') + '<div><span>Deadline</span><strong>Werkdag ' + Number(employee.customerTimesheetDueWorkday || 5) + '</strong></div><div><span>Brokerroute na goedkeuring</span><strong>' + escapeHtml(route) + '</strong></div><div><span>Factuurblokkade</span><strong>Actief tot de klanturenstaat gereed is</strong></div><div><span>Onderwerp naar broker</span><strong>' + escapeHtml(brokerMail.subject) + '</strong></div>';
   if (reviewMode && documentRecord.status === "received") {
     showModal({
       label: "Klanturenstaat controleren",
@@ -7616,42 +7606,6 @@ function restoreSkippedCustomerTimesheet() {
   documentRecord.skippedAt = "";
   documentRecord.skippedBy = "";
   persistState(); renderAll(); toast("De registratie is teruggedraaid. Je kunt de klanturenstaat nu uploaden.");
-}
-
-function showCustomerTimesheetSubmissionMailEditor() {
-  const employee = currentEmployee();
-  const period = currentCustomerTimesheetPanelPeriod();
-  const documentRecord = customerTimesheetFor(recordFor(employee.id, period.key));
-  if (["received", "approved", "sent", "sent_to_broker", "skipped"].includes(documentRecord.status)) {
-    toast("Dit bericht is al ingediend en kan niet meer worden aangepast.");
-    return;
-  }
-  const mail = customerTimesheetSubmissionMail(employee, period.key);
-  showModal({
-    label: "Bericht aan Backoffice",
-    title: employee.name + " · " + period.label,
-    message: "Dit bericht hoort bij de klanturenstaat van deze maand. Onderwerp en tekst mogen vóór het indienen worden aangepast.",
-    summary: '<div><span>Aan</span><strong>' + escapeHtml(state.settings.supportName || "Path Backoffice") + ' · ' + escapeHtml(state.settings.supportEmail || SUPPORT_EMAIL) + '</strong></div><div class="modal-form full"><label class="full">Onderwerp<input id="customer-timesheet-submission-subject" value="' + escapeHtml(mail.subject) + '"></label><label class="full">Bericht<textarea id="customer-timesheet-submission-body" rows="8">' + escapeHtml(mail.body) + '</textarea></label></div>',
-    confirm: "Bericht opslaan",
-    secondary: "Standaard herstellen",
-    wide: true,
-    action: () => {
-      const subject = document.querySelector("#customer-timesheet-submission-subject").value.trim();
-      const body = document.querySelector("#customer-timesheet-submission-body").value.trim();
-      if (!subject || !body) {
-        toast("Vul een onderwerp en bericht in.");
-        return;
-      }
-      documentRecord.submissionSubject = subject;
-      documentRecord.submissionBody = body;
-      persistState(); closeModal(); renderAll(); toast("Het bericht aan Backoffice is opgeslagen.");
-    },
-    secondaryAction: () => {
-      documentRecord.submissionSubject = "";
-      documentRecord.submissionBody = "";
-      persistState(); closeModal(); renderAll(); toast("Het standaardbericht is hersteld.");
-    }
-  });
 }
 
 function showCustomerTimesheetBrokerCheck(employeeId, periodKey, adminTaskId = "") {
@@ -15159,12 +15113,7 @@ function storeCustomerTimesheetFile(targetStatus) {
     documentRecord.skippedReason = "";
     documentRecord.skippedAt = "";
     documentRecord.skippedBy = "";
-    if (targetStatus === "received") {
-      const submissionMail = customerTimesheetSubmissionMail(employee, periodKey);
-      documentRecord.submissionSubject = submissionMail.subject;
-      documentRecord.submissionBody = submissionMail.body;
-      notifyCustomerTimesheetSubmitted(employee, periodKey);
-    }
+    if (targetStatus === "received") notifyCustomerTimesheetSubmitted(employee, periodKey);
     persistState();
     fileInput.value = "";
     renderAll();
@@ -15175,7 +15124,6 @@ function storeCustomerTimesheetFile(targetStatus) {
 }
 
 document.querySelector("#customer-timesheet-save-draft").addEventListener("click", () => storeCustomerTimesheetFile("draft"));
-document.querySelector("#customer-timesheet-edit-mail").addEventListener("click", showCustomerTimesheetSubmissionMailEditor);
 // Dashboardkaart klanturenstaat (Klassiek): kiezen, weghalen, versturen.
 document.querySelectorAll("[data-klantkaart-kies]").forEach(knop => {
   knop.addEventListener("click", () => document.getElementById(knop.dataset.klantkaartKies)?.click());
@@ -15238,9 +15186,6 @@ document.querySelector("#customer-timesheet-submit").addEventListener("click", (
     return;
   }
 
-  const submissionMail = customerTimesheetSubmissionMail(employee, periodKey);
-  documentRecord.submissionSubject = submissionMail.subject;
-  documentRecord.submissionBody = submissionMail.body;
   documentRecord.status = "received";
   notifyCustomerTimesheetSubmitted(employee, periodKey);
   persistState();

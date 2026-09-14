@@ -1320,7 +1320,6 @@ html:not([data-skin="new"]) .button-primary:active:not(:disabled) { transform: s
 .modal-summary { display: grid; gap: 8px; margin: 20px 0; border-radius: 14px; background: var(--vlak-zacht); padding: 15px; }
 .modal-summary > div { display: flex; justify-content: space-between; gap: 20px; color: var(--muted); font-size: 11px; }
 .modal-summary strong { color: var(--navy-tekst); }
-.modal-summary .customer-timesheet-submission-review { flex-direction: column; gap: 6px; }
 .modal-queue { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 12px; align-items: center; margin: 20px 0 12px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 12px 0; }
 .modal-queue[hidden] { display: none; }
 .modal-queue > div { min-width: 0; text-align: center; }
@@ -1329,7 +1328,6 @@ html:not([data-skin="new"]) .button-primary:active:not(:disabled) { transform: s
 .modal-queue small { margin-top: 3px; color: var(--muted); font-size: 9px; line-height: 1.4; }
 .modal-queue .small-button { min-width: 92px; }
 .modal-queue .small-button:disabled { cursor: not-allowed; opacity: .42; }
-.customer-timesheet-submission-review pre { margin: 4px 0 0; border-top: 1px solid #dfe8e5; padding-top: 10px; white-space: pre-wrap; color: var(--ink); font: inherit; line-height: 1.6; }
 .modal-form { display: grid !important; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 13px !important; color: var(--muted); }
 .modal-form label { display: block; color: var(--muted); font-size: 10px; font-weight: 700; }
 .modal-form label.full, .modal-form .full { grid-column: 1/-1; }
@@ -2101,13 +2099,6 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 /* Zelfde ongedefinieerde-token-bug als .account-conflict-focus hierboven:
    var(--accent) bestond niet, dus stond dit kaartje zonder de bedoelde
    linkerrand-accent. --mint sluit aan bij de mint-tint van dit kaartje. */
-.customer-timesheet-mail-preview { display: grid; gap: 10px; margin-top: 16px; border: 1px solid #cde9e1; border-left: 3px solid var(--mint); border-radius: 9px; background: #effaf7; padding: 14px 16px; }
-.customer-timesheet-mail-preview-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-.customer-timesheet-mail-preview-heading > div { min-width: 0; }
-.customer-timesheet-mail-preview span, .customer-timesheet-mail-preview strong { display: block; }
-.customer-timesheet-mail-preview span { color: var(--muted); font-size: 9px; text-transform: uppercase; }
-.customer-timesheet-mail-preview strong { margin-top: 4px; }
-.customer-timesheet-mail-preview pre { margin: 0; white-space: pre-wrap; color: var(--ink); font: inherit; line-height: 1.65; }
 .customer-timesheet-admin-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; padding: 16px 20px 20px; }
 .customer-timesheet-admin-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 13px; align-items: stretch; min-width: 0; padding: 16px; }
 .customer-timesheet-admin-person strong { color: var(--navy-tekst); font-size: 13px; }
@@ -2145,8 +2136,6 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
   .customer-timesheet-admin-list { grid-template-columns: minmax(0, 1fr); padding: 12px; }
   .customer-timesheet-admin-row { grid-template-columns: minmax(0, 1fr); }
   .customer-timesheet-admin-row-actions { justify-content: flex-start; }
-  .customer-timesheet-mail-preview-heading { align-items: stretch; flex-direction: column; }
-  .customer-timesheet-mail-preview-heading .small-button { width: 100%; }
 }
 
 @media (max-width: 700px) {
@@ -2431,7 +2420,6 @@ html[data-theme="dark"] .hours-view-toolbar,
 html[data-theme="dark"] .reminder-rule { border-color: var(--line); background: #0d1825; }
 html[data-theme="dark"] .reminder-choice-trigger, html[data-theme="dark"] .reminder-choice-panel { border-color: var(--line); background: #101d2d; color: var(--ink); }
 html[data-theme="dark"] .reminder-schedule-summary span { background: rgba(13,27,56,.38); }
-html[data-theme="dark"] .customer-timesheet-mail-preview { border-color: #28584d; background: #0e201d; }
 
 @media (max-width: 1100px) {
   .employee-hero { grid-template-columns: minmax(0, 1fr); }
@@ -3576,7 +3564,6 @@ body.toont-installatieaanbod .main-content {
   .customer-timesheet-admin-person strong { font-size: 15px; }
   .customer-timesheet-field-label { font-size: 12px; }
   .customer-timesheet-flow span { font-size: 13px; }
-  .customer-timesheet-mail-preview span { font-size: 11px; }
   .customer-timesheet-template-card > small { font-size: 11px; }
   .customer-timesheet-template-card h4 { font-size: 17px; }
   /* 16px: getypte onderwerp-/berichtvelden, zelfde iOS-zoomdrempel als elders. */

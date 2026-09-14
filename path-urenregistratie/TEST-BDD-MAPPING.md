@@ -178,6 +178,7 @@
 | DASH-H-042 | ui | dashboard.feature | Standaardweek vullen na Week terugzetten vult de week weer volgens het werkpatroon | End-to-end use-case + visuele contractasserties | 7 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | Standaardweek vullen na Week terugzetten vult de week weer volgens het werkpatroon | Happy | 15 | Actueel |
 | DASH-H-043 | ui | dashboard.feature | een vrije dag uit beheer telt als ingevuld en staat niet in het rode blok; een 0 op een werkdag wel | End-to-end use-case + visuele contractasserties | 10 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | een vrije dag uit beheer telt als ingevuld en staat niet in het rode blok; een 0 op een werkdag wel | Happy | 15 | Actueel |
 | DASH-H-044 | ui | dashboard.feature | bij een zelf gemailde klanturenstaat zegt het verloop "wacht op Backoffice" en "Volgt na bevestiging", met ongewijzigde standen | End-to-end use-case + visuele contractasserties | 6 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | bij een zelf gemailde klanturenstaat zegt het verloop "wacht op Backoffice" en "Volgt na bevestiging", met ongewijzigde standen | Happy | 15 | Actueel |
+| DASH-N-033 | ui | dashboard.feature | geen misleidend bericht aan Backoffice, en zelf gemaild in medewerkertaal terwijl Backoffice zijn eigen term houdt | Beslissingstabel rollen en autorisatie | 11 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | geen misleidend bericht aan Backoffice, en zelf gemaild in medewerkertaal terwijl Backoffice zijn eigen term houdt | Negative | 15 | Actueel |
 | DASH-H-001 | ui | dashboard.feature | admin dashboard opent zonder console errors | Beslissingstabel rollen en autorisatie | 1 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | admin dashboard opent zonder console errors | Happy | 15 | Actueel |
 | DASH-H-018 | ui | dashboard.feature | elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen | End-to-end use-case + visuele contractasserties | 29 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen | Happy | 15 | Actueel |
 | DASH-N-022 | ui | dashboard.feature | een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding | Beslissingstabel rollen en autorisatie | 8 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding | Negative | 15 | Actueel |
@@ -565,9 +566,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 543
+- Playwright executable cases: 544
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 544
+- Totaal unieke executable cases: 545
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30

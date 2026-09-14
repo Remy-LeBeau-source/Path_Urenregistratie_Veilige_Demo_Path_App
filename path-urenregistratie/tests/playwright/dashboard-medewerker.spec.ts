@@ -2597,3 +2597,86 @@ test('[DASH-H-044] bij een zelf gemailde klanturenstaat zegt het verloop "wacht 
   expect(ingediend.find(s => s.key === 'customer')!.detail).toBe('Aangeleverd');
   expect(ingediend.find(s => s.key === 'done')!.detail).toBe('Volgt na bevestiging');
 });
+
+// Besluiten Gio (14 sep) over de klanturenstaat:
+// 1. "Bericht aan Backoffice" is weg. Op TEST en productie stuurde indienen alleen
+//    het bestand; wat de medewerker typte bleef in zijn eigen browser. Het veld
+//    beloofde iets wat niet gebeurde.
+// 2. Het blok "Van [medewerker] aan Path Backoffice" is weg uit het
+//    Backoffice-detailscherm: het toonde een sjabloon alsof de medewerker het
+//    geschreven had.
+// 3. Zelf gemaild in medewerkertaal: op de kaart titel "Zelf gemaild" en pil "Wacht
+//    op Backoffice"; waar de pil alleen staat (Mijn maanden) de volledige tekst
+//    "Door jou gemaild · wacht op Backoffice". Backoffice houdt "Al rechtstreeks
+//    gemaild".
+test('[DASH-N-033] geen misleidend bericht aan Backoffice, en zelf gemaild in medewerkertaal terwijl Backoffice zijn eigen term houdt', async ({ page }) => {
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  const herstelUrenstaat = await bewaarUrenstaat(page);
+  try {
+    await test.step('Then heeft het scherm Klanturenstaat geen berichtveld en geen berichtvoorbeeld meer', async () => {
+      await expect(page.locator('#customer-timesheet-edit-mail')).toHaveCount(0);
+      await expect(page.locator('#customer-timesheet-subject, #customer-timesheet-body, .customer-timesheet-mail-preview')).toHaveCount(0);
+      await expect(page.locator('body')).not.toContainText('Bericht aanpassen');
+    });
+
+    const stand = await page.evaluate(() => {
+      const w = window as unknown as {
+        currentEmployee: () => { id: number; name: string };
+        currentPeriod: () => { key: string };
+        recordFor: (id: number, key: string) => { customerTimesheet: Record<string, unknown> };
+        renderAll: () => void;
+        showCustomerTimesheetDetails: (id: number, key: string, review: boolean) => void;
+        closeModal: () => void;
+      };
+      const emp = w.currentEmployee();
+      const key = w.currentPeriod().key;
+      const doc = w.recordFor(emp.id, key).customerTimesheet;
+      // Zelf gemaild, nog niet extern bevestigd.
+      Object.assign(doc, { status: 'skipped', skippedReason: 'De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.', skippedBy: emp.name, skippedAt: '14-09-2026 10:00', reviewNote: '' });
+      w.renderAll();
+      const kaartTitel = (document.querySelector('#employee-customer-timesheet-title')?.textContent || '').trim();
+      const kaartPil = (document.querySelector('#employee-customer-timesheet-status')?.textContent || '').trim();
+      const historiePillen = Array.from(document.querySelectorAll('#employee-history .status-pill')).map(p => (p.textContent || '').trim());
+      // Het detailscherm zoals Backoffice het ziet: status in Backoffice-taal, en
+      // geen blok "Van ... aan Path Backoffice" meer.
+      w.showCustomerTimesheetDetails(emp.id, key, false);
+      const detail = document.querySelector('#modal-summary')?.textContent || '';
+      w.closeModal();
+      // Ook bij een ingediende klanturenstaat geen sjabloonblok.
+      Object.assign(doc, { status: 'received', skippedReason: '', skippedBy: '', skippedAt: '' });
+      w.renderAll();
+      w.showCustomerTimesheetDetails(emp.id, key, false);
+      const detailIngediend = document.querySelector('#modal-summary')?.textContent || '';
+      w.closeModal();
+      return { naam: emp.name, kaartTitel, kaartPil, historiePillen, detail, detailIngediend };
+    });
+
+    await test.step('And zegt de kaart "Zelf gemaild" met de pil "Wacht op Backoffice"', async () => {
+      expect(stand.kaartTitel).toBe('Zelf gemaild');
+      expect(stand.kaartPil).toBe('Wacht op Backoffice');
+    });
+
+    await test.step('And staat in Mijn maanden, waar de pil alleen staat, de volledige tekst', async () => {
+      expect(stand.historiePillen).toContain('Door jou gemaild · wacht op Backoffice');
+      expect(stand.historiePillen, 'de Backoffice-term hoort niet op een medewerkerscherm').not.toContain('Al rechtstreeks gemaild');
+    });
+
+    await test.step('And houdt Backoffice zijn eigen term, zonder sjabloonbericht van de medewerker', async () => {
+      expect(stand.detail).toContain('Al rechtstreeks gemaild');
+      expect(stand.detail).toContain('Reden');
+      expect(stand.detail, 'geen sjabloon alsof de medewerker het schreef').not.toContain('Van ' + stand.naam + ' aan');
+      expect(stand.detailIngediend).not.toContain('Van ' + stand.naam + ' aan');
+    });
+  } finally {
+    await herstelUrenstaat();
+    await page.evaluate(() => {
+      const w = window as unknown as { currentEmployee: () => { id: number }; currentPeriod: () => { key: string }; recordFor: (id: number, key: string) => { customerTimesheet: Record<string, unknown> }; renderAll: () => void };
+      const doc = w.recordFor(w.currentEmployee().id, w.currentPeriod().key).customerTimesheet;
+      Object.assign(doc, { status: 'missing', skippedReason: '', skippedBy: '', skippedAt: '' });
+      w.renderAll();
+    });
+  }
+});

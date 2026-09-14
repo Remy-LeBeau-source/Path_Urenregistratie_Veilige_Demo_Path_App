@@ -372,6 +372,16 @@ Feature: Dashboard en open werkvoorraad
     When de flow voor DASH-H-044 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat bij een zelf gemailde klanturenstaat zegt het verloop "wacht op Backoffice" en "Volgt na bevestiging", met ongewijzigde standen
 
+  @negative
+  Scenario: [DASH-N-033] geen misleidend bericht aan Backoffice, en zelf gemaild in medewerkertaal terwijl Backoffice zijn eigen term houdt
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given dashboard en open werkvoorraad is voorbereid
+    When de flow voor DASH-N-033 wordt uitgevoerd
+    Then heeft het scherm Klanturenstaat geen berichtveld en geen berichtvoorbeeld meer
+    And staat in Mijn maanden, waar de pil alleen staat, de volledige tekst
+    And houdt Backoffice zijn eigen term, zonder sjabloonbericht van de medewerker
+
   @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors
     # Testtechniek: Beslissingstabel rollen en autorisatie

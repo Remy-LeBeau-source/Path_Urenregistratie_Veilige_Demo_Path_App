@@ -586,7 +586,7 @@ test.describe('customer timesheet api', () => {
       const response = await responsePromise;
       expect(response.status()).toBe(200);
       await expect(page.locator('#toast')).toContainText('rechtstreeks gemaild geregistreerd');
-      await expect(page.locator('#employee-customer-timesheet-title')).toHaveText('Als rechtstreeks gemaild geregistreerd');
+      await expect(page.locator('#employee-customer-timesheet-title')).toHaveText('Zelf gemaild');
       await expect(page.locator('#employee-customer-timesheet-skip')).toHaveText('Toch een bestand toevoegen');
       // Medewerkertaal (opdracht 14 sep, punt 4), niet de vastgelegde Backoffice-reden.
       await expect(page.locator('#employee-customer-timesheet-note')).toContainText('Je gaf aan de urenstaat zelf te hebben gemaild. De Backoffice verwerkt hem zodra hij binnen is.');
@@ -601,8 +601,9 @@ test.describe('customer timesheet api', () => {
       await page.reload();
       await expect(page.locator('#app-shell')).toBeVisible();
       await expect(page.locator('#period-label')).toHaveText('September 2026');
-      await expect(page.locator('#employee-customer-timesheet-title')).toHaveText('Als rechtstreeks gemaild geregistreerd');
-      await expect(page.locator('#employee-customer-timesheet-status')).toHaveText('Al rechtstreeks gemaild');
+      await expect(page.locator('#employee-customer-timesheet-title')).toHaveText('Zelf gemaild');
+      // Medewerkertaal naast de titel "Zelf gemaild" (besluit Gio 14 sep); Backoffice houdt "Al rechtstreeks gemaild".
+      await expect(page.locator('#employee-customer-timesheet-status')).toHaveText('Wacht op Backoffice');
 
       const restorePromise = page.waitForResponse(response => response.request().method() === 'POST' && /customer-timesheets\.php$/.test(response.url()));
       await page.locator('#employee-customer-timesheet-skip').click();
