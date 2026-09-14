@@ -272,6 +272,14 @@ Feature: Dashboard en open werkvoorraad
     Then heeft de weekstaat alleen de werkdagen als kolommen
     And staat in elke dagcel de datum boven het veld en 0/8/9 eronder, met het totaal rechts van de dagen
 
+  @negative
+  Scenario: [DASH-N-031] de volgende actie is één zin zonder aangeplakte maand, en de maand staat in de regel eronder
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given dashboard en open werkvoorraad is voorbereid
+    When de flow voor DASH-N-031 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat de volgende actie is één zin zonder aangeplakte maand, en de maand staat in de regel eronder
+
   @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors
     # Testtechniek: Beslissingstabel rollen en autorisatie

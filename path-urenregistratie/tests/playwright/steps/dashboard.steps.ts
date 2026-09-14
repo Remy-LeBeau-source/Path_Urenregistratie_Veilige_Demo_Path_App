@@ -127,6 +127,8 @@ Then("wordt met Playwright-assertions bevestigd dat de klanturenstaatkaart loopt
 When("de flow voor DASH-H-035 wordt uitgevoerd");
 Then("heeft de weekstaat alleen de werkdagen als kolommen");
 And("staat in elke dagcel de datum boven het veld en 0/8/9 eronder, met het totaal rechts van de dagen");
+When("de flow voor DASH-N-031 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat de volgende actie is één zin zonder aangeplakte maand, en de maand staat in de regel eronder");
 Given("de administrator is ingelogd");
 When("de administrator het dashboard opent");
 Then("het dashboard toont admin-overzicht zonder consolefouten");

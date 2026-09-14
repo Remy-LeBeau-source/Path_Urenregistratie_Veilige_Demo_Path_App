@@ -6152,7 +6152,12 @@ function renderEmployeeDashboard() {
     action = "Even geduld…";
     note = "Werkvoorraad laden…";
   } else if (nextOpenMonth && nextOpenAction) {
-    next = nextOpenAction.description + " voor " + nextOpenMonth.period.label + ".";
+    // Alleen de actietekst. De maand staat al in de regel eronder ("Juni 2026 ·
+    // actie 1 van 5"). Eerder werd " voor <maand>." erachter geplakt, maar elke
+    // actietekst eindigt al op een punt, en een correctiebericht of reviewnotitie
+    // van Backoffice is vrije tekst. Dat gaf op TEST "…dien deze maand in. voor
+    // Juni 2026." (screenshot Gio, 14 sep).
+    next = nextOpenAction.description;
     action = nextOpenAction.button;
   } else {
     next = "Alles voor deze maand is afgerond.";
@@ -6402,9 +6407,9 @@ function employeeOpenMonthSummaries(employeeId, currentPeriodKey) {
       const actions = [];
 
       if (historyRecord.timesheetStatus === 'draft') {
-        actions.push({ type: 'hours', category: 'Urenregistratie', label: 'Uren indienen', description: 'Controleer je uren en dien deze maand in.', button: 'Open uren', tone: 'status-concept' });
+        actions.push({ type: 'hours', category: 'Urenregistratie', label: 'Uren indienen', description: 'Controleer je uren en dien de maand in.', button: 'Open uren', tone: 'status-concept' });
       } else if (historyRecord.timesheetStatus === 'correction') {
-        actions.push({ type: 'hours', category: 'Urenregistratie', label: 'Correctie indienen', description: activeCorrection(historyRecord)?.message || 'Pas je uren aan en dien deze maand opnieuw in.', button: 'Open correctie', tone: 'status-warning' });
+        actions.push({ type: 'hours', category: 'Urenregistratie', label: 'Correctie indienen', description: activeCorrection(historyRecord)?.message || 'Pas je uren aan en dien de maand opnieuw in.', button: 'Open correctie', tone: 'status-warning' });
       }
 
       if (employee.customerTimesheetExpected !== false) {

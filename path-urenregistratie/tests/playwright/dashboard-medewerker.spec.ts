@@ -1854,3 +1854,27 @@ test('[DASH-H-035] Mijn uren op desktop toont alleen Ma–Vr, de datum boven elk
     expect(maten.totaal!.left, 'het weektotaal hoort rechts van de dagen te staan').toBeGreaterThanOrEqual(maten.laatsteDag!.right - 1);
   });
 });
+
+// Screenshot van Gio op TEST (14 sep, Klassiek, telefoon): de volgende actie las
+// "Controleer je uren en dien deze maand in. voor Juni 2026." -- " voor <maand>."
+// werd achter een actietekst geplakt die al op een punt eindigt. De maand staat
+// al in de regel eronder, dus de zin hoort alleen de actie te noemen. De case
+// toetst beide kanten: geen aanhangsel achter de zin, en de maand wél in de
+// metaregel -- anders zou "maand weggelaten" ook als oplossing tellen.
+test('[DASH-N-031] de volgende actie is één zin zonder aangeplakte maand, en de maand staat in de regel eronder', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  await expect(page.locator('#employee-dashboard-next-label')).toHaveText('Volgende actie', { timeout: 20_000 });
+
+  const zin = (await page.locator('#employee-dashboard-next').textContent() || '').trim();
+  const meta = (await page.locator('#employee-dashboard-next-meta').textContent() || '').trim();
+  const maand = meta.split(' · ')[0];
+
+  expect(meta, 'de metaregel hoort met de maand van de actie te beginnen').toMatch(/^[A-Z][a-z]+ \d{4} · actie 1 van \d+$/);
+  // Niet "geen tweede zin": een correctiebericht van Backoffice mag er meer hebben.
+  expect(zin, 'na een punt hoort geen aangeplakte "voor <maand>" te volgen').not.toMatch(/\.\s+voor\s/);
+  expect(zin, 'de maand hoort niet nog eens achter de actietekst te staan').not.toContain(' voor ' + maand);
+  expect(zin, 'de actie gaat niet per se over de lopende maand').not.toContain('deze maand');
+});
