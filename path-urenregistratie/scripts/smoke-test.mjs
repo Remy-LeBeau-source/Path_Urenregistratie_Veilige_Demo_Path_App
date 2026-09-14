@@ -905,7 +905,8 @@ assert(document.querySelector("#customer-timesheet-admin-list").textContent.incl
 click('#admin-task-panel [data-review-customer-timesheet="1"][data-period-key="2026-08"]');
 assert(document.querySelector("#modal-title").textContent.includes("Marc de Roon") && document.querySelector("#modal-secondary").textContent === "Opnieuw uploaden vragen", "Backoffice moet een officiële PDF kunnen goedkeuren of opnieuw laten uploaden");
 assert(document.querySelector('#modal-summary [data-view-customer-timesheet="1"]'), "Backoffice moet de ingediende PDF kunnen bekijken voordat deze wordt goedgekeurd");
-assert(document.querySelector("#modal-summary").textContent.includes("Van Marc de Roon aan Path Backoffice") && document.querySelector("#modal-summary").textContent.includes("mijn klanturenstaat"), "De beheerder moet eerst het bericht van de medewerker bij de inzending zien");
+// "Bericht aan Backoffice" is weg (besluit Gio 14 sep): de controle toont geen medewerkersbericht meer.
+assert(!document.querySelector("#modal-summary").textContent.includes("Van Marc de Roon aan Path Backoffice"), "De controle hoort geen bericht aan Backoffice meer te tonen");
 click("#modal-confirm");
 // Remove temp diagnostic
 assert(JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final")).records["2026-08"]["1"].customerTimesheet.status === "approved", "Een gecontroleerde klanturenstaat moet Goedgekeurd worden");
