@@ -2973,6 +2973,15 @@ melding -- dus vermoedelijk echt, in onderzoek (sessie -ad):**
   eerst toetsen of `mobile-ui.spec.ts` (`MOBILE_PERIOD = '2026-01'` voor Stasjo) niet juist op dit
   race-venster leunt; (b) terugbladeren blokkeren tot het serverprofiel binnen is -- gedragswijziging
   voor elk echt account, dus aan Gio.
+  **Fix (a) doorgevoerd en bewezen (sessie -ad, commit 2cf62034).** Nieuwe regressie `[DASH-N-030]`
+  houdt de bootstrap bewust tegen en kiest dan april: **rood zonder fix** ("Stasjo van Bakel,
+  catalogus-startdatum 2026-01-01", april geaccepteerd), **groen met fix** (catalogus Marc, Stasjo en
+  Brian naar 2026-05-01; Shawn klopte al). De race wordt dus afgedwongen in plaats van gehoopt.
+  `dashboard-medewerker.spec.ts` 26/26 groen. Het risico dat de mobiele cases op het race-venster
+  leunden is uitgesloten: `mobile-ui.spec.ts` op mobile-chrome 31/31 groen, inclusief MOB-H-002/003
+  met januari 2026. Smoke-test (demomodus, waar de catalogus leidend is) geslaagd. **Fix (b) --
+  terugbladeren blokkeren tot het serverprofiel binnen is, nodig voor echte accounts buiten de
+  catalogus -- blijft een beslissing voor Gio.**
 - `[DASH-H-030]` -- klik op `#submit-timesheet` loopt af terwijl het element "visible, enabled and
   stable" is: iets onderschept de klik. Op 768px zit je in de 721-820px-band; overlay vermoed.
 - `[SKIN-H-023]` -- resettoken "ongeldig of verlopen" waar "wachtwoord ingesteld" verwacht werd.
@@ -2982,6 +2991,11 @@ melding -- dus vermoedelijk echt, in onderzoek (sessie -ad):**
   dezelfde tekst. Oorzaak dus nog onbekend. Volgende stap: de case laten melden welke status en
   `error`-code `reset-password.php` teruggaf, zonder extra eis (`skin.spec.ts` is in gebruik bij de
   herontwerp-lane, dus in overleg).
+  **Diagnose ingebouwd en bewezen (sessie -ad, commit 2cf62034, akkoord van -cb).** De case meldt bij
+  een mislukte reset nu status en foutcode van de server. Groen bij een normale run; een proef met een
+  bewust kapot token gaf letterlijk `reset-password.php antwoordde: 400 {"error":"invalid-token",...}`
+  in de melding, daarna teruggedraaid. De oorzaak van de eerdere uitval is daarmee nog niet bekend,
+  maar de volgende uitval noemt hem.
   **Voor Gio, los van de test:** een medewerker met een gewoon geldige link die door een netwerk- of
   CSRF-hapering "ongeldig of verlopen" te zien krijgt, vraagt een nieuwe link aan -- en maakt daarmee
   zijn eerste link ongeldig. De tekst zegt iets anders dan wat er gebeurde.
