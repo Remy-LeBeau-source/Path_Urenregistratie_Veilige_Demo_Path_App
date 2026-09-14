@@ -4,6 +4,7 @@ import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 import { useFixedDemoClock } from './fixtures/fixedDemoClock';
 import { LoginPage } from './pages/LoginPage';
+import { openUrenactieVanMaand } from './fixtures/klassiekDashboard';
 
 type JsonBody = Record<string, unknown>;
 
@@ -143,16 +144,9 @@ test('[E2E-H-003] herindiening verplaatst dezelfde actie van medewerker naar Bac
   await test.step('When Stasjo zijn correctie opent en opnieuw indient', async () => {
     await loginPage.logout();
     await loginPage.loginAsEmployee();
-    const august = page.locator('[data-employee-open-month="2026-08"]');
-    await expect(august).toBeVisible();
-    const augustBody = august.locator('.employee-open-month-body');
-    if (await augustBody.isHidden()) {
-      await august.locator('[data-employee-open-month-toggle]').click();
-    }
-    const action = august.locator('[data-employee-open-action="hours"]');
-    await expect(action).toContainText('Open correctie');
-    await expect(action).toHaveAttribute('data-period-key', '2026-08');
-    await action.click();
+    // Desktop-Klassiek: chip "Augustus · correctie" in Vandaag; elders de
+    // knop "Open correctie" in Open acties per maand. Zie fixtures/klassiekDashboard.ts.
+    await openUrenactieVanMaand(page, '2026-08', { chip: 'correctie', knop: 'Open correctie' });
     await expect(page.locator('#timesheet-status')).toHaveText('Correctie nodig');
     await expect(page.locator('#hours-grid .hours-input:not([disabled])').first()).toBeVisible();
     await page.locator('[data-hours-week-scope="all"]').click();

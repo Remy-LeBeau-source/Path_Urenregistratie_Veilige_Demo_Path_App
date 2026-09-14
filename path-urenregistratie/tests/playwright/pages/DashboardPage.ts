@@ -10,7 +10,10 @@ export class DashboardPage {
   }
 
   async assertEmployeeDashboardVisible(): Promise<void> {
-    await expect(this.page.locator('#employee-dashboard-greeting')).toBeVisible();
+    // De begroeting staat op desktop in Klassiek in Vandaag (#vd-kop-label,
+    // referentie medewerker-gui.html) en elders nog in de oude hero. Welke van de
+    // twee zichtbaar is hangt af van skin en breedte; er hoort er altijd één te zijn.
+    await expect(this.page.locator('#vd-kop-label:visible, #employee-dashboard-greeting:visible').first()).toHaveText(/^Goede(morgen|middag|navond)/);
     await expect(this.page.locator('button[data-view="approvals"]')).toBeHidden();
     await expect(this.page.locator('button[data-view="announcements"]')).toBeHidden();
   }

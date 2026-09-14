@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 533 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 534 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 533 unieke case-ID's
+- Playwright executable cases: 534 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 534 unieke case-ID's
+- Totaal executable cases: 535 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 575
-- Niet-mobile projectuitvoeringen: 491
+- Uitvoeringen: 576
+- Niet-mobile projectuitvoeringen: 492
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 533 Playwright-functionele cases in totaal 575 resultaten op: 491 + (42 x 2) = 575.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 534 Playwright-functionele cases in totaal 576 resultaten op: 492 + (42 x 2) = 576.
 
 ## Documentatieketen
 
@@ -148,7 +148,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 533 Playwri
 - [E2E-N-018] documentlinks accepteren geen ongeautoriseerde gebruiker, clientpad of vrije bestandsnaam — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 21
 - [E2E-H-001] herstelbasis houdt globale werkvoorraad stabiel bij maand- en filterwissels — Techniek: Equivalentieklassen · Assertions: 11
 - [E2E-H-002] rolwissel werkt zonder F5 en herstel blijft beschikbaar voor iedere rol op LOCAL/TEST — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
-- [E2E-H-003] herindiening verplaatst dezelfde actie van medewerker naar Backoffice — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 18
+- [E2E-H-003] herindiening verplaatst dezelfde actie van medewerker naar Backoffice — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 15
 - [E2E-H-004] goedkeuring vervangt urencontrole door factuurverzending voor hetzelfde dossier — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [E2E-H-005] klanturenstaatcontrole wordt een brokeractie zonder taakverlies — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
 - [E2E-H-006] eenmalige wachtwoordlink geeft toegang en blokkeert hergebruik — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
@@ -201,7 +201,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 533 Playwri
 
 - Feature: `tests/playwright/features/dashboard.feature`
 - Source: `tests/playwright/dashboard*.spec.ts`
-- Cases: 51
+- Cases: 52
 
 - [DASH-H-002] employee dashboard opent zonder console errors — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
 - [DASH-H-025] "Mijn maanden" toont naast de urenstatus ook de klanturenstaat-status per maand — Techniek: Toestandsovergang · Assertions: 7
@@ -210,7 +210,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 533 Playwri
 - [DASH-N-030] ook vóórdat de serverdata binnen is, opent een medewerker geen maand vóór zijn indiensttreding — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [DASH-N-024] een lokaal record van vóór indiensttreding verschijnt niet in Mijn maanden — Techniek: Toestandsovergang · Assertions: 2
 - [DASH-N-025] een gekozen klanturenstaat-bestand blijft niet hangen na een gewone maandwissel — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
-- [DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties toe en houdt de kalendermaand in beeld — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 10
+- [DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties toe en houdt de kalendermaand in beeld — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 11
 - [DASH-N-009] medewerker teller blijft stabiel bij aug-juli-aug en dashboard triggert geen verborgen timesheet-read — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 - [DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behoudt maandlabels bij themawissel — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
@@ -234,6 +234,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 533 Playwri
 - [DASH-H-034] de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 32
 - [DASH-H-035] Mijn uren op desktop toont alleen Ma–Vr, de datum boven elk veld, 0/8/9 eronder en het weektotaal rechts — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
 - [DASH-N-031] de volgende actie is één zin zonder aangeplakte maand, en de maand staat in de regel eronder — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
+- [DASH-H-036] Vandaag staat op desktop in Klassiek volgens de referentie, en hero, ring en Nog te doen kloppen met elkaar — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 27
 - [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 29
 - [DASH-N-022] een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8

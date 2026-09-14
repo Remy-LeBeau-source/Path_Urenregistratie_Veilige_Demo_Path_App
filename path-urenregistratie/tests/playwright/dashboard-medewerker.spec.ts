@@ -15,6 +15,16 @@ import { expect, test } from '@playwright/test';
 import { openPaneel, openProfielmenu } from './pages/TopbarMenu';
 import { suppressInstallBanner } from './fixtures/suppressInstallBanner';
 import { useFixedDemoClock } from './fixtures/fixedDemoClock';
+// Scope rechtgezet 14 sep: op desktop vervangt Vandaag (#vandaag, referentie
+// handoff/medewerker-gui.html) in Klassiek de oude dashboardblokken: "Open acties
+// per maand", de volgende-actieknop, de kerncijfers en de stappenlijst. Op
+// telefoon staan die blokken er nog, tot medewerker-wild.html is nagebouwd. Cases
+// die dát gedrag toetsen, draaien daarom op telefoonbreedte: dezelfde assertions,
+// op de plek waar die code nog live is. Bij de Wild-stap worden ze opnieuw bekeken.
+async function opOudeKlassiekeBreedte(page: import('@playwright/test').Page): Promise<void> {
+  await page.setViewportSize({ width: 390, height: 844 });
+}
+
 
 test.beforeEach(async ({ page }) => {
   await useFixedDemoClock(page);
@@ -318,7 +328,11 @@ test('[DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties t
 
   await test.step('Then verschijnt juni niet als open-actiemaand en blijven het totaal en de kalendermaand ongewijzigd', async () => {
     await expect(page.locator('[data-employee-open-month="2026-06"]')).toHaveCount(0);
-    await expect(page.locator('[data-employee-open-month="2026-08"]').first()).toBeVisible();
+    // Op desktop staan de open maanden in Klassiek als chips in "Nog te doen"
+    // (Vandaag, referentie medewerker-gui.html); "Open acties per maand" is daar
+    // verborgen maar wordt nog wel gevuld. Beide horen juni niet te noemen.
+    await expect(page.locator('#vd-nogtedoen-chips [data-vd-open-maand="2026-06"]')).toHaveCount(0);
+    await expect(page.locator('#vd-nogtedoen-chips [data-vd-open-maand="2026-08"]')).toBeVisible();
     await expect(page.locator('#employee-open-task-total')).toHaveText(totalOnCalendarMonth);
     await expect(page.locator('#employee-dashboard-next')).not.toContainText('Juni 2026');
   });
@@ -384,6 +398,7 @@ test('[DASH-N-009] medewerker teller blijft stabiel bij aug-juli-aug en dashboar
 });
 
 test('[DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar', async ({ page }) => {
+  await opOudeKlassiekeBreedte(page);
   const loginPage = new LoginPage(page);
 
   await page.route('**/server/api/timesheets.php**', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ ok: false }) }));
@@ -477,6 +492,7 @@ test('[DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakie
 });
 
 test('[DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behoudt maandlabels bij themawissel', async ({ page }) => {
+  await opOudeKlassiekeBreedte(page);
   const loginPage = new LoginPage(page);
 
   await page.route('**/server/api/timesheets.php**', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ ok: false }) }));
@@ -513,6 +529,7 @@ test('[DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behou
 });
 
 test('[DASH-H-005] medewerker ziet open maanden compact en kan direct naar de juiste maand springen', async ({ page }) => {
+  await opOudeKlassiekeBreedte(page);
   const loginPage = new LoginPage(page);
 
   await test.step('Given een medewerker met open maanden', async () => {
@@ -541,6 +558,7 @@ test('[DASH-H-005] medewerker ziet open maanden compact en kan direct naar de ju
 });
 
 test('[DASH-H-014] medewerker krijgt de eerstvolgende concrete actie met juiste maand en taakroute', async ({ page }) => {
+  await opOudeKlassiekeBreedte(page);
   const errors = captureConsoleErrors(page);
   const loginPage = new LoginPage(page);
 
@@ -679,6 +697,7 @@ test('[DASH-N-015] medewerkerprioriteit kiest correctie boven document en toont 
 });
 
 test('[DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere maand', async ({ page }) => {
+  await opOudeKlassiekeBreedte(page);
   const loginPage = new LoginPage(page);
 
   // Deze test is uitsluitend gericht op het servergestuurde urenrooster. Houd de
@@ -1877,4 +1896,113 @@ test('[DASH-N-031] de volgende actie is één zin zonder aangeplakte maand, en d
   expect(zin, 'na een punt hoort geen aangeplakte "voor <maand>" te volgen').not.toMatch(/\.\s+voor\s/);
   expect(zin, 'de maand hoort niet nog eens achter de actietekst te staan').not.toContain(' voor ' + maand);
   expect(zin, 'de actie gaat niet per se over de lopende maand').not.toContain('deze maand');
+});
+
+// Scope rechtgezet 14 sep: handoff/medewerker-gui.html is de nieuwe Klassiek. Op
+// desktop vervangt het Vandaag-scherm de oude Klassieke dashboardblokken. De case
+// bewaakt drie dingen:
+// 1. Het scherm staat in Klassiek en niet in Modern, en op telefoon nog niet.
+//    Juist dat ging eerder mis: dit werk stond eerst in de verkeerde skin.
+// 2. De opbouw uit de referentie, met het gezegde uit de letterlijke lijst.
+// 3. Dat hero, ring en "Nog te doen" elkaar niet tegenspreken. Een eerdere nabouw
+//    toonde "Nog 4 weken" boven een verloop dat meer open liet zien.
+test('[DASH-H-036] Vandaag staat op desktop in Klassiek volgens de referentie, en hero, ring en Nog te doen kloppen met elkaar', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  const vandaag = page.locator('#vandaag');
+
+  await test.step('Then staat Vandaag er in Klassiek, en zijn de oude blokken en de klanturenstaatkaart verhuisd of weg', async () => {
+    await expect(vandaag).toBeVisible();
+    // De archiefregel blijft tot de tab "Maanden" er is: anders is Mijn maanden op
+    // desktop onbereikbaar.
+    await expect(page.locator('#employee-history-teaser')).toBeVisible();
+    for (const oud of ['#view-employee-dashboard > .employee-hero', '#employee-open-overview', '#employee-status-keten', '#view-employee-dashboard > .employee-metrics']) {
+      await expect(page.locator(oud), `${oud} hoort op desktop plaats te maken voor Vandaag`).toBeHidden();
+    }
+    await expect(page.locator('#vd-klant-plek > #employee-customer-timesheet-card'), 'de klanturenstaatkaart hoort onder de hero te staan').toBeVisible();
+    await expect(page.locator('#vd-kop-titel')).not.toBeEmpty();
+    await expect(page.locator('#vd-periode')).toHaveText(await page.locator('#period-label').textContent() || '');
+    await expect(page.locator('#vd-verloop-lijst .vd-stap')).toHaveCount(5);
+  });
+
+  await test.step('And komt het gezegde letterlijk uit de lijst van de referentie', async () => {
+    const stand = await page.evaluate(() => {
+      const lijst = (0, eval)('VANDAAG_GEZEGDES') as string[];
+      return { aantal: lijst.length, gezegde: document.querySelector('#vd-spreuk')?.textContent || '', inLijst: lijst.includes(document.querySelector('#vd-spreuk')?.textContent || '') };
+    });
+    expect(stand.aantal, 'de referentie heeft 98 gezegdes').toBe(98);
+    expect(stand.gezegde.length).toBeGreaterThan(0);
+    expect(stand.inLijst, `"${stand.gezegde}" hoort uit de lijst te komen`).toBe(true);
+  });
+
+  await test.step('And zeggen hero en ring hetzelfde aantal open weken', async () => {
+    const stand = await page.evaluate(() => {
+      const w = window as unknown as {
+        currentEmployee: () => { id: number }; currentPeriod: () => { key: string; weekRows: unknown[] };
+        recordFor: (id: number, key: string) => unknown;
+        completedTimesheetWeeks: (r: unknown, p: unknown) => number;
+      };
+      const periode = w.currentPeriod();
+      const record = w.recordFor(w.currentEmployee().id, periode.key);
+      return {
+        totaal: periode.weekRows.length,
+        compleet: w.completedTimesheetWeeks(record, periode),
+        antwoord: (document.querySelector('#vd-antwoord')?.textContent || '').trim(),
+        pct: (document.querySelector('#vd-pct')?.textContent || '').trim(),
+        fillStand: document.querySelector('#vd-verloop-lijst [data-vd-stap="fill"]')?.className || '',
+      };
+    });
+    const open = stand.totaal - stand.compleet;
+    expect(stand.pct, 'de ring hoort het aandeel complete weken te tonen').toBe(Math.round((stand.compleet / stand.totaal) * 100) + '%');
+    if (open > 0) {
+      expect(stand.antwoord).toBe('Nog ' + open + (open === 1 ? ' week' : ' weken') + ' in te vullen.');
+      expect(stand.fillStand, 'met open weken hoort "Uren ingevuld" de huidige stap te zijn').toContain('is-nu');
+    }
+  });
+
+  await test.step('And toont Nog te doen een chip per open maand, oudste eerst en uitgelicht', async () => {
+    const verwacht = await page.evaluate(() => {
+      const w = window as unknown as {
+        currentEmployee: () => { id: number }; currentPeriod: () => { key: string };
+        employeeOpenMonthSummaries: (id: number, key: string) => Array<{ periodKey: string }>;
+      };
+      return w.employeeOpenMonthSummaries(w.currentEmployee().id, w.currentPeriod().key).map(m => m.periodKey);
+    });
+    const chips = page.locator('#vd-nogtedoen-chips .vd-maandchip');
+    await expect(chips).toHaveCount(verwacht.length);
+    if (verwacht.length > 0) {
+      expect(await chips.evaluateAll(els => els.map(el => (el as HTMLElement).dataset.vdOpenMaand))).toEqual(verwacht);
+      await expect(chips.first()).toHaveClass(/is-eerste/);
+      await expect(page.locator('#vd-nogtedoen-kop')).toHaveText(verwacht.length === 1 ? 'Nog te doen' : `Nog te doen — ${verwacht.length} maanden`);
+    }
+  });
+
+  await test.step('And brengt de hoofdknop je naar Mijn uren zolang er weken open staan', async () => {
+    if (await page.locator('#vd-hoofdknop').getAttribute('data-vd-actie') === 'uren') {
+      await page.locator('#vd-hoofdknop').click();
+      await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+      await page.locator('button[data-view="employee-dashboard"]').click();
+      await expect(vandaag).toBeVisible();
+    }
+  });
+
+  await test.step('And staat Vandaag niet in Modern, en daar blijft de bento', async () => {
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(vandaag).toBeHidden();
+    await expect(page.locator('#new-employee-bento')).toBeVisible();
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  });
+
+  await test.step('And staat Vandaag op telefoonbreedte nog niet, en keert de kaart terug naar zijn eigen plek', async () => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(vandaag).toBeHidden();
+    await expect(page.locator('#view-employee-dashboard > .employee-hero')).toBeVisible();
+    await expect(page.locator('#vd-klant-plek > #employee-customer-timesheet-card')).toHaveCount(0);
+  });
 });

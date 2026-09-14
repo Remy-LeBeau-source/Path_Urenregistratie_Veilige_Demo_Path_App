@@ -61,7 +61,7 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
   @happy
   Scenario: [E2E-H-003] herindiening verplaatst dezelfde actie van medewerker naar Backoffice
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 18
+    # Aantoonbare Playwright-assertions in deze case: 15
     Given de herstelbasis Stasjo een correctieactie en Backoffice zeven acties geeft
     When Stasjo zijn correctie opent en opnieuw indient
     Then krijgt Backoffice direct de vervolgcontrole zonder verlies van het globale totaal

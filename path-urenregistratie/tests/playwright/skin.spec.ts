@@ -5,6 +5,16 @@ import { LoginPage } from './pages/LoginPage';
 import { bewaarUrenstaat } from './fixtures/urenstaatHerstel';
 import { openProfielmenu } from './pages/TopbarMenu';
 import { appConfig, requirePassword } from './fixtures/appConfig';
+// Scope rechtgezet 14 sep: op desktop vervangt Vandaag (#vandaag, referentie
+// handoff/medewerker-gui.html) in Klassiek de oude dashboardblokken: "Open acties
+// per maand", de volgende-actieknop, de kerncijfers en de stappenlijst. Op
+// telefoon staan die blokken er nog, tot medewerker-wild.html is nagebouwd. Cases
+// die dát gedrag toetsen, draaien daarom op telefoonbreedte: dezelfde assertions,
+// op de plek waar die code nog live is. Bij de Wild-stap worden ze opnieuw bekeken.
+async function opOudeKlassiekeBreedte(page: import('@playwright/test').Page): Promise<void> {
+  await page.setViewportSize({ width: 390, height: 844 });
+}
+
 
 type JsonBody = Record<string, unknown>;
 
@@ -309,6 +319,7 @@ test('[SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en
 });
 
 test('[SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en Klassiek', async ({ page }) => {
+  await opOudeKlassiekeBreedte(page);
   const loginPage = new LoginPage(page);
 
   await test.step('Given een medewerkerdashboard met geladen urenstatus', async () => {
@@ -1616,6 +1627,7 @@ test('[SKIN-H-028] "Week terugzetten" overschrijft ook een dag die bewust op 0 i
 });
 
 test('[SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eerstvolgende stap en blijft op het Dashboard', async ({ page }) => {
+  await opOudeKlassiekeBreedte(page);
   // Vervangt wat het oude klassieke hero-blok deed (één duidelijke
   // eerstvolgende stap met knop) door dezelfde bento-kaarttaal te gebruiken
   // als de rest van deze sectie, i.p.v. het hero-blok zelf terug te zetten
@@ -1951,6 +1963,7 @@ test('[SKIN-H-030] een lang e-mailadres duwt de statuspil niet buiten beeld op 3
 // zodra iemand één vlag aanpast. Deze case bewaakt de uitkomst van die
 // doorloop, niet de implementatie.
 test('[SKIN-H-031] de vijf stappen lopen in volgorde en geen stap staat groen terwijl een eerdere nog open is', async ({ page }) => {
+  await opOudeKlassiekeBreedte(page);
   test.setTimeout(120_000);
   const loginPage = new LoginPage(page);
   await loginPage.open();
@@ -2060,6 +2073,7 @@ test('[SKIN-H-031] de vijf stappen lopen in volgorde en geen stap staat groen te
 // die val staat in styles-new.css opgeschreven bij .new-bento-step-segment:
 // één lijnstuk dat op 11 sep twee keer onafhankelijk werd gerepareerd.
 test('[SKIN-H-032] Klassiek en Modern tonen dezelfde statusketen, uit dezelfde bron', async ({ page }) => {
+  await opOudeKlassiekeBreedte(page);
   test.setTimeout(120_000);
   const loginPage = new LoginPage(page);
   await loginPage.open();
@@ -2170,7 +2184,8 @@ test('[SKIN-H-033] de medewerkerschermen rekken op een breed scherm niet verder 
   await loginPage.open();
   await loginPage.loginAsEmployee();
   await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
-  await expect(page.locator('#employee-dashboard-hours')).toBeVisible();
+  // Op desktop is het Klassieke dashboard sinds 14 sep het Vandaag-scherm.
+  await expect(page.locator('#vandaag')).toBeVisible();
 
   await test.step('Then blijft het dashboard op een breed venster binnen 1060px', async () => {
     await page.setViewportSize({ width: 1800, height: 1000 });
@@ -2246,7 +2261,11 @@ test('[SKIN-H-034] een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgl
   await loginPage.loginAsEmployee();
   await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
 
-  const hoofdknop = page.locator('#employee-dashboard-action');
+  // Sinds 14 sep is de hoofdactie op het Klassieke desktopdashboard de knop in
+  // Vandaag, met de waarden uit handoff/medewerker-gui.html r226: in rust
+  // 0 8px 20px rgba(58,189,157,.3), ingedrukt scale(.97) en 0 2px 22px
+  // rgba(58,189,157,.55).
+  const hoofdknop = page.locator('#vd-hoofdknop');
   await expect(hoofdknop).toBeVisible();
 
   const stijlNu = () => hoofdknop.evaluate(el => {
@@ -2281,8 +2300,14 @@ test('[SKIN-H-034] een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgl
       message: `de hoofdactie hoort bij indrukken te krimpen (rust: ${rust.transform})`,
       timeout: 5_000,
     }).toBeLessThan(1);
-    const ingedrukt = await stijlNu();
-    expect(ingedrukt.schaduw, 'de hoofdactie hoort bij indrukken de mintgloed te tonen').toContain('58, 189, 157');
+    // Ook in rust heeft deze knop een mintschaduw (r226), dus "bevat mint" zegt
+    // niets. Ingedrukt hoort het de sterkere gloed van .55 te zijn. Ook de schaduw
+    // heeft een overgang van .16s, dus die krijgt dezelfde poll als de schaal.
+    await expect.poll(async () => (await stijlNu()).schaduw, {
+      message: 'de hoofdactie hoort bij indrukken de mintgloed te tonen',
+      timeout: 5_000,
+    }).toContain('rgba(58, 189, 157, 0.55)');
+    expect((await stijlNu()).schaduw, 'de gloed hoort anders te zijn dan in rust').not.toBe(rust.schaduw);
     await page.mouse.up();
   });
 });

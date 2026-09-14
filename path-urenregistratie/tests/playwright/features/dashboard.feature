@@ -69,7 +69,7 @@ Feature: Dashboard en open werkvoorraad
   @negative
   Scenario: [DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties toe en houdt de kalendermaand in beeld
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 10
+    # Aantoonbare Playwright-assertions in deze case: 11
     Given de medewerker ziet zijn open acties in de actuele kalendermaand augustus
     When de medewerker handmatig een lege oudere maand (juni 2026) opent
     Then verschijnt juni niet als open-actiemaand en blijven het totaal en de kalendermaand ongewijzigd
@@ -279,6 +279,20 @@ Feature: Dashboard en open werkvoorraad
     Given dashboard en open werkvoorraad is voorbereid
     When de flow voor DASH-N-031 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat de volgende actie is één zin zonder aangeplakte maand, en de maand staat in de regel eronder
+
+  @happy
+  Scenario: [DASH-H-036] Vandaag staat op desktop in Klassiek volgens de referentie, en hero, ring en Nog te doen kloppen met elkaar
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 27
+    Given dashboard en open werkvoorraad is voorbereid
+    When de flow voor DASH-H-036 wordt uitgevoerd
+    Then staat Vandaag er in Klassiek, en zijn de oude blokken en de klanturenstaatkaart verhuisd of weg
+    And komt het gezegde letterlijk uit de lijst van de referentie
+    And zeggen hero en ring hetzelfde aantal open weken
+    And toont Nog te doen een chip per open maand, oudste eerst en uitgelicht
+    And brengt de hoofdknop je naar Mijn uren zolang er weken open staan
+    And staat Vandaag niet in Modern, en daar blijft de bento
+    And staat Vandaag op telefoonbreedte nog niet, en keert de kaart terug naar zijn eigen plek
 
   @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors

@@ -33,6 +33,57 @@ weekstrook meer.
 tabs in plaats van de zijbalk. De parkeerbranch blijft bestaan tot het
 desktopscherm in Klassiek staat.
 
+**Vandaag op desktop in Klassiek (stap 1).** Van de parkeerbranch overgezet en
+bijgewerkt naar de export van 04:40Z. Het scherm staat in `#vandaag` en wordt
+gevuld door `renderVandaag()`; de opmaak staat in `styles.css`, alleen in
+Klassiek en vanaf 721px. Op desktop vervangt het de oude Klassieke hero, "Open
+acties per maand", de correctiebanner, de stappenlijst, de kerncijfers en de
+archiefregel. De klanturenstaatkaart verhuist naar de plek onder de hero en
+krijgt daar de kop uit de referentie (icoon, "Klanturenstaat <maand>", stand).
+De tokens van de referentie staan onder hun eigen namen op `#vandaag`, zodat de
+kaart vanzelf de referentiewaarden overneemt. [DASH-H-036] toetst de skin
+(Klassiek wel, Modern en telefoon niet), de 98 gezegdes, of hero, ring en
+"Nog te doen" met elkaar kloppen, en de hoofdknop. Tegenproeven (Vandaag
+zichtbaar in Modern; 97 gezegdes) vielen allebei om.
+
+Terugmelding aan design, twee verschillen met de referentie:
+- **Zelf mailen:** de GUI (r227) toont "Die heb ik al gemaild" alleen naast de
+  hoofdknop, en alleen als de uren vol zijn. Wild en DESIGN-BESLUITEN ("beide
+  wegen staan in de kaart") zetten hem altijd in de kaart. Gebouwd: in de kaart,
+  én naast de hoofdknop zoals r624. Anders kan iemand met open weken niet melden
+  dat hij zelf gemaild heeft.
+- **Uren vol, maand niet ingediend:** r563 telt dat als taak, maar r697 zegt dan
+  "Alleen de klanturenstaat ontbreekt nog" en de knop wordt "Klanturenstaat
+  toevoegen". Gebouwd: "Je uren staan erin. Dien de maand in." met de knop
+  "Maand indienen" naar Mijn uren, omdat statustekst bij de werkelijke toestand
+  hoort (HANDOFF punt 10).
+
+Nog niet: de app-topbalk en de zijbalk staan er nog (stap 3, de tabs), en de
+paginaachtergrond `--veld` hoort bij die stap. De archiefregel "Mijn maanden"
+blijft tot die stap op desktop staan: zonder de tab "Maanden" is het de enige weg
+naar Mijn maanden.
+
+**Tests bij deze stap.** Lokaal op desktop-chromium vielen 14 cases om op de
+verborgen oude blokken. Hoe ze zijn aangepast:
+- **Page object** `assertEmployeeDashboardVisible`: de begroeting komt uit
+  Vandaag of uit de oude hero, afhankelijk van wat er op die breedte staat.
+- **Gemigreerd naar Vandaag:**
+  - DASH-N-021: de chips in "Nog te doen";
+  - SKIN-H-033: de breedte van Vandaag;
+  - SKIN-H-034: de gloed van de hoofdknop. Strenger dan eerst: ingedrukt
+    `rgba(58,189,157,.55)` en anders dan in rust, want deze knop heeft ook in
+    rust een mintschaduw.
+- **Op telefoonbreedte (390px):** DASH-H-003, -004, -005, -014, DASH-N-016,
+  SKIN-H-009, -024, -031 en -032. Ze toetsen "Open acties per maand", de
+  volgende-actieknop, de kerncijfers en de stappenlijst, die daar nog live zijn.
+  De assertions zijn ongewijzigd; bij de Wild-stap worden ze opnieuw bekeken.
+- **E2E-H-003 en TS-REV-UI-H-008:** via `fixtures/klassiekDashboard.ts`. Die
+  opent de urenactie van een maand via de chip in Vandaag of via de oude route,
+  op basis van breedte en skin.
+
+Daarna lokaal op desktop groen: dashboard-medewerker en skin (68), E2E-H-003 en
+TS-REV-UI-H-008. Tablet en mobiel lopen via CI.
+
 ## Sync history
 
 ### Ronde 14 sep (derde, vervolg) — terugmeldingen verwerkt, export 04:07:28Z

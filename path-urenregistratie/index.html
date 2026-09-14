@@ -267,6 +267,64 @@
       </header>
 
       <section class="view role-employee-only" id="view-employee-dashboard" data-title="Mijn overzicht">
+        <!-- Vandaag: de nieuwe Klassiek op desktop, 1-op-1 nagebouwd naar
+             handoff/medewerker-gui.html r139-287 (scope rechtgezet 14 sep: de
+             referentie ís Klassiek). De inhoud komt uit de appdata, niet uit de
+             demodata van het artefact. Alleen in Klassiek en vanaf 721px; Modern
+             en telefoon verbergen hem in styles.css. Gevuld door renderVandaag(). -->
+        <section class="vandaag" id="vandaag" aria-label="Vandaag">
+          <header class="vd-kop">
+            <div class="vd-kop-tekst">
+              <span class="vd-kop-label" id="vd-kop-label"></span>
+              <h1 class="vd-kop-titel" id="vd-kop-titel"></h1>
+              <p class="vd-spreuk"><span class="vd-spreuk-lijn" aria-hidden="true"></span><span id="vd-spreuk"></span></p>
+            </div>
+            <div class="vd-maandpil">
+              <button type="button" data-vd-maand-terug aria-label="Vorige maand">‹</button>
+              <strong id="vd-periode"></strong>
+              <button type="button" aria-label="Volgende maand" disabled>›</button>
+            </div>
+          </header>
+          <section class="vd-nogtedoen" id="vd-nogtedoen" hidden>
+            <strong id="vd-nogtedoen-kop"></strong>
+            <div class="vd-nogtedoen-chips" id="vd-nogtedoen-chips"></div>
+          </section>
+          <section class="vd-hero" id="vd-hero">
+            <span class="vd-hero-halo" aria-hidden="true"></span>
+            <div class="vd-hero-kop">
+              <div class="vd-hero-kop-tekst"><h2 id="vd-antwoord"></h2></div>
+              <span class="vd-oog" id="vd-oog"><span class="vd-oog-stip" aria-hidden="true"></span><span id="vd-oog-label"></span></span>
+            </div>
+            <div class="vd-hero-midden">
+              <div class="vd-ringblok">
+                <div class="vd-ring" aria-hidden="true">
+                  <svg viewBox="0 0 82 82"><circle class="vd-ring-leeg" cx="41" cy="41" r="36.5"></circle><circle class="vd-ring-boog" id="vd-ring-boog" cx="41" cy="41" r="36.5"></circle></svg>
+                  <strong id="vd-pct"></strong>
+                </div>
+                <p id="vd-toelichting"></p>
+              </div>
+              <div class="vd-kpi" id="vd-kpi">
+                <strong id="vd-kpi-waarde"></strong>
+                <small id="vd-kpi-label"></small>
+              </div>
+            </div>
+            <div class="vd-hero-acties">
+              <button type="button" class="vd-knop-hoofd" id="vd-hoofdknop"></button>
+              <button type="button" class="vd-knop-mail" id="vd-mailknop" hidden>Die heb ik al gemaild</button>
+            </div>
+          </section>
+          <div class="vd-onder">
+            <!-- Plek voor de klanturenstaatkaart, zoals de referentie hem onder de
+                 hero zet. De bestaande Klassieke kaart (#employee-customer-
+                 timesheet-card, met zijn upload- en mailflow) wordt hierheen
+                 verplaatst, niet nagebouwd: dan bestaan de id's maar één keer. -->
+            <div class="vd-klant-plek" id="vd-klant-plek"></div>
+            <section class="vd-verloop">
+              <strong class="vd-verloop-kop" id="vd-verloop-kop"></strong>
+              <ol class="vd-verloop-lijst" id="vd-verloop-lijst"></ol>
+            </section>
+          </div>
+        </section>
         <section class="new-employee-bento" id="new-employee-bento" aria-label="Modern medewerkeroverzicht">
           <article class="new-bento-hero">
             <img src="pilot/assets/1919/bento-foliage-v2.png" alt="" aria-hidden="true">
@@ -395,7 +453,13 @@
           <ol class="status-keten-lijst" id="employee-status-keten-list"></ol>
         </section>
         <section class="employee-customer-timesheet-card" id="employee-customer-timesheet-card">
-          <div>
+          <!-- Kop uit handoff/medewerker-gui.html r238-244; alleen zichtbaar als
+               de kaart in Vandaag staat. Daarbuiten blijft de kop hieronder. -->
+          <div class="klantkaart-kop">
+            <span class="klantkaart-icoon" id="employee-customer-timesheet-icoon" aria-hidden="true">↑</span>
+            <div class="klantkaart-kop-tekst"><strong id="employee-customer-timesheet-kaartnaam">Klanturenstaat</strong><small id="employee-customer-timesheet-stand"></small></div>
+          </div>
+          <div class="klantkaart-oude-kop">
             <span class="section-label">Klanturenstaat · <span id="employee-customer-timesheet-period">Juli 2026</span></span>
             <div class="employee-customer-timesheet-heading"><h3 id="employee-customer-timesheet-title">Klanturenstaat staat nog open</h3><span class="status-pill status-concept" id="employee-customer-timesheet-status">Nog niet ontvangen</span></div>
             <p id="employee-customer-timesheet-note">Upload de officiële klanturenstaat of registreer dat je deze al rechtstreeks hebt gemaild.</p>

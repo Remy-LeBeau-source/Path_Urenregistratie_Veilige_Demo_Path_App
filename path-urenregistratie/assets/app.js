@@ -5365,6 +5365,21 @@ function renderEmployeeCustomerTimesheet(record, employee, period) {
   // Met een bestand klaar is versturen de enige vervolgstap (referentie: de
   // mailknop staat alleen bij de lege kaart); het kruisje is de weg terug.
   if (stand === "gekozen") skipButton.hidden = true;
+  const zetKaart = (selector, tekst) => { const el = document.querySelector(selector); if (el) el.textContent = tekst; };
+  // Kop zoals handoff/medewerker-gui.html r238-244 (icoon, "Klanturenstaat <maand>",
+  // stand). Alleen zichtbaar als de kaart in Vandaag staat, zie styles.css.
+  const kaartStand = stand;
+  const icoon = document.querySelector("#employee-customer-timesheet-icoon");
+  if (icoon) {
+    icoon.textContent = kaartStand === "verstuurd" ? "✓" : kaartStand === "gemaild" ? "✉" : kaartStand === "gekozen" ? "📄" : "↑";
+    icoon.classList.toggle("is-gemaild", kaartStand === "gemaild");
+  }
+  zetKaart("#employee-customer-timesheet-kaartnaam", "Klanturenstaat " + period.month.toLowerCase());
+  zetKaart("#employee-customer-timesheet-stand", kaartStand === "verstuurd" ? "Aangeleverd"
+    : kaartStand === "gemaild" ? "Rechtstreeks gemaild"
+    : kaartStand === "gekozen" ? "Klaar om te versturen"
+    : "Nog niet aangeleverd");
+
   if (stand === "gekozen") {
     const naam = klantKaartKeuze ? klantKaartKeuze.file.name : documentRecord.fileName;
     const soort = klantKaartKeuze ? customerTimesheetSourceType(klantKaartKeuze.file) : "pdf";
@@ -5400,7 +5415,8 @@ function kiesKlantKaartBestand(input) {
   const employee = currentEmployee();
   const period = currentPeriod();
   klantKaartKeuze = { file, periodKey: period.key, employeeId: employee.id };
-  renderEmployeeCustomerTimesheet(recordFor(employee.id, period.key), employee, period);
+  // renderAll en niet alleen de kaart: de mailknop in Vandaag hangt ook aan de keuze.
+  renderAll();
 }
 
 // "Als bijlage versturen" is dezelfde handeling als "Indienen bij Backoffice" op
@@ -5978,6 +5994,142 @@ function renderNewEmployeeBento(record, employee, period) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Vandaag -- de nieuwe Klassiek op desktop, 1-op-1 naar handoff/medewerker-gui.html
+// (scope rechtgezet 14 sep: de referentie ís Klassiek). Opbouw, teksten en
+// standen volgen de referentie (r563-697); de getallen komen uit de appdata.
+//
+// De gezegdes staan letterlijk zoals in de referentie (r580).
+const VANDAAG_GEZEGDES = ["Een uur geschreven is een uur gewonnen.","Wie zijn week bijhoudt, hoeft de maand niet in te halen.","Klein bijhouden voorkomt groot inhalen.","Uren invullen is als afwassen: elke dag een beetje scheelt een berg.","Een ingevulde week is een opgeruimd hoofd.","Uitstel van uren is nog geen kwijtschelding.","Beter een leeg vakje ingevuld dan een volle maand vergeten.","Wie vandaag boekt, hoeft morgen niet te gokken.","Een week op tijd is een maand zonder gedoe.","Achterstallige uren wegen zwaarder dan ze lijken.","De klok liegt niet, ook niet als je hem negeert.","Kleine vinkjes, grote rust.","Wat je nu niet invult, zoek je straks terug.","Een correcte week is stiller dan een correctieverzoek.","Uren zijn als post: hoe langer je wacht, hoe meer er stapelt.","Vandaag negen, morgen geen stress.","De beste tijd om je uren in te vullen was gisteren; de op één na beste is nu.","Een lege week is geen vrije week.","Wat je bijhoudt, hoef je niet te onthouden.","Klaar is klaar, ook in uren.","Een goedgekeurde maand slaapt beter.","Consequent invullen is de kortste weg naar niks meer in te halen.","Uren zijn geen wijn — ze worden niet beter met uitstel.","Vul in wat je weet, corrigeer wat je niet wist.","Wie zijn uren negeert, wordt er zelf aan herinnerd.","Elke dag een beetje is nooit een berg.","Tijd schrijf je op, niet in je hoofd.","De snelste weg naar 'Afgerond' is 'Vandaag beginnen'.","Uren invullen kost minuten; achterstand inhalen kost avonden.","Zet vandaag neer wat je vandaag deed.","Een ingevulde maand is een geruste maand.","Wachten maakt de weekstaat niet korter.","Een half ingevulde week is een halve gerustheid.","Beter zelf ingevuld dan later gecorrigeerd.","Uren zijn feiten, geen herinneringen.","De snelste correctie is er geen nodig hebben.","Elke maandag is een nieuwe kans op een schone lei.","Wat vandaag klaar is, hoeft morgen niet meer.","Invullen went, inhalen niet.","Een week zonder gaten is een week zonder gedoe.","De kortste route naar goedgekeurd is op tijd ingediend.","Wat je niet noteert, verdwijnt niet — het wacht.","Rustige maanden beginnen met rustige weken.","Klanturenstaat wacht niet op het geheugen.","Wie op tijd indient, wacht nooit op zichzelf.","Vandaag negen uur schrijven scheelt volgende week zoeken.","Een status 'open' is geen status 'later'.","De rustigste vrijdag is die zonder ingehaalde uren.","Correctie vragen is makkelijker dan uren onthouden.","Wat je bijhoudt, hoeft niemand je te vragen.","Een lege chip wacht op jou, niet andersom.","De beste planning begint bij vandaag invullen.","Uren zijn licht, tot je ze moet inhalen.","Consequent is sneller dan perfect achteraf.","Wie zijn week afsluit, opent zijn maand.","Een ingevulde dag is een afgevinkte zorg.","Klanturenstaat aanleveren kan niet wachten op het weekend.","De rustigste maandcijfers komen van de stipste weken.","Invullen kost seconden, vergeten kost herinneringen.","Elke ingevulde dag is een stapje dichter bij Afgerond.","Wat vandaag ingevuld is, vraagt morgen niets meer.","De snelste weg naar rust is een lege takenlijst.","Uren bijhouden is geen taak, het is een gewoonte.","Wie nu vult, hoeft straks niet te reconstrueren.","Een status 'ingediend' is rustiger dan een status 'open'.","Klein en op tijd wint van laat en compleet.","De beste week is er een zonder losse eindjes.","Wat je invult, hoef je niet te verantwoorden.","Elke ingevulde week is een streepje minder op de lijst.","Op tijd indienen voorkomt op tijd corrigeren.","Uren zijn sneller ingevuld dan uitgelegd.","De rustigste maand is degene die je zelf hebt bijgehouden.","Wat vandaag genoteerd is, hoeft morgen niet herinnerd.","Een schone urenstaat begint bij een schone week.","Invullen is de korte weg, inhalen de lange.","Wie zijn uren volgt, loopt nooit achter.","De beste tijd voor je uren is nu, niet vrijdag.","Klaar vandaag is rustig morgen.","Een ingevulde week weegt lichter dan een lege.","Status 'open' wordt vanzelf status 'te laat'.","Wat je noteert, hoef je niet te bewaken.","De rustigste Backoffice-mail begint bij een volledige week.","Elke chip die verdwijnt, is een zorg minder.","Invullen nu is sneller dan reconstrueren later.","Een ingevulde maand vraagt geen vragen.","Wie op tijd is, wacht nooit op zichzelf.","De beste gewoonte is de kleinste: elke dag even invullen.","Uren onthouden is moeilijker dan uren noteren.","Status 'goedgekeurd' begint bij status 'op tijd'.","Wat je nu regelt, hoef je later niet te verklaren.","Een rustige maandafsluiting begint bij rustige weken.","Invullen is klein werk, inhalen is groot werk.","De snelste weg naar niets meer te doen is alles nu doen.","Elke week die je afrondt, is een week die je niet meer ziet.","Wat vandaag is ingevuld, is morgen vergeten — in de goede zin.","De rustigste vrijdagmiddag begint bij een volle weekstaat.","Uren zijn kort te noteren, lang te missen.","Wie vandaag vult, hoeft morgen niet te zoeken."];
+const VANDAAG_GEZEGDE_INDEX = Math.floor(Math.random() * 1e6);
+
+// Weken die nog in te vullen zijn. Eén telling voor hero, ring en KPI, en
+// dezelfde betekenis van "ingevuld" als het verloop eronder
+// (isTimesheetWeekComplete: elke werkdag uren of bewust op 0). Een eerdere
+// nabouw telde hier de referentiemanier (weken zonder één uur) en toonde daardoor
+// "Nog 4 weken" boven een verloop dat meer open liet zien.
+function vandaagLegeWeken(record, period) {
+  return Math.max(0, period.weekRows.length - completedTimesheetWeeks(record, period));
+}
+
+// De klanturenstaatkaart staat op desktop in Vandaag, onder de hero (referentie
+// r233-274), en daarbuiten op zijn eigen plek in het dashboard. Verplaatsen in
+// plaats van dupliceren: de kaart heeft zijn eigen upload- en mailflow en een
+// kopie zou dezelfde id's twee keer in de pagina zetten.
+const VANDAAG_BREED = typeof window.matchMedia === "function" ? window.matchMedia("(min-width: 721px)") : null;
+let vandaagKlantKaartThuis = null;
+function plaatsVandaagKlantKaart() {
+  const kaart = document.querySelector("#employee-customer-timesheet-card");
+  const plek = document.querySelector("#vd-klant-plek");
+  if (!kaart || !plek) return;
+  if (!vandaagKlantKaartThuis) vandaagKlantKaartThuis = { ouder: kaart.parentElement, volgende: kaart.nextElementSibling };
+  const inVandaag = Boolean(VANDAAG_BREED && VANDAAG_BREED.matches) && document.documentElement.dataset.skin !== "new";
+  if (inVandaag) {
+    if (kaart.parentElement !== plek) plek.appendChild(kaart);
+  } else if (kaart.parentElement === plek) {
+    vandaagKlantKaartThuis.ouder.insertBefore(kaart, vandaagKlantKaartThuis.volgende);
+  }
+}
+if (VANDAAG_BREED && typeof VANDAAG_BREED.addEventListener === "function") {
+  VANDAAG_BREED.addEventListener("change", plaatsVandaagKlantKaart);
+}
+
+function renderVandaag(record, employee, period) {
+  const vak = document.querySelector("#vandaag");
+  if (!vak) return;
+  plaatsVandaagKlantKaart();
+  const zet = (selector, tekst) => { const el = document.querySelector(selector); if (el) el.textContent = tekst; };
+  const nWeken = period.weekRows.length;
+  const leeg = vandaagLegeWeken(record, period);
+  const nietIngediend = ["draft", "correction"].includes(String(record.timesheetStatus || "draft"));
+  const klantDocument = customerTimesheetFor(record);
+  const klantOpen = employee.customerTimesheetExpected !== false && customerTimesheetNeedsEmployeeAction(klantDocument.status);
+  // r563: ook een maand die vol is maar nog niet ingediend is een taak.
+  const heeftTaak = leeg > 0 || nietIngediend || klantOpen;
+  const ingevuld = nWeken > 0 ? (nWeken - leeg) / nWeken : 0;
+  const maandNaam = period.month.charAt(0).toUpperCase() + period.month.slice(1);
+
+  // Paginakop, r139-153
+  zet("#vd-kop-label", greetingForNow());
+  zet("#vd-kop-titel", employee.name || "");
+  zet("#vd-spreuk", VANDAAG_GEZEGDES[VANDAAG_GEZEGDE_INDEX % VANDAAG_GEZEGDES.length]);
+  zet("#vd-periode", period.label);
+
+  // Nog te doen, r185-195 en r588-612: de maanden met open acties, oudste eerst,
+  // de eerste uitgelicht. De chip zegt wat er in die maand nog moet.
+  const openMaanden = employeeOpenMonthSummaries(employee.id, period.key);
+  document.querySelector("#vd-nogtedoen").hidden = openMaanden.length === 0;
+  zet("#vd-nogtedoen-kop", openMaanden.length === 1 ? "Nog te doen" : "Nog te doen — " + openMaanden.length + " maanden");
+  document.querySelector("#vd-nogtedoen-chips").innerHTML = openMaanden.map((maand, index) => {
+    const uren = maand.actions.find(actie => actie.type === "hours");
+    const maandRecord = recordFor(employee.id, maand.periodKey);
+    const wat = uren
+      ? (maandRecord.timesheetStatus === "correction" ? "correctie"
+        : ontbrekendeWerkdagen(maandRecord, maand.period).length > 0 ? "uren invullen" : "maand indienen")
+      : "urenstaat";
+    const naam = maand.period.month.charAt(0).toUpperCase() + maand.period.month.slice(1);
+    return '<button type="button" class="vd-maandchip' + (index === 0 ? ' is-eerste' : '') + '" data-vd-open-maand="' + escapeHtml(maand.periodKey) + '" data-vd-open-soort="' + (uren ? 'uren' : 'klant') + '">'
+      + '<span>' + escapeHtml(naam) + '</span><small>' + escapeHtml(wat) + '</small><span aria-hidden="true">›</span></button>';
+  }).join("");
+
+  // Hero, r197-231 en r615-697
+  const alleenIndienen = leeg === 0 && nietIngediend;
+  zet("#vd-antwoord", heeftTaak
+    ? (leeg > 0 ? "Nog " + leeg + (leeg === 1 ? " week" : " weken") + " in te vullen." : "Bijna rond. Nog één ding.")
+    : maandNaam + " is klaar.");
+  document.querySelector("#vd-oog").classList.toggle("is-taak", heeftTaak);
+  zet("#vd-oog-label", heeftTaak ? "Jij bent aan zet" : "Het ligt bij ons");
+  zet("#vd-pct", Math.round(ingevuld * 100) + "%");
+  const boog = document.querySelector("#vd-ring-boog");
+  if (boog) boog.style.strokeDashoffset = (229.3 * (1 - ingevuld)).toFixed(1);
+  // Afwijking van de referentie: r697 zegt bij "alle weken vol" altijd "Alleen de
+  // klanturenstaat ontbreekt nog", ook als de maand nog niet is ingediend (r563
+  // telt dat wél als taak). Statuscopy hoort bij de werkelijke toestand
+  // (HANDOFF punt 10), dus dan staat hier de indienstap. Teruggemeld.
+  zet("#vd-toelichting", heeftTaak
+    ? (leeg > 0 ? "Eén tik vult een hele week met je standaardweek."
+      : alleenIndienen ? "Je uren staan erin. Dien de maand in."
+      : "Alleen de klanturenstaat ontbreekt nog.")
+    : klantDocument.status === "skipped"
+      ? "Je uren staan erin en je gaf aan de urenstaat zelf te hebben gemaild. De Backoffice pakt het op."
+      : "Alles is binnen en goedgekeurd. We laten het weten als er iets nodig is.");
+  const contract = defaultContractHours(employee, period.key);
+  document.querySelector("#vd-kpi").hidden = !heeftTaak;
+  zet("#vd-kpi-waarde", hoursFormat.format(Math.max(0, contract - totalEntries(record.entries))) + "u");
+  zet("#vd-kpi-label", "Nog in te vullen (van " + hoursFormat.format(contract) + "u)");
+
+  // Hoofdknop, r621-623: zonder taak deze maand wijst hij naar de oudste open
+  // maand (de eerste chip), anders naar Mijn maanden.
+  const hoofdknop = document.querySelector("#vd-hoofdknop");
+  const oudste = openMaanden[0] || null;
+  if (heeftTaak) {
+    hoofdknop.textContent = leeg > 0 ? "Uren invullen" : alleenIndienen ? "Maand indienen" : "Klanturenstaat toevoegen";
+    hoofdknop.dataset.vdActie = leeg > 0 || alleenIndienen ? "uren" : "klant";
+    delete hoofdknop.dataset.vdMaand;
+  } else if (oudste) {
+    hoofdknop.textContent = oudste.actions[0]?.button || "Open maand";
+    hoofdknop.dataset.vdActie = "maand";
+    hoofdknop.dataset.vdMaand = oudste.periodKey;
+    hoofdknop.dataset.vdSoort = oudste.actions.some(actie => actie.type === "hours") ? "uren" : "klant";
+  } else {
+    hoofdknop.textContent = "Mijn maanden bekijken";
+    hoofdknop.dataset.vdActie = "maanden";
+    delete hoofdknop.dataset.vdMaand;
+  }
+  // r624: de mailknop naast de hoofdknop alleen als de klanturenstaat het enige
+  // is dat nog open staat.
+  document.querySelector("#vd-mailknop").hidden = !(heeftTaak && leeg === 0 && !nietIngediend && klantOpen && !klantKaartKeuze);
+
+  // Verloop, r276-287: de vijf stappen uit dezelfde bron als overal. Teken en
+  // kleuren zoals r565-569: ✓ af, • huidig, leeg wachtend; tekens in navy.
+  zet("#vd-verloop-kop", "Verloop van " + period.month.toLowerCase());
+  document.querySelector("#vd-verloop-lijst").innerHTML = statusKetenStappen(record, period).map(stap =>
+    '<li class="vd-stap is-' + escapeHtml(stap.stand) + '" data-vd-stap="' + escapeHtml(stap.key) + '">'
+      + '<span class="vd-stap-bol" aria-hidden="true">' + (stap.stand === "af" ? "✓" : stap.stand === "nu" ? "•" : "") + '</span>'
+      + '<div><strong>' + escapeHtml(stap.titel) + '</strong><small>' + escapeHtml(stap.detail) + '</small></div></li>'
+  ).join("");
+}
+
 function renderEmployeeDashboard() {
   const employee = currentEmployee();
   const employeeId = Number(employee.id);
@@ -6287,6 +6439,7 @@ function renderEmployeeDashboard() {
       : "Mijn maanden · nog geen maanden";
   }
   renderNewEmployeeBento(record, employee, period);
+  renderVandaag(record, employee, period);
 }
 
 function adminOpenTasks() {
@@ -13973,6 +14126,52 @@ function toonInstallatieAanbod() {
       return;
     }
     showTimesheetSubmitConfirmation();
+    return;
+  }
+
+  // Vandaag (Klassiek, desktop): acties uit handoff/medewerker-gui.html.
+  // Maandchip in "Nog te doen": uren -> Mijn uren van die maand; alleen een
+  // klanturenstaat -> Mijn maanden met die maand opengeklapt (r608-610).
+  const vandaagMaandChip = event.target.closest("[data-vd-open-maand]");
+  if (vandaagMaandChip) {
+    const periodKey = vandaagMaandChip.dataset.vdOpenMaand;
+    if (!parsePeriodKey(periodKey)) return;
+    setPeriod(periodKey);
+    if (vandaagMaandChip.dataset.vdOpenSoort === "uren") {
+      showView("timesheet");
+    } else {
+      state.historyVerloopOpen = periodKey;
+      showView("historie");
+    }
+    return;
+  }
+  // Maandpil: vorige maand -> Mijn maanden met die maand opengeklapt; vooruit
+  // staat uitgeschakeld (DESIGN-BESLUITEN "Maandnavigatie").
+  if (event.target.closest("[data-vd-maand-terug]")) {
+    state.historyVerloopOpen = shiftPeriodKey(currentPeriod().key, -1);
+    showView("historie");
+    return;
+  }
+  const vandaagHoofdknop = event.target.closest("#vd-hoofdknop");
+  if (vandaagHoofdknop) {
+    const actie = vandaagHoofdknop.dataset.vdActie;
+    if (actie === "uren") showView("timesheet");
+    else if (actie === "maanden") showView("historie");
+    else if (actie === "maand" && parsePeriodKey(vandaagHoofdknop.dataset.vdMaand || "")) {
+      // Zelfde bestemming als de eerste chip in "Nog te doen".
+      setPeriod(vandaagHoofdknop.dataset.vdMaand);
+      if (vandaagHoofdknop.dataset.vdSoort === "uren") showView("timesheet");
+      else { state.historyVerloopOpen = vandaagHoofdknop.dataset.vdMaand; showView("historie"); }
+    } else {
+      document.querySelector("#employee-customer-timesheet-card")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      document.querySelector("[data-klantkaart-kies=\"employee-customer-timesheet-file\"]")?.focus();
+    }
+    return;
+  }
+  if (event.target.closest("#vd-mailknop")) {
+    // De registratie "zelf gemaild" legt een reden vast; die flow zit achter de
+    // bestaande knop. Niet omzeilen, alleen doorverwijzen.
+    document.querySelector("#employee-customer-timesheet-skip")?.click();
     return;
   }
 

@@ -4143,3 +4143,162 @@ body.toont-installatieaanbod .main-content {
    staat. Ontwerpronde 14 sep, "grijs met Nog N dagen". */
 .button.is-gedempt { background: var(--surface-muted); color: var(--muted); box-shadow: none; }
 .button.is-gedempt:hover { background: var(--vlak-zacht); color: var(--navy-tekst); box-shadow: none; }
+
+/* ===========================================================================
+   Vandaag — de nieuwe Klassiek op desktop, 1-op-1 naar handoff/medewerker-gui.html
+   (scope rechtgezet 14 sep: de referentie is Klassiek). Elke waarde komt uit de
+   referentie; het regelnummer staat erbij, na te trekken in
+   handoff/medewerker-gui.bron.txt.
+
+   De tokens van de referentie (r11-45) staan onder hun eigen namen op #vandaag.
+   Zo nemen onderdelen die hierheen verhuizen, zoals de klanturenstaatkaart, de
+   referentiewaarden vanzelf over, zonder een tweede set regels.
+
+   Waar de bestaande Klassieke opmaak botst met de referentie, wint de
+   referentie: op desktop verdwijnen de oude hero, "Open acties per maand", de
+   correctiebanner, de stappenlijst, de kerncijfers en de archiefregel, want de
+   referentie heeft die blokken niet ("Nog te doen" neemt de open acties over,
+   het verloop de stappenlijst). Op telefoon blijft voorlopig de huidige
+   Klassiek, tot medewerker-wild.html is nagebouwd.
+   ======================================================================== */
+.vandaag { display: none; }
+html:not([data-skin="new"]) #vandaag {
+  /* r12-28 */
+  --navy: #0d1b38; --mint: #3abd9d; --mint-tekst: #037f63; --mint-dark-tekst: #037f63;
+  --ink: #172332; --muted: #485651; --line: #bfcec8; --line-zacht: #d0dcd6;
+  --surface: #eaf2ee; --surface-muted: #d5e0da; --vlak: #eaf2ee;
+  --warning: #bb7623; --warning-bg: #fff5e8; --warning-tekst: #a5600d; --warning-rand: #edc58f;
+  --hero-ring-leeg: rgba(16,34,53,.1);
+  --kaart-glans: rgba(255,255,255,.9); --halo: rgba(58,189,157,.42);
+  --schaduw: 0 6px 18px rgba(16,34,53,.07);
+  --oog-taak: #8a5c1c; --oog-klaar: #1f6b4f;
+  --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  --kop: "Segoe UI Variable Display", "Segoe UI Semibold", "Segoe UI", system-ui, Arial, sans-serif;
+  /* r184: kolom met gap 18px, max-width var(--pagina), gecentreerd */
+  gap: 18px;
+  max-width: var(--pagina);
+  margin: 0 auto;
+  color: var(--ink);
+  font-family: var(--sans);
+}
+html[data-theme="dark"]:not([data-skin="new"]) #vandaag {
+  /* r30-45; de pilkleuren uit r619 */
+  --ink: #dde6ea; --muted: #93a2ac; --line: #22323d; --line-zacht: #1d2c36;
+  --surface: #101c26; --surface-muted: #16242f; --vlak: #101c26;
+  --mint-tekst: #5fd3b3; --mint-dark-tekst: #5fd3b3;
+  --warning-bg: #2d2313; --warning-tekst: #f0bd7a; --warning-rand: #5a4526;
+  --hero-ring-leeg: rgba(255,255,255,.13);
+  --kaart-glans: rgba(255,255,255,.07); --halo: rgba(58,189,157,.5);
+  --schaduw: 0 6px 20px rgba(0,0,0,.3);
+  --oog-taak: #f0bd7a; --oog-klaar: #7fe0c0;
+}
+
+/* Paginakop, r139-153 */
+#vandaag .vd-kop { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 18px; margin-bottom: clamp(18px, 2.4vw, 26px); }
+#vandaag .vd-kop-tekst { min-width: 0; flex: 0 1 auto; }
+#vandaag .vd-kop-label { display: block; color: var(--mint-tekst); font-size: 10px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+#vandaag .vd-kop-titel { margin: 5px 0 0; color: var(--ink); font-family: var(--kop); font-size: clamp(25px, 2.7vw, 33px); font-weight: 700; letter-spacing: -.022em; line-height: 1.12; }
+#vandaag .vd-spreuk { display: flex; align-items: baseline; gap: 7px; margin: 8px 0 0; color: var(--muted); font-size: 12.5px; font-style: italic; }
+#vandaag .vd-spreuk-lijn { flex: 0 0 auto; width: 2px; align-self: stretch; border-radius: 2px; background: var(--mint); opacity: .5; font-style: normal; }
+#vandaag .vd-maandpil { display: flex; flex: 0 0 auto; align-items: center; gap: 2px; border: 1px solid var(--line-zacht); border-radius: 999px; background: var(--surface); padding: 3px; box-shadow: inset 0 1px 0 var(--kaart-glans); }
+#vandaag .vd-maandpil button { display: grid; width: 36px; height: 36px; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; font-size: 17px; }
+#vandaag .vd-maandpil button:hover:not(:disabled) { background: var(--surface-muted); color: var(--ink); }
+#vandaag .vd-maandpil button:disabled { color: var(--line); cursor: default; }
+#vandaag .vd-maandpil strong { min-width: 112px; text-align: center; font-size: 12.5px; font-weight: 800; letter-spacing: .01em; }
+
+/* Nog te doen, r186-195. De referentie zet de achtergrond op var(--warning-vlak),
+   een token dat in de referentie niet bestaat; die declaratie vervalt daar en
+   het vlak is transparant. Zo overgenomen. */
+#vandaag .vd-nogtedoen { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border: 1px solid var(--warning-rand); border-radius: 14px; background: transparent; padding: 12px 15px; box-shadow: inset 0 1px 0 var(--kaart-glans); }
+#vandaag .vd-nogtedoen[hidden] { display: none; }
+#vandaag .vd-nogtedoen > strong { flex: 0 0 auto; color: var(--warning-tekst); font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+#vandaag .vd-nogtedoen-chips { display: flex; flex-wrap: wrap; flex: 1; min-width: 0; gap: 7px; }
+#vandaag .vd-maandchip { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--muted); cursor: pointer; min-height: 34px; font: inherit; font-size: 12px; font-weight: 700; padding: 0 11px; white-space: nowrap; }
+#vandaag .vd-maandchip.is-eerste { border-color: var(--warning-rand); background: rgba(187,118,35,.2); color: var(--warning-tekst); }
+#vandaag .vd-maandchip:active { transform: scale(.97); }
+#vandaag .vd-maandchip small { font-weight: 600; opacity: .75; }
+#vandaag .vd-maandchip span[aria-hidden] { opacity: .5; }
+
+/* Hero, r197-231 */
+@keyframes vd-ademen { 0%, 100% { opacity: .45; transform: scale(1); } 50% { opacity: .68; transform: scale(1.07); } }
+#vandaag .vd-hero { position: relative; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); background-image: linear-gradient(122deg, rgba(58,189,157,.1), rgba(58,189,157,0) 52%); padding: 0; overflow: hidden; box-shadow: inset 0 1px 0 var(--kaart-glans), var(--schaduw); }
+#vandaag .vd-hero-halo { position: absolute; top: -40px; right: -30px; width: 150px; height: 150px; border-radius: 50%; background: var(--halo); filter: blur(34px); opacity: .55; animation: vd-ademen 7s ease-in-out infinite; pointer-events: none; }
+#vandaag .vd-hero-kop { position: relative; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; padding: 22px clamp(18px, 3vw, 28px) 16px; }
+#vandaag .vd-hero-kop-tekst { min-width: 0; }
+#vandaag .vd-hero h2 { margin: 0; color: var(--ink); font-family: var(--kop); font-size: clamp(21px, 2.2vw, 26px); font-weight: 700; letter-spacing: -.015em; line-height: 1.25; text-wrap: balance; }
+#vandaag .vd-oog { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 7px; border: 1px solid rgba(47,106,76,.36); border-radius: 999px; background: rgba(47,106,76,.14); color: var(--oog-klaar); font-size: 10px; font-weight: 800; white-space: nowrap; letter-spacing: .1em; padding: 6px 10px; text-transform: uppercase; }
+#vandaag .vd-oog.is-taak { border-color: rgba(187,118,35,.4); background: rgba(187,118,35,.16); color: var(--oog-taak); }
+#vandaag .vd-oog-stip { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+#vandaag .vd-hero-midden { display: flex; flex-wrap: wrap; border-top: 1px solid var(--line-zacht); border-bottom: 1px solid var(--line-zacht); }
+#vandaag .vd-ringblok { display: flex; flex: 1 1 260px; min-width: 0; align-items: center; gap: 14px; padding: 16px clamp(18px, 3vw, 28px); }
+#vandaag .vd-ring { position: relative; display: grid; width: 52px; height: 52px; flex: 0 0 auto; place-items: center; }
+#vandaag .vd-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+#vandaag .vd-ring circle { fill: none; stroke-width: 10; }
+#vandaag .vd-ring-leeg { stroke: var(--hero-ring-leeg); }
+#vandaag .vd-ring-boog { stroke: #2f9e80; stroke-linecap: round; stroke-dasharray: 229.3; stroke-dashoffset: 229.3; transition: stroke-dashoffset .8s cubic-bezier(.22,1,.36,1); }
+#vandaag .vd-ring strong { position: relative; color: var(--ink); font-family: var(--kop); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+#vandaag .vd-ringblok p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; text-wrap: pretty; }
+#vandaag .vd-kpi { display: flex; flex: 1 1 180px; flex-direction: column; justify-content: center; padding: 16px 24px; }
+#vandaag .vd-kpi[hidden] { display: none; }
+#vandaag .vd-kpi strong { color: var(--ink); font-family: var(--kop); font-size: 22px; font-variant-numeric: tabular-nums; line-height: 1; }
+#vandaag .vd-kpi small { margin-top: 4px; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+#vandaag .vd-hero-acties { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 14px clamp(18px, 3vw, 28px); }
+#vandaag .vd-knop-hoofd { min-height: 46px; border: 0; border-radius: 12px; background: var(--mint); color: var(--navy); cursor: pointer; font: inherit; font-size: 13.5px; font-weight: 700; padding: 0 22px; flex: 0 0 auto; white-space: nowrap; box-shadow: 0 8px 20px rgba(58,189,157,.3); transition: transform .16s cubic-bezier(.22,1,.36,1), box-shadow .16s; }
+#vandaag .vd-knop-hoofd:hover { box-shadow: 0 11px 26px rgba(58,189,157,.44); }
+#vandaag .vd-knop-hoofd:active { transform: scale(.97); box-shadow: 0 2px 22px rgba(58,189,157,.55); }
+#vandaag .vd-knop-mail { min-height: 46px; border: 1px solid var(--line); border-radius: 12px; background: transparent; color: var(--ink); cursor: pointer; font: inherit; font-size: 13px; font-weight: 700; padding: 0 18px; flex: 0 0 auto; white-space: nowrap; transition: border-color .16s; }
+#vandaag .vd-knop-mail:hover { border-color: var(--mint); }
+#vandaag .vd-knop-mail[hidden] { display: none; }
+
+/* Onder de hero, r233-234: één kolom met de klanturenstaatkaart en het verloop. */
+#vandaag .vd-onder { display: grid; gap: 16px; align-content: start; min-width: 0; }
+#vandaag .vd-klant-plek:empty { display: none; }
+
+/* Klanturenstaatkaart in Vandaag, r237-273. De kaart verhuist hierheen; zijn
+   Klassieke kop maakt plaats voor de kop uit de referentie. */
+.klantkaart-kop { display: none; }
+#vandaag .employee-customer-timesheet-card { display: block; margin: 0; border: 1px solid var(--line-zacht); border-radius: 18px; background: var(--surface); padding: 16px 16px 14px; box-shadow: inset 0 1px 0 var(--kaart-glans), var(--schaduw); }
+#vandaag .employee-customer-timesheet-card[data-klantkaart-stand="gekozen"] { border-color: var(--mint); }
+#vandaag .employee-customer-timesheet-card .klantkaart-oude-kop { display: none; }
+#vandaag .klantkaart-kop { display: flex; align-items: center; gap: 10px; }
+#vandaag .klantkaart-icoon { display: grid; width: 30px; height: 30px; flex: 0 0 auto; place-items: center; border-radius: 9px; background: rgba(58,189,157,.14); color: var(--mint-tekst); font-size: 14px; }
+#vandaag .klantkaart-icoon.is-gemaild { background: var(--surface-muted); color: var(--muted); }
+#vandaag .klantkaart-kop-tekst { flex: 1; min-width: 0; }
+#vandaag .klantkaart-kop-tekst strong { display: block; color: var(--ink); font-size: 14px; font-weight: 700; }
+#vandaag .klantkaart-kop-tekst small { display: block; margin-top: 1px; color: var(--muted); font-size: 11.5px; }
+#vandaag .klantkaart-stand > .klantkaart-uitleg:first-child { margin-top: 11px; }
+#vandaag .klantkaart-bestand { margin-top: 12px; }
+
+/* Verloop, r276-287; teken en kleuren r565-569 */
+#vandaag .vd-verloop { display: grid; gap: 14px; border: 1px solid var(--line-zacht); border-radius: 16px; background: var(--surface); padding: 16px 18px; box-shadow: inset 0 1px 0 var(--kaart-glans), var(--schaduw); }
+#vandaag .vd-verloop-kop { font-size: 10px; font-weight: 800; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; }
+#vandaag .vd-verloop-lijst { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; }
+#vandaag .vd-stap { display: flex; align-items: flex-start; gap: 12px; }
+#vandaag .vd-stap-bol { display: grid; width: 24px; height: 24px; flex: 0 0 auto; place-items: center; border-radius: 50%; background: var(--surface-muted); color: var(--muted); font-size: 11px; font-weight: 900; }
+#vandaag .vd-stap div { min-width: 0; }
+#vandaag .vd-stap strong { display: block; color: var(--muted); font-size: 13px; font-weight: 700; }
+#vandaag .vd-stap small { display: block; margin-top: 1px; color: var(--muted); font-size: 11.5px; }
+#vandaag .vd-stap.is-af .vd-stap-bol { background: #3abd9d; color: var(--navy); }
+#vandaag .vd-stap.is-af strong { color: var(--mint-tekst); }
+#vandaag .vd-stap.is-nu .vd-stap-bol { background: var(--warning); color: var(--navy); }
+#vandaag .vd-stap.is-nu strong { color: var(--warning-tekst); }
+
+@media (prefers-reduced-motion: reduce) {
+  #vandaag .vd-hero-halo { animation: none; }
+  #vandaag .vd-ring-boog, #vandaag .vd-knop-hoofd { transition: none; }
+}
+
+/* Welke opbouw waar: Vandaag in Klassiek vanaf 721px, en de blokken die de
+   referentie niet heeft gaan daar weg. Modern en telefoon blijven zoals ze zijn. */
+@media (min-width: 721px) {
+  html:not([data-skin="new"]) #vandaag { display: grid; }
+  html:not([data-skin="new"]) #view-employee-dashboard > .employee-hero,
+  html:not([data-skin="new"]) #view-employee-dashboard > #employee-open-overview,
+  html:not([data-skin="new"]) #view-employee-dashboard > #employee-dashboard-correction,
+  html:not([data-skin="new"]) #view-employee-dashboard > #employee-status-keten,
+  html:not([data-skin="new"]) #view-employee-dashboard > .employee-metrics { display: none !important; }
+  /* De archiefregel blijft voorlopig staan: hij is op desktop de enige weg naar
+     Mijn maanden, tot de tab "Maanden" uit de referentie er is (volgende stap).
+     Hij staat onder Vandaag, op de breedte van de pagina. */
+  html:not([data-skin="new"]) #view-employee-dashboard > #employee-history-teaser { order: 10; max-width: var(--pagina); margin-inline: auto; width: 100%; }
+}
