@@ -2897,6 +2897,37 @@ de deploy-job zelf te kijken in plaats van naar de testpoort ervóór -- en daar
   vertelt je wáár hij stopte, niet waaróm hij al dagen niet aankwam -- kijk bij een langdurige
   blokkade eerst naar de laatste stap die ooit geslaagd is, niet naar de eerste die nu faalt.
 
+**`[DASH-H-017]`: de derde uitval op een tijdsbegroting, en deze keer niet met een hogere waarde
+opgelost (14 sep).** De case hield de uitrol drie keer tegen met een klik die na 15 s afliep, telkens
+in het beheertakenpaneel en telkens alleen op `tablet-chromium` (768x1024). Twee keer eerder was het
+antwoord die dag "venster ruimer" geweest (5 s -> 20 s op een assertie, 45 s -> 150 s op een case).
+De vormgevingslane stelde de betere vraag: *waarom* wordt dat paneel op díé breedte zo traag
+klikbaar?
+**Gemeten met een probe die de echte klikvolgorde volgt, en het is geen traagheid:**
+- `#admin-task-panel` staat op **y=1046** bij een scherm van 1024 hoog -- volledig onder de vouw.
+- `[data-admin-task-filter="waiting"]` staat na het openen van het paneel op **y=1408**.
+- Na het uitklappen van een maandblok springt diezelfde knop naar **y=287**.
+Ruim 1100 pixels verspringing tussen twee stappen. Elke klik hangt daar dus af van een automatische
+scroll die op tijd tot rust komt, en Playwright eist twee opeenvolgende frames op dezelfde plek
+voordat hij klikt. Op desktop past het paneel gewoon in beeld -- precies waarom dit uitsluitend op
+tabletbreedte omvalt.
+**Fix:** een `klikNaScroll()`-helper die het element eerst bewust in beeld scrollt en dan pas klikt;
+acht plekken in `dashboard.spec.ts` gebruiken hem. Geen enkele assertie verandert, en een knop die
+echt nooit verschijnt laat de klik nog steeds aflopen. **Verificatie staat nog open** -- zie de
+notitie hieronder over botsende testruns; de eerste meting (klik in 337 ms, positie 2 s stabiel) was
+bemoedigend maar niet schoon.
+**Les:** twee keer op een dag een venster verruimen is een signaal, geen oplossing. De derde keer
+hoort de vraag te zijn wat er beweegt, niet hoe lang je erop wacht.
+
+**Herhaald probleem: onze twee sessies draaien tests door elkaar heen (vier keer op 13/14 sep).**
+Telkens hetzelfde gevolg: een meting die geldig lijkt omdat hij reproduceerbaar is, terwijl de
+vervuiling elke herhaling meereist. **Herkenningsteken dat het contention is en geen defect:**
+meerdere runs van dezelfde case geven *verschillende* fouten, vaak in de opstartfase (inlogknop
+blijft uitgeschakeld, `#view-dashboard` blijft verborgen, `waitForFunction` op de login loopt af).
+Een echt defect geeft steeds dezelfde fout op dezelfde plek. **Werkafspraak:** wie een run start
+meldt "machine bezet" en bij het eind "machine vrij" -- geen tijdsinschatting, alleen bezet of vrij.
+Voor het laatst gebroken doordat ik "vrij" meldde en daarna zelf opnieuw begon zonder het te zeggen.
+
 **NOG OPEN: `dashboard.spec.ts` heeft wisselwerking tussen cases, in beide richtingen.** In de run
 waarin DASH-N-007 groen werd, viel `[DASH-N-012]` om op `#modal-confirm`: verwacht "Controle
 afronden", gekregen "Voorbeeldgegevens herstellen" -- dus een andere modal stond nog open. Los
