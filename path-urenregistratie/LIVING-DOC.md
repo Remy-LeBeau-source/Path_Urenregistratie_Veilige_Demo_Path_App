@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 534 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 537 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 534 unieke case-ID's
+- Playwright executable cases: 537 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 535 unieke case-ID's
+- Totaal executable cases: 538 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 576
-- Niet-mobile projectuitvoeringen: 492
+- Uitvoeringen: 579
+- Niet-mobile projectuitvoeringen: 495
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 534 Playwright-functionele cases in totaal 576 resultaten op: 492 + (42 x 2) = 576.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 537 Playwright-functionele cases in totaal 579 resultaten op: 495 + (42 x 2) = 579.
 
 ## Documentatieketen
 
@@ -201,7 +201,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 534 Playwri
 
 - Feature: `tests/playwright/features/dashboard.feature`
 - Source: `tests/playwright/dashboard*.spec.ts`
-- Cases: 52
+- Cases: 55
 
 - [DASH-H-002] employee dashboard opent zonder console errors — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
 - [DASH-H-025] "Mijn maanden" toont naast de urenstatus ook de klanturenstaat-status per maand — Techniek: Toestandsovergang · Assertions: 7
@@ -210,7 +210,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 534 Playwri
 - [DASH-N-030] ook vóórdat de serverdata binnen is, opent een medewerker geen maand vóór zijn indiensttreding — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [DASH-N-024] een lokaal record van vóór indiensttreding verschijnt niet in Mijn maanden — Techniek: Toestandsovergang · Assertions: 2
 - [DASH-N-025] een gekozen klanturenstaat-bestand blijft niet hangen na een gewone maandwissel — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
-- [DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties toe en houdt de kalendermaand in beeld — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 11
+- [DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties toe en houdt de kalendermaand in beeld — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 12
 - [DASH-N-009] medewerker teller blijft stabiel bij aug-juli-aug en dashboard triggert geen verborgen timesheet-read — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 - [DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behoudt maandlabels bij themawissel — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
@@ -235,6 +235,9 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 534 Playwri
 - [DASH-H-035] Mijn uren op desktop toont alleen Ma–Vr, de datum boven elk veld, 0/8/9 eronder en het weektotaal rechts — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
 - [DASH-N-031] de volgende actie is één zin zonder aangeplakte maand, en de maand staat in de regel eronder — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [DASH-H-036] Vandaag staat op desktop in Klassiek volgens de referentie, en hero, ring en Nog te doen kloppen met elkaar — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 27
+- [DASH-H-037] Vandaag ververst het restcijfer meteen na ureninvoer en na terugnavigeren — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 8
+- [DASH-H-038] Nog te doen in Vandaag opent per maand de juiste route, ook voor een correctie, en blijft leesbaar in donker — Techniek: Toestandsovergang · Assertions: 17
+- [DASH-H-039] het verloop in Vandaag volgt de volgorderegel en is gelijk aan de stappen in Modern — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
 - [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 29
 - [DASH-N-022] een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
@@ -655,7 +658,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 534 Playwri
 - [SKIN-H-022] een tweede herlading zet de skin/thema-voorkeur niet terug naar standaard — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 8
 - [SKIN-H-023] "Standaardweek/-maand vullen" vult alleen lege dagen met het eigen werkpatroon, in Nieuw en Klassiek — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
 - [SKIN-H-028] "Week terugzetten" overschrijft ook een dag die bewust op 0 is bevestigd, na expliciete bevestiging — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
-- [SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eerstvolgende stap en blijft op het Dashboard — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
+- [SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eerstvolgende stap en blijft op het Dashboard — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 12
 - [SKIN-H-025] de 0/8/9-snelkeuze bij elke dag staat altijd zichtbaar, in Klassiek en in Nieuw — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
 - [SKIN-H-027] Nieuw-skin beheer-topbar behoudt de safe-area-inset-top van de statusbalk — Techniek: Toestandsovergang · Assertions: 2
 - [SKIN-H-029] nog niet opgeslagen uren overleven rotatie, themawissel, modal, designwissel en browser-back — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 15

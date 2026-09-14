@@ -84,6 +84,30 @@ verborgen oude blokken. Hoe ze zijn aangepast:
 Daarna lokaal op desktop groen: dashboard-medewerker en skin (68), E2E-H-003 en
 TS-REV-UI-H-008. Tablet en mobiel lopen via CI.
 
+**Dekking op desktop na het vastzetten** (vraag van de main-sessie). Het gedrag
+van de negen cases op 390px is op desktop vervangen door Vandaag, dus het hoort
+daar een eigen assertie te hebben. SKIN-H-024 bleek onterecht vastgezet: die
+toetst Modern, waar "Open acties per maand" op desktop gewoon staat. Hij draait
+weer op desktop, met een voorwaarde die op elke breedte klopt. Nieuw, elk met
+een tegenproef die omviel:
+- [DASH-H-037] dekt DASH-H-003, -004 en SKIN-H-009: het restcijfer in Vandaag
+  klopt met contract min geboekte uren, en ververst na invoer via de hoofdknop
+  en terugnavigeren.
+- [DASH-H-038] dekt DASH-H-005, -014, DASH-N-016 en het contrast uit DASH-H-003:
+  - de eerste chip (de geprioriteerde maand) opent precies die maand en route;
+  - een correctiemaand opent Mijn uren als bewerkbare correctie;
+  - elke chip haalt 4,5:1 in donker, gemeten tegen het werkelijke vlak.
+- [DASH-H-039] dekt SKIN-H-031 en -032: het verloop in Vandaag volgt de
+  volgorderegel, met tekens • en ✓, en is gelijk aan de Modern-bento, in concept
+  en na indienen.
+
+**CI op ebe60553 rood, gerepareerd:**
+- DASH-N-021 en SKIN-H-033 toetsten Vandaag ook op telefoonbreedte.
+- DASH-H-034 op mobile-safari: WebKit geeft in een onderschept verzoek de inhoud
+  van het bestandsdeel niet mee. De bestandsnaam en de actie gelden in elke
+  browser; de inhoudscontrole alleen buiten WebKit.
+- HELP-N-001 (mobile-safari) is de bekende WebKit-inloguitval van main.
+
 ## Sync history
 
 ### Ronde 14 sep (derde, vervolg) — terugmeldingen verwerkt, export 04:07:28Z

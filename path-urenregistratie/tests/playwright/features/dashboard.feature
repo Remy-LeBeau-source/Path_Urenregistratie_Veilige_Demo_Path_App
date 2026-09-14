@@ -69,7 +69,7 @@ Feature: Dashboard en open werkvoorraad
   @negative
   Scenario: [DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties toe en houdt de kalendermaand in beeld
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 11
+    # Aantoonbare Playwright-assertions in deze case: 12
     Given de medewerker ziet zijn open acties in de actuele kalendermaand augustus
     When de medewerker handmatig een lege oudere maand (juni 2026) opent
     Then verschijnt juni niet als open-actiemaand en blijven het totaal en de kalendermaand ongewijzigd
@@ -293,6 +293,33 @@ Feature: Dashboard en open werkvoorraad
     And brengt de hoofdknop je naar Mijn uren zolang er weken open staan
     And staat Vandaag niet in Modern, en daar blijft de bento
     And staat Vandaag op telefoonbreedte nog niet, en keert de kaart terug naar zijn eigen plek
+
+  @happy
+  Scenario: [DASH-H-037] Vandaag ververst het restcijfer meteen na ureninvoer en na terugnavigeren
+    # Testtechniek: Herstelbaarheid + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given het restcijfer klopt met contract en geboekte uren
+    When de medewerker via de hoofdknop een uur invult en terug naar het dashboard gaat
+    Then is het restcijfer lager en klopt het nog steeds met de bron
+
+  @happy
+  Scenario: [DASH-H-038] Nog te doen in Vandaag opent per maand de juiste route, ook voor een correctie, en blijft leesbaar in donker
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 17
+    Given dashboard en open werkvoorraad is voorbereid
+    When de flow voor DASH-H-038 wordt uitgevoerd
+    Then leidt de eerste chip, de geprioriteerde maand, naar precies die maand en de juiste route
+    And opent een correctiemaand Mijn uren als bewerkbare correctie
+    And is de tekst op elke chip leesbaar in donker (4,5:1 tegen het werkelijke vlak)
+
+  @happy
+  Scenario: [DASH-H-039] het verloop in Vandaag volgt de volgorderegel en is gelijk aan de stappen in Modern
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given een concept-maand met een factuurstatus die al op verwerkt staat
+    And lopen beide gelijk mee zodra de maand is ingediend
+    When de flow voor DASH-H-039 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat het verloop in Vandaag volgt de volgorderegel en is gelijk aan de stappen in Modern
 
   @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors

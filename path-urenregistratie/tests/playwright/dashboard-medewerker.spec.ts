@@ -8,6 +8,7 @@ import type { MutableRecord } from './fixtures/dashboardGedeeld';
 import { ALLE_SCHERMEN, verwachtAlleenSchermActief } from './fixtures/dashboardGedeeld';
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
+import { staatVandaagInBeeld } from './fixtures/klassiekDashboard';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
 import { bewaarUrenstaat } from './fixtures/urenstaatHerstel';
 import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErrors';
@@ -332,7 +333,11 @@ test('[DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties t
     // (Vandaag, referentie medewerker-gui.html); "Open acties per maand" is daar
     // verborgen maar wordt nog wel gevuld. Beide horen juni niet te noemen.
     await expect(page.locator('#vd-nogtedoen-chips [data-vd-open-maand="2026-06"]')).toHaveCount(0);
-    await expect(page.locator('#vd-nogtedoen-chips [data-vd-open-maand="2026-08"]')).toBeVisible();
+    if (await staatVandaagInBeeld(page)) {
+      await expect(page.locator('#vd-nogtedoen-chips [data-vd-open-maand="2026-08"]')).toBeVisible();
+    } else {
+      await expect(page.locator('[data-employee-open-month="2026-08"]').first()).toBeVisible();
+    }
     await expect(page.locator('#employee-open-task-total')).toHaveText(totalOnCalendarMonth);
     await expect(page.locator('#employee-dashboard-next')).not.toContainText('Juni 2026');
   });
@@ -1725,7 +1730,7 @@ test('[DASH-H-033] de verloopstappen in Klassiek tonen ✓ en • in de bol, lee
 // de indienroute van dat scherm; de case onderschept dat verzoek met een
 // weigering, zodat hij de server niet verandert en tegelijk bewijst dat de kaart
 // het gekozen bestand echt meestuurt en na een weigering niet kwijtraakt.
-test('[DASH-H-034] de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee', async ({ page }) => {
+test('[DASH-H-034] de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee', async ({ page, browserName }) => {
   test.setTimeout(120_000);
   // De beforeEach zet de klok op 31 augustus; die maand heeft in de demodata al
   // een ingediende klanturenstaat. September heeft er nog geen (zie ook
@@ -1786,7 +1791,11 @@ test('[DASH-H-034] de klanturenstaatkaart loopt van leeg via bestand gekozen naa
     await expect(page.locator('#toast')).toContainText('Testweigering door DASH-H-034');
     expect(verzoek, 'het verzoek hoort de actie submit te dragen').toMatch(/name="action"\r\n\r\nsubmit/);
     expect(verzoek, 'het verzoek hoort het gekozen bestand mee te sturen').toContain('filename="' + pdf.name + '"');
-    expect(verzoek).toContain('%PDF-1.4 klanturenstaat');
+    // De inhoud van het bestandsdeel zelf: WebKit geeft die in een onderschept
+    // verzoek niet mee (CI 14 sep, mobile-safari: alleen de boundary). De
+    // bestandsnaam en de actie hierboven gelden wel in elke browser, en die
+    // bewijzen dat de kaart het gekozen bestand doorgeeft.
+    if (browserName !== 'webkit') expect(verzoek).toContain('%PDF-1.4 klanturenstaat');
     await page.unroute(/customer-timesheets\.php$/);
   });
 
@@ -2005,4 +2014,224 @@ test('[DASH-H-036] Vandaag staat op desktop in Klassiek volgens de referentie, e
     await expect(page.locator('#view-employee-dashboard > .employee-hero')).toBeVisible();
     await expect(page.locator('#vd-klant-plek > #employee-customer-timesheet-card')).toHaveCount(0);
   });
+});
+
+// Dekking op desktop voor gedrag dat Vandaag daar overneemt (vraag van de
+// main-sessie, 14 sep). Negen cases draaien sinds deze ronde op 390px, omdat ze de
+// oude Klassieke blokken toetsen die daar nog live zijn. Op desktop is dat gedrag
+// niet alleen verborgen maar vervangen, en dus hoort het daar een eigen assertie
+// te hebben. Deze drie cases dekken dat:
+//   DASH-H-037 <- DASH-H-003, DASH-H-004, SKIN-H-009 (uren verversen na invoer)
+//   DASH-H-038 <- DASH-H-005, DASH-H-014, DASH-N-016, DASH-H-003 (open maanden en
+//                 hun route, correctie, contrast van de chips in donker)
+//   DASH-H-039 <- SKIN-H-031, SKIN-H-032 (verloop volgt de regel en is gelijk
+//                 aan de Modern-bento)
+
+test('[DASH-H-037] Vandaag ververst het restcijfer meteen na ureninvoer en na terugnavigeren', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('#vandaag')).toBeVisible();
+  await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
+  const herstelUrenstaat = await bewaarUrenstaat(page);
+
+  // Het restcijfer hoort contracturen min geboekte uren te zijn, uit dezelfde
+  // bron als de rest van de app. In één evaluate gelezen: een serversync tussen
+  // twee losse metingen zou twee verschillende standen vergelijken.
+  const stand = () => page.evaluate(() => {
+    const w = window as unknown as {
+      currentEmployee: () => { id: number }; currentPeriod: () => { key: string };
+      recordFor: (id: number, key: string) => { entries: number[][] };
+      totalEntries: (e: number[][]) => number;
+      defaultContractHours: (emp: unknown, key: string) => number;
+    };
+    // hoursFormat is een const op scriptniveau en hangt dus niet aan window.
+    const hoursFormat = (0, eval)('hoursFormat') as Intl.NumberFormat;
+    const emp = w.currentEmployee();
+    const key = w.currentPeriod().key;
+    const verwacht = Math.max(0, w.defaultContractHours(emp, key) - w.totalEntries(w.recordFor(emp.id, key).entries));
+    return { getoond: (document.querySelector('#vd-kpi-waarde')?.textContent || '').trim(), verwacht: hoursFormat.format(verwacht) + 'u' };
+  });
+
+  try {
+    await test.step('Given het restcijfer klopt met contract en geboekte uren', async () => {
+      const s = await stand();
+      expect(s.getoond, 'het restcijfer hoort contract min geboekte uren te zijn').toBe(s.verwacht);
+    });
+
+    let voor = '';
+    await test.step('When de medewerker via de hoofdknop een uur invult en terug naar het dashboard gaat', async () => {
+      voor = (await stand()).getoond;
+      await expect(page.locator('#vd-hoofdknop')).toHaveAttribute('data-vd-actie', 'uren');
+      await page.locator('#vd-hoofdknop').click();
+      await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+      const veld = page.locator('#hours-grid .hours-input:not([disabled])').first();
+      await veld.fill(String(Number(await veld.inputValue() || 0) + 3));
+      await veld.press('Enter');
+      await page.locator('button[data-view="employee-dashboard"]').click();
+      await expect(page.locator('#vandaag')).toBeVisible();
+    });
+
+    await test.step('Then is het restcijfer lager en klopt het nog steeds met de bron', async () => {
+      await expect(page.locator('#vd-kpi-waarde')).not.toHaveText(voor, { timeout: 15_000 });
+      const s = await stand();
+      expect(s.getoond).toBe(s.verwacht);
+    });
+  } finally {
+    await herstelUrenstaat();
+  }
+});
+
+test('[DASH-H-038] Nog te doen in Vandaag opent per maand de juiste route, ook voor een correctie, en blijft leesbaar in donker', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('#vandaag')).toBeVisible();
+  await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
+
+  const maanden = await page.evaluate(() => {
+    const w = window as unknown as {
+      currentEmployee: () => { id: number }; currentPeriod: () => { key: string };
+      employeeOpenMonthSummaries: (id: number, key: string) => Array<{ periodKey: string; period: { label: string }; actions: Array<{ type: string }> }>;
+      recordFor: (id: number, key: string) => { timesheetStatus: string };
+    };
+    const emp = w.currentEmployee();
+    return w.employeeOpenMonthSummaries(emp.id, w.currentPeriod().key).map(m => ({
+      key: m.periodKey, label: m.period.label, uren: m.actions.some(a => a.type === 'hours'),
+      correctie: w.recordFor(emp.id, m.periodKey).timesheetStatus === 'correction',
+    }));
+  });
+  expect(maanden.length, 'de demodata hoort open maanden te hebben, anders toetst deze case niets').toBeGreaterThan(0);
+
+  await test.step('Then leidt de eerste chip, de geprioriteerde maand, naar precies die maand en de juiste route', async () => {
+    const eerste = maanden[0];
+    const chip = page.locator(`#vd-nogtedoen-chips [data-vd-open-maand="${eerste.key}"]`);
+    await expect(page.locator('#vd-nogtedoen-chips .vd-maandchip').first()).toHaveAttribute('data-vd-open-maand', eerste.key);
+    await chip.click();
+    if (eerste.uren) {
+      await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+      await expect(page.locator('#period-label')).toHaveText(eerste.label);
+    } else {
+      await expect(page.locator('#view-historie')).toHaveClass(/is-active/);
+      await expect(page.locator(`#employee-history [data-history-verloop="${eerste.key}"]`)).toHaveAttribute('aria-expanded', 'true');
+    }
+  });
+
+  const correctie = maanden.find(m => m.correctie);
+  await test.step('And opent een correctiemaand Mijn uren als bewerkbare correctie', async () => {
+    test.skip(!correctie, 'geen correctiemaand in de demodata van deze run');
+    await page.locator('button[data-view="employee-dashboard"]').click();
+    await expect(page.locator('#vandaag')).toBeVisible();
+    const chip = page.locator(`#vd-nogtedoen-chips [data-vd-open-maand="${correctie!.key}"]`);
+    await expect(chip).toContainText('correctie');
+    await chip.click();
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+    await expect(page.locator('#period-label')).toHaveText(correctie!.label);
+    await expect(page.locator('#timesheet-status')).toHaveText('Correctie nodig');
+    await expect(page.locator('#hours-grid .hours-input:not([disabled])').first()).toBeVisible();
+  });
+
+  await test.step('And is de tekst op elke chip leesbaar in donker (4,5:1 tegen het werkelijke vlak)', async () => {
+    await page.locator('button[data-view="employee-dashboard"]').click();
+    await expect(page.locator('#vandaag')).toBeVisible();
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+    const ratios = await page.locator('#vd-nogtedoen-chips .vd-maandchip').evaluateAll(chips => {
+      const rgba = (v: string) => { const n = (v.match(/[\d.]+/g) || []).map(Number); return { r: n[0] || 0, g: n[1] || 0, b: n[2] || 0, a: n.length > 3 ? n[3] : 1 }; };
+      const lum = (c: { r: number; g: number; b: number }) => {
+        const k = [c.r, c.g, c.b].map(v => { const x = v / 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; });
+        return 0.2126 * k[0] + 0.7152 * k[1] + 0.0722 * k[2];
+      };
+      // Doorzichtige vlakken over elkaar leggen tot een dicht vlak: de chip en
+      // "Nog te doen" zijn (deels) transparant, dus het echte vlak komt van verder op.
+      const vlakAchter = (el: Element) => {
+        const lagen: Array<ReturnType<typeof rgba>> = [];
+        for (let n: Element | null = el; n; n = n.parentElement) {
+          const c = rgba(getComputedStyle(n).backgroundColor);
+          if (c.a > 0) lagen.push(c);
+          if (c.a >= 1) break;
+        }
+        let basis = { r: 255, g: 255, b: 255 };
+        for (const laag of lagen.reverse()) basis = { r: laag.r * laag.a + basis.r * (1 - laag.a), g: laag.g * laag.a + basis.g * (1 - laag.a), b: laag.b * laag.a + basis.b * (1 - laag.a) };
+        return basis;
+      };
+      return chips.map(chip => {
+        const tekst = rgba(getComputedStyle(chip.querySelector('span')!).color);
+        const a = lum(tekst); const b = lum(vlakAchter(chip));
+        return Math.round(((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)) * 100) / 100;
+      });
+    });
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
+    expect(ratios.length).toBeGreaterThan(0);
+    for (const ratio of ratios) expect(ratio, 'chiptekst in donker').toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+test('[DASH-H-039] het verloop in Vandaag volgt de volgorderegel en is gelijk aan de stappen in Modern', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('#vandaag')).toBeVisible();
+  const herstelUrenstaat = await bewaarUrenstaat(page);
+
+  // Zet, render en lees in één evaluate (zie [SKIN-H-032] voor de race die
+  // anders ontstaat). Beide weergaven worden altijd gerenderd; de skin bepaalt
+  // alleen wat zichtbaar is.
+  const zetEnLees = (toestand: 'concept' | 'ingediend') => page.evaluate(stand => {
+    const w = window as unknown as {
+      currentEmployee: () => { id: number }; currentPeriod: () => { key: string; weekRows: unknown[] };
+      recordFor: (id: number, key: string) => { entries: number[][]; confirmedEntries?: boolean[][]; timesheetStatus: string; invoiceStatus: string };
+      persistState: () => void; renderAll: () => void;
+    };
+    const period = w.currentPeriod();
+    const record = w.recordFor(w.currentEmployee().id, period.key);
+    if (stand === 'concept') {
+      record.timesheetStatus = 'draft';
+      record.invoiceStatus = 'simulated';
+      record.entries = record.entries.map(() => [0, 0, 0, 0, 0]);
+      record.confirmedEntries = period.weekRows.map(() => [false, false, false, false, false]);
+    } else {
+      record.entries = record.entries.map(() => [8, 8, 8, 8, 8]);
+      record.confirmedEntries = period.weekRows.map(() => [true, true, true, true, true]);
+      record.timesheetStatus = 'submitted';
+    }
+    w.persistState();
+    w.renderAll();
+    const lees = (lijst: string, sleutel: string, af: string, nu: string, detail: string) =>
+      Array.from(document.querySelectorAll(lijst)).map(li => ({
+        key: (li as HTMLElement).dataset[sleutel],
+        stand: li.classList.contains(af) ? 'af' : li.classList.contains(nu) ? 'nu' : 'wacht',
+        detail: String(li.querySelector(detail)?.textContent || '').trim(),
+      }));
+    return {
+      vandaag: lees('#vd-verloop-lijst [data-vd-stap]', 'vdStap', 'is-af', 'is-nu', 'small'),
+      tekens: Array.from(document.querySelectorAll('#vd-verloop-lijst .vd-stap-bol')).map(b => b.textContent),
+      modern: lees('#new-bento-steps [data-step]', 'step', 'is-done', 'is-current', '[data-step-detail]'),
+    };
+  }, toestand);
+
+  try {
+    await test.step('Given een concept-maand met een factuurstatus die al op verwerkt staat', async () => {
+      const { vandaag, modern, tekens } = await zetEnLees('concept');
+      expect(vandaag.map(s => s.key)).toEqual(['fill', 'submit', 'review', 'customer', 'done']);
+      expect(vandaag.map(s => s.stand), 'geen stap mag groen staan zolang "Uren ingevuld" nog de huidige is').toEqual(['nu', 'wacht', 'wacht', 'wacht', 'wacht']);
+      expect(tekens).toEqual(['•', '', '', '', '']);
+      expect(vandaag, 'Vandaag en Modern horen dezelfde keten te tonen, uit statusKetenStappen').toEqual(modern);
+    });
+
+    await test.step('And lopen beide gelijk mee zodra de maand is ingediend', async () => {
+      const { vandaag, modern, tekens } = await zetEnLees('ingediend');
+      expect(vandaag.map(s => s.stand)).toEqual(['af', 'af', 'nu', 'wacht', 'wacht']);
+      expect(tekens).toEqual(['✓', '✓', '•', '', '']);
+      expect(vandaag).toEqual(modern);
+      await expect(page.locator('#vd-verloop-lijst')).toBeVisible();
+    });
+  } finally {
+    await herstelUrenstaat();
+  }
 });

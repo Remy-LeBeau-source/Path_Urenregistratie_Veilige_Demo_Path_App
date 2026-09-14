@@ -1627,7 +1627,6 @@ test('[SKIN-H-028] "Week terugzetten" overschrijft ook een dag die bewust op 0 i
 });
 
 test('[SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eerstvolgende stap en blijft op het Dashboard', async ({ page }) => {
-  await opOudeKlassiekeBreedte(page);
   // Vervangt wat het oude klassieke hero-blok deed (één duidelijke
   // eerstvolgende stap met knop) door dezelfde bento-kaarttaal te gebruiken
   // als de rest van deze sectie, i.p.v. het hero-blok zelf terug te zetten
@@ -1639,7 +1638,11 @@ test('[SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eers
   await test.step('Given de medewerker Nieuw activeert op het Dashboard', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await expect(page.locator('#employee-dashboard-hours')).toBeVisible();
+    // Wacht tot het Klassieke dashboard er staat voordat de skin wisselt. Op
+    // desktop is dat sinds 14 sep Vandaag, op telefoon nog de oude hero; deze
+    // case gaat over Modern, waar "Open acties per maand" op elke breedte staat.
+    await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
+    await expect(page.locator('#vandaag:visible, #view-employee-dashboard > .employee-hero:visible').first()).toBeVisible();
     await page.locator('#quick-skin-toggle').click();
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
   });
@@ -2184,11 +2187,12 @@ test('[SKIN-H-033] de medewerkerschermen rekken op een breed scherm niet verder 
   await loginPage.open();
   await loginPage.loginAsEmployee();
   await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
-  // Op desktop is het Klassieke dashboard sinds 14 sep het Vandaag-scherm.
-  await expect(page.locator('#vandaag')).toBeVisible();
 
   await test.step('Then blijft het dashboard op een breed venster binnen 1060px', async () => {
     await page.setViewportSize({ width: 1800, height: 1000 });
+    // Op een breed venster is het Klassieke dashboard sinds 14 sep het
+    // Vandaag-scherm. Pas hier toetsen: de mobiele projecten beginnen smal.
+    await expect(page.locator('#vandaag')).toBeVisible();
     const breedte = await page.locator('#view-employee-dashboard')
       .evaluate(el => Math.round(el.getBoundingClientRect().width));
     expect(breedte, 'zonder bovengrens loopt dit scherm door tot de volle vensterbreedte')
