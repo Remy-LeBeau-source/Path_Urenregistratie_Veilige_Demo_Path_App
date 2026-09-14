@@ -5517,7 +5517,9 @@ function statusKetenStappen(record, period) {
 function statusKetenItemsHtml(stappen) {
   return stappen.map(stap =>
     '<li data-keten-step="' + escapeHtml(stap.key) + '" class="is-' + escapeHtml(stap.stand) + '">' +
-      '<span class="keten-bol" aria-hidden="true"></span>' +
+      // Tekens zoals de referentie (medewerker-gui.html r972): af ✓, huidig •,
+      // wachtend leeg. aria-hidden: de stand staat al in de klasse en de tekst.
+      '<span class="keten-bol" aria-hidden="true">' + (stap.stand === "af" ? "✓" : stap.stand === "nu" ? "•" : "") + '</span>' +
       '<strong>' + escapeHtml(stap.titel) + '</strong>' +
       '<small data-keten-detail>' + escapeHtml(stap.detail) + '</small>' +
     '</li>'
@@ -7917,15 +7919,17 @@ function renderApprovals() {
         '<div class="approval-person"><span class="mini-avatar">' + initials(employee.name) + "</span><span><strong>" + escapeHtml(employee.name) + "</strong><small>" + escapeHtml(employee.client) + " · " + escapeHtml(employee.role) + "</small></span></div>" +
         '<div class="approval-data"><small>Declarabele uren</small><strong>' + hoursFormat.format(total) + " uur</strong></div>" +
         '<div class="approval-data"><small>Verwacht factuurbedrag</small><strong>' + currency.format(total * employee.rate) + "</strong></div>" +
-        // Volgorde in de DOM: Goedkeuren, Correctie vragen, Bekijken. Besluit van
-        // Gio (14 sep). Bewust in de markup en niet alleen via CSS `order` --
-        // `order` verplaatst het beeld maar niet de tabvolgorde, dan springt
-        // een toetsenbordgebruiker eerst naar de knop die onderaan staat.
-        '<div class="approval-actions"><button class="button button-primary" data-approve="' + employee.id + '" data-period-key="' + item.periodKey + '">Goedkeuren</button><button class="button button-ghost" data-request-correction="' + employee.id + '" data-period-key="' + item.periodKey + '">Correctie vragen</button><button class="button button-ghost" data-review="' + employee.id + '" data-period-key="' + item.periodKey + '">Bekijken</button></div>' +
+        // Volgorde in de markup = wat je op desktop ziet: Bekijken, Correctie
+        // vragen, Goedkeuren. Op telefoonbreedte hoort Goedkeuren bovenaan
+        // (besluit Gio, 14 sep); ordenGoedkeurActies() verhuist de knoppen dan in
+        // de DOM. Nooit via CSS `order`: dat verplaatst het beeld maar niet de
+        // tabvolgorde (DESIGN-BESLUITEN "Vier vragen uit de bouw").
+        '<div class="approval-actions"><button class="button button-ghost" data-review="' + employee.id + '" data-period-key="' + item.periodKey + '">Bekijken</button><button class="button button-ghost" data-request-correction="' + employee.id + '" data-period-key="' + item.periodKey + '">Correctie vragen</button><button class="button button-primary" data-approve="' + employee.id + '" data-period-key="' + item.periodKey + '">Goedkeuren</button></div>' +
         "</article>";
     }).join("");
     return '<section class="approval-period-group"><div class="approval-period-heading"><div><span class="section-label">Periode</span><h3>' + escapeHtml(period.label) + '</h3></div><span class="status-pill status-submitted">' + items.length + " open</span></div>" + cards + "</section>";
   }).join("");
+  ordenGoedkeurActies();
   document.querySelector("#approval-period-title").textContent = state.approvalScope === "month"
     ? "Openstaande uren · " + period.label
     : "Alle openstaande uren · " + allApprovals.length;
@@ -11296,6 +11300,36 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener("resize", () => volgZichtbaarGebiedVoorDialoog());
   window.visualViewport.addEventListener("scroll", () => volgZichtbaarGebiedVoorDialoog());
 }
+
+// Goedkeurkaart: op telefoonbreedte (590px, dezelfde grens als de gestapelde
+// opmaak in styles.css) staat Goedkeuren bovenaan, daarna Correctie vragen, dan
+// Bekijken; breder is het Bekijken, Correctie vragen, Goedkeuren. De knoppen
+// verhuizen in de DOM zodat de tabvolgorde altijd gelijk loopt met het beeld.
+// appendChild verplaatst het bestaande element: listeners en focus blijven.
+const GOEDKEUR_TELEFOON = typeof window.matchMedia === "function" ? window.matchMedia("(max-width: 590px)") : null;
+function ordenGoedkeurActies() {
+  const telefoon = Boolean(GOEDKEUR_TELEFOON && GOEDKEUR_TELEFOON.matches);
+  const volgorde = telefoon
+    ? ["[data-approve]", "[data-request-correction]", "[data-review]"]
+    : ["[data-review]", "[data-request-correction]", "[data-approve]"];
+  document.querySelectorAll(".approval-actions").forEach(groep => {
+    volgorde.forEach(selector => {
+      const knop = groep.querySelector(":scope > " + selector);
+      if (knop) groep.appendChild(knop);
+    });
+  });
+}
+if (GOEDKEUR_TELEFOON && typeof GOEDKEUR_TELEFOON.addEventListener === "function") {
+  GOEDKEUR_TELEFOON.addEventListener("change", ordenGoedkeurActies);
+}
+
+// Indrukeffect op iOS (DESIGN-BESLUITEN "Vier vragen uit de bouw", 14 sep).
+// Safari past :active op een aanraakscherm alleen toe als de pagina ergens een
+// touchstart-listener heeft; zonder dat zie je de scale/gloed van .button:active
+// op een iPhone nooit. Een lege, passieve listener op document is genoeg en
+// houdt scrollen vlot (passive: geen preventDefault mogelijk, dus geen wachten).
+function activeerIndrukOpTouch() {}
+document.addEventListener("touchstart", activeerIndrukOpTouch, { passive: true });
 
 function closeModal(runCloseAction = false) {
   const afterClose = modalCloseAction;

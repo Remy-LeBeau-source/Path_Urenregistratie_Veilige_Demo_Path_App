@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 529 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 531 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 529 unieke case-ID's
+- Playwright executable cases: 531 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 530 unieke case-ID's
+- Totaal executable cases: 532 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 571
-- Niet-mobile projectuitvoeringen: 487
+- Uitvoeringen: 573
+- Niet-mobile projectuitvoeringen: 489
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 529 Playwright-functionele cases in totaal 571 resultaten op: 487 + (42 x 2) = 571.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 531 Playwright-functionele cases in totaal 573 resultaten op: 489 + (42 x 2) = 573.
 
 ## Documentatieketen
 
@@ -201,7 +201,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 529 Playwri
 
 - Feature: `tests/playwright/features/dashboard.feature`
 - Source: `tests/playwright/dashboard*.spec.ts`
-- Cases: 47
+- Cases: 48
 
 - [DASH-H-002] employee dashboard opent zonder console errors — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
 - [DASH-H-025] "Mijn maanden" toont naast de urenstatus ook de klanturenstaat-status per maand — Techniek: Toestandsovergang · Assertions: 7
@@ -230,6 +230,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 529 Playwri
 - [DASH-H-030] de indienbevestiging noemt werkdagen die bewust op 0,0 staan — Techniek: Toestandsovergang · Assertions: 9
 - [DASH-H-031] het verloop van een maand klapt open in Mijn maanden en overleeft een hertekening — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 14
 - [DASH-H-032] "Hele maand" noemt de ontbrekende werkdagen bij naam, inclusief dagen die nog moeten komen — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 18
+- [DASH-H-033] de verloopstappen in Klassiek tonen ✓ en • in de bol, leesbaar in licht en donker — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 10
 - [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 29
 - [DASH-N-022] een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
@@ -623,7 +624,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 529 Playwri
 
 - Feature: `tests/playwright/features/skin.feature`
 - Source: `tests/playwright/skin.spec.ts`
-- Cases: 37
+- Cases: 38
 
 - [SKIN-H-001] de app start standaard in de klassieke vormgeving — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [SKIN-H-002] Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
@@ -659,9 +660,10 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 529 Playwri
 - [SKIN-H-032] Klassiek en Modern tonen dezelfde statusketen, uit dezelfde bron — Techniek: Toestandsovergang · Assertions: 12
 - [SKIN-H-033] de medewerkerschermen rekken op een breed scherm niet verder uit dan 1060px en staan gecentreerd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [SKIN-H-034] een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgloed — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
-- [SKIN-H-035] op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle breedte — Techniek: Toestandsovergang · Assertions: 19
+- [SKIN-H-035] op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle breedte — Techniek: Toestandsovergang · Assertions: 21
 - [SKIN-H-036] een dialoog met open toetsenbord houdt de knoppen, de sluitactie en het typveld in beeld — Techniek: Toestandsovergang · Assertions: 7
 - [SKIN-H-037] de weekchips in Modern passen op 360px naast elkaar, gelijk breed en zonder scrollen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
+- [SKIN-H-039] de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect toont — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 2
 
 ### Correctie- en goedkeuringsproces
 

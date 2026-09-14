@@ -2237,9 +2237,8 @@ test('[SKIN-H-034] een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgl
   //
   // Wat dit wél zegt over de echte iPhone: iOS Safari zet :active alleen als er
   // op het element of een voorouder een touchstart-luisteraar hangt. Zonder die
-  // luisteraar is de indrukgloed op een iPhone dus waarschijnlijk onzichtbaar.
-  // Dat is geen testprobleem maar een productvraag, en hij hoort bij het
-  // iOS-punt dat met main is afgestemd -- niet hier stil opgelost.
+  // luisteraar is de indrukgloed op een iPhone dus onzichtbaar. Gio besliste op
+  // 14 sep die luisteraar toe te voegen; [SKIN-H-039] bewaakt dat hij er is.
   test.skip(Boolean(testInfo.project.use.hasTouch),
     `aanraakemulatie (${browserName}) zet geen betrouwbare :active via page.mouse.down()`);
   const loginPage = new LoginPage(page);
@@ -2362,19 +2361,37 @@ test('[SKIN-H-035] op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vr
     await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
   });
 
-  await test.step('And houdt de desktopkaart zijn bestaande beeld: een rij, rechts uitgelijnd, Goedkeuren achteraan', async () => {
-    // Het besluit ging over de telefoon. Op desktop is niets gevraagd, dus daar
-    // hoort het bestaande beeld te blijven -- ook al is de DOM-volgorde nu
-    // omgedraaid voor de tabvolgorde op de telefoon.
+  await test.step('And houdt de desktopkaart zijn beeld, met een DOM-volgorde die gelijk loopt met dat beeld', async () => {
+    // Op desktop blijft het beeld Bekijken, Correctie vragen, Goedkeuren. Eerder
+    // kwam dat uit CSS `order` op een omgekeerde DOM, waardoor Tab van rechts
+    // naar links liep. Gio (14 sep): op desktop hoort de DOM-orde gelijk te zijn
+    // aan wat je ziet, en op telefoon verhuist het element in de DOM. Deze stap
+    // wisselt van breedte zonder te herladen, dus hij toetst ook dat de
+    // verhuizing meebeweegt met de breedte en niet alleen bij de eerste render.
     await page.setViewportSize({ width: 1280, height: 900 });
     await expect(acties).toBeVisible();
     const desktop = await acties.evaluate(el => {
       const r = (sel: string) => el.querySelector(sel)!.getBoundingClientRect();
-      return { review: r('[data-review]'), correctie: r('[data-request-correction]'), goedkeuren: r('[data-approve]') };
+      const soort = (knop: Element) => knop.hasAttribute('data-approve') ? 'goedkeuren' : knop.hasAttribute('data-request-correction') ? 'correctie' : 'bekijken';
+      const knoppen = Array.from(el.querySelectorAll('button'));
+      return {
+        review: r('[data-review]'), correctie: r('[data-request-correction]'), goedkeuren: r('[data-approve]'),
+        dom: knoppen.map(soort),
+        beeld: [...knoppen].sort((a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left).map(soort),
+      };
     });
     expect(Math.round(desktop.goedkeuren.top), 'op desktop horen de knoppen op één rij te staan').toBe(Math.round(desktop.correctie.top));
     expect(desktop.review.left, 'op desktop hoort Bekijken vooraan te staan').toBeLessThan(desktop.correctie.left);
     expect(desktop.correctie.left, 'op desktop hoort Goedkeuren achteraan te staan').toBeLessThan(desktop.goedkeuren.left);
+    expect(desktop.dom, 'op desktop hoort de DOM-volgorde (en dus Tab) gelijk te lopen met het beeld van links naar rechts').toEqual(desktop.beeld);
+    expect(desktop.dom).toEqual(['bekijken', 'correctie', 'goedkeuren']);
+  });
+
+  await test.step('And springt de volgorde terug als het scherm weer smal wordt', async () => {
+    await page.setViewportSize({ width: 360, height: 740 });
+    await expect.poll(() => acties.evaluate(el => Array.from(el.querySelectorAll('button')).map(knop =>
+      knop.hasAttribute('data-approve') ? 'goedkeuren' : knop.hasAttribute('data-request-correction') ? 'correctie' : 'bekijken')))
+      .toEqual(['goedkeuren', 'correctie', 'bekijken']);
   });
 });
 
@@ -2493,4 +2510,31 @@ test('[SKIN-H-037] de weekchips in Modern passen op 360px naast elkaar, gelijk b
       expect(chip.label, 'voor de schermlezer staat het volle woord').toMatch(/^Week \d{1,2}, /);
     }
   });
+});
+
+// Besluit 14 sep (DESIGN-BESLUITEN "Vier vragen uit de bouw"): iOS Safari toont
+// :active op een aanraakscherm alleen als de pagina een touchstart-luisteraar
+// heeft, dus de app hangt er één aan document. Playwright kan de :active-stand
+// van een echte iPhone niet nabootsen (zie [SKIN-H-034]). Wat wél vast te stellen
+// is, is dat de luisteraar er staat en passief is -- een niet-passieve
+// touchstart op document zou elke scroll op de telefoon laten wachten. De case
+// registreert daarvoor alle document-listeners vóórdat app.js laadt.
+test('[SKIN-H-039] de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect toont', async ({ page }) => {
+  await page.addInitScript(() => {
+    const gezien: { type: string; passief: boolean }[] = [];
+    (window as unknown as { __documentListeners: typeof gezien }).__documentListeners = gezien;
+    const origineel = Document.prototype.addEventListener;
+    Document.prototype.addEventListener = function (type: string, luisteraar: EventListenerOrEventListenerObject, opties?: boolean | AddEventListenerOptions) {
+      gezien.push({ type, passief: typeof opties === 'object' && opties !== null && opties.passive === true });
+      return origineel.call(this, type, luisteraar, opties);
+    };
+  });
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+
+  const touch = await page.evaluate(() =>
+    (window as unknown as { __documentListeners: { type: string; passief: boolean }[] }).__documentListeners
+      .filter(l => l.type === 'touchstart'));
+  expect(touch.length, 'de app hoort een touchstart-luisteraar op document te hebben').toBeGreaterThan(0);
+  expect(touch.every(l => l.passief), 'elke touchstart-luisteraar op document hoort passief te zijn').toBe(true);
 });

@@ -144,7 +144,8 @@ Then("staan de knoppen onder elkaar in de afgesproken volgorde, met 10px ertusse
 And("staat Goedkeuren ook in de DOM eerst, zodat de tabvolgorde klopt");
 And("heeft Correctie vragen alleen een rand, geen vlak");
 And("blijft dat zo in het donkere thema");
-And("houdt de desktopkaart zijn bestaande beeld: een rij, rechts uitgelijnd, Goedkeuren achteraan");
+And("houdt de desktopkaart zijn beeld, met een DOM-volgorde die gelijk loopt met dat beeld");
+And("springt de volgorde terug als het scherm weer smal wordt");
 Given("een lange dialoog met onderaan een invoerveld");
 Then("passen zonder aanpassing de knoppen niet in 300px -- de uitgangssituatie op iOS");
 When("het toetsenbord het zichtbare deel verkleint tot 300px");
@@ -152,3 +153,5 @@ Then("blijven de indienknop, de sluitactie en het typveld binnen dat deel");
 And("ruimt het sluiten van de dialoog de aanpassing op");
 When("de flow voor SKIN-H-037 wordt uitgevoerd");
 Then("staat er per week één chip, en scrolt de strook niet horizontaal");
+When("de flow voor SKIN-H-039 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect toont");

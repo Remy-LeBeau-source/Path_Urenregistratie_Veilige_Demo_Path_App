@@ -941,21 +941,13 @@ html:not([data-skin="new"]) .button-primary:active:not(:disabled) { transform: s
    rand; 10px ertussen; volle breedte; minimaal 44px. Dat staat in het
    590px-blok verderop.
 
-   De volgorde Goedkeuren, Correctie vragen, Bekijken zit in de markup
-   (app.js), want CSS `order` verplaatst alleen het beeld en niet de
-   tabvolgorde. Op desktop is om dit besluit niets gevraagd, dus daar zet
-   `order` het bestaande beeld exact terug: Bekijken, Correctie vragen,
-   Goedkeuren, rechts uitgelijnd. Kanttekening die daarbij hoort: op desktop
-   loopt de tabvolgorde daardoor van rechts naar links door deze groep. Rechttrekken
-   betekent daar de zichtbare volgorde omdraaien, en dat is niet gevraagd.
-
-   Niet met flex-direction: row-reverse. Dat keert de hoofdas om, en dan pakt
-   justify-content: flex-end (onder 1100px) links in plaats van rechts.
-   Analyse deels van de main-sessie. */
+   De volgorde zit in de DOM, niet in CSS `order`: `order` verplaatst alleen
+   het beeld en liet Tab op desktop van rechts naar links lopen, een
+   toegankelijkheidsfout (DESIGN-BESLUITEN "Vier vragen uit de bouw").
+   ordenGoedkeurActies() in app.js zet de knoppen per breedte in de volgorde
+   die je ziet. Ook niet met flex-direction: row-reverse -- dat is hetzelfde
+   probleem, en justify-content: flex-end pakt dan links. */
 .approval-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.approval-actions [data-review] { order: 1; }
-.approval-actions [data-request-correction] { order: 2; }
-.approval-actions [data-approve] { order: 3; }
 .empty-state { border: 1px dashed #b9d9d1; border-radius: 20px; background: var(--vlak-zacht); padding: 70px 25px; text-align: center; }
 .empty-check { display: grid; width: 48px; height: 48px; place-items: center; margin: 0 auto 15px; border-radius: 50%; background: var(--mint); color: var(--navy); font-weight: 900; }
 .empty-state h3 { margin: 0; font-family: var(--letter-kop); }
@@ -1541,7 +1533,7 @@ html:not([data-skin="new"]) .button-primary:active:not(:disabled) { transform: s
      Correctie vragen: met alleen Correctie transparant zou Bekijken, de
      zijweg, zwaarder ogen dan de correctie. */
   .approval-actions { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 10px; }
-  .approval-actions .button { order: 0; width: 100%; min-height: 44px; flex: none; }
+  .approval-actions .button { width: 100%; min-height: 44px; flex: none; }
   .approval-card .approval-actions .button-ghost { background: transparent; border: 1px solid var(--line); box-shadow: none; }
   .invoice-toolbar { align-items: flex-start; flex-direction: column; }
   /* Hier stapelt de factuurbalk tot een kolom, en dan is de vaste
@@ -1719,8 +1711,16 @@ html:not([data-skin="new"]) #view-historie { max-width: var(--pagina); margin-in
 .status-keten-lijst li::before { content: ""; position: absolute; top: 20px; bottom: 0; left: 9px; width: 2px; background: var(--line); }
 .status-keten-lijst li:last-child::before { display: none; }
 .status-keten-lijst li.is-af::before { background: var(--mint); }
-.keten-bol { position: relative; z-index: 1; display: block; width: 20px; height: 20px; margin-top: 1px; border: 2px solid var(--line); border-radius: 50%; background: var(--vlak); }
-.status-keten-lijst li.is-af .keten-bol { border-color: var(--mint); background: var(--mint); }
+/* Teken in de bol volgens de referentie (medewerker-gui.html r373: 10px/900 in
+   de maandlijst; r276: 11px op het dashboard). Op mint altijd var(--navy),
+   nooit wit: wit op #3abd9d haalt 2,35:1 (DESIGN-BESLUITEN "Contrast op mint en
+   amber"). De huidige bol is in Klassiek geen gevulde amberbol maar een lichte
+   (donker: bruine) tint; navy zou daar in donker wegvallen, dus daar de
+   amber-teksttint van dezelfde stap. */
+.keten-bol { position: relative; z-index: 1; display: grid; place-items: center; width: 20px; height: 20px; margin-top: 1px; border: 2px solid var(--line); border-radius: 50%; background: var(--vlak); font-size: 10px; font-weight: 900; line-height: 1; }
+.employee-status-keten .keten-bol { font-size: 11px; }
+.status-keten-lijst li.is-af .keten-bol { border-color: var(--mint); background: var(--mint); color: var(--navy); }
+.status-keten-lijst li.is-nu .keten-bol { color: var(--warning-tekst); }
 .status-keten-lijst li.is-nu .keten-bol { border-color: var(--warning-rand); background: var(--warning-bg); box-shadow: 0 0 0 4px var(--warning-bg); }
 .status-keten-lijst li strong { grid-column: 2; color: var(--navy-tekst); font-size: 14px; }
 .status-keten-lijst li small { grid-column: 2; margin-top: 2px; color: var(--muted); font-size: 11.5px; }

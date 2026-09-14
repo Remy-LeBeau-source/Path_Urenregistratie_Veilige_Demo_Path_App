@@ -115,6 +115,8 @@ And("telt de bewust op 0,0 gezette dag niet mee, ook al ligt hij aan het eind va
 And("noemt de indienknop wat hij doet en hoeveel dagen er nog open staan, gedempt");
 And("brengt een chip je naar de week waar die dag in zit");
 And("verdwijnt de waarschuwing zodra alles is ingevuld");
+When("de flow voor DASH-H-033 wordt uitgevoerd");
+Then("heeft de huidige stap een • en een wachtende stap geen teken");
 Given("de administrator is ingelogd");
 When("de administrator het dashboard opent");
 Then("het dashboard toont admin-overzicht zonder consolefouten");

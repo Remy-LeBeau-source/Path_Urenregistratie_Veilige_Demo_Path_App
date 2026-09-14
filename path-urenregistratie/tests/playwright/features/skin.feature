@@ -313,14 +313,15 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
   @happy
   Scenario: [SKIN-H-035] op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle breedte
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 19
+    # Aantoonbare Playwright-assertions in deze case: 21
     Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
     When de flow voor SKIN-H-035 wordt uitgevoerd
     Then staan de knoppen onder elkaar in de afgesproken volgorde, met 10px ertussen
     And staat Goedkeuren ook in de DOM eerst, zodat de tabvolgorde klopt
     And heeft Correctie vragen alleen een rand, geen vlak
     And blijft dat zo in het donkere thema
-    And houdt de desktopkaart zijn bestaande beeld: een rij, rechts uitgelijnd, Goedkeuren achteraan
+    And houdt de desktopkaart zijn beeld, met een DOM-volgorde die gelijk loopt met dat beeld
+    And springt de volgorde terug als het scherm weer smal wordt
 
   @happy
   Scenario: [SKIN-H-036] een dialoog met open toetsenbord houdt de knoppen, de sluitactie en het typveld in beeld
@@ -339,3 +340,11 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
     When de flow voor SKIN-H-037 wordt uitgevoerd
     Then staat er per week één chip, en scrolt de strook niet horizontaal
+
+  @happy
+  Scenario: [SKIN-H-039] de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect toont
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
+    When de flow voor SKIN-H-039 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect toont

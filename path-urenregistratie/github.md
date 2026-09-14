@@ -3,7 +3,62 @@ branch: main
 path: path-urenregistratie
 
 ## Last sync
-date: 2026-09-14T04:00:00Z
+date: 2026-09-14T05:25:00Z
+
+### Ronde 14 sep (derde) — scope gewijzigd: Klassiek eerst
+Export 2026-09-14T03:24:33Z. Verschil met de vorige export, gelezen uit de
+uitgepakte bronnen: tekens op mint- en amberbollen `var(--navy)` in plaats van
+`#fff` (GUI r565/r976, Wild r650/r915), en de indienknop `cursor: pointer` ook
+bij gaten (GUI r724). Verder niets.
+
+**Modern geparkeerd.** Het Modern Vandaag-scherm (markup, `renderModernVandaag`,
+opmaak in `styles-new.css`, de Modern-case) staat op branch
+`modern-vandaag-geparkeerd`, niet op main. `styles-new.css` is in deze ronde niet
+aangeraakt. Vraag 6 (Modern standaard licht) vervalt.
+
+Functionele laag naar Klassiek, stand per punt:
+
+1. **Hele maand met concrete dagchips.** Bestond al: amberchips "Di 15-09" die
+   naar hun week springen, maximaal zes, daaronder "en nog N dagen deze maand"
+   (`renderMissingWorkdays`, TS-REV-UI-H-015).
+2. **Vijf verloopstappen, nooit groen na een open stap.** De volgorde-regel
+   bestond al (`statusKetenStappen` zet na de eerste open stap alles op wacht).
+   Nieuw: het teken in de bol, ✓ af en • huidig, zoals de referentie. Op mint
+   staat het in navy. Afwijking om terug te melden: de huidige bol is in Klassiek
+   geen gevulde amberbol maar een lichte tint (in donker bruin `#332618`); navy zou
+   daar in donker wegvallen, dus daar de amber-teksttint. [DASH-H-033] meet ✓ en •
+   in licht en donker op 4,5:1.
+3. **Mijn uren op desktop.** Bestaat in Klassiek wél al als eigen scherm, en
+   precies in de vorm uit DESIGN-BESLUITEN: schakelaar Hele maand / per week,
+   alleen Ma–Vr, datum boven elk veld, 0/8/9 per dag, weektotaal rechts,
+   Standaardweek/-maand vullen en Week/Maand terugzetten die met de modus
+   meebewegen. Niets gebouwd. Terugmelding: de opdracht zegt dat dit scherm nog
+   niet bestaat; dat klopt niet.
+4. **Klanturenstaatkaart met drie toestanden + "Die heb ik al gemaild".** Nog
+   niet gebouwd; volgt als eigen increment. In Klassiek is dit nu een kaart die
+   doorverwijst naar het scherm Klanturenstaat, met de knop "Al rechtstreeks
+   gemaild".
+5. **Indienlabel.** Bestond al sinds de vorige ronde.
+
+Vijf beantwoorde vragen:
+
+1. Klikbaar bij gaten: zo gebouwd, geen wijziging.
+2. **Tabvolgorde goedkeurkaart.** Omgebouwd. De markup staat weer in de
+   desktopvolgorde (Bekijken, Correctie vragen, Goedkeuren); op 590px en smaller
+   verhuist `ordenGoedkeurActies()` de knoppen in de DOM naar Goedkeuren,
+   Correctie vragen, Bekijken, ook bij het draaien of verbreden van het scherm.
+   Alle CSS `order` is weg. [SKIN-H-035] toetst nu ook op desktop dat DOM en
+   beeld gelijk lopen, en dat de volgorde terugspringt bij smal.
+3. 0/8/9 per dag: zo gebouwd, geen wijziging.
+4. Maandpijl alleen in de Modern-pil: hoort bij de geparkeerde branch.
+5. **iOS-touch-handler.** Toegevoegd: een lege, passieve touchstart-listener op
+   `document`. [SKIN-H-039] registreert de listeners vóór app.js laadt en toetst
+   dat hij er is en passief is.
+
+Tegenproeven gedaan door de verwachting in de test te verdraaien, zonder
+productiecode te wijzigen: DASH-H-033, SKIN-H-035 en SKIN-H-039 vielen alle drie om.
+
+## Sync history
 
 ### Ronde 14 sep (tweede) — vervangt de zip-ronde van eerder vandaag
 Zeven punten in `OPDRACHT.md`. Stand per punt aan de repo-kant:
@@ -72,8 +127,6 @@ zichtbaar deel van 300px en toetst beide kanten.
 Bijvangst die bij dat iOS-punt hoort en nog openstaat: iOS Safari zet `:active`
 alleen als er een touchstart-luisteraar hangt. De indrukgloed (glanslaag 5) is op
 een echte iPhone daardoor waarschijnlijk onzichtbaar.
-
-## Sync history
 
 ### Ronde 14 sep — aangeleverd als zip, niet via links
 date: 2026-09-14T02:35:00Z

@@ -244,6 +244,14 @@ Feature: Dashboard en open werkvoorraad
     And verdwijnt de waarschuwing zodra alles is ingevuld
 
   @happy
+  Scenario: [DASH-H-033] de verloopstappen in Klassiek tonen ✓ en • in de bol, leesbaar in licht en donker
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given dashboard en open werkvoorraad is voorbereid
+    When de flow voor DASH-H-033 wordt uitgevoerd
+    Then heeft de huidige stap een • en een wachtende stap geen teken
+
+  @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 1

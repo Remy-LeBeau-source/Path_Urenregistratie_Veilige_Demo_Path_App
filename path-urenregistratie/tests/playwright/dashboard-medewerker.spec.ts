@@ -1622,3 +1622,65 @@ test('[DASH-H-032] "Hele maand" noemt de ontbrekende werkdagen bij naam, inclusi
     await herstelUrenstaat();
   }
 });
+
+// Opdracht 14 sep (Klassiek eerst): de vijf verloopstappen krijgen het teken uit
+// de referentie in hun bol -- ✓ voor af, • voor de huidige stap, niets voor
+// wachtend. DESIGN-BESLUITEN "Contrast op mint en amber": een teken op mint staat
+// in navy, nooit wit (wit op #3abd9d haalt 2,35:1, onleesbaar). De case meet het
+// contrast in licht én donker, want een versie die alleen in licht klopt is de
+// fout die hier eerder in de referentie zat.
+test('[DASH-H-033] de verloopstappen in Klassiek tonen ✓ en • in de bol, leesbaar in licht en donker', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  const lijst = page.locator('#employee-status-keten-list');
+  await expect(lijst.locator('[data-keten-step]')).toHaveCount(5);
+
+  await test.step('Then heeft de huidige stap een • en een wachtende stap geen teken', async () => {
+    await expect(lijst.locator('li.is-nu .keten-bol')).toHaveText('•');
+    const wachtend = lijst.locator('li.is-wacht .keten-bol');
+    expect(await wachtend.count(), 'de lopende maand hoort minstens één wachtende stap te hebben').toBeGreaterThan(0);
+    for (const tekst of await wachtend.allTextContents()) expect(tekst).toBe('');
+    await expect(lijst.locator('.keten-bol').first()).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  // Een afgeronde stap bestaat in de lopende demomaand niet. Daarom bouwt de
+  // case de lijst met dezelfde bouwer die het dashboard en Mijn maanden
+  // gebruiken, en meet in dezelfde evaluate -- een serversync tussendoor zou de
+  // lijst anders al opnieuw getekend kunnen hebben.
+  const meet = (thema: string) => page.evaluate((themaNaam) => {
+    document.documentElement.setAttribute('data-theme', themaNaam);
+    const runtime = window as unknown as { statusKetenItemsHtml: (s: unknown[]) => string };
+    const el = document.querySelector('#employee-status-keten-list')!;
+    el.innerHTML = runtime.statusKetenItemsHtml([
+      { key: 'fill', titel: 'Uren ingevuld', detail: 'Compleet', stand: 'af' },
+      { key: 'submit', titel: 'Maand ingediend', detail: 'Klaar om in te dienen', stand: 'nu' },
+      { key: 'review', titel: 'Uren goedgekeurd', detail: 'Volgt', stand: 'wacht' },
+    ]);
+    const rgb = (v: string) => (v.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+    const lum = (c: number[]) => {
+      const k = c.map(v => { const x = v / 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; });
+      return 0.2126 * k[0] + 0.7152 * k[1] + 0.0722 * k[2];
+    };
+    const contrast = (sel: string) => {
+      const bol = el.querySelector(sel) as HTMLElement;
+      const cs = getComputedStyle(bol);
+      const a = lum(rgb(cs.color)); const b = lum(rgb(cs.backgroundColor));
+      return { teken: bol.textContent, ratio: (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05) };
+    };
+    return { af: contrast('li.is-af .keten-bol'), nu: contrast('li.is-nu .keten-bol') };
+  }, thema);
+
+  for (const thema of ['light', 'dark']) {
+    await test.step(`And is het teken leesbaar op zijn bol in ${thema}`, async () => {
+      const stand = await meet(thema);
+      expect(stand.af.teken, 'een afgeronde stap hoort een vinkje te tonen').toBe('✓');
+      expect(stand.nu.teken).toBe('•');
+      // 4,5:1 zoals voor tekst: het teken is de enige drager van de stand in de bol.
+      expect(stand.af.ratio, `✓ op mint in ${thema}`).toBeGreaterThanOrEqual(4.5);
+      expect(stand.nu.ratio, `• op de huidige bol in ${thema}`).toBeGreaterThanOrEqual(4.5);
+    });
+  }
+  await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
+});
