@@ -231,7 +231,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 548 Playwri
 - [DASH-H-034] de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 32
 - [DASH-H-035] Mijn uren op desktop toont alleen Ma–Vr, de datum boven elk veld, 0/8/9 eronder en het weektotaal rechts — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
 - [DASH-N-031] de volgende actie is één zin zonder aangeplakte maand, en de maand staat in de regel eronder — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
-- [DASH-H-036] Vandaag gebruikt in Klassiek de ene kopkaart op desktop en de Wild-opbouw op telefoon — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 44
+- [DASH-H-036] Vandaag gebruikt in Klassiek de ene kopkaart op desktop en de Wild-opbouw op telefoon — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 45
 - [DASH-H-037] Vandaag ververst de urenregel in de kopkaart meteen na ureninvoer en na terugnavigeren — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 8
 - [DASH-H-038] Eerdere maanden in Vandaag opent per maand de juiste route, ook voor een correctie, en blijft leesbaar in donker — Techniek: Toestandsovergang · Assertions: 17
 - [DASH-H-039] het verloop in Vandaag volgt de volgorderegel en is gelijk aan de stappen in Modern — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
@@ -245,7 +245,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 548 Playwri
 - [DASH-H-045] de tabbalk van de medewerker heeft Vandaag · Mijn uren · Maanden · Berichten, en Maanden opent Mijn maanden — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 21
 - [DASH-H-046] op telefoon zweeft "Andere rol kiezen" niet over de inhoud; de actie staat in de topbalk — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbalk, en Vandaag begint met de begroeting — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 25
-- [DASH-H-048] het maandspoor heeft per kalenderdag een streep en de weken zijn zo breed als hun dagen, en ze leiden naar die week — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 19
+- [DASH-H-048] de kop toont de maand als vakjes per week, en een dagvakje opent Mijn uren op die dag — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 19
 - [DASH-H-049] licht Klassiek heeft bij de medewerker één vast veld over de pagina en een doorschijnende menubalk — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
 - [DASH-H-050] zodra de laatste lege week gevuld is, staat Maand indienen ook in de weekweergave — Techniek: Toestandsovergang · Assertions: 7
 - [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1

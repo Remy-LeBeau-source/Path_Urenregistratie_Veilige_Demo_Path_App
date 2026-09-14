@@ -6227,6 +6227,7 @@ function vandaagKopWaarden(record, employee, period) {
       return {
         nummer: w.nummer,
         wi: w.wi,
+        dagnummers: w.dagen.map(d => d.dag),
         groei: Math.max(1, w.dagen.length),
         bereik: eerste + "–" + laatste + " " + maandKort,
         stand: dicht ? (record.timesheetStatus === "approved" ? "Goedgekeurd" : "Ingediend") : werkdagen.length === 0 ? "Vrij" : klaar ? "Compleet" : (werkdagen.length - vol) + " open",
@@ -6236,29 +6237,33 @@ function vandaagKopWaarden(record, employee, period) {
     werk,
     open,
     dagWoord: open === 1 ? "dag open" : "dagen open",
-    noemer: open + " van " + werk + " werkdagen",
+    noemer: "van " + werk + " werkdagen",
     uren: hoursFormat.format(totalEntries(record.entries) + Number(record.leave || 0) + Number(record.sick || 0)) + " van " + hoursFormat.format(defaultContractHours(employee, period.key)) + " uur",
     standaardDatum: period.label,
-    standaardTekst: "Elke streep is een dag — beweeg erover",
-    standaardTekstTelefoon: "Elke streep is een dag"
+    standaardTekst: "Elke dag is een vakje — houd je muis erboven",
+    standaardTekstTelefoon: "Elke dag is een vakje"
   };
 }
 
-// De streepjes en weekkaarten als HTML. Hoogte, kleur en dikte uit kopVals
-// (gui r551-563): vrij 8px lijnkleur, gevuld 18px mint met gloed, leeg 26px
-// amber met de puls "aandacht".
-function vandaagSpoorHtml(kop) {
-  return kop.dagen.map(d => {
-    const soort = d.vrij ? "vrij" : d.gevuld ? "gevuld" : "leeg";
-    return '<span class="vd-streep is-' + soort + '" title="' + escapeHtml(d.titel) + '" data-vd-dag="' + d.dag + '" data-vd-week="' + d.wi + '" data-vd-dagindex="' + d.di + '" data-vd-wijs="' + escapeHtml(d.wijsTekst) + '">'
-      + '<span style="animation-delay:' + (d.dag * 22) + 'ms"></span></span>';
-  }).join("");
+// Kop 5c (gui r221-237 en kopVals r592-613): per week een vlak met een vakje per
+// dag. Kleur uit de stand: mint gevuld, amber leeg (ademend, eigen duur en eigen
+// start per dag), grijs en laag voor weekend of vrij. Een vakje opent Mijn uren
+// met de cursor in het vak van die dag, een weekvlak die week.
+function vandaagDagvakHtml(d) {
+  const soort = d.vrij ? "vrij" : d.gevuld ? "gevuld" : "leeg";
+  const beweging = soort === "leeg"
+    ? "animation: vd-dag-rijzen .5s cubic-bezier(.34,1.56,.64,1) both, vd-dag-adem " + (3.2 + (d.dag % 5) * .55).toFixed(2) + "s ease-in-out infinite; animation-delay: " + (d.dag * 34) + "ms;"
+    : "animation: vd-dag-rijzen .5s cubic-bezier(.34,1.56,.64,1) both; animation-delay: " + (d.dag * 34) + "ms;";
+  return '<button type="button" class="vd-dagvak is-' + soort + '" title="' + escapeHtml(d.titel) + '" aria-label="' + escapeHtml(d.titel) + '" data-vd-dag="' + d.dag + '" data-vd-week="' + d.wi + '"'
+    + (d.vrij ? '' : ' data-vd-dagindex="' + d.di + '"') + ' data-vd-wijs="' + escapeHtml(d.wijsTekst) + '" style="' + beweging + '">' + d.dag + '</button>';
 }
-function vandaagWekenHtml(kop, klasse) {
-  return kop.weken.map(w =>
-    '<button type="button" class="' + klasse + ' is-' + w.soort + '" data-vd-week="' + w.wi + '" style="flex:' + w.groei + ' 1 0">'
-      + '<strong>Week ' + w.nummer + '</strong><small>' + escapeHtml(w.bereik) + '</small><small class="vd-weekstand">' + escapeHtml(w.stand) + '</small></button>'
-  ).join("");
+function vandaagWekenHtml(kop, telefoon) {
+  return kop.weken.map(w => {
+    const dagen = kop.dagen.filter(d => w.dagnummers.includes(d.dag)).map(vandaagDagvakHtml).join("");
+    return telefoon
+      ? '<div class="vd-tel-weekblok is-' + w.soort + '" data-vd-week="' + w.wi + '"><div class="vd-tel-weekblok-kop"><strong>Week ' + w.nummer + '</strong><small>' + escapeHtml(w.stand) + '</small></div><div class="vd-tel-weekblok-dagen">' + dagen + '</div></div>'
+      : '<div class="vd-weekblok is-' + w.soort + '" data-vd-week="' + w.wi + '" style="flex:' + w.groei + ' 1 0"><div class="vd-weekblok-kop"><strong>Week ' + w.nummer + '</strong><small>' + escapeHtml(w.stand) + '</small></div><div class="vd-weekblok-dagen">' + dagen + '</div></div>';
+  }).join("");
 }
 
 // De klanturenstaatkaart staat op desktop in Vandaag, onder de hero (referentie
@@ -6288,7 +6293,7 @@ function plaatsVandaagKlantKaart() {
 // De regel boven het spoor volgt de muis (gui r213-218): datum en wat er die dag
 // staat, en terug naar de maand zodra de muis het spoor verlaat.
 document.addEventListener("mouseover", event => {
-  const streep = event.target.closest?.("#vd-spoor [data-vd-dag]");
+  const streep = event.target.closest?.("#vd-kopweken [data-vd-dag]");
   if (!streep) return;
   const datum = document.querySelector("#vd-wijs-datum");
   const tekst = document.querySelector("#vd-wijs-tekst");
@@ -6299,13 +6304,13 @@ document.addEventListener("mouseover", event => {
   }
 });
 document.addEventListener("mouseout", event => {
-  const spoor = event.target.closest?.("#vd-spoor");
+  const spoor = event.target.closest?.("#vd-kopweken");
   if (!spoor || spoor.contains(event.relatedTarget)) return;
   const periode = currentPeriod();
   const datum = document.querySelector("#vd-wijs-datum");
   const tekst = document.querySelector("#vd-wijs-tekst");
   if (datum) datum.textContent = periode.label;
-  if (tekst) { tekst.textContent = "Elke streep is een dag — beweeg erover"; tekst.classList.remove("is-leeg"); }
+  if (tekst) { tekst.textContent = "Elke dag is een vakje — houd je muis erboven"; tekst.classList.remove("is-leeg"); }
 });
 if (VANDAAG_BREED && typeof VANDAAG_BREED.addEventListener === "function") {
   VANDAAG_BREED.addEventListener("change", plaatsVandaagKlantKaart);
@@ -6342,8 +6347,7 @@ function renderVandaag(record, employee, period) {
   zet("#vd-wijs-datum", kop.standaardDatum);
   zet("#vd-wijs-tekst", kop.standaardTekst);
   document.querySelector("#vd-wijs-tekst")?.classList.remove("is-leeg");
-  document.querySelector("#vd-spoor").innerHTML = vandaagSpoorHtml(kop);
-  document.querySelector("#vd-kopweken").innerHTML = vandaagWekenHtml(kop, "vd-weekkaart");
+  document.querySelector("#vd-kopweken").innerHTML = vandaagWekenHtml(kop, false);
 
   // Eerdere maanden, gui r238-247 en r750-753: de open maanden behalve de
   // gekozen, oudste eerst. Navy omlijnd; amber is voorbehouden aan lege dagen.
@@ -6442,8 +6446,7 @@ function renderVandaag(record, employee, period) {
   zet("#vdt-wijs-tekst", kop.standaardTekstTelefoon);
   zet("#vdt-kop-open", String(kop.open));
   zet("#vdt-kop-dagwoord", kop.dagWoord);
-  document.querySelector("#vdt-spoor").innerHTML = vandaagSpoorHtml(kop);
-  document.querySelector("#vdt-kopweken").innerHTML = vandaagWekenHtml(kop, "vd-tel-weekkaart");
+  document.querySelector("#vdt-kopweken").innerHTML = vandaagWekenHtml(kop, true);
   const mailknopTel = document.querySelector("#vdt-mailknop");
   if (mailknopTel) mailknopTel.hidden = document.querySelector("#vd-mailknop").hidden;
   // Verloop als lijst, r150-162, met de huidige stap rechts in de kop (r153).
@@ -14489,7 +14492,7 @@ function toonInstallatieAanbod() {
   }
   // Een streepje of weekkaart in de kop opent Mijn uren op die week (gui r223,
   // r231: view "uren", actief = die week, geen maandmodus).
-  const vandaagWeek = event.target.closest("#vd-spoor [data-vd-week], #vd-kopweken [data-vd-week], #vdt-kopweken [data-vd-week]");
+  const vandaagWeek = event.target.closest("#vd-kopweken [data-vd-week], #vdt-kopweken [data-vd-week]");
   if (vandaagWeek) {
     state.hoursWeekScope = "week-" + Number(vandaagWeek.dataset.vdWeek || 0);
     state.hoursWeekScopeTouched = true;

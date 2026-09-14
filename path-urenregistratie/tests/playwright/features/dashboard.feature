@@ -258,7 +258,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-036] Vandaag gebruikt in Klassiek de ene kopkaart op desktop en de Wild-opbouw op telefoon
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 44
+    # Aantoonbare Playwright-assertions in deze case: 45
     Given dashboard en open werkvoorraad is voorbereid
     When de flow voor DASH-H-036 wordt uitgevoerd
     Then staat Vandaag er in Klassiek, en zijn de oude blokken en de klanturenstaatkaart verhuisd of weg
@@ -388,15 +388,15 @@ Feature: Dashboard en open werkvoorraad
     And houdt beheer de knoppen in zijn eigen topbalk
 
   @happy
-  Scenario: [DASH-H-048] het maandspoor heeft per kalenderdag een streep en de weken zijn zo breed als hun dagen, en ze leiden naar die week
+  Scenario: [DASH-H-048] de kop toont de maand als vakjes per week, en een dagvakje opent Mijn uren op die dag
     # Testtechniek: End-to-end use-case + visuele contractasserties
     # Aantoonbare Playwright-assertions in deze case: 19
     Given dashboard en open werkvoorraad is voorbereid
-    Then heeft het spoor per dag een streep met de stand uit dezelfde regel als Hele maand
-    And zijn de weken samen de hele maand, elk zo breed als zijn dagen, met bereik en stand
-    And zegt de regel boven het spoor wat er op een dag staat zolang de muis erop staat
-    When de medewerker op het streepje van een werkdag tikt, then staat de cursor in het urenvak van precies die dag
-    When de medewerker op de laatste week tikt, then opent Mijn uren op die week
+    Then heeft elke kalenderdag een vakje met de stand uit dezelfde regel als Mijn uren
+    And zijn de weekvlakken samen de hele maand, elk zo breed als zijn dagen, met weeknummer en stand
+    And zegt de regel boven de vakjes wat er op een dag staat zolang de muis erop staat
+    When de medewerker op het vakje van een werkdag tikt, then staat de cursor in het urenvak van precies die dag
+    When de medewerker op een weekvlak naast de vakjes tikt, then opent Mijn uren op die week
 
   @happy
   Scenario: [DASH-H-049] licht Klassiek heeft bij de medewerker één vast veld over de pagina en een doorschijnende menubalk

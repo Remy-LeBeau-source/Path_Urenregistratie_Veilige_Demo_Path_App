@@ -4154,9 +4154,10 @@ html:not([data-skin="new"]) #vandaag {
   /* r12-28 */
   --navy: #0d1b38; --mint: #3abd9d; --mint-tekst: #037f63; --mint-dark-tekst: #037f63;
   --ink: #172332; --muted: #485651; --line: #bfcec8; --line-zacht: #d0dcd6;
-  /* Het palet "salie" dat de referentie tijdens het draaien over :root zet
-     (gui r501-514, pas()): dát is wat Gio ziet, niet de :root-waarden erboven. */
-  --surface: #eaf2ee; --surface-muted: #d5e0da; --vlak: #eaf2ee;
+  /* Doorschijnend, zodat het veldverloop door de kaarten loopt (Gio 14 sep, export
+     16:10; gui r14). Niet het dichte palet "salie" dat pas() nog over :root zet. */
+  --surface: rgba(255,255,255,.78); --surface-muted: rgba(255,255,255,.46); --vlak: rgba(255,255,255,.78);
+  --weekvlak: rgba(255,255,255,.55); --dag-leeg: rgba(232,176,106,.5); --dag-leeg-ink: #8a5510;
   --warning: #bb7623; --warning-bg: #fff5e8; --warning-tekst: #a5600d; --warning-rand: #edc58f;
   --hero-ring-leeg: rgba(16,34,53,.1);
   --kaart-ring: #ffffff; --kaart-glans: rgba(255,255,255,.9); --halo: rgba(58,189,157,.2);
@@ -4172,6 +4173,7 @@ html:not([data-skin="new"]) #vandaag {
   font-family: var(--sans);
 }
 html[data-theme="dark"]:not([data-skin="new"]) #vandaag {
+  --weekvlak: rgba(255,255,255,.05); --dag-leeg: #e8b06a; --dag-leeg-ink: #3a2205;
   /* r30-45; de pilkleuren uit r619 */
   --ink: #dde6ea; --muted: #93a2ac; --line: #22323d; --line-zacht: #1d2c36;
   --surface: #101c26; --surface-muted: #16242f; --vlak: #101c26;
@@ -4319,9 +4321,10 @@ html[data-theme="dark"]:not([data-skin="new"]) #vandaag {
 html:not([data-skin="new"]) #vd-tel {
   /* r13-31 */
   --navy: #0d1b38; --mint: #3abd9d; --mint-tekst: #037f63; --mint-dark-tekst: #037f63;
-  /* Palet "salie", door de referentie tijdens het draaien gezet (wild r509-522). */
-  --ink: #16241f; --muted: #485651; --line: #bfcec8; --line-zacht: #d0dcd6;
-  --surface: #eaf2ee; --surface-muted: #d5e0da; --vlak: #eaf2ee;
+  /* wild r13-18 (export 16:10), doorschijnend zodat het veld doorloopt. */
+  --ink: #16241f; --muted: #5c6d66; --line: rgba(22,36,31,.09); --line-zacht: rgba(22,36,31,.05);
+  --surface: rgba(255,255,255,.66); --surface-muted: rgba(22,52,42,.045); --vlak: rgba(255,255,255,.66);
+  --weekvlak: rgba(255,255,255,.55); --dag-leeg: rgba(232,176,106,.5); --dag-leeg-ink: #8a5510;
   --display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --getal: #12332a; --ring-leeg: 22,36,31,.1;
   --warning: #bb7623; --warning-bg: #fff5e8; --warning-tekst: #a5600d; --warning-rand: #edc58f;
@@ -4333,6 +4336,7 @@ html:not([data-skin="new"]) #vd-tel {
   font-family: var(--sans);
 }
 html[data-theme="dark"]:not([data-skin="new"]) #vd-tel {
+  --weekvlak: rgba(255,255,255,.05); --dag-leeg: #e8b06a; --dag-leeg-ink: #3a2205;
   /* r33-47 */
   --ink: #dde6ea; --muted: #93a2ac; --line: #22323d; --line-zacht: #1d2c36;
   --surface: rgba(255,255,255,.05); --surface-muted: rgba(255,255,255,.055); --vlak: rgba(255,255,255,.05);
@@ -4508,8 +4512,7 @@ html:not([data-skin="new"]) body[data-role="employee"] .topbar-title { display: 
    Desktop: gui r14 en r26 (--bg #cfe1d8). Telefoon: wild r6 en r20 (--bg #dfe9e4).
    ======================================================================== */
 html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] {
-  /* --bg uit het palet "salie"; het veldverloop ligt eroverheen. */
-  background-color: #dde7e2;
+  background-color: #cfe1d8;
   background-image: linear-gradient(176deg, #a9cbbb 0%, #bfd8cc 22%, #d5e7df 52%, #e8f2ed 78%, #f7fbf9 100%);
   background-attachment: fixed;
   background-size: cover;
@@ -4687,7 +4690,7 @@ html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] { --na
 
 @media (max-width: 720px) {
   html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] {
-    background-color: #dde7e2;
+    background-color: #dfe9e4;
     background-image: linear-gradient(176deg, #c4dbd1 0%, #d6e8e0 26%, #e9f3ef 58%, #f8fcfa 82%, #ffffff 100%);
   }
 }
@@ -4836,7 +4839,7 @@ html:not([data-skin="new"]) body[data-role="employee"] .testbalk-label { font-si
 
 /* ===========================================================================
    Mijn uren in Klassiek, 1-op-1 naar medewerker-gui.bron.txt r319-371 met het
-   palet "salie" (Gio 14 sep: "op zet anders bij design"). Eén kaart: weekkeuze
+   doorschijnende kaarten (Gio 14 sep: "op zet anders bij design"). Eén kaart: weekkeuze
    met totaal, de tabel en een voetbalk met één uitlegregel en de knoppen. Geen
    opdrachtbalk, geen oranje blok met dagchips, geen maandtotaalregel, alles één
    kolom. De samenvatting alleen als verlof en ziekte hier ingevuld kunnen worden.
@@ -4845,7 +4848,7 @@ html:not([data-skin="new"]) body[data-role="employee"] #hours-missing-days { dis
 html:not([data-skin="new"]) body[data-role="employee"] .hours-table tfoot { display: none; }
 @media (min-width: 821px) {
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet {
-    --surface: #eaf2ee; --surface-muted: #d5e0da; --line: #bfcec8; --line-zacht: #d0dcd6; --muted: #485651; --ink: #172332;
+    --surface: rgba(255,255,255,.78); --surface-muted: rgba(255,255,255,.46); --line: #bfcec8; --line-zacht: #d0dcd6; --muted: #485651; --ink: #172332;
     --veld-vlak: #fff; --veld-rand: rgba(22,52,42,.22); --kaart-glans: rgba(255,255,255,.9);
   }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .view-heading p,
@@ -4910,3 +4913,60 @@ html:not([data-skin="new"]) body[data-role="employee"] .hours-table tfoot { disp
 @media (min-width: 821px) {
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .outside-month-mark { width: auto; height: auto; margin: 0; background: transparent; color: var(--line); }
 }
+
+/* ===========================================================================
+   Kop variant 5c (DESIGN-BESLUITEN "Kop van het dashboard: weekblokjes", 14 sep).
+   Vervangt het maandspoor. Per week een vlak (--weekvlak, radius 18px) met
+   weeknummer en stand, daaronder één vakje per dag: mint als gevuld, amber
+   (--dag-leeg) als leeg en zacht ademend, laag en grijs voor weekend of vrij.
+   ======================================================================== */
+@keyframes vd-dag-adem { 0%, 100% { opacity: 1; } 50% { opacity: .78; } }
+@keyframes vd-dag-rijzen { from { transform: scaleY(.06); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
+#vandaag .vd-kopweken { position: relative; display: flex; flex-wrap: nowrap; gap: 9px; margin-top: 10px; }
+#vandaag .vd-weekblok { display: flex; flex-direction: column; gap: 8px; min-width: 0; border-radius: 18px; background: var(--weekvlak); padding: 11px 11px 12px; box-shadow: inset 0 1px 0 var(--kaart-glans); cursor: pointer; }
+#vandaag .vd-weekblok-kop { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 7px; min-width: 0; }
+#vandaag .vd-weekblok-kop strong { flex: 0 1 auto; min-width: 0; color: var(--ink); font-size: 10.5px; font-weight: 800; letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#vandaag .vd-weekblok-kop small { flex: 0 0 auto; color: var(--warning-tekst); font-size: 9.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+#vandaag .vd-weekblok.is-compleet .vd-weekblok-kop small { color: var(--mint-tekst); }
+#vandaag .vd-weekblok.is-dicht .vd-weekblok-kop small { color: var(--muted); }
+#vandaag .vd-weekblok-dagen { display: flex; align-items: flex-end; gap: 4px; margin-top: auto; }
+.vd-dagvak { display: grid; flex: 1; height: 38px; place-items: center; min-width: 0; border: 0; border-radius: 9px; background: var(--dag-leeg); color: var(--dag-leeg-ink); cursor: pointer; font: inherit; font-size: 9.5px; font-weight: 800; font-variant-numeric: tabular-nums; padding: 0; transform-origin: bottom; transition: background .4s ease, transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s; }
+.vd-dagvak.is-gevuld { background: var(--mint); color: var(--navy); }
+.vd-dagvak.is-vrij { height: 26px; background: var(--surface-muted); color: var(--muted); }
+#vandaag .vd-dagvak:hover { transform: translateY(-3px); box-shadow: 0 6px 14px -6px rgba(16,34,53,.5); }
+
+/* Telefoon, wild r163-180: één regel per week, weeknummer en stand links (56px). */
+#vd-tel .vd-tel-weken { display: flex; flex-direction: column; gap: 7px; margin-top: 11px; }
+#vd-tel .vd-tel-weekblok { display: flex; align-items: center; gap: 10px; border-radius: 14px; background: var(--weekvlak); padding: 8px 10px; cursor: pointer; }
+#vd-tel .vd-tel-weekblok-kop { display: grid; flex: 0 0 auto; gap: 1px; width: 56px; }
+#vd-tel .vd-tel-weekblok-kop strong { color: var(--ink); font-size: 10.5px; font-weight: 800; white-space: nowrap; }
+#vd-tel .vd-tel-weekblok-kop small { color: var(--warning-tekst); font-size: 9px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; }
+#vd-tel .vd-tel-weekblok.is-compleet .vd-tel-weekblok-kop small { color: var(--mint-tekst); }
+#vd-tel .vd-tel-weekblok.is-dicht .vd-tel-weekblok-kop small { color: var(--muted); }
+#vd-tel .vd-tel-weekblok-dagen { display: flex; flex: 1; align-items: flex-end; gap: 3px; min-width: 0; }
+#vd-tel .vd-dagvak { border-radius: 8px; font-size: 9px; }
+#vd-tel .vd-dagvak.is-vrij { height: 26px; }
+
+/* Het maandspoor (10a) is vervallen. */
+#vandaag .vd-spoorvak, #vd-tel .vd-tel-spoorvak { display: none; }
+
+@media (max-width: 780px) {
+  #vandaag .vd-kopweken { flex-wrap: wrap; }
+  #vandaag .vd-weekblok { flex: 1 1 46% !important; }
+}
+/* Te klein voor de 44px-regel: op telefoon is het weekvlak de knop (5c). */
+@media (max-width: 820px) {
+  .vd-dagvak { pointer-events: none; cursor: default; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vd-dagvak { animation: none !important; transition: none; }
+}
+
+/* Voettekst (Gio 14 sep: "links beneden en bij elkaar"): copyright, maker en
+   versie samen links, binnen dezelfde paginabreedte als de inhoud. */
+html:not([data-skin="new"]) body[data-role="employee"] .app-footer {
+  max-width: var(--pagina);
+  margin-inline: auto;
+  justify-content: flex-start;
+}
+html:not([data-skin="new"]) body[data-role="employee"] .app-footer .app-footer-version { margin-left: 0; }

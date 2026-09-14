@@ -1830,7 +1830,7 @@ test('[DASH-H-036] Vandaag gebruikt in Klassiek de ene kopkaart op desktop en de
     });
     expect(stand.open).toBe(String(stand.openDagen));
     expect(stand.woord).toBe(stand.openDagen === 1 ? 'dag open' : 'dagen open');
-    expect(stand.noemer).toBe(stand.openDagen + ' van ' + stand.werkdagen + ' werkdagen');
+    expect(stand.noemer).toBe('van ' + stand.werkdagen + ' werkdagen');
     if (stand.openDagen > 0) expect(stand.fillStand, 'met open dagen hoort "Uren ingevuld" de huidige stap te zijn').toContain('is-nu');
     await expect(page.locator('#vd-kopkaart')).not.toContainText('in te vullen.');
     await expect(page.locator('#vd-kopkaart')).not.toContainText(/Jij bent aan zet/i);
@@ -1890,7 +1890,10 @@ test('[DASH-H-036] Vandaag gebruikt in Klassiek de ene kopkaart op desktop en de
   });
 
   await test.step('And opent ook een mobiele week de juiste urenweek, met de omslag exact tussen 720 en 721px', async () => {
-    const laatste = page.locator('#vdt-kopweken .vd-tel-weekkaart').last();
+    const laatste = page.locator('#vdt-kopweken .vd-tel-weekblok').last();
+    // 5c: op telefoon zijn de dagvakjes te klein voor 44px en dus niet aanklikbaar;
+    // het weekvlak is de knop.
+    expect(await laatste.locator('.vd-dagvak').first().evaluate(el => getComputedStyle(el).pointerEvents)).toBe('none');
     const wi = await laatste.getAttribute('data-vd-week');
     await laatste.click();
     await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
@@ -2744,11 +2747,12 @@ test('[DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbal
   });
 });
 
-test('[DASH-H-048] het maandspoor heeft per kalenderdag een streep en de weken zijn zo breed als hun dagen, en ze leiden naar die week', async ({ page }) => {
-  // DESIGN-BESLUITEN "Kop van het dashboard: maandspoor" (14 sep): per
-  // kalenderdag één streep, mint als de dag gevuld is, amber als hij leeg is,
-  // een stipje voor het weekend. De weken als kaarten met flex:<dagen> 1 0,
-  // getint naar hun stand. Een streep of week opent Mijn uren op die week.
+test('[DASH-H-048] de kop toont de maand als vakjes per week, en een dagvakje opent Mijn uren op die dag', async ({ page }) => {
+  // DESIGN-BESLUITEN "Kop van het dashboard: weekblokjes" (variant 5c, 14 sep):
+  // per week een vlak met weeknummer en stand, per kalenderdag een vakje; mint
+  // als gevuld, amber als leeg, laag voor weekend. Weekvlakken zo breed als hun
+  // dagen. Een dagvakje opent Mijn uren met de cursor in dat vak (Gio 14 sep),
+  // een weekvlak opent die week.
   test.setTimeout(120_000);
   await page.setViewportSize({ width: 1280, height: 900 });
   const loginPage = new LoginPage(page);
@@ -2757,7 +2761,7 @@ test('[DASH-H-048] het maandspoor heeft per kalenderdag een streep en de weken z
   await expect(page.locator('#vd-kopkaart')).toBeVisible();
   await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
 
-  await test.step('Then heeft het spoor per dag een streep met de stand uit dezelfde regel als Hele maand', async () => {
+  await test.step('Then heeft elke kalenderdag een vakje met de stand uit dezelfde regel als Mijn uren', async () => {
     const stand = await page.evaluate(() => {
       const w = window as unknown as {
         currentEmployee: () => { id: number }; currentPeriod: () => { key: string; year: number; monthIndex: number; weekRows: Array<{ days: Array<{ day: number } | null> }> };
@@ -2774,58 +2778,60 @@ test('[DASH-H-048] het maandspoor heeft per kalenderdag een streep en de weken z
         const wi = p.weekRows.findIndex(r => r.days[di]?.day === dag);
         verwacht.push(w.werkdagTeltAlsIngevuld(record, wi, di) ? 'gevuld' : 'leeg');
       }
-      const getoond = Array.from(document.querySelectorAll('#vd-spoor .vd-streep')).map(el => el.classList.contains('is-vrij') ? 'vrij' : el.classList.contains('is-gevuld') ? 'gevuld' : 'leeg');
-      const leegHoogte = getComputedStyle(document.querySelector('#vd-spoor .vd-streep.is-leeg > span') || document.body).height;
-      const gevuldHoogte = getComputedStyle(document.querySelector('#vd-spoor .vd-streep.is-gevuld > span') || document.body).height;
-      return { verwacht, getoond, leegHoogte, gevuldHoogte };
+      const vakken = Array.from(document.querySelectorAll('#vd-kopweken .vd-dagvak'));
+      return {
+        verwacht,
+        getoond: vakken.map(el => el.classList.contains('is-vrij') ? 'vrij' : el.classList.contains('is-gevuld') ? 'gevuld' : 'leeg'),
+        nummers: vakken.map(el => Number(el.textContent)),
+        hoogteLeeg: getComputedStyle(document.querySelector('#vd-kopweken .vd-dagvak.is-leeg') || document.body).height,
+        hoogteVrij: getComputedStyle(document.querySelector('#vd-kopweken .vd-dagvak.is-vrij') || document.body).height,
+      };
     });
     expect(stand.getoond).toEqual(stand.verwacht);
-    if (stand.verwacht.includes('leeg')) expect(stand.leegHoogte, 'een lege dag is 26px hoog').toBe('26px');
-    if (stand.verwacht.includes('gevuld')) expect(stand.gevuldHoogte, 'een gevulde dag is 18px hoog').toBe('18px');
+    expect(stand.nummers, 'elk vakje draagt zijn datum').toEqual(stand.verwacht.map((_, i) => i + 1));
+    if (stand.verwacht.includes('leeg')) expect(stand.hoogteLeeg).toBe('38px');
+    expect(stand.hoogteVrij, 'weekend is laag').toBe('26px');
   });
 
-  await test.step('And zijn de weken samen de hele maand, elk zo breed als zijn dagen, met bereik en stand', async () => {
-    const weken = await page.locator('#vd-kopweken .vd-weekkaart').evaluateAll(els => els.map(el => ({
-      groei: getComputedStyle(el).flexGrow,
-      tekst: (el.textContent || '').replace(/\s+/g, ' ').trim(),
-      soort: el.className,
+  await test.step('And zijn de weekvlakken samen de hele maand, elk zo breed als zijn dagen, met weeknummer en stand', async () => {
+    const weken = await page.locator('#vd-kopweken .vd-weekblok').evaluateAll(els => els.map(el => ({
+      groei: Number(getComputedStyle(el).flexGrow),
+      vakken: el.querySelectorAll('.vd-dagvak').length,
+      kop: (el.querySelector('.vd-weekblok-kop')?.textContent || '').replace(/\s+/g, ' ').trim(),
     })));
-    const dagen = await page.locator('#vd-spoor .vd-streep').count();
     expect(weken.length).toBeGreaterThan(3);
-    expect(weken.reduce((som, w) => som + Number(w.groei), 0), 'de weken samen horen alle dagen van de maand te dekken').toBe(dagen);
     for (const w of weken) {
-      expect(w.tekst).toMatch(/^Week \d+\d*[–-]\d+ [a-z]{3}(Compleet|\d+ open|Vrij|Ingediend|Goedgekeurd)$/);
-      if (/open$/.test(w.tekst)) expect(w.soort).toContain('is-open');
-      if (/Compleet$/.test(w.tekst)) expect(w.soort).toContain('is-compleet');
+      expect(w.groei, 'een weekvlak groeit met zijn aantal dagen').toBe(w.vakken);
+      expect(w.kop).toMatch(/^Week \d+ ?(Compleet|\d+ open|Vrij|Ingediend|Goedgekeurd)$/);
     }
+    await expect(page.locator('#vd-spoor')).toHaveCount(0);
   });
 
-  await test.step('And zegt de regel boven het spoor wat er op een dag staat zolang de muis erop staat', async () => {
-    await expect(page.locator('#vd-wijs-tekst')).toHaveText('Elke streep is een dag — beweeg erover');
-    const tweede = page.locator('#vd-spoor .vd-streep').nth(1);
+  await test.step('And zegt de regel boven de vakjes wat er op een dag staat zolang de muis erop staat', async () => {
+    await expect(page.locator('#vd-wijs-tekst')).toHaveText('Elke dag is een vakje — houd je muis erboven');
+    const tweede = page.locator('#vd-kopweken .vd-dagvak').nth(1);
     await tweede.hover();
     await expect(page.locator('#vd-wijs-datum')).toHaveText(/^2 [a-z]+$/);
     await expect(page.locator('#vd-wijs-tekst')).toHaveText(await tweede.getAttribute('data-vd-wijs') || '');
     await page.mouse.move(5, 5);
-    await expect(page.locator('#vd-wijs-tekst')).toHaveText('Elke streep is een dag — beweeg erover');
+    await expect(page.locator('#vd-wijs-tekst')).toHaveText('Elke dag is een vakje — houd je muis erboven');
   });
 
-  await test.step('When de medewerker op het streepje van een werkdag tikt, then staat de cursor in het urenvak van precies die dag', async () => {
-    // Gio 14 sep: een streepje is één dag, dus daar hoort je uit te komen.
-    const streep = page.locator('#vd-spoor .vd-streep[data-vd-dagindex]:not(.is-vrij)').nth(2);
-    const wi = await streep.getAttribute('data-vd-week');
-    const di = await streep.getAttribute('data-vd-dagindex');
-    await streep.click();
+  await test.step('When de medewerker op het vakje van een werkdag tikt, then staat de cursor in het urenvak van precies die dag', async () => {
+    const vak = page.locator('#vd-kopweken .vd-dagvak[data-vd-dagindex]').nth(2);
+    const wi = await vak.getAttribute('data-vd-week');
+    const di = await vak.getAttribute('data-vd-dagindex');
+    await vak.click();
     await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
     await expect(page.locator(`#hours-grid .hours-input[data-week-index="${wi}"][data-day-index="${di}"]`)).toBeFocused();
     await page.locator('button.nav-item[data-view="employee-dashboard"]:visible').first().click();
     await expect(page.locator('#vd-kopkaart')).toBeVisible();
   });
 
-  await test.step('When de medewerker op de laatste week tikt, then opent Mijn uren op die week', async () => {
-    const laatste = page.locator('#vd-kopweken .vd-weekkaart').last();
+  await test.step('When de medewerker op een weekvlak naast de vakjes tikt, then opent Mijn uren op die week', async () => {
+    const laatste = page.locator('#vd-kopweken .vd-weekblok').last();
     const wi = await laatste.getAttribute('data-vd-week');
-    await laatste.click();
+    await laatste.locator('.vd-weekblok-kop').click();
     await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
     expect(await page.evaluate(() => (0, eval)('state').hoursWeekScope)).toBe('week-' + wi);
   });
@@ -2848,8 +2854,8 @@ test('[DASH-H-049] licht Klassiek heeft bij de medewerker één vast veld over d
       return { kleur: s.backgroundColor, beeld: s.backgroundImage, vast: s.backgroundAttachment, balk: balk.backgroundColor, blur: balk.backdropFilter || (balk as unknown as Record<string, string>).webkitBackdropFilter };
     });
     expect(veld.vast).toBe('fixed');
-    // --bg uit het palet "salie" dat beide referenties tijdens het draaien zetten.
-    expect(veld.kleur).toBe('rgb(221, 231, 226)');
+    // --bg doorschijnend-veld (Gio 14 sep, export 16:10): desktop #cfe1d8, telefoon #dfe9e4.
+    expect(veld.kleur).toBe(breed ? 'rgb(207, 225, 216)' : 'rgb(223, 233, 228)');
     expect(veld.beeld).toContain(breed ? 'rgb(169, 203, 187)' : 'rgb(196, 219, 209)');
     expect(veld.balk).toBe('rgba(0, 0, 0, 0)');
     expect(veld.blur).toContain('blur(12px)');
@@ -2859,8 +2865,9 @@ test('[DASH-H-049] licht Klassiek heeft bij de medewerker één vast veld over d
     const kaart = page.locator('#vd-kopkaart:visible, #vdt-spoorkaart:visible').first();
     await expect(kaart).toBeVisible();
     expect(await kaart.evaluate(el => getComputedStyle(el).backgroundImage)).toBe('none');
-    // Dicht kaartvlak uit het palet "salie" (#eaf2ee), zoals Gio het ontwerp ziet.
-    expect(await kaart.evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(234, 242, 238)');
+    // Doorschijnend, zodat het vaste veld door de kaart loopt (Gio 14 sep): .78 op
+    // desktop (gui r14), .66 op telefoon (wild r18).
+    expect(await kaart.evaluate(el => getComputedStyle(el).backgroundColor)).toBe(breed ? 'rgba(255, 255, 255, 0.78)' : 'rgba(255, 255, 255, 0.66)');
   });
 
   await test.step('And blijft donker zoals het was: geen veldverloop', async () => {
