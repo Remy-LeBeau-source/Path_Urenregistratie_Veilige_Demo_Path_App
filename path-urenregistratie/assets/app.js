@@ -540,7 +540,11 @@ function freshState() {
         name: "Marc de Roon",
         email: "marc@example.invalid",
         active: true,
-        startDate: "2026-01-01",
+        // Gelijk aan employment_start_date op de server (database/
+        // seed-demo-data.sql). Stond op 2026-01-01; vóór de bootstrap-
+        // hydratatie liet setPeriod() daardoor maanden vóór de echte
+        // indiensttreding door. Zie [DASH-N-030].
+        startDate: "2026-05-01",
         notificationsEnabled: true,
         emailNotificationsEnabled: true,
         photo: "",
@@ -576,7 +580,7 @@ function freshState() {
         name: "Stasjo van Bakel",
         email: "stasjo@example.invalid",
         active: true,
-        startDate: "2026-01-01",
+        startDate: "2026-05-01", // gelijk aan de server, zie Marc hierboven en [DASH-N-030]
         notificationsEnabled: true,
         emailNotificationsEnabled: true,
         photo: "",
@@ -612,7 +616,7 @@ function freshState() {
         name: "Brian Hek",
         email: "brian@example.invalid",
         active: true,
-        startDate: "2026-01-01",
+        startDate: "2026-05-01", // gelijk aan de server, zie Marc hierboven en [DASH-N-030]
         notificationsEnabled: true,
         emailNotificationsEnabled: true,
         photo: "",

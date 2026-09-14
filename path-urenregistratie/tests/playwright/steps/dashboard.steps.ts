@@ -29,6 +29,9 @@ Then("zet ook de Mijn uren-tab zelf de maand terug op augustus, zonder via Dashb
 Given("de medewerker (in dienst sinds mei 2026) op de actuele kalendermaand staat");
 When("de medewerker probeert een maand vóór de startdatum te openen");
 Then("blijft de maand op augustus staan en verschijnt een duidelijke melding");
+Given("een ingelogde medewerker vóórdat de serverdata binnen is");
+When("de medewerker april 2026 kiest, een maand vóór zijn indiensttreding in mei");
+Then("wordt met Playwright-assertions bevestigd dat ook vóórdat de serverdata binnen is, opent een medewerker geen maand vóór zijn indiensttreding");
 Given("de medewerker is ingelogd en er bestaat lokaal een record van vóór de startdatum");
 When("de flow voor DASH-N-024 wordt uitgevoerd");
 Then("blijft april 2026 weg uit de historie, ook al heeft het record uren");

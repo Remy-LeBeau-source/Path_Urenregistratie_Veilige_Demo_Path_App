@@ -141,6 +141,7 @@
 | DASH-H-025 | ui | dashboard.feature | "Mijn maanden" toont naast de urenstatus ook de klanturenstaat-status per maand | Toestandsovergang | 7 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | "Mijn maanden" toont naast de urenstatus ook de klanturenstaat-status per maand | Happy | 15 | Actueel |
 | DASH-H-021 | ui | dashboard.feature | de medewerker keert zowel via Dashboard als via Mijn uren terug naar de actuele maand na een blik op een oudere maand | Beslissingstabel rollen en autorisatie | 10 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | de medewerker keert zowel via Dashboard als via Mijn uren terug naar de actuele maand na een blik op een oudere maand | Happy | 15 | Actueel |
 | DASH-N-023 | ui | dashboard.feature | een medewerker kan niet naar een maand vóór de eigen indiensttreding bladeren | Beslissingstabel rollen en autorisatie | 4 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | een medewerker kan niet naar een maand vóór de eigen indiensttreding bladeren | Negative | 15 | Actueel |
+| DASH-N-030 | ui | dashboard.feature | ook vóórdat de serverdata binnen is, opent een medewerker geen maand vóór zijn indiensttreding | Beslissingstabel rollen en autorisatie | 3 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | ook vóórdat de serverdata binnen is, opent een medewerker geen maand vóór zijn indiensttreding | Negative | 15 | Actueel |
 | DASH-N-024 | ui | dashboard.feature | een lokaal record van vóór indiensttreding verschijnt niet in Mijn maanden | Toestandsovergang | 2 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | een lokaal record van vóór indiensttreding verschijnt niet in Mijn maanden | Negative | 15 | Actueel |
 | DASH-N-025 | ui | dashboard.feature | een gekozen klanturenstaat-bestand blijft niet hangen na een gewone maandwissel | Negatieve equivalentieklasse + error guessing | 3 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | een gekozen klanturenstaat-bestand blijft niet hangen na een gewone maandwissel | Negative | 15 | Actueel |
 | DASH-N-021 | ui | dashboard.feature | een lege oudere maand openen voegt geen fantoom-open-acties toe en houdt de kalendermaand in beeld | Negatieve equivalentieklasse + error guessing | 10 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | een lege oudere maand openen voegt geen fantoom-open-acties toe en houdt de kalendermaand in beeld | Negative | 15 | Actueel |
@@ -544,9 +545,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 522
+- Playwright executable cases: 523
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 523
+- Totaal unieke executable cases: 524
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
