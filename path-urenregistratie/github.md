@@ -108,6 +108,23 @@ een tegenproef die omviel:
   browser; de inhoudscontrole alleen buiten WebKit.
 - HELP-N-001 (mobile-safari) staat hier los van. Volgens main faalt hij bij het uitloggen: het hulppaneel blijft open en onderschept de klik op #switch-role. Main pakt dat op in LoginPage.logout().
 
+**Echte app-fout, gevonden door main bij E2E-N-019.** `renderNewEmployeeBento()`
+zette bij elke render `state.hoursWeekScope` op "week-N". Die functie draait via
+`renderEmployeeDashboard` bij iedere `renderAll`, ook in Klassiek en ook op Mijn
+uren. Een hertekening op de achtergrond, zoals het antwoord op een conceptopslag,
+zette "Hele maand" daardoor terug naar één week, en de knop Maand indienen
+verdween. Main bewees op mobile-safari dat de knop na één `renderAll()` hidden
+is, en met de bento als no-op niet. Dat verklaart de CI-uitval (de indienknop
+hidden en disabled in een correctiemaand), maar de exacte volgorde uit CI is niet
+nagebootst.
+
+Fix: de bento zet de week alleen nog als hij in beeld is, dus in Modern op het
+dashboard. Bewuste keuze, om Modern niet te wijzigen: daar blijft het bestaande
+gedrag. Wie in Modern op het dashboard staat, krijgt de week van de bento, ook na
+een eerder gekozen "Hele maand"; op Mijn uren zelf blijft de keuze staan.
+[DASH-N-032] toetst Klassiek, Modern op Mijn uren, en dat de bento op het
+dashboard nog wel zijn week zet. Groen op desktop, mobile-chrome en mobile-safari.
+
 ## Sync history
 
 ### Ronde 14 sep (derde, vervolg) — terugmeldingen verwerkt, export 04:07:28Z

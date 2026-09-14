@@ -321,6 +321,16 @@ Feature: Dashboard en open werkvoorraad
     When de flow voor DASH-H-039 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat het verloop in Vandaag volgt de volgorderegel en is gelijk aan de stappen in Modern
 
+  @negative
+  Scenario: [DASH-N-032] een hertekening op de achtergrond zet "Hele maand" in Mijn uren niet terug naar één week
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given Klassiek op Mijn uren met Hele maand gekozen
+    When de app op de achtergrond opnieuw tekent, then blijft Hele maand staan met de indienknop
+    And geldt dat ook in Modern op Mijn uren
+    And zet de bento in Modern op het dashboard nog wel zijn eigen week
+    Then wordt met Playwright-assertions bevestigd dat een hertekening op de achtergrond zet "Hele maand" in Mijn uren niet terug naar één week
+
   @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors
     # Testtechniek: Beslissingstabel rollen en autorisatie

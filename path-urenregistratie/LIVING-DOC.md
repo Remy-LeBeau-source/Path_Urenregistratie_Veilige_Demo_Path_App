@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 537 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 538 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 537 unieke case-ID's
+- Playwright executable cases: 538 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 538 unieke case-ID's
+- Totaal executable cases: 539 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 579
-- Niet-mobile projectuitvoeringen: 495
+- Uitvoeringen: 580
+- Niet-mobile projectuitvoeringen: 496
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 537 Playwright-functionele cases in totaal 579 resultaten op: 495 + (42 x 2) = 579.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 538 Playwright-functionele cases in totaal 580 resultaten op: 496 + (42 x 2) = 580.
 
 ## Documentatieketen
 
@@ -201,7 +201,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 537 Playwri
 
 - Feature: `tests/playwright/features/dashboard.feature`
 - Source: `tests/playwright/dashboard*.spec.ts`
-- Cases: 55
+- Cases: 56
 
 - [DASH-H-002] employee dashboard opent zonder console errors — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
 - [DASH-H-025] "Mijn maanden" toont naast de urenstatus ook de klanturenstaat-status per maand — Techniek: Toestandsovergang · Assertions: 7
@@ -238,6 +238,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 537 Playwri
 - [DASH-H-037] Vandaag ververst het restcijfer meteen na ureninvoer en na terugnavigeren — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 8
 - [DASH-H-038] Nog te doen in Vandaag opent per maand de juiste route, ook voor een correctie, en blijft leesbaar in donker — Techniek: Toestandsovergang · Assertions: 17
 - [DASH-H-039] het verloop in Vandaag volgt de volgorderegel en is gelijk aan de stappen in Modern — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
+- [DASH-N-032] een hertekening op de achtergrond zet "Hele maand" in Mijn uren niet terug naar één week — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 11
 - [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 29
 - [DASH-N-022] een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8

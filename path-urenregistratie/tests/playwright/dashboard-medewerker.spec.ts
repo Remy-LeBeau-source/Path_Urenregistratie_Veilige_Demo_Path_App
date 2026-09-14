@@ -2235,3 +2235,58 @@ test('[DASH-H-039] het verloop in Vandaag volgt de volgorderegel en is gelijk aa
     await herstelUrenstaat();
   }
 });
+
+// Gevonden door de main-sessie bij E2E-N-019 (14 sep): renderNewEmployeeBento()
+// zette bij elke render state.hoursWeekScope op "week-N". Die functie draait via
+// renderEmployeeDashboard bij iedere renderAll, ook in Klassiek en ook als je op
+// Mijn uren staat. Een hertekening op de achtergrond, zoals een serversync,
+// zette daardoor "Hele maand" terug naar één week, en dan verdwijnt de knop Maand
+// indienen. In CI stond de indienknop precies zo verborgen.
+test('[DASH-N-032] een hertekening op de achtergrond zet "Hele maand" in Mijn uren niet terug naar één week', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  const scope = () => page.evaluate(() => ((0, eval)('state') as { hoursWeekScope: string }).hoursWeekScope);
+  const hertekenTweeKeer = () => page.evaluate(() => {
+    const w = window as unknown as { renderAll: () => void };
+    w.renderAll(); w.renderAll();
+  });
+
+  await test.step('Given Klassiek op Mijn uren met Hele maand gekozen', async () => {
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+    await page.locator('button[data-view="timesheet"]').click();
+    await page.locator('[data-hours-week-scope="all"]').click();
+    await expect(page.locator('#submit-timesheet')).toBeVisible();
+  });
+
+  await test.step('When de app op de achtergrond opnieuw tekent, then blijft Hele maand staan met de indienknop', async () => {
+    await hertekenTweeKeer();
+    expect(await scope()).toBe('all');
+    await expect(page.locator('#submit-timesheet')).toBeVisible();
+  });
+
+  await test.step('And geldt dat ook in Modern op Mijn uren', async () => {
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    // Modern verbergt de zijbalk op de medewerkerschermen; na de wissel staan we
+    // nog op Mijn uren.
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+    await page.locator('[data-hours-week-scope="all"]').click();
+    await hertekenTweeKeer();
+    expect(await scope()).toBe('all');
+    await expect(page.locator('#submit-timesheet')).toBeVisible();
+  });
+
+  await test.step('And zet de bento in Modern op het dashboard nog wel zijn eigen week', async () => {
+    // De andere kant: de grens mag het bedoelde gedrag niet slopen. Staat de
+    // bento in beeld, dan volgt Mijn uren de week die hij toont.
+    await page.evaluate(() => { window.location.hash = 'employee-dashboard'; });
+    await expect(page.locator('#new-employee-bento')).toBeVisible();
+    await hertekenTweeKeer();
+    expect(await scope()).toMatch(/^week-\d+$/);
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  });
+});

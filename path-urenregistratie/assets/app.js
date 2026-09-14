@@ -5871,7 +5871,15 @@ function renderNewEmployeeBento(record, employee, period) {
   const weekIndex = newEmployeeBentoWeekIndex(period);
   const week = period.weekRows[weekIndex];
   if (!week) return;
-  state.hoursWeekScope = "week-" + weekIndex;
+  // Alleen als de bento echt het scherm is (Modern, op het dashboard) volgt Mijn
+  // uren de week die hij toont. renderEmployeeDashboard draait bij elke
+  // renderAll, ook in Klassiek en ook als je op Mijn uren staat. Zonder deze
+  // grens zette een hertekening op de achtergrond (bijvoorbeeld na een
+  // serversync) "Hele maand" ongevraagd terug naar één week, en verdween daarmee
+  // de knop Maand indienen. Gevonden door de main-sessie bij E2E-N-019 (14 sep).
+  const bentoInBeeld = document.documentElement.dataset.skin === "new"
+    && Boolean(document.querySelector("#view-employee-dashboard")?.classList.contains("is-active"));
+  if (bentoInBeeld) state.hoursWeekScope = "week-" + weekIndex;
   const customerDocument = customerTimesheetFor(record);
   const heroGreeting = document.querySelector("#new-bento-greeting");
   const heroTitle = document.querySelector("#new-bento-hero-title");
