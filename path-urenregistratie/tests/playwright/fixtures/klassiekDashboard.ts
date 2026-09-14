@@ -1,30 +1,53 @@
 import { expect, type Page } from '@playwright/test';
+import { openPaneel } from '../pages/TopbarMenu';
 
-// Scope rechtgezet 14 sep: in Klassiek op desktop (vanaf 721px) is het
-// medewerkerdashboard het Vandaag-scherm uit handoff/medewerker-gui.html. Daar
-// staan de open maanden als chips in "Nog te doen". Op telefoon, en in Modern,
-// staat nog "Open acties per maand" met de volgende-actieknop.
+// Scope rechtgezet 14 sep: in Klassiek is het medewerkerdashboard het
+// Vandaag-scherm. Op desktop (vanaf 721px) volgens handoff/medewerker-gui.html,
+// met de open maanden als chips in "Nog te doen". Op telefoon volgens
+// handoff/medewerker-wild.html: geen chips, de hero volgt de gekozen maand.
+// Alleen Modern heeft nog "Open acties per maand" met de volgende-actieknop.
 //
-// Deze helper kiest de route op basis van breedte en skin, niet op "wat
+// Deze helpers kiezen de route op basis van breedte en skin, niet op "wat
 // toevallig zichtbaar is": dat laatste is vlak na het inloggen afhankelijk van
 // hoe ver de eerste render is, en dan kiest een case stil de verkeerde weg.
-export async function staatVandaagInBeeld(page: Page): Promise<boolean> {
-  const breedte = page.viewportSize()?.width ?? 0;
+export type DashboardRoute = 'chips' | 'telefoon' | 'modern';
+
+export async function dashboardRoute(page: Page): Promise<DashboardRoute> {
   const skin = await page.locator('html').getAttribute('data-skin');
-  return breedte >= 721 && skin !== 'new';
+  if (skin === 'new') return 'modern';
+  return (page.viewportSize()?.width ?? 0) >= 721 ? 'chips' : 'telefoon';
+}
+
+// Waar: Vandaag op desktop, met de chips in "Nog te doen".
+export async function staatVandaagInBeeld(page: Page): Promise<boolean> {
+  return (await dashboardRoute(page)) === 'chips';
 }
 
 // Opent de urenactie (invullen of correctie) van één maand vanaf het
-// medewerkerdashboard, via de route die op deze breedte bestaat. Beide routes
-// toetsen eerst dat het om die maand en om een urenactie gaat, en eindigen op
+// medewerkerdashboard, via de route die op deze breedte bestaat. Elke route
+// toetst eerst dat het om die maand en om een urenactie gaat, en eindigt op
 // Mijn uren van die maand.
 export async function openUrenactieVanMaand(page: Page, periodKey: string, verwacht: { chip: string | RegExp; knop: string | RegExp }): Promise<void> {
-  if (await staatVandaagInBeeld(page)) {
+  const route = await dashboardRoute(page);
+  if (route === 'chips') {
     const chip = page.locator(`#vd-nogtedoen-chips [data-vd-open-maand="${periodKey}"]`);
     await expect(chip).toBeVisible();
     await expect(chip).toHaveAttribute('data-vd-open-soort', 'uren');
     await expect(chip).toContainText(verwacht.chip);
     await chip.click();
+  } else if (route === 'telefoon') {
+    // Telefoon: eerst de maand kiezen met de maandpil; de hero volgt die maand
+    // en de hoofdknop wijst dan naar de urenactie van precies die maand.
+    const [jaar, maandNr] = periodKey.split('-');
+    await openPaneel(page, '#period-month-picker', '#period-month-panel');
+    await page.locator('#period-year-picker').fill(jaar);
+    await page.locator(`#period-month-panel [data-period-month="${maandNr}"][data-month-control="#period-month-picker"]`).click();
+    const maandNaam = new Date(Number(jaar), Number(maandNr) - 1, 1).toLocaleString('nl-NL', { month: 'long' });
+    await expect(page.locator('#vdt-verloop-kop')).toHaveText(`Verloop van ${maandNaam}`);
+    const knop = page.locator('#vdt-hoofdknop');
+    await expect(knop).toBeVisible();
+    await expect(knop).toHaveAttribute('data-vd-actie', 'uren');
+    await knop.click();
   } else {
     const maand = page.locator(`[data-employee-open-month="${periodKey}"]`);
     await expect(maand).toBeVisible();

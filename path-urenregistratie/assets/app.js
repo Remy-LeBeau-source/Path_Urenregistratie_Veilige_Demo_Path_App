@@ -6084,13 +6084,19 @@ const VANDAAG_BREED = typeof window.matchMedia === "function" ? window.matchMedi
 let vandaagKlantKaartThuis = null;
 function plaatsVandaagKlantKaart() {
   const kaart = document.querySelector("#employee-customer-timesheet-card");
-  const plek = document.querySelector("#vd-klant-plek");
-  if (!kaart || !plek) return;
+  const plekDesktop = document.querySelector("#vd-klant-plek");
+  const plekTelefoon = document.querySelector("#vdt-klant-plek");
+  if (!kaart || !plekDesktop || !plekTelefoon) return;
   if (!vandaagKlantKaartThuis) vandaagKlantKaartThuis = { ouder: kaart.parentElement, volgende: kaart.nextElementSibling };
-  const inVandaag = Boolean(VANDAAG_BREED && VANDAAG_BREED.matches) && document.documentElement.dataset.skin !== "new";
-  if (inVandaag) {
-    if (kaart.parentElement !== plek) plek.appendChild(kaart);
-  } else if (kaart.parentElement === plek) {
+  // Sinds de telefoonversie (medewerker-wild.html r164) staat de kaart in
+  // Klassiek op elke breedte in Vandaag: op desktop onder de hero, op telefoon
+  // onder het verloop. In Modern gaat hij terug naar zijn eigen plek.
+  const modern = document.documentElement.dataset.skin === "new";
+  const breed = Boolean(VANDAAG_BREED && VANDAAG_BREED.matches);
+  const doel = modern ? null : (breed ? plekDesktop : plekTelefoon);
+  if (doel) {
+    if (kaart.parentElement !== doel) doel.appendChild(kaart);
+  } else if (kaart.parentElement === plekDesktop || kaart.parentElement === plekTelefoon) {
     vandaagKlantKaartThuis.ouder.insertBefore(kaart, vandaagKlantKaartThuis.volgende);
   }
 }
@@ -6109,9 +6115,12 @@ function renderVandaag(record, employee, period) {
   const klantDocument = customerTimesheetFor(record);
   const klantOpen = employee.customerTimesheetExpected !== false && customerTimesheetNeedsEmployeeAction(klantDocument.status);
   // r563: ook een maand die vol is maar nog niet ingediend is een taak.
-  const heeftTaak = leeg > 0 || nietIngediend || klantOpen;
+  const heeftTaak = ontbrekendeWerkdagen(record, period).length > 0 || leeg > 0 || nietIngediend || klantOpen;
   const ingevuld = nWeken > 0 ? (nWeken - leeg) / nWeken : 0;
   const maandNaam = period.month.charAt(0).toUpperCase() + period.month.slice(1);
+  // Eén eenheid voor wat er open is: dagen (DESIGN-BESLUITEN "Eén eenheid: dagen",
+  // 14 sep). Dezelfde telling als Hele maand, het verloop en het indienlabel.
+  const gaten = ontbrekendeWerkdagen(record, period).length;
 
   // Paginakop, r139-153
   zet("#vd-kop-label", greetingForNow());
@@ -6137,9 +6146,9 @@ function renderVandaag(record, employee, period) {
   }).join("");
 
   // Hero, r197-231 en r615-697
-  const alleenIndienen = leeg === 0 && nietIngediend;
+  const alleenIndienen = gaten === 0 && nietIngediend;
   zet("#vd-antwoord", heeftTaak
-    ? (leeg > 0 ? "Nog " + leeg + (leeg === 1 ? " week" : " weken") + " in te vullen." : "Bijna rond. Nog één ding.")
+    ? (gaten > 0 ? "Nog " + gaten + (gaten === 1 ? " dag" : " dagen") + " in te vullen." : "Bijna rond. Nog één ding.")
     : maandNaam + " is klaar.");
   document.querySelector("#vd-oog").classList.toggle("is-taak", heeftTaak);
   zet("#vd-oog-label", heeftTaak ? "Jij bent aan zet" : "Het ligt bij ons");
@@ -6151,7 +6160,7 @@ function renderVandaag(record, employee, period) {
   // telt dat wél als taak). Statuscopy hoort bij de werkelijke toestand
   // (HANDOFF punt 10), dus dan staat hier de indienstap. Teruggemeld.
   zet("#vd-toelichting", heeftTaak
-    ? (leeg > 0 ? "Eén tik vult een hele week met je standaardweek."
+    ? (gaten > 0 ? "Eén tik vult een hele week met je standaardweek."
       : alleenIndienen ? "Je uren staan erin. Dien de maand in."
       : "Alleen de klanturenstaat ontbreekt nog.")
     : klantDocument.status === "skipped"
@@ -6167,8 +6176,8 @@ function renderVandaag(record, employee, period) {
   const hoofdknop = document.querySelector("#vd-hoofdknop");
   const oudste = openMaanden[0] || null;
   if (heeftTaak) {
-    hoofdknop.textContent = leeg > 0 ? "Uren invullen" : alleenIndienen ? "Maand indienen" : "Klanturenstaat toevoegen";
-    hoofdknop.dataset.vdActie = leeg > 0 || alleenIndienen ? "uren" : "klant";
+    hoofdknop.textContent = gaten > 0 ? "Uren invullen" : alleenIndienen ? "Maand indienen" : "Klanturenstaat toevoegen";
+    hoofdknop.dataset.vdActie = gaten > 0 || alleenIndienen ? "uren" : "klant";
     delete hoofdknop.dataset.vdMaand;
   } else if (oudste) {
     hoofdknop.textContent = oudste.actions[0]?.button || "Open maand";
@@ -6182,7 +6191,7 @@ function renderVandaag(record, employee, period) {
   }
   // r624: de mailknop naast de hoofdknop alleen als de klanturenstaat het enige
   // is dat nog open staat.
-  document.querySelector("#vd-mailknop").hidden = !(heeftTaak && leeg === 0 && !nietIngediend && klantOpen && !klantKaartKeuze);
+  document.querySelector("#vd-mailknop").hidden = !(heeftTaak && gaten === 0 && !nietIngediend && klantOpen && !klantKaartKeuze);
 
   // Verloop, r276-287: de vijf stappen uit dezelfde bron als overal. Teken en
   // kleuren zoals r565-569: ✓ af, • huidig, leeg wachtend; tekens in navy.
@@ -6191,6 +6200,44 @@ function renderVandaag(record, employee, period) {
     '<li class="vd-stap is-' + escapeHtml(stap.stand) + '" data-vd-stap="' + escapeHtml(stap.key) + '">'
       + '<span class="vd-stap-bol" aria-hidden="true">' + (stap.stand === "af" ? "✓" : stap.stand === "nu" ? "•" : "") + '</span>'
       + '<div><strong>' + escapeHtml(stap.titel) + '</strong><small>' + escapeHtml(stap.detail) + '</small></div></li>'
+  ).join("");
+
+  // ---- Telefoon, medewerker-wild.html r113-212 ----
+  zet("#vdt-groet", greetingForNow());
+  // Maandtotaal: dezelfde optelling als #hours-total (uren plus verlof en ziekte).
+  zet("#vdt-maanduren", hoursFormat.format(totalEntries(record.entries) + Number(record.leave || 0) + Number(record.sick || 0)));
+  // r707: "van 158,4 uur contract · 3 van 5 weken ingevuld".
+  zet("#vdt-contractregel", "van " + hoursFormat.format(contract) + " uur contract · " + (nWeken - leeg) + " van " + nWeken + " " + (nWeken === 1 ? "week" : "weken") + " ingevuld");
+  zet("#vdt-antwoord", document.querySelector("#vd-antwoord")?.textContent || "");
+  zet("#vdt-pct", document.querySelector("#vd-pct")?.textContent || "");
+  const boogTel = document.querySelector("#vdt-ring-boog");
+  if (boogTel) boogTel.style.strokeDashoffset = (229.3 * (1 - ingevuld)).toFixed(1);
+  // r137: de toelichting alleen zolang er een taak is.
+  const toelichtingTel = document.querySelector("#vdt-toelichting");
+  if (toelichtingTel) {
+    toelichtingTel.hidden = !heeftTaak;
+    toelichtingTel.textContent = document.querySelector("#vd-toelichting")?.textContent || "";
+  }
+  zet("#vdt-spreuk", document.querySelector("#vd-spreuk")?.textContent || "");
+  const hoofdknopTel = document.querySelector("#vdt-hoofdknop");
+  if (hoofdknopTel) {
+    hoofdknopTel.textContent = hoofdknop.textContent;
+    ["vdActie", "vdMaand", "vdSoort"].forEach(sleutel => {
+      if (hoofdknop.dataset[sleutel] === undefined) delete hoofdknopTel.dataset[sleutel];
+      else hoofdknopTel.dataset[sleutel] = hoofdknop.dataset[sleutel];
+    });
+  }
+  const mailknopTel = document.querySelector("#vdt-mailknop");
+  if (mailknopTel) mailknopTel.hidden = document.querySelector("#vd-mailknop").hidden;
+  // Verloop als lijst, r150-162, met de huidige stap rechts in de kop (r153).
+  const stappenTel = statusKetenStappen(record, period);
+  zet("#vdt-verloop-kop", "Verloop van " + period.month.toLowerCase());
+  const huidig = stappenTel.find(stap => stap.stand === "nu");
+  zet("#vdt-nustap", huidig ? huidig.titel : "Afgerond");
+  document.querySelector("#vdt-verloop-lijst").innerHTML = stappenTel.map(stap =>
+    '<li class="vd-tel-stap is-' + escapeHtml(stap.stand) + '" data-vdt-stap="' + escapeHtml(stap.key) + '">'
+      + '<span class="vd-tel-stap-bol" aria-hidden="true">' + (stap.stand === "af" ? "✓" : stap.stand === "nu" ? "•" : "") + '</span>'
+      + '<strong>' + escapeHtml(stap.titel) + '</strong><small>' + escapeHtml(stap.detail) + '</small></li>'
   ).join("");
 }
 
@@ -8696,6 +8743,7 @@ function renderEmployeeAnnouncementArchive() {
     let announcements = employeeAnnouncementItemsFromNotifications();
     const unreadAnnouncementCount = announcements.filter(item => !item.read).length;
     document.querySelector("#announcement-unread-filter").textContent = "Ongelezen mededelingen · " + unreadAnnouncementCount;
+    zetBerichtenTeller(unreadAnnouncementCount);
     if (state.announcementArchiveFilter === "unread") announcements = announcements.filter(item => !item.read);
     if (state.announcementArchiveFilter === "withdrawn") announcements = [];
     document.querySelectorAll("[data-announcement-archive-filter]").forEach(button => button.classList.toggle("is-active", button.dataset.announcementArchiveFilter === state.announcementArchiveFilter));
@@ -8721,6 +8769,7 @@ function renderEmployeeAnnouncementArchive() {
   announcements = sortAnnouncementsByActivity(announcements);
   const unreadAnnouncementCount = announcements.filter(item => isAnnouncementUnread(employee.id, item.id)).length;
   document.querySelector("#announcement-unread-filter").textContent = "Ongelezen mededelingen · " + unreadAnnouncementCount;
+  zetBerichtenTeller(unreadAnnouncementCount);
   if (state.announcementArchiveFilter === "unread") announcements = announcements.filter(item => isAnnouncementUnread(employee.id, item.id));
   if (state.announcementArchiveFilter === "withdrawn") announcements = announcements.filter(item => item.status === "withdrawn" || announcementKind(item) === "withdrawal");
   document.querySelectorAll("[data-announcement-archive-filter]").forEach(button => button.classList.toggle("is-active", button.dataset.announcementArchiveFilter === state.announcementArchiveFilter));
@@ -11222,6 +11271,17 @@ function answerHelpQuestion(question, explicitTopicId) {
   const combinedQuestion = "Eerste formulering: " + unresolvedHelpQuestion + "\nTweede formulering: " + question;
   unresolvedHelpQuestion = "";
   addHelpMessage("Ook na je tweede formulering heb ik geen betrouwbaar standaardantwoord. Open hieronder je e-mailapp of kopieer het bericht voor " + supportName() + ". Er wordt niets automatisch verzonden.", "bot", { contact: true, question: combinedQuestion });
+}
+
+// Telbolletje op de tab Berichten (referentie: badge bij Berichten). Dezelfde
+// telling als het filter "Ongelezen mededelingen" op dat scherm.
+function zetBerichtenTeller(aantal) {
+  const teller = document.querySelector("#employee-berichten-count");
+  if (!teller) return;
+  teller.hidden = !(aantal > 0);
+  teller.textContent = String(aantal);
+  const knop = teller.closest("button");
+  if (knop) knop.setAttribute("aria-label", "Berichten" + (aantal > 0 ? ", " + aantal + " ongelezen" : ""));
 }
 
 function renderAll() {
@@ -14176,7 +14236,7 @@ function toonInstallatieAanbod() {
     showView("historie");
     return;
   }
-  const vandaagHoofdknop = event.target.closest("#vd-hoofdknop");
+  const vandaagHoofdknop = event.target.closest("#vd-hoofdknop, #vdt-hoofdknop");
   if (vandaagHoofdknop) {
     const actie = vandaagHoofdknop.dataset.vdActie;
     if (actie === "uren") showView("timesheet");
@@ -14192,7 +14252,7 @@ function toonInstallatieAanbod() {
     }
     return;
   }
-  if (event.target.closest("#vd-mailknop")) {
+  if (event.target.closest("#vd-mailknop, #vdt-mailknop")) {
     // De registratie "zelf gemaild" legt een reden vast; die flow zit achter de
     // bestaande knop. Niet omzeilen, alleen doorverwijzen.
     document.querySelector("#employee-customer-timesheet-skip")?.click();

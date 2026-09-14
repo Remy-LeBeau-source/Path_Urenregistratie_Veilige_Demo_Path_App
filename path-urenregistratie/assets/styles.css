@@ -437,6 +437,12 @@ summary:focus-visible,
   }
   .switch-role:hover { background: var(--navy-soft); border-color: transparent; color: #fff; }
 }
+/* TEST 2.0.59, punt 9: op telefoon zweefde deze knop over de klanturenstaat-
+   kaart en de tabbalk. Daar staat dezelfde actie al in de topbalk
+   (#mobile-switch-role), dus in Klassiek hoeft de zwevende knop er niet. */
+@media (max-width: 720px) {
+  html:not([data-skin="new"]) #switch-role { display: none; }
+}
 
 .main-content {
   min-height: 100vh;
@@ -1462,7 +1468,7 @@ html:not([data-skin="new"]) .button-primary:active:not(:disabled) { transform: s
   .settings-card.full-width { grid-column: auto; }
   .template-item { grid-template-columns: 1fr auto; }
   .template-subject { grid-column: 1/-1; grid-row: 2; }
-  body[data-role="employee"] .nav-list { grid-template-columns: repeat(3,1fr); }
+  body[data-role="employee"] .nav-list { grid-template-columns: repeat(4,1fr); }
 }
 
 @media (max-width: 590px) {
@@ -2436,7 +2442,7 @@ html[data-theme="dark"] .reminder-schedule-summary span { background: rgba(13,27
   #employee-history.has-customer-timesheet-column .employee-history-row { grid-template-columns: 1fr 1fr; }
   .administrator-row { grid-template-columns: 1fr auto; }
   .mail-recipient-setting, .mail-route-choice { grid-template-columns: 1fr auto; }
-  body[data-role="employee"] .nav-list { grid-template-columns: repeat(3,1fr); }
+  body[data-role="employee"] .nav-list { grid-template-columns: repeat(4,1fr); }
   .mail-route-guide { grid-template-columns: minmax(0, 1fr); }
   .announcement-meta { grid-template-columns: minmax(0, 1fr); }
 }
@@ -4284,8 +4290,110 @@ html[data-theme="dark"]:not([data-skin="new"]) #vandaag {
   html:not([data-skin="new"]) #view-employee-dashboard > #employee-dashboard-correction,
   html:not([data-skin="new"]) #view-employee-dashboard > #employee-status-keten,
   html:not([data-skin="new"]) #view-employee-dashboard > .employee-metrics { display: none !important; }
-  /* De archiefregel blijft voorlopig staan: hij is op desktop de enige weg naar
-     Mijn maanden, tot de tab "Maanden" uit de referentie er is (volgende stap).
-     Hij staat onder Vandaag, op de breedte van de pagina. */
-  html:not([data-skin="new"]) #view-employee-dashboard > #employee-history-teaser { order: 10; max-width: var(--pagina); margin-inline: auto; width: 100%; }
 }
+/* ===========================================================================
+   Vandaag op telefoon — 1-op-1 naar handoff/medewerker-wild.html r113-212.
+   Tokens uit r12-48, op #vd-tel onder hun eigen namen, zodat de klanturenstaat-
+   kaart die hierheen verhuist de telefoonwaarden overneemt.
+   ======================================================================== */
+.vd-tel { display: none; }
+html:not([data-skin="new"]) #vd-tel {
+  /* r13-31 */
+  --navy: #0d1b38; --mint: #3abd9d; --mint-tekst: #037f63; --mint-dark-tekst: #037f63;
+  --ink: #16241f; --muted: #5c6d66; --line: rgba(22,36,31,.09); --line-zacht: rgba(22,36,31,.05);
+  --surface: rgba(255,255,255,.66); --surface-muted: rgba(22,52,42,.045); --vlak: rgba(255,255,255,.66);
+  --display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --getal: #12332a; --ring-leeg: 22,36,31,.1;
+  --warning: #bb7623; --warning-bg: #fff5e8; --warning-tekst: #a5600d; --warning-rand: #edc58f;
+  --kaart-glans: rgba(255,255,255,.85); --halo: rgba(47,158,128,.3);
+  --kaart-schaduw: 0 1px 1px rgba(22,52,42,.03), 0 6px 18px rgba(22,52,42,.055);
+  --schaduw: var(--kaart-schaduw);
+  --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  color: var(--ink);
+  font-family: var(--sans);
+}
+html[data-theme="dark"]:not([data-skin="new"]) #vd-tel {
+  /* r33-47 */
+  --ink: #dde6ea; --muted: #93a2ac; --line: #22323d; --line-zacht: #1d2c36;
+  --surface: rgba(255,255,255,.05); --surface-muted: rgba(255,255,255,.055); --vlak: rgba(255,255,255,.05);
+  --getal: #eaf3f0; --ring-leeg: 255,255,255,.11;
+  --mint-tekst: #5fd3b3; --mint-dark-tekst: #5fd3b3;
+  --warning-bg: #2d2313; --warning-tekst: #f0bd7a; --warning-rand: #5a4526;
+  --kaart-glans: rgba(255,255,255,.07); --halo: rgba(58,189,157,.34);
+}
+
+/* Hero, r114-148 */
+@keyframes vd-tel-ademen { 0%, 100% { opacity: .5; transform: translateX(-50%) scale(1); } 50% { opacity: .78; transform: translateX(-50%) scale(1.04); } }
+#vd-tel .vd-tel-herovak { position: relative; margin: 8px 0 14px; }
+#vd-tel .vd-tel-halo { position: absolute; bottom: 6px; left: 50%; width: 70%; height: 58px; border-radius: 50%; background: var(--halo); filter: blur(26px); animation: vd-tel-ademen 5.5s ease-in-out infinite; pointer-events: none; }
+#vd-tel .vd-tel-hero { position: relative; padding: 6px 2px 4px; color: var(--ink); }
+#vd-tel .vd-tel-groet { position: relative; margin: 0; color: var(--mint-tekst); font-size: 11px; font-weight: 900; letter-spacing: .22em; text-transform: uppercase; }
+#vd-tel .vd-tel-rij { position: relative; display: flex; align-items: center; gap: 16px; margin-top: 10px; }
+#vd-tel .vd-tel-cijfers { flex: 1; min-width: 0; }
+#vd-tel .vd-tel-maandtotaal { display: flex; align-items: flex-end; gap: 8px; margin: 0; line-height: .84; }
+#vd-tel .vd-tel-maandtotaal strong { font-family: var(--display); font-size: 52px; font-weight: 400; letter-spacing: -.045em; font-variant-numeric: tabular-nums; background: var(--getal); -webkit-background-clip: text; background-clip: text; color: transparent; }
+#vd-tel .vd-tel-maandtotaal span { padding-bottom: 7px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
+#vd-tel .vd-tel-contractregel { display: block; margin-top: 5px; color: var(--muted); font-size: 11.5px; font-weight: 700; }
+#vd-tel .vd-tel-antwoord { margin: 6px 0 0; color: var(--ink); font-family: var(--display); font-size: 20px; font-weight: 400; letter-spacing: -.024em; line-height: 1.18; text-wrap: balance; }
+#vd-tel .vd-tel-ring { position: relative; display: grid; width: 70px; height: 70px; flex: 0 0 auto; place-items: center; }
+#vd-tel .vd-tel-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+#vd-tel .vd-tel-ring circle { fill: none; stroke-width: 9; }
+#vd-tel .vd-tel-ring-leeg { stroke: rgba(var(--ring-leeg)); }
+#vd-tel .vd-tel-ring-boog { stroke: #2f9e80; stroke-linecap: round; stroke-dasharray: 229.3; stroke-dashoffset: 229.3; transition: stroke-dashoffset .8s cubic-bezier(.22,1,.36,1); filter: drop-shadow(0 0 7px rgba(58,189,157,.6)); }
+#vd-tel .vd-tel-ring-binnen { position: relative; display: grid; width: 54px; height: 54px; place-items: center; border-radius: 50%; background: var(--surface); box-shadow: inset 0 0 0 1px var(--kaart-glans); }
+#vd-tel .vd-tel-ring-binnen strong { color: var(--ink); font-family: var(--display); font-weight: 400; font-size: 16px; font-variant-numeric: tabular-nums; line-height: 1; }
+#vd-tel .vd-tel-toelichting { position: relative; margin: 10px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; text-wrap: pretty; }
+#vd-tel .vd-tel-toelichting[hidden] { display: none; }
+#vd-tel .vd-tel-spreuk { position: relative; margin: 13px 0 0; color: var(--muted); font-family: var(--display); font-size: 14.5px; font-weight: 400; font-style: italic; letter-spacing: -.008em; line-height: 1.45; text-wrap: pretty; }
+#vd-tel .vd-tel-acties { position: relative; display: grid; gap: 8px; margin-top: 14px; }
+#vd-tel .vd-tel-knop-hoofd { min-height: 46px; border: 0; border-radius: 13px; background: var(--mint); color: var(--navy); cursor: pointer; font: inherit; font-size: 14px; font-weight: 700; box-shadow: 0 8px 20px rgba(58,189,157,.32); transition: transform .16s cubic-bezier(.22,1,.36,1), box-shadow .16s; }
+#vd-tel .vd-tel-knop-hoofd:active { transform: scale(.965); box-shadow: 0 2px 26px rgba(58,189,157,.6); }
+#vd-tel .vd-tel-knop-mail { min-height: 50px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; font-size: 14px; font-weight: 700; }
+#vd-tel .vd-tel-knop-mail[hidden] { display: none; }
+
+/* Verloop als lijst, r150-162 */
+#vd-tel .vd-tel-verloop { display: grid; gap: 1px; border: 1px solid var(--line-zacht); border-radius: 18px; background: var(--line-zacht); overflow: hidden; box-shadow: var(--kaart-schaduw); }
+#vd-tel .vd-tel-verloop-kop { display: flex; width: 100%; align-items: center; gap: 10px; background: var(--surface); color: var(--ink); padding: 13px 16px 12px; text-align: left; }
+#vd-tel .vd-tel-verloop-kop strong { flex: 1; min-width: 0; font-size: 10px; font-weight: 800; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
+#vd-tel .vd-tel-verloop-kop small { color: var(--mint-tekst); font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+#vd-tel .vd-tel-verloop-lijst { display: contents; margin: 0; padding: 0; list-style: none; }
+#vd-tel .vd-tel-stap { display: flex; align-items: center; gap: 12px; background: var(--surface); color: var(--ink); padding: 14px 16px; }
+#vd-tel .vd-tel-stap-bol { display: grid; width: 24px; height: 24px; flex: 0 0 auto; place-items: center; border-radius: 50%; background: var(--surface-muted); color: var(--muted); font-size: 11px; font-weight: 900; }
+#vd-tel .vd-tel-stap strong { flex: 1; min-width: 0; color: var(--muted); font-size: 13.5px; font-weight: 700; }
+#vd-tel .vd-tel-stap small { color: var(--muted); font-size: 11.5px; text-align: right; }
+#vd-tel .vd-tel-stap.is-af .vd-tel-stap-bol { background: #3abd9d; color: var(--navy); }
+#vd-tel .vd-tel-stap.is-af strong { color: var(--mint-tekst); }
+#vd-tel .vd-tel-stap.is-nu .vd-tel-stap-bol { background: var(--warning); color: var(--navy); }
+#vd-tel .vd-tel-stap.is-nu strong { color: var(--warning-tekst); }
+
+/* Klanturenstaatkaart op telefoon, r165 (margin-bottom 12px, radius 18px). De
+   kaartonderdelen zelf staan al onder #vandaag; hier alleen de telefoonplek. */
+#vd-tel .vd-tel-klant-plek { margin-top: 12px; }
+#vd-tel .vd-tel-klant-plek:empty { display: none; }
+#vd-tel .employee-customer-timesheet-card { display: block; margin: 0 0 12px; border: 1px solid var(--line-zacht); border-radius: 18px; background: var(--surface); padding: 16px 16px 14px; box-shadow: inset 0 1px 0 var(--kaart-glans), var(--kaart-schaduw); }
+#vd-tel .employee-customer-timesheet-card[data-klantkaart-stand="gekozen"] { border-color: var(--mint); }
+
+@media (prefers-reduced-motion: reduce) {
+  #vd-tel .vd-tel-halo { animation: none; }
+  #vd-tel .vd-tel-ring-boog, #vd-tel .vd-tel-knop-hoofd { transition: none; }
+}
+
+/* Welke opbouw waar op telefoon. Vandaag staat in Klassiek nu op elke breedte;
+   op telefoon toont hij de Wild-opbouw en verdwijnen de desktopdelen. Tegelijk
+   gaan de oude Klassieke blokken ook op telefoon weg, "Open acties per maand"
+   inbegrepen: dat mag pas nu, nu de telefoon Vandaag heeft (besluit Gio). De
+   archiefregel verdwijnt op elke breedte: Maanden is een eigen tab. */
+@media (max-width: 720px) {
+  html:not([data-skin="new"]) #vandaag { display: block; }
+  html:not([data-skin="new"]) #vd-tel { display: block; }
+  html:not([data-skin="new"]) #vandaag > .vd-kop,
+  html:not([data-skin="new"]) #vandaag > .vd-nogtedoen,
+  html:not([data-skin="new"]) #vandaag > .vd-hero,
+  html:not([data-skin="new"]) #vandaag > .vd-onder { display: none !important; }
+  html:not([data-skin="new"]) #view-employee-dashboard > .employee-hero,
+  html:not([data-skin="new"]) #view-employee-dashboard > #employee-open-overview,
+  html:not([data-skin="new"]) #view-employee-dashboard > #employee-dashboard-correction,
+  html:not([data-skin="new"]) #view-employee-dashboard > #employee-status-keten,
+  html:not([data-skin="new"]) #view-employee-dashboard > .employee-metrics { display: none !important; }
+}
+html:not([data-skin="new"]) #view-employee-dashboard > #employee-history-teaser { display: none !important; }

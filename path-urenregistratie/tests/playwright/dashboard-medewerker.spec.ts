@@ -8,7 +8,7 @@ import type { MutableRecord } from './fixtures/dashboardGedeeld';
 import { ALLE_SCHERMEN, verwachtAlleenSchermActief } from './fixtures/dashboardGedeeld';
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
-import { staatVandaagInBeeld } from './fixtures/klassiekDashboard';
+import { openUrenactieVanMaand, staatVandaagInBeeld } from './fixtures/klassiekDashboard';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
 import { bewaarUrenstaat } from './fixtures/urenstaatHerstel';
 import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErrors';
@@ -16,15 +16,10 @@ import { expect, test } from '@playwright/test';
 import { openPaneel, openProfielmenu } from './pages/TopbarMenu';
 import { suppressInstallBanner } from './fixtures/suppressInstallBanner';
 import { useFixedDemoClock } from './fixtures/fixedDemoClock';
-// Scope rechtgezet 14 sep: op desktop vervangt Vandaag (#vandaag, referentie
-// handoff/medewerker-gui.html) in Klassiek de oude dashboardblokken: "Open acties
-// per maand", de volgende-actieknop, de kerncijfers en de stappenlijst. Op
-// telefoon staan die blokken er nog, tot medewerker-wild.html is nagebouwd. Cases
-// die dát gedrag toetsen, draaien daarom op telefoonbreedte: dezelfde assertions,
-// op de plek waar die code nog live is. Bij de Wild-stap worden ze opnieuw bekeken.
-async function opOudeKlassiekeBreedte(page: import('@playwright/test').Page): Promise<void> {
-  await page.setViewportSize({ width: 390, height: 844 });
-}
+// Scope rechtgezet 14 sep: Vandaag (#vandaag) vervangt in Klassiek de oude
+// dashboardblokken ("Open acties per maand", de volgende-actieknop, de
+// kerncijfers en de stappenlijst), op desktop volgens handoff/medewerker-gui.html
+// en op telefoon volgens handoff/medewerker-wild.html.
 
 
 test.beforeEach(async ({ page }) => {
@@ -206,7 +201,8 @@ test('[DASH-N-024] een lokaal record van vóór indiensttreding verschijnt niet 
     // uitgeklapt onderaan het Dashboard. Deze case gaat over wát er in die
     // tabel staat, dus wordt hier eerst naar dat scherm genavigeerd; de
     // inhoudelijke controles verderop blijven ongewijzigd.
-    await page.locator('#employee-history-teaser [data-go="historie"]').click();
+    // Sinds 14 sep via de eigen tab "Maanden"; de archiefregel is weg.
+    await page.locator('.nav-item[data-view="historie"]:visible').click();
     await expect(page.locator('#employee-history')).toBeVisible();
     await page.evaluate(() => {
       const runtime = window as typeof window & {
@@ -336,7 +332,9 @@ test('[DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties t
     if (await staatVandaagInBeeld(page)) {
       await expect(page.locator('#vd-nogtedoen-chips [data-vd-open-maand="2026-08"]')).toBeVisible();
     } else {
-      await expect(page.locator('[data-employee-open-month="2026-08"]').first()).toBeVisible();
+      // Telefoon (medewerker-wild.html) heeft geen maandchips; daar volgt de hero
+      // de gekozen maand.
+      await expect(page.locator('#vdt-verloop-kop')).toHaveText('Verloop van juni');
     }
     await expect(page.locator('#employee-open-task-total')).toHaveText(totalOnCalendarMonth);
     await expect(page.locator('#employee-dashboard-next')).not.toContainText('Juni 2026');
@@ -403,8 +401,11 @@ test('[DASH-N-009] medewerker teller blijft stabiel bij aug-juli-aug en dashboar
 });
 
 test('[DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar', async ({ page }) => {
-  await opOudeKlassiekeBreedte(page);
+  // Draait op elke projectbreedte. Het maandcijfer staat in Vandaag op desktop in
+  // de KPI (restcijfer) en op telefoon groot in de hero; welke zichtbaar is, hangt
+  // van de breedte af. Het restcijfer op desktop toetst ook [DASH-H-037].
   const loginPage = new LoginPage(page);
+  const maandcijfer = page.locator('#vd-kpi-waarde:visible, #vdt-maanduren:visible').first();
 
   await page.route('**/server/api/timesheets.php**', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ ok: false }) }));
 
@@ -425,7 +426,9 @@ test('[DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakie
   });
 
   await test.step('When de medewerker uren invult en terug naar het medewerkerdashboard gaat', async () => {
-    const totalBefore = await page.locator('#employee-dashboard-hours').textContent();
+    await page.locator('button[data-view="employee-dashboard"]:visible').first().click();
+    const totalBefore = await maandcijfer.textContent();
+    await page.locator('button[data-view="timesheet"]:visible').first().click();
     const firstInput = page.locator('.hours-table input').first();
     await firstInput.fill('11');
     await firstInput.press('Enter');
@@ -433,47 +436,13 @@ test('[DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakie
 
     await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
     await expect(page.locator('#page-title')).toHaveText(/Mijn overzicht/);
-    await expect(page.locator('#employee-dashboard-hours')).not.toHaveText(totalBefore || '', { timeout: 15_000 });
+    await expect(maandcijfer).not.toHaveText(totalBefore || '', { timeout: 15_000 });
   });
 
   await test.step('Then blijven de maandnamen zichtbaar in donkere modus', async () => {
-    const openOverview = page.locator('#employee-open-overview');
-    // Deze case blokkeert timesheets.php bewust met een 503. De open-maandenkaart
-    // blijft verborgen zolang de eerste werkvoorraad-sync loopt, dus wacht eerst
-    // tot die ronde klaar is voordat de zichtbaarheid wordt beoordeeld.
+    // "Open acties per maand" staat niet meer in Klassiek; het contrast van dat
+    // blok is daarmee vervallen. De maandkiezer blijft.
     await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
-    await expect(openOverview).toBeVisible();
-    const overviewContrast = await openOverview.evaluate((overview) => {
-      const parseRgb = (value: string) => (value.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
-      const luminance = (rgb: number[]) => {
-        const channels = rgb.map((value) => {
-          const channel = value / 255;
-          return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
-        });
-        return (0.2126 * channels[0]) + (0.7152 * channels[1]) + (0.0722 * channels[2]);
-      };
-      const foreground = luminance(parseRgb(getComputedStyle(overview.querySelector('h3')!).color));
-      const background = luminance(parseRgb(getComputedStyle(overview).backgroundColor));
-      return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
-    });
-    expect(overviewContrast).toBeGreaterThanOrEqual(4.5);
-
-    const firstOpenMonth = page.locator('#employee-open-overview-list [data-employee-open-month]').first();
-    const openMonthContrast = await firstOpenMonth.evaluate((month) => {
-      const parseRgb = (value: string) => (value.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
-      const luminance = (rgb: number[]) => {
-        const channels = rgb.map((value) => {
-          const channel = value / 255;
-          return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
-        });
-        return (0.2126 * channels[0]) + (0.7152 * channels[1]) + (0.0722 * channels[2]);
-      };
-      const foreground = luminance(parseRgb(getComputedStyle(month.querySelector('strong')!).color));
-      const background = luminance(parseRgb(getComputedStyle(month).backgroundColor));
-      return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
-    });
-    expect(openMonthContrast).toBeGreaterThanOrEqual(4.5);
-
     await openPaneel(page, '#period-month-picker', '#period-month-panel');
     await expect(page.locator('#period-month-panel')).toBeVisible();
     const firstMonth = page.locator('#period-month-panel button').first();
@@ -496,133 +465,18 @@ test('[DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakie
   });
 });
 
-test('[DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behoudt maandlabels bij themawissel', async ({ page }) => {
-  await opOudeKlassiekeBreedte(page);
-  const loginPage = new LoginPage(page);
+// [DASH-H-004] is vervallen (14 sep): hij liep via de volgende-actieknop die in
+// Klassiek niet meer bestaat, en toetste verder hetzelfde als [DASH-H-003].
 
-  await page.route('**/server/api/timesheets.php**', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ ok: false }) }));
+// [DASH-H-005] is vervallen (14 sep): "Open acties per maand" staat niet meer in
+// Klassiek, en in Modern blijft een actie daaruit bewust op het Dashboard, wat
+// [SKIN-H-024] toetst. De maandchips in Klassiek toetst [DASH-H-038].
 
-  await test.step('Given een medewerker op donker thema die vanuit dashboard naar uren gaat', async () => {
-    await loginPage.open();
-    await loginPage.loginAsEmployee();
-    await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
-    await openProfielmenu(page);
-    await page.locator('[data-profile-action="preferences"]').click();
-    await page.locator('#pref-theme-trigger').click();
-    await page.locator('[data-standard-choice-target="pref-theme"][data-standard-choice-value="dark"]').click();
-    await page.locator('#modal-confirm').click();
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-    await page.locator('button[data-view="employee-dashboard"]').click();
-    await page.locator('#employee-dashboard-action').click();
-  });
-
-  await test.step('When de medewerker uren wijzigt en terug navigeert via de zichtbare medewerkerroute', async () => {
-    const hoursBefore = await page.locator('#employee-dashboard-hours').textContent();
-    const firstInput = page.locator('.hours-table input').first();
-    await firstInput.fill('11');
-    await firstInput.press('Enter');
-    await page.locator('button[data-view="employee-dashboard"]').click();
-    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
-    await expect(page.locator('#employee-dashboard-hours')).not.toHaveText(hoursBefore || '', { timeout: 15_000 });
-  });
-
-  await test.step('Then zijn de maandlabels nog zichtbaar in de maandkiezer', async () => {
-    await openPaneel(page, '#period-month-picker', '#period-month-panel');
-    await expect(page.locator('#period-month-panel')).toBeVisible();
-    await expect(page.locator('#period-month-panel button').nth(6)).toHaveText('Juli');
-  });
-});
-
-test('[DASH-H-005] medewerker ziet open maanden compact en kan direct naar de juiste maand springen', async ({ page }) => {
-  await opOudeKlassiekeBreedte(page);
-  const loginPage = new LoginPage(page);
-
-  await test.step('Given een medewerker met open maanden', async () => {
-    await loginPage.open();
-    await loginPage.loginAsEmployee();
-  });
-
-  await test.step('When het medewerkerdashboard opent', async () => {
-    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
-  });
-
-  await test.step('Then is er een compacte open-maandenkaart zichtbaar met een directe maandknop', async () => {
-    await expect(page.locator('#employee-open-overview')).toBeVisible();
-    await expect(page.locator('#employee-open-task-total')).toHaveText(/open acti/);
-    await expect(page.locator('#employee-open-task-total')).not.toHaveText('0 open acties');
-    await expect(page.locator('#employee-open-task-owners')).toContainText('Urenregistraties');
-    await expect(page.locator('#employee-open-task-owners')).not.toContainText('Backoffice');
-    const openMonthItems = page.locator('#employee-open-overview-list [data-employee-open-month]');
-    await expect.poll(async () => openMonthItems.count()).toBeGreaterThan(0);
-    const firstMonth = openMonthItems.first();
-    const firstToggle = firstMonth.locator('[data-employee-open-month-toggle]');
-    if (await firstToggle.getAttribute('aria-expanded') !== 'true') await firstToggle.click();
-    await firstMonth.locator('[data-employee-open-action]').first().click();
-    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
-  });
-});
-
-test('[DASH-H-014] medewerker krijgt de eerstvolgende concrete actie met juiste maand en taakroute', async ({ page }) => {
-  await opOudeKlassiekeBreedte(page);
-  const errors = captureConsoleErrors(page);
-  const loginPage = new LoginPage(page);
-
-  await test.step('Given een medewerker met meerdere open acties over verschillende maanden', async () => {
-    await loginPage.open();
-    await loginPage.loginAsEmployee();
-    clearConsoleErrors(errors);
-    await expect(page.locator('#employee-open-overview')).toBeVisible();
-    await expect(page.locator('#employee-open-task-total')).not.toHaveText('0 open acties');
-  });
-
-  let firstPeriod = '';
-  let firstPeriodLabel = '';
-  let firstActionType = '';
-
-  await test.step('When het dashboard de werkvoorraad prioriteert', async () => {
-    const openMonths = page.locator('#employee-open-overview-list [data-employee-open-month]');
-    await expect.poll(async () => openMonths.count()).toBeGreaterThan(0);
-    const firstMonth = openMonths.first();
-    firstPeriod = (await firstMonth.getAttribute('data-employee-open-month')) || '';
-    firstPeriodLabel = ((await firstMonth.locator('.employee-open-month-heading-copy strong').textContent()) || '').split(' · ')[0];
-    const firstToggle = firstMonth.locator('[data-employee-open-month-toggle]');
-    await expect(firstToggle).toHaveAttribute('aria-expanded', 'false');
-    await expect(firstMonth.locator('.employee-open-month-body')).toBeHidden();
-    await firstToggle.click();
-    await expect(firstToggle).toHaveAttribute('aria-expanded', 'true');
-    await expect(firstMonth.locator('.employee-open-month-body')).toBeVisible();
-
-    const allActionRows = page.locator('#employee-open-overview-list [data-employee-action-row]');
-    const totalText = (await page.locator('#employee-open-task-total').textContent()) || '0';
-    const total = Number(totalText.match(/\d+/)?.[0] || 0);
-    await expect(allActionRows).toHaveCount(total);
-    await expect(page.locator('#employee-dashboard-all-actions')).toHaveText(`Bekijk alle ${total} open ${total === 1 ? 'actie' : 'acties'}`);
-    await page.locator('#employee-dashboard-all-actions').click();
-    await expect(page.locator('#employee-open-overview')).toBeInViewport();
-    await expect(page.locator('#employee-open-overview .panel-heading h3')).toBeVisible();
-    expect(await page.locator('#employee-open-overview').evaluate(element => element.getBoundingClientRect().top)).toBeGreaterThanOrEqual(80);
-    await expect(page.locator('#employee-history .employee-history-head')).toContainText('Maand');
-    await expect(page.locator('#employee-history [data-history-period]').first()).toHaveText('Open maand');
-
-    const firstAction = firstMonth.locator('[data-employee-open-action]').first();
-    firstActionType = (await firstAction.getAttribute('data-employee-open-action')) || '';
-    await expect(page.locator('#employee-dashboard-next-label')).toHaveText('Volgende actie');
-    await expect(page.locator('#employee-dashboard-next-meta')).toContainText(firstPeriodLabel);
-    await expect(page.locator('#employee-dashboard-action')).toHaveAttribute('data-employee-action-period', firstPeriod);
-    await expect(page.locator('#employee-dashboard-action')).toHaveAttribute('data-employee-action-type', firstActionType);
-    await attachBusinessScreenshot(page, 'GUI smoke · Slim medewerkerdashboard');
-  });
-
-  await test.step('Then opent de hoofdactie exact de geprioriteerde maand en juiste taakroute', async () => {
-    await page.locator('#employee-dashboard-action').click();
-    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
-    await expect(page.locator('#timesheet-period-title')).toHaveText(firstPeriodLabel);
-    if (firstActionType === 'customer') await expect(page.locator('#customer-timesheet-upload-panel')).toBeVisible();
-    else await expect(page.locator('#hours-grid')).toBeVisible();
-    await attachBusinessScreenshot(page, 'GUI smoke · Medewerker opent eerstvolgende actie');
-    expect(errors).toEqual([]);
-  });
-});
+// [DASH-H-014] is vervallen (14 sep): de volgende-actieknop (#employee-dashboard-
+// action) en "Bekijk alle open acties" staan in Klassiek en Modern niet meer in
+// beeld. De route per maand toetsen nu [DASH-H-038] (Klassiek, chips) en
+// [SKIN-H-024] (Modern, #employee-open-overview-next). De prioriteit zelf blijft
+// in [DASH-N-015].
 
 test('[DASH-N-015] medewerkerprioriteit kiest correctie boven document en toont niets als alles klaar is', async ({ page }) => {
   const loginPage = new LoginPage(page);
@@ -702,7 +556,6 @@ test('[DASH-N-015] medewerkerprioriteit kiest correctie boven document en toont 
 });
 
 test('[DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere maand', async ({ page }) => {
-  await opOudeKlassiekeBreedte(page);
   const loginPage = new LoginPage(page);
 
   // Deze test is uitsluitend gericht op het servergestuurde urenrooster. Houd de
@@ -802,9 +655,8 @@ test('[DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere
   await test.step('When het dashboard augustus prioriteert en Open correctie wordt gekozen', async () => {
     await page.locator('button[data-view="employee-dashboard"]').click();
     await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
-    await expect(page.locator('#employee-dashboard-action')).toHaveAttribute('data-employee-action-period', '2026-08');
-    await expect(page.locator('#employee-dashboard-action')).toContainText('Open correctie');
-    await page.locator('#employee-dashboard-action').click();
+    // Desktop via de chip in "Nog te doen", telefoon via maandpil en hoofdknop.
+    await openUrenactieVanMaand(page, '2026-08', { chip: 'correctie', knop: 'Open correctie' });
   });
 
   await test.step('Then toont Mijn uren augustus als bewerkbare correctie met herindienknop', async () => {
@@ -1020,7 +872,8 @@ test('[DASH-H-024] startdatum verbergt procesmaand zonder uren of klanturenstaat
 
 test('[DASH-H-023] medewerker kan met de browser-terug/-vooruit-knop door alle eigen schermen navigeren', async ({ page }) => {
   const loginPage = new LoginPage(page);
-  const volgorde = ['employee-dashboard', 'timesheet', 'employee-announcements'] as const;
+  // Vier tabs sinds 14 sep: Vandaag · Mijn uren · Maanden · Berichten.
+  const volgorde = ['employee-dashboard', 'timesheet', 'historie', 'employee-announcements'] as const;
 
   await test.step('Given de medewerker is ingelogd op Mijn overzicht', async () => {
     await loginPage.open();
@@ -1305,20 +1158,23 @@ test('[DASH-H-026] het medewerkerdashboard houdt op telefoonbreedte de afgesprok
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
   });
 
-  await test.step('Then staat in Klassiek de volgende actie bovenaan, dan open acties, dan de klanturenstaat, dan de rest', async () => {
-    const blokken = await volgorde();
-    const positie = (naam: string) => {
-      const i = blokken.indexOf(naam);
-      expect(i, `${naam} hoort zichtbaar op het medewerkerdashboard te staan (gevonden: ${blokken.join(' < ')})`).toBeGreaterThanOrEqual(0);
-      return i;
-    };
-    const hero = positie('employee-hero');
-    const openActies = positie('employee-open-overview');
-    const klanturenstaat = positie('employee-customer-timesheet-card');
-    const historie = positie('employee-history-teaser');
-    expect(hero, `de volgende actie hoort boven open acties te staan (${blokken.join(' < ')})`).toBeLessThan(openActies);
-    expect(openActies, `open acties hoort boven de klanturenstaat te staan (${blokken.join(' < ')})`).toBeLessThan(klanturenstaat);
-    expect(klanturenstaat, `de klanturenstaat hoort boven het archief te staan (${blokken.join(' < ')})`).toBeLessThan(historie);
+  await test.step('Then staat in Klassiek Vandaag uit medewerker-wild.html: hero met de actie, dan het verloop, dan de klanturenstaat', async () => {
+    // Sinds 14 sep (TEST 2.0.59, punt 5-7) vervangt Vandaag op telefoon de oude
+    // blokken; open acties en de archiefregel staan er niet meer.
+    const tops = await page.evaluate(() => {
+      const top = (sel: string) => {
+        const el = document.querySelector<HTMLElement>(sel);
+        if (!el) return -1;
+        const r = el.getBoundingClientRect();
+        return r.width < 1 || r.height < 1 ? -1 : Math.round(r.top + window.scrollY);
+      };
+      return { knop: top('#vdt-hoofdknop'), verloop: top('#vdt-verloop-kop'), kaart: top('#vdt-klant-plek > #employee-customer-timesheet-card') };
+    });
+    const oud = await volgorde();
+    expect(oud.filter(n => n !== 'employee-customer-timesheet-card'), 'de oude Klassieke blokken horen op telefoon weg te zijn').toEqual([]);
+    expect(tops.knop, 'de hoofdknop hoort zichtbaar te zijn').toBeGreaterThan(0);
+    expect(tops.knop, `de actie hoort boven het verloop te staan (${JSON.stringify(tops)})`).toBeLessThan(tops.verloop);
+    expect(tops.verloop, `het verloop hoort boven de klanturenstaat te staan (${JSON.stringify(tops)})`).toBeLessThan(tops.kaart);
   });
 
   await test.step('And staat in Nieuw open acties in ieder geval boven de correctie- en archiefingang', async () => {
@@ -1940,9 +1796,8 @@ test('[DASH-H-036] Vandaag staat op desktop in Klassiek volgens de referentie, e
 
   await test.step('Then staat Vandaag er in Klassiek, en zijn de oude blokken en de klanturenstaatkaart verhuisd of weg', async () => {
     await expect(vandaag).toBeVisible();
-    // De archiefregel blijft tot de tab "Maanden" er is: anders is Mijn maanden op
-    // desktop onbereikbaar.
-    await expect(page.locator('#employee-history-teaser')).toBeVisible();
+    // De archiefregel is weg sinds Maanden een eigen tab is ([DASH-H-045]).
+    await expect(page.locator('#employee-history-teaser')).toBeHidden();
     for (const oud of ['#view-employee-dashboard > .employee-hero', '#employee-open-overview', '#employee-status-keten', '#view-employee-dashboard > .employee-metrics']) {
       await expect(page.locator(oud), `${oud} hoort op desktop plaats te maken voor Vandaag`).toBeHidden();
     }
@@ -1962,28 +1817,32 @@ test('[DASH-H-036] Vandaag staat op desktop in Klassiek volgens de referentie, e
     expect(stand.inLijst, `"${stand.gezegde}" hoort uit de lijst te komen`).toBe(true);
   });
 
-  await test.step('And zeggen hero en ring hetzelfde aantal open weken', async () => {
+  // Eén eenheid voor wat open is: dagen (DESIGN-BESLUITEN, 14 sep). De ring
+  // blijft het aandeel complete weken, zoals de referentie.
+  await test.step('And noemt de hero de open dagen uit dezelfde telling als Hele maand, en toont de ring de complete weken', async () => {
     const stand = await page.evaluate(() => {
       const w = window as unknown as {
         currentEmployee: () => { id: number }; currentPeriod: () => { key: string; weekRows: unknown[] };
         recordFor: (id: number, key: string) => unknown;
         completedTimesheetWeeks: (r: unknown, p: unknown) => number;
+        ontbrekendeWerkdagen: (r: unknown, p: unknown) => unknown[];
       };
       const periode = w.currentPeriod();
       const record = w.recordFor(w.currentEmployee().id, periode.key);
       return {
         totaal: periode.weekRows.length,
         compleet: w.completedTimesheetWeeks(record, periode),
+        openDagen: w.ontbrekendeWerkdagen(record, periode).length,
         antwoord: (document.querySelector('#vd-antwoord')?.textContent || '').trim(),
         pct: (document.querySelector('#vd-pct')?.textContent || '').trim(),
         fillStand: document.querySelector('#vd-verloop-lijst [data-vd-stap="fill"]')?.className || '',
       };
     });
-    const open = stand.totaal - stand.compleet;
     expect(stand.pct, 'de ring hoort het aandeel complete weken te tonen').toBe(Math.round((stand.compleet / stand.totaal) * 100) + '%');
+    const open = stand.openDagen;
     if (open > 0) {
-      expect(stand.antwoord).toBe('Nog ' + open + (open === 1 ? ' week' : ' weken') + ' in te vullen.');
-      expect(stand.fillStand, 'met open weken hoort "Uren ingevuld" de huidige stap te zijn').toContain('is-nu');
+      expect(stand.antwoord).toBe('Nog ' + open + (open === 1 ? ' dag' : ' dagen') + ' in te vullen.');
+      expect(stand.fillStand, 'met open dagen hoort "Uren ingevuld" de huidige stap te zijn').toContain('is-nu');
     }
   });
 
@@ -2022,11 +1881,17 @@ test('[DASH-H-036] Vandaag staat op desktop in Klassiek volgens de referentie, e
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
   });
 
-  await test.step('And staat Vandaag op telefoonbreedte nog niet, en keert de kaart terug naar zijn eigen plek', async () => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await expect(vandaag).toBeHidden();
-    await expect(page.locator('#view-employee-dashboard > .employee-hero')).toBeVisible();
-    await expect(page.locator('#vd-klant-plek > #employee-customer-timesheet-card')).toHaveCount(0);
+  await test.step('And toont Vandaag op telefoon de opbouw uit medewerker-wild.html, met de kaart onder het verloop', async () => {
+    // Sinds 14 sep staat Vandaag in Klassiek ook op telefoon (TEST 2.0.59, punt
+    // 5-7). De oude hero en "Open acties per maand" zijn daar weg.
+    await page.setViewportSize({ width: 390, height: 850 });
+    await expect(page.locator('#vd-tel')).toBeVisible();
+    await expect(page.locator('#vd-hero')).toBeHidden();
+    await expect(page.locator('#vdt-klant-plek > #employee-customer-timesheet-card')).toBeVisible();
+    await expect(page.locator('#view-employee-dashboard > .employee-hero')).toBeHidden();
+    await expect(page.locator('#employee-open-overview')).toBeHidden();
+    await expect(page.locator('#vdt-spreuk')).toHaveText(await page.locator('#vd-spreuk').textContent() || '');
+    await expect(page.locator('#vdt-verloop-lijst .vd-tel-stap')).toHaveCount(5);
   });
 });
 
@@ -2679,4 +2544,86 @@ test('[DASH-N-033] geen misleidend bericht aan Backoffice, en zelf gemaild in me
       w.renderAll();
     });
   }
+});
+
+// TEST 2.0.59, punt 1 (14 sep): de tabbalk van de medewerker had drie tabs,
+// Dashboard · Mijn uren · Mededelingen. "Maanden" ontbrak, en daarmee de vaste weg
+// naar afgeronde maanden en het Urenoverzicht-PDF; alleen een link onderaan het
+// dashboard leidde erheen. De referentie heeft vier tabs met telbolletjes.
+test('[DASH-H-045] de tabbalk van de medewerker heeft Vandaag · Mijn uren · Maanden · Berichten, en Maanden opent Mijn maanden', async ({ page }) => {
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  const tabs = page.locator('.nav-group.role-employee-only .nav-item');
+
+  await test.step('Then staan de vier tabs in de volgorde van de referentie', async () => {
+    await expect(tabs).toHaveCount(4);
+    const namen = await tabs.evaluateAll(items => items.map(item => (item.querySelector('span:not(.nav-marker):not(.nav-count)')?.textContent || '').trim()));
+    expect(namen).toEqual(['Vandaag', 'Mijn uren', 'Maanden', 'Berichten']);
+    await expect(tabs.nth(2)).toHaveAttribute('data-view', 'historie');
+  });
+
+  await test.step('When de medewerker op Maanden tikt, then staat Mijn maanden open en is die tab actief', async () => {
+    await page.locator('button[data-view="historie"]:visible').first().click();
+    await expect(page.locator('#view-historie')).toHaveClass(/is-active/);
+    await expect(tabs.nth(2)).toHaveClass(/is-active/);
+    await expect(page.locator('#employee-history .employee-history-row').first()).toBeVisible();
+  });
+
+  await test.step('And toont Berichten een telbolletje gelijk aan het aantal ongelezen berichten', async () => {
+    // Het scherm Berichten zelf is de bron: tel daar de ongelezen kaarten, met
+    // het filter op "alles", en vergelijk met het bolletje op de tab.
+    await page.locator('button[data-view="employee-announcements"]:visible').first().click();
+    await expect(page.locator('#view-employee-announcements')).toHaveClass(/is-active/);
+    const alles = page.locator('[data-announcement-archive-filter="all"]');
+    if (await alles.count()) await alles.first().click();
+    await expect(page.locator('#employee-announcement-archive, #view-employee-announcements').first()).toBeVisible();
+    const stand = await page.evaluate(() => {
+      const teller = document.querySelector('#employee-berichten-count') as HTMLElement;
+      return {
+        zichtbaar: !teller.hidden,
+        tekst: (teller.textContent || '').trim(),
+        ongelezen: document.querySelectorAll('#view-employee-announcements .employee-announcement-card.is-unread').length,
+      };
+    });
+    expect(stand.zichtbaar, 'het bolletje hoort er alleen te zijn als er ongelezen berichten zijn').toBe(stand.ongelezen > 0);
+    if (stand.ongelezen > 0) expect(stand.tekst).toBe(String(stand.ongelezen));
+  });
+});
+
+test('[DASH-H-046] op telefoon zweeft "Andere rol kiezen" niet over de inhoud; de actie staat in de topbalk', async ({ page }) => {
+  // TEST 2.0.59, punt 9: de zwevende knop linksonder bedekte de knoppen van de
+  // klanturenstaatkaart en de tabbalk. Op telefoon staat dezelfde actie al in de
+  // topbalk (#mobile-switch-role).
+  const loginPage = new LoginPage(page);
+  await page.setViewportSize({ width: 390, height: 850 });
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+
+  await test.step('Then is de zwevende knop weg en staat de topbalkknop er wel', async () => {
+    await expect(page.locator('#switch-role')).toBeHidden();
+    await expect(page.locator('#mobile-switch-role')).toBeVisible();
+  });
+
+  await test.step('And ligt geen vast gepositioneerde knop over de tabbalk', async () => {
+    const overlap = await page.evaluate(() => {
+      const balk = document.querySelector('.sidebar')!.getBoundingClientRect();
+      return Array.from(document.querySelectorAll<HTMLElement>('button')).filter(knop => {
+        if (getComputedStyle(knop).position !== 'fixed' || knop.closest('.sidebar')) return false;
+        const r = knop.getBoundingClientRect();
+        if (r.width < 1 || r.height < 1) return false;
+        return r.bottom > balk.top && r.top < balk.bottom && r.right > balk.left && r.left < balk.right;
+      }).map(knop => knop.id || knop.className);
+    });
+    expect(overlap).toEqual([]);
+  });
+
+  await test.step('When de medewerker via de topbalk van rol wisselt, then staat het inlogscherm er', async () => {
+    // logout() kiest de zichtbare knop: met #switch-role verborgen is dat
+    // #mobile-switch-role. Het sluit eerst een open hulppaneel (zie LoginPage).
+    await loginPage.logout();
+    await loginPage.assertLoggedOut();
+  });
 });

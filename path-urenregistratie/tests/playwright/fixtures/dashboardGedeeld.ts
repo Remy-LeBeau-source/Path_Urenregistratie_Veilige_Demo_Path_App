@@ -107,13 +107,15 @@ export function staleServerStateWith132OpenActions(): Record<string, unknown> {
 }
 
 export const ALLE_SCHERMEN = [
-  'dashboard', 'employee-dashboard', 'timesheet', 'approvals', 'invoices',
+  'dashboard', 'employee-dashboard', 'timesheet', 'historie', 'approvals', 'invoices',
   'announcements', 'employee-announcements', 'employees', 'settings',
 ] as const;
 export const SCHERMTITELS: Record<(typeof ALLE_SCHERMEN)[number], string> = {
   dashboard: 'Urenoverzicht',
   'employee-dashboard': 'Mijn overzicht',
   timesheet: 'Mijn uren',
+  // Sinds 14 sep een eigen tab ("Maanden") in de tabbalk van de medewerker.
+  historie: 'Mijn maanden',
   approvals: 'Goedkeuringen',
   invoices: 'Facturen',
   announcements: 'Mededelingen',

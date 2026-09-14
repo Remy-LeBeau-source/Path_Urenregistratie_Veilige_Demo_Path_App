@@ -125,15 +125,24 @@
            display:contents zodat de knoppenbalk onderin ongewijzigd blijft. -->
       <nav class="nav-list">
         <div class="nav-group role-employee-only" hidden>
+          <!-- Tabbalk van de medewerker, zoals de referentie (medewerker-wild.html
+               r394-405 en medewerker-gui.html r91-100): Vandaag · Mijn uren ·
+               Maanden · Berichten, met telbolletjes. "Maanden" ontbrak: Mijn
+               maanden (afgeronde maanden en het Urenoverzicht-PDF) was alleen
+               via een link onderaan het dashboard bereikbaar (TEST 2.0.59, punt 1). -->
           <button class="nav-item role-employee-only" data-view="employee-dashboard" hidden>
-            <span class="nav-marker"></span><span>Dashboard</span>
+            <span class="nav-marker"></span><span>Vandaag</span>
             <span class="nav-count" id="employee-dashboard-count" hidden>0</span>
           </button>
           <button class="nav-item role-employee-only" data-view="timesheet" hidden>
             <span class="nav-marker"></span><span>Mijn uren</span>
           </button>
+          <button class="nav-item role-employee-only" data-view="historie" hidden>
+            <span class="nav-marker"></span><span>Maanden</span>
+          </button>
           <button class="nav-item role-employee-only" data-view="employee-announcements" hidden>
-            <span class="nav-marker"></span><span>Mededelingen</span>
+            <span class="nav-marker"></span><span>Berichten</span>
+            <span class="nav-count" id="employee-berichten-count" hidden>0</span>
           </button>
         </div>
 
@@ -313,6 +322,42 @@
               <button type="button" class="vd-knop-mail" id="vd-mailknop" hidden>Die heb ik al gemaild</button>
             </div>
           </section>
+          <!-- Telefoon (tot 720px): 1-op-1 naar handoff/medewerker-wild.html
+               r113-212. Eigen opbouw, omdat volgorde en onderdelen verschillen van
+               desktop: geen paginakop, geen "Nog te doen", geen KPI; wel het grote
+               maandcijfer met de ring ernaast, het gezegde in de hero, het verloop
+               als lijst en daaronder de klanturenstaatkaart. Gevuld door dezelfde
+               renderVandaag(), dus één bron voor de getallen. -->
+          <div class="vd-tel" id="vd-tel">
+            <div class="vd-tel-herovak">
+              <span class="vd-tel-halo" aria-hidden="true"></span>
+              <section class="vd-tel-hero" aria-labelledby="vdt-antwoord">
+                <p class="vd-tel-groet" id="vdt-groet"></p>
+                <div class="vd-tel-rij">
+                  <div class="vd-tel-cijfers">
+                    <div class="vd-tel-maandtotaal"><strong id="vdt-maanduren"></strong><span>uur</span></div>
+                    <small class="vd-tel-contractregel" id="vdt-contractregel"></small>
+                    <h1 class="vd-tel-antwoord" id="vdt-antwoord"></h1>
+                  </div>
+                  <div class="vd-tel-ring" aria-hidden="true">
+                    <svg viewBox="0 0 82 82"><circle class="vd-tel-ring-leeg" cx="41" cy="41" r="36.5"></circle><circle class="vd-tel-ring-boog" id="vdt-ring-boog" cx="41" cy="41" r="36.5"></circle></svg>
+                    <span class="vd-tel-ring-binnen"><strong id="vdt-pct"></strong></span>
+                  </div>
+                </div>
+                <p class="vd-tel-toelichting" id="vdt-toelichting"></p>
+                <p class="vd-tel-spreuk" id="vdt-spreuk"></p>
+                <div class="vd-tel-acties">
+                  <button type="button" class="vd-tel-knop-hoofd" id="vdt-hoofdknop"></button>
+                  <button type="button" class="vd-tel-knop-mail" id="vdt-mailknop" hidden>Die heb ik al gemaild</button>
+                </div>
+              </section>
+            </div>
+            <section class="vd-tel-verloop" aria-labelledby="vdt-verloop-kop">
+              <div class="vd-tel-verloop-kop"><strong id="vdt-verloop-kop"></strong><small id="vdt-nustap"></small></div>
+              <ol class="vd-tel-verloop-lijst" id="vdt-verloop-lijst"></ol>
+            </section>
+            <div class="vd-tel-klant-plek" id="vdt-klant-plek"></div>
+          </div>
           <div class="vd-onder">
             <!-- Plek voor de klanturenstaatkaart, zoals de referentie hem onder de
                  hero zet. De bestaande Klassieke kaart (#employee-customer-

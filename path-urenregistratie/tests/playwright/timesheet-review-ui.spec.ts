@@ -4,7 +4,7 @@ import { appConfig, requirePassword } from './fixtures/appConfig';
 import { suppressInstallBanner } from './fixtures/suppressInstallBanner';
 import { setLeaveSickEntryEnabled } from './helpers/companySettings';
 import { LoginPage } from './pages/LoginPage';
-import { openUrenactieVanMaand, staatVandaagInBeeld } from './fixtures/klassiekDashboard';
+import { openUrenactieVanMaand } from './fixtures/klassiekDashboard';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
 
 test.beforeEach(async ({ page }) => {
@@ -454,15 +454,8 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
     await loginPage.assertLoggedOut();
 
     await loginPage.loginAsEmployee();
-    if (await staatVandaagInBeeld(page)) {
-      // Desktop-Klassiek: de correctie staat als chip in "Nog te doen" (Vandaag).
-      await openUrenactieVanMaand(page, PERIOD_KEY, { chip: 'correctie', knop: 'Open correctie' });
-    } else {
-      const correctionAction = page.locator('#employee-dashboard-action');
-      await expect(correctionAction).toContainText('Open correctie');
-      await expect(correctionAction).toHaveAttribute('data-employee-action-period', PERIOD_KEY);
-      await correctionAction.click();
-    }
+    // Klassiek desktop via de chip, Klassiek telefoon via maandpil + hoofdknop.
+    await openUrenactieVanMaand(page, PERIOD_KEY, { chip: 'correctie', knop: 'Open correctie' });
 
     await expect(page.locator('#timesheet-status')).toHaveText('Correctie nodig');
     await expect(page.locator('#timesheet-correction-banner')).toBeVisible();

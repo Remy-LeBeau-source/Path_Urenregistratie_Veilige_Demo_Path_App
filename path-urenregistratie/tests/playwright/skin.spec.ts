@@ -7,12 +7,11 @@ import { openProfielmenu } from './pages/TopbarMenu';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 // Scope rechtgezet 14 sep: op desktop vervangt Vandaag (#vandaag, referentie
 // handoff/medewerker-gui.html) in Klassiek de oude dashboardblokken: "Open acties
-// per maand", de volgende-actieknop, de kerncijfers en de stappenlijst. Op
-// telefoon staan die blokken er nog, tot medewerker-wild.html is nagebouwd. Cases
-// die dát gedrag toetsen, draaien daarom op telefoonbreedte: dezelfde assertions,
-// op de plek waar die code nog live is. Bij de Wild-stap worden ze opnieuw bekeken.
-async function opOudeKlassiekeBreedte(page: import('@playwright/test').Page): Promise<void> {
-  await page.setViewportSize({ width: 390, height: 844 });
+// per maand", de volgende-actieknop, de kerncijfers en de stappenlijst. Sinds 14
+// sep geldt dat ook op telefoon: daar staat Vandaag uit medewerker-wild.html.
+// Cases die op telefoon Vandaag lezen, zetten daarom de maat uit de opdracht.
+async function opTelefoonmaat(page: import('@playwright/test').Page): Promise<void> {
+  await page.setViewportSize({ width: 390, height: 850 });
 }
 
 
@@ -319,13 +318,16 @@ test('[SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en
 });
 
 test('[SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en Klassiek', async ({ page }) => {
-  await opOudeKlassiekeBreedte(page);
+  await opTelefoonmaat(page);
   const loginPage = new LoginPage(page);
+  // In Klassiek op telefoon staan het maandcijfer en de huidige stap in Vandaag.
+  const klassiekUren = page.locator('#vdt-maanduren');
+  const klassiekStap = page.locator('#vdt-nustap');
 
   await test.step('Given een medewerkerdashboard met geladen urenstatus', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await expect(page.locator('#employee-dashboard-hours')).toBeVisible();
+    await expect(klassiekUren).toBeVisible();
     // Zichtbaar is niet hetzelfde als geladen. Het dashboard toont eerst de
     // lokale stand (0,0 uur) en tekent zichzelf opnieuw zodra bootstrap.php
     // binnen is -- met daarin het eigen werkpatroon van de medewerker, dat
@@ -335,16 +337,19 @@ test('[SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en K
     // navigeren te maken heeft. De case gaat over "blijft gelijk bij
     // navigeren", dus hij moet van een bezonken waarde uitgaan.
     await expect(async () => {
-      const eerste = await page.locator('#employee-dashboard-hours').innerText();
+      const eerste = await klassiekUren.innerText();
       await page.waitForTimeout(600);
-      const tweede = await page.locator('#employee-dashboard-hours').innerText();
+      const tweede = await klassiekUren.innerText();
       expect(tweede, 'de urenwaarde op het dashboard moet tot rust gekomen zijn').toBe(eerste);
     }).toPass({ timeout: 20_000, intervals: [300, 600, 1_000] });
   });
 
   const medewerker = await page.locator('#workspace-name').innerText();
-  const urenVoor = await page.locator('#employee-dashboard-hours').innerText();
-  const statusVoor = await page.locator('#employee-dashboard-status').innerText();
+  const urenVoor = await klassiekUren.innerText();
+  const stapVoor = await klassiekStap.innerText();
+  // Modern leest zijn eigen blok; dat is in Klassiek verborgen, dus textContent.
+  const modernUrenVoor = await page.locator('#employee-dashboard-hours').textContent();
+  const modernStatusVoor = await page.locator('#employee-dashboard-status').textContent();
 
   await test.step('When de medewerker Nieuw activeert en via de bento naar Mijn uren navigeert', async () => {
     await page.locator('#quick-skin-toggle').click();
@@ -367,13 +372,14 @@ test('[SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en K
     await expect(page.locator('.mobile-brand-home')).toBeVisible();
     await page.locator('.mobile-brand-home').click();
     await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
-    await expect(page.locator('#employee-dashboard-hours')).toHaveText(urenVoor);
-    await expect(page.locator('#employee-dashboard-status')).toHaveText(statusVoor);
+    await expect(page.locator('#employee-dashboard-hours')).toHaveText(modernUrenVoor || '');
+    await expect(page.locator('#employee-dashboard-status')).toHaveText(modernStatusVoor || '');
 
     await page.locator('#quick-skin-toggle').click();
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
-    await expect(page.locator('#employee-dashboard-hours')).toHaveText(urenVoor);
-    await expect(page.locator('#employee-dashboard-status')).toHaveText(statusVoor);
+    await expect(klassiekUren).toBeVisible();
+    await expect(klassiekUren).toHaveText(urenVoor);
+    await expect(klassiekStap).toHaveText(stapVoor);
   });
 });
 
@@ -1532,7 +1538,12 @@ test('[SKIN-H-028] "Week terugzetten" overschrijft ook een dag die bewust op 0 i
     await page.locator('[data-hours-week-scope="all"]').click();
   });
 
-  await test.step('And "Standaardweek vullen" die bevestigde 0 met rust laat (bestaand, veilig gedrag)', async () => {
+  // Besluit Gio (14 sep): wie op "vullen" drukt, geeft een nieuwe instructie, en
+  // die weegt zwaarder dan een eerdere bewuste 0. Eerder liet vullen een bevestigde
+  // 0 met rust (de wens van Stasjo hierboven); op TEST leek de knop daardoor stuk
+  // na "Week terugzetten". Wie na vullen alsnog een 0 wil, tikt die dag aan. Zie
+  // ook [DASH-H-042].
+  await test.step('And "Standaardweek vullen" zet die bevestigde 0 terug op het werkpatroon', async () => {
     // Bevestigde 0-dag zetten en meteen "Standaardweek vullen" klikken in
     // dezelfde evaluate, zonder gat ertussen: net als SKIN-H-023 hierboven al
     // toelicht, kan een achtergrond-sync tussen een losse zet-stap en een
@@ -1555,7 +1566,7 @@ test('[SKIN-H-028] "Week terugzetten" overschrijft ook een dag die bewust op 0 i
       (document.querySelector('#fill-standard-hours') as HTMLElement | null)?.click();
       return record.entries[weekIndex][0];
     }, plek);
-    expect(maandag).toBe(0);
+    expect(maandag, 'vullen hoort het patroon terug te zetten, ook over een bewuste 0').toBe(plek.patroon);
   });
 
   await test.step('Then vraagt "Week terugzetten" om bevestiging vóór hij iets overschrijft', async () => {
@@ -1966,12 +1977,11 @@ test('[SKIN-H-030] een lang e-mailadres duwt de statuspil niet buiten beeld op 3
 // zodra iemand één vlag aanpast. Deze case bewaakt de uitkomst van die
 // doorloop, niet de implementatie.
 test('[SKIN-H-031] de vijf stappen lopen in volgorde en geen stap staat groen terwijl een eerdere nog open is', async ({ page }) => {
-  await opOudeKlassiekeBreedte(page);
   test.setTimeout(120_000);
   const loginPage = new LoginPage(page);
   await loginPage.open();
   await loginPage.loginAsEmployee();
-  await expect(page.locator('#employee-dashboard-hours')).toBeVisible();
+  await expect(page.locator('#vd-antwoord')).not.toBeEmpty();
   await page.locator('#quick-skin-toggle').click();
   await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
   // Deze case zet de gedeelde demomedewerker in een extreme toestand (hele
@@ -2076,12 +2086,16 @@ test('[SKIN-H-031] de vijf stappen lopen in volgorde en geen stap staat groen te
 // die val staat in styles-new.css opgeschreven bij .new-bento-step-segment:
 // één lijnstuk dat op 11 sep twee keer onafhankelijk werd gerepareerd.
 test('[SKIN-H-032] Klassiek en Modern tonen dezelfde statusketen, uit dezelfde bron', async ({ page }) => {
-  await opOudeKlassiekeBreedte(page);
+  // Klassiek heeft sinds 14 sep twee weergaven van de keten: het verloop in
+  // Vandaag op desktop (#vd-verloop-lijst) en op telefoon (#vdt-verloop-lijst).
+  // Beide horen gelijk te zijn aan Modern. Op telefoonmaat, zodat de laatste stap
+  // de telefoonlijst ook echt in beeld toetst; desktop doet [DASH-H-039].
+  await opTelefoonmaat(page);
   test.setTimeout(120_000);
   const loginPage = new LoginPage(page);
   await loginPage.open();
   await loginPage.loginAsEmployee();
-  await expect(page.locator('#employee-dashboard-hours')).toBeVisible();
+  await expect(page.locator('#vdt-verloop-lijst')).toBeVisible();
   // Zelfde reden als bij [SKIN-H-031]: deze case laat de maand ingediend
   // achter en dat verandert wat latere cases zien.
   const herstelUrenstaat = await bewaarUrenstaat(page);
@@ -2133,19 +2147,21 @@ test('[SKIN-H-032] Klassiek en Modern tonen dezelfde statusketen, uit dezelfde b
         detail: String(li.querySelector(detail)?.textContent || '').trim(),
       }));
     return {
-      klassiek: lees('#employee-status-keten-list [data-keten-step]', 'ketenStep', 'is-af', 'is-nu', '[data-keten-detail]'),
+      klassiek: lees('#vdt-verloop-lijst [data-vdt-stap]', 'vdtStap', 'is-af', 'is-nu', 'small'),
+      klassiekDesktop: lees('#vd-verloop-lijst [data-vd-stap]', 'vdStap', 'is-af', 'is-nu', 'small'),
       modern: lees('#new-bento-steps [data-step]', 'step', 'is-done', 'is-current', '[data-step-detail]'),
-      huidigeStap: String(document.querySelector('#employee-status-keten-nu')?.textContent || '').trim(),
+      huidigeStap: String(document.querySelector('#vdt-nustap')?.textContent || '').trim(),
     };
   }, toestand);
 
   try {
     await test.step('Given een maand die nog concept is terwijl de factuurstatus al op verwerkt staat', async () => {
-      const { klassiek, modern, huidigeStap } = await zetEnLees('concept');
+      const { klassiek, klassiekDesktop, modern, huidigeStap } = await zetEnLees('concept');
       expect(klassiek.map(stap => stap.key)).toEqual(['fill', 'submit', 'review', 'customer', 'done']);
       expect(klassiek.map(stap => stap.stand), 'geen stap mag groen staan zolang "Uren ingevuld" nog de huidige is')
         .toEqual(['nu', 'wacht', 'wacht', 'wacht', 'wacht']);
-      expect(huidigeStap).toBe('Stap 1 van 5 · Uren ingevuld');
+      expect(huidigeStap).toBe('Uren ingevuld');
+      expect(klassiekDesktop, 'desktop en telefoon in Klassiek horen dezelfde keten te tonen').toEqual(klassiek);
       expect(modern, 'Klassiek en Modern horen dezelfde keten te tonen; wijkt dit af, dan rekent een van de twee zijn eigen standen uit in plaats van statusKetenStappen te gebruiken')
         .toEqual(klassiek);
     });
@@ -2153,20 +2169,21 @@ test('[SKIN-H-032] Klassiek en Modern tonen dezelfde statusketen, uit dezelfde b
     await test.step('And lopen beide gelijk mee zodra de maand is ingediend', async () => {
       // De andere kant: zonder deze helft zou een keten die in beide
       // vormgevingen altijd hetzelfde verkeerde antwoord geeft ook slagen.
-      const { klassiek, modern, huidigeStap } = await zetEnLees('ingediend');
+      const { klassiek, klassiekDesktop, modern, huidigeStap } = await zetEnLees('ingediend');
       expect(modern.map(stap => stap.stand)).toEqual(['af', 'af', 'nu', 'wacht', 'wacht']);
       expect(klassiek, 'ook na een statuswissel horen beide vormgevingen gelijk te lopen').toEqual(modern);
-      expect(huidigeStap).toBe('Stap 3 van 5 · Uren goedgekeurd');
+      expect(huidigeStap).toBe('Uren goedgekeurd');
+      expect(klassiekDesktop).toEqual(modern);
     });
 
-    await test.step('And is de Klassieke keten zichtbaar in Klassiek en de bento in Modern', async () => {
+    await test.step('And is het verloop zichtbaar in Klassiek en de bento in Modern', async () => {
       // De vergelijking hierboven leest de DOM, niet het beeld. Deze stap
       // controleert dat elke skin ook echt zijn eigen weergave toont.
-      await expect(page.locator('#employee-status-keten')).toBeVisible();
+      await expect(page.locator('#vdt-verloop-lijst')).toBeVisible();
       await page.locator('#quick-skin-toggle').click();
       await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
       await expect(page.locator('#new-bento-steps')).toBeVisible();
-      await expect(page.locator('#employee-status-keten')).toBeHidden();
+      await expect(page.locator('#vdt-verloop-lijst')).toBeHidden();
     });
   } finally {
     await herstelUrenstaat();
