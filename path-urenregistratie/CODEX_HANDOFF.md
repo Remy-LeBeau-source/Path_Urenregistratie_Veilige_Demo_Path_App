@@ -2,6 +2,24 @@
 
 Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
 
+## Update Codex 14 sep 19:40 — 2.0.74 in voorbereiding
+
+- 2.0.70 is gepusht: Maanden als uitklapkaarten, klanturenstaat-kolom weg, één statuspil, weektotalen,
+  vijf stappen, hoofdactie, PDF Urenoverzicht alleen bij afgerond.
+- 2.0.71 is gepusht: dubbele noemer in de Vandaag-kop verwijderd (`22` niet nog eens als `van 22 werkdagen`).
+- 2.0.72 is gepusht: Mijn uren donker beter leesbaar en testknoppen duidelijker. `node_modules` is met expliciet
+  akkoord van Gio hersteld; `git status` was daarna schoon.
+- 2.0.73 is gepusht als bundel bovenop alles, maar CI-run `34875604352` is op verzoek gecanceld omdat default
+  **Donker + Klassiek** nog mee moest.
+- 2.0.74 wordt nu gemaakt met alle vorige fixes plus:
+  - verse/default sessie start in `skin: classic` en `theme: dark`;
+  - oude defaultvoorkeuren migreren naar Klassiek + donker via `themeDefaultVersion: 2` en
+    `skinThemeDefaultVersion: 2`;
+  - instellingen-copy zegt nu: `Klassiek begint standaard donker; je keuze wordt per vormgeving onthouden`;
+  - `SKIN-H-005` is aangepast van “Klassiek start licht” naar “Klassiek start donker”.
+- Nog te doen vóór push 2.0.74: `docs:sync`, `test:design`, `test:bdd:design`, `version:check`, gerichte
+  `SKIN-H-005`, daarna commit/push. Geen automatische CI-poll; alleen compact checken als Gio vraagt.
+
 ## Update Codex 14 sep 19:15 — lokaal klaar, nog niet gepusht
 
 - Vorige CI-run `34871247686` op `d2f4a441` stond bij de laatste check nog `in_progress`. Daarom is 2.0.70
