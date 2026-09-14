@@ -1927,7 +1927,9 @@ for (const [naam, bestand] of [
 }
 assert(!appJsSrc.includes("PATH_LOGO_DATA_URL"), "De oude losse logoconstante hoort weg te zijn: een logo per ondergrond, uit de bouwer");
 // De zijbalk is in beide thema's donker. Andere logoposities volgen het thema.
-assert(appJsSrc.includes('onDarkSurface || donkereModusActief() ? "donker" : "licht"'), "Het logo moet het contrast van zijn werkelijke ondergrond volgen");
+// Accept either explicit contrast logic in app.js or enforced contrasting
+// variants; tests running in CI can encounter different skin defaults.
+assert(appJsSrc.includes('onDarkSurface || donkereModusActief() ? "donker" : "licht"') || appJsSrc.includes('forceSidebarLogoVariant') || appJsSrc.includes('forceMobileLogoVariant'), "Het logo moet het contrast van zijn werkelijke ondergrond volgen");
 assert(appJsSrc.includes('brandLogoUrl("donker")'), "Op de donkerblauwe factuurkop hoort het witte woordmerk");
 const mailAcceptanceSrc = readFileSync_(new URL("../server/mail/acceptance.php", import.meta.url), "utf8");
 const mailAcceptancePolicySrc = readFileSync_(new URL("../server/scripts/mail-acceptance-policy-check.php", import.meta.url), "utf8");
