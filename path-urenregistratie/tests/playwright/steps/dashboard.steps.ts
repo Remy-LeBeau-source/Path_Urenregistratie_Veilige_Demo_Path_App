@@ -151,7 +151,8 @@ Then("wordt met Playwright-assertions bevestigd dat het verloop in Vandaag volgt
 Given("Klassiek op Mijn uren met Hele maand gekozen");
 When("de app op de achtergrond opnieuw tekent, then blijft Hele maand staan met de indienknop");
 And("geldt dat ook in Modern op Mijn uren");
-And("zet de bento in Modern op het dashboard nog wel zijn eigen week");
+And("blijft de keuze ook staan als de bento in Modern op het dashboard tekent");
+And("volgt Mijn uren de week van de bento zolang de medewerker zelf niets koos");
 Then("wordt met Playwright-assertions bevestigd dat een hertekening op de achtergrond zet \"Hele maand\" in Mijn uren niet terug naar één week");
 Given("de administrator is ingelogd");
 When("de administrator het dashboard opent");

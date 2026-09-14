@@ -238,7 +238,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 538 Playwri
 - [DASH-H-037] Vandaag ververst het restcijfer meteen na ureninvoer en na terugnavigeren — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 8
 - [DASH-H-038] Nog te doen in Vandaag opent per maand de juiste route, ook voor een correctie, en blijft leesbaar in donker — Techniek: Toestandsovergang · Assertions: 17
 - [DASH-H-039] het verloop in Vandaag volgt de volgorderegel en is gelijk aan de stappen in Modern — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
-- [DASH-N-032] een hertekening op de achtergrond zet "Hele maand" in Mijn uren niet terug naar één week — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 11
+- [DASH-N-032] een hertekening op de achtergrond zet "Hele maand" in Mijn uren niet terug naar één week — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 12
 - [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 29
 - [DASH-N-022] een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8

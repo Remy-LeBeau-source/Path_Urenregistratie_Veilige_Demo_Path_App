@@ -2279,11 +2279,21 @@ test('[DASH-N-032] een hertekening op de achtergrond zet "Hele maand" in Mijn ur
     await expect(page.locator('#submit-timesheet')).toBeVisible();
   });
 
-  await test.step('And zet de bento in Modern op het dashboard nog wel zijn eigen week', async () => {
-    // De andere kant: de grens mag het bedoelde gedrag niet slopen. Staat de
-    // bento in beeld, dan volgt Mijn uren de week die hij toont.
+  await test.step('And blijft de keuze ook staan als de bento in Modern op het dashboard tekent', async () => {
     await page.evaluate(() => { window.location.hash = 'employee-dashboard'; });
     await expect(page.locator('#new-employee-bento')).toBeVisible();
+    await hertekenTweeKeer();
+    expect(await scope()).toBe('all');
+  });
+
+  await test.step('And volgt Mijn uren de week van de bento zolang de medewerker zelf niets koos', async () => {
+    // De andere kant: de grens mag het standaardgedrag niet slopen. Zonder eigen
+    // keuze hoort de bento de week te zetten ([SKIN-H-016], [MOB-H-003]).
+    await page.evaluate(() => {
+      const s = (0, eval)('state') as { hoursWeekScope: string; hoursWeekScopeTouched: boolean };
+      s.hoursWeekScopeTouched = false;
+      s.hoursWeekScope = 'all';
+    });
     await hertekenTweeKeer();
     expect(await scope()).toMatch(/^week-\d+$/);
     await page.locator('#quick-skin-toggle').click();

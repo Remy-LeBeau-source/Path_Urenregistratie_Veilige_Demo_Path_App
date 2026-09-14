@@ -5871,15 +5871,14 @@ function renderNewEmployeeBento(record, employee, period) {
   const weekIndex = newEmployeeBentoWeekIndex(period);
   const week = period.weekRows[weekIndex];
   if (!week) return;
-  // Alleen als de bento echt het scherm is (Modern, op het dashboard) volgt Mijn
-  // uren de week die hij toont. renderEmployeeDashboard draait bij elke
-  // renderAll, ook in Klassiek en ook als je op Mijn uren staat. Zonder deze
-  // grens zette een hertekening op de achtergrond (bijvoorbeeld na een
-  // serversync) "Hele maand" ongevraagd terug naar één week, en verdween daarmee
-  // de knop Maand indienen. Gevonden door de main-sessie bij E2E-N-019 (14 sep).
-  const bentoInBeeld = document.documentElement.dataset.skin === "new"
-    && Boolean(document.querySelector("#view-employee-dashboard")?.classList.contains("is-active"));
-  if (bentoInBeeld) state.hoursWeekScope = "week-" + weekIndex;
+  // Zolang de medewerker zelf nog geen weergave koos, volgt Mijn uren de week die
+  // de bento toont (daar leunen onder meer [SKIN-H-016] en [MOB-H-003] op). Een
+  // bewuste keuze, zoals "Hele maand", zet hoursWeekScopeTouched en blijft dan
+  // staan. renderEmployeeDashboard draait bij elke renderAll, ook in Klassiek en
+  // op Mijn uren; zonder deze grens zette een hertekening op de achtergrond "Hele
+  // maand" terug naar één week en verdween de knop Maand indienen. Gevonden door
+  // de main-sessie bij E2E-N-019 (14 sep); de grens is hun voorstel.
+  if (!state.hoursWeekScopeTouched) state.hoursWeekScope = "week-" + weekIndex;
   const customerDocument = customerTimesheetFor(record);
   const heroGreeting = document.querySelector("#new-bento-greeting");
   const heroTitle = document.querySelector("#new-bento-hero-title");
@@ -11338,6 +11337,11 @@ function login(role) {
     state.selectedPeriodKey = currentMonthKey;
     ensurePeriodRecords(currentMonthKey);
   }
+  // Net als de maand begint ook de weergave van Mijn uren bij elke inlog opnieuw:
+  // een eerder gekozen "Hele maand" hoort bij die sessie. Op telefoon begint de
+  // app daardoor weer met één week (helptekst "Uren invullen", [MOB-H-003]).
+  // Binnen een sessie blijft de keuze staan, ook na een hertekening ([DASH-N-032]).
+  state.hoursWeekScopeTouched = false;
   state.currentRole = role;
   if (API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative()) state.notifications = [];
   persistState();
