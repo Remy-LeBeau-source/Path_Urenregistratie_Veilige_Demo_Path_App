@@ -246,7 +246,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-033] de verloopstappen in Klassiek tonen ✓ en • in de bol, leesbaar in licht en donker
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 10
+    # Aantoonbare Playwright-assertions in deze case: 14
     Given dashboard en open werkvoorraad is voorbereid
     When de flow voor DASH-H-033 wordt uitgevoerd
     Then heeft de huidige stap een • en een wachtende stap geen teken
@@ -262,6 +262,15 @@ Feature: Dashboard en open werkvoorraad
     When het bestand als bijlage wordt verstuurd, dan gaat precies dat bestand mee naar de indienroute
     And na een weigering blijft het gekozen bestand staan
     Then wordt met Playwright-assertions bevestigd dat de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee
+
+  @happy
+  Scenario: [DASH-H-035] Mijn uren op desktop toont alleen Ma–Vr, de datum boven elk veld, 0/8/9 eronder en het weektotaal rechts
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given dashboard en open werkvoorraad is voorbereid
+    When de flow voor DASH-H-035 wordt uitgevoerd
+    Then heeft de weekstaat alleen de werkdagen als kolommen
+    And staat in elke dagcel de datum boven het veld en 0/8/9 eronder, met het totaal rechts van de dagen
 
   @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors

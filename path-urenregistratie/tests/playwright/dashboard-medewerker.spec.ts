@@ -1639,6 +1639,8 @@ test('[DASH-H-033] de verloopstappen in Klassiek tonen ✓ en • in de bol, lee
 
   await test.step('Then heeft de huidige stap een • en een wachtende stap geen teken', async () => {
     await expect(lijst.locator('li.is-nu .keten-bol')).toHaveText('•');
+    // De referentie telt open dagen, net als Hele maand, geen weken.
+    await expect(lijst.locator('[data-keten-step="fill"] [data-keten-detail]')).toHaveText(/^(Compleet|1 dag open|\d+ dagen open)$/);
     const wachtend = lijst.locator('li.is-wacht .keten-bol');
     expect(await wachtend.count(), 'de lopende maand hoort minstens één wachtende stap te hebben').toBeGreaterThan(0);
     for (const tekst of await wachtend.allTextContents()) expect(tekst).toBe('');
@@ -1667,9 +1669,16 @@ test('[DASH-H-033] de verloopstappen in Klassiek tonen ✓ en • in de bol, lee
       const bol = el.querySelector(sel) as HTMLElement;
       const cs = getComputedStyle(bol);
       const a = lum(rgb(cs.color)); const b = lum(rgb(cs.backgroundColor));
-      return { teken: bol.textContent, ratio: (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05) };
+      return { teken: bol.textContent, kleur: cs.color, vlak: cs.backgroundColor, ratio: (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05) };
     };
-    return { af: contrast('li.is-af .keten-bol'), nu: contrast('li.is-nu .keten-bol') };
+    // De verwachte kleuren uit de tokens van hetzelfde thema, via een meetelement,
+    // zodat de case "navy" en "amber" toetst en niet alleen "leesbaar genoeg".
+    const meet = document.createElement('span');
+    document.body.appendChild(meet);
+    meet.style.color = 'var(--navy)'; meet.style.backgroundColor = 'var(--warning)';
+    const token = { navy: getComputedStyle(meet).color, warning: getComputedStyle(meet).backgroundColor };
+    meet.remove();
+    return { af: contrast('li.is-af .keten-bol'), nu: contrast('li.is-nu .keten-bol'), token };
   }, thema);
 
   for (const thema of ['light', 'dark']) {
@@ -1680,6 +1689,11 @@ test('[DASH-H-033] de verloopstappen in Klassiek tonen ✓ en • in de bol, lee
       // 4,5:1 zoals voor tekst: het teken is de enige drager van de stand in de bol.
       expect(stand.af.ratio, `✓ op mint in ${thema}`).toBeGreaterThanOrEqual(4.5);
       expect(stand.nu.ratio, `• op de huidige bol in ${thema}`).toBeGreaterThanOrEqual(4.5);
+      // Export 14 sep 04:07Z: de huidige bol is massief amber, en tekens op mint
+      // en amber staan altijd in navy (DESIGN-BESLUITEN, terugmelding 2).
+      expect(stand.af.kleur, `✓ hoort navy te zijn in ${thema}`).toBe(stand.token.navy);
+      expect(stand.nu.kleur, `• hoort navy te zijn in ${thema}`).toBe(stand.token.navy);
+      expect(stand.nu.vlak, `de huidige bol hoort massief amber te zijn in ${thema}`).toBe(stand.token.warning);
     });
   }
   await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
@@ -1795,5 +1809,48 @@ test('[DASH-H-034] de klanturenstaatkaart loopt van leeg via bestand gekozen naa
     expect(standen.gemaild.stand).toBe('gemaild');
     expect(standen.gemaild.tekst).toContain('De Backoffice verwerkt hem zodra hij binnen is.');
     expect(standen.gemaild.skipTekst).toBe('Toch een bestand toevoegen');
+  });
+});
+
+// Opdracht 14 sep, terugmelding 1: Mijn uren bestaat in Klassiek al en hoeft
+// niet opnieuw gebouwd, maar wel getoetst aan de eisen uit DESIGN-BESLUITEN
+// "Mijn uren in de GUI": alleen Ma–Vr, de datum boven elk veld, 0/8/9 klein onder
+// elk veld, en het weektotaal rechts. 0/8/9 per dag bewaakt [SKIN-H-025] al;
+// deze case legt de opbouw vast, want die stond nog nergens -- een weekendkolom
+// of een datum naast het veld zou nu stil doorgaan.
+test('[DASH-H-035] Mijn uren op desktop toont alleen Ma–Vr, de datum boven elk veld, 0/8/9 eronder en het weektotaal rechts', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  await page.locator('button[data-view="timesheet"]').click();
+  await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+  await expect(page.locator('#hours-grid .hours-input').first()).toBeVisible({ timeout: 10_000 });
+
+  await test.step('Then heeft de weekstaat alleen de werkdagen als kolommen', async () => {
+    await expect(page.locator('.hours-table thead th')).toHaveText(['Week', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Totaal']);
+    const cellenPerWeek = await page.locator('#hours-grid tr').first().locator('td').count();
+    expect(cellenPerWeek, 'een weekrij hoort weeknummer, vijf dagen en totaal te hebben').toBe(7);
+  });
+
+  await test.step('And staat in elke dagcel de datum boven het veld en 0/8/9 eronder, met het totaal rechts van de dagen', async () => {
+    const maten = await page.locator('#hours-grid tr').first().evaluate(rij => {
+      const cel = rij.querySelector('.hours-day-entry') as HTMLElement;
+      const r = (el: Element | null) => el ? el.getBoundingClientRect() : null;
+      const dagcellen = rij.querySelectorAll('td.workday-cell, td.outside-month');
+      return {
+        datum: r(cel.querySelector('.date-number')),
+        veld: r(cel.querySelector('.hours-input')),
+        knoppen: r(cel.querySelector('.hours-day-presets')),
+        datumTekst: cel.querySelector('.date-number')?.textContent || '',
+        laatsteDag: r(dagcellen[dagcellen.length - 1]),
+        totaal: r(rij.querySelector('.week-total')),
+      };
+    });
+    expect(maten.datumTekst, 'de datum hoort als "di 1 sep" te lezen').toMatch(/^(Ma|Di|Wo|Do|Vr) \d{1,2} \w{3}$/i);
+    expect(maten.datum!.bottom, 'de datum hoort boven het veld te staan').toBeLessThanOrEqual(maten.veld!.top + 1);
+    expect(maten.knoppen!.top, '0/8/9 hoort onder het veld te staan').toBeGreaterThanOrEqual(maten.veld!.bottom - 1);
+    expect(maten.totaal!.left, 'het weektotaal hoort rechts van de dagen te staan').toBeGreaterThanOrEqual(maten.laatsteDag!.right - 1);
   });
 });

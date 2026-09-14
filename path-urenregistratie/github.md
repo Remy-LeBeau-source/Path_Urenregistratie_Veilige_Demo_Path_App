@@ -3,7 +3,53 @@ branch: main
 path: path-urenregistratie
 
 ## Last sync
-date: 2026-09-14T06:00:00Z
+date: 2026-09-14T06:20:00Z
+
+### Ronde 14 sep (derde, vervolg) — terugmeldingen verwerkt, export 04:07:28Z
+Vier van de vijf terugmeldingen waren fouten in de referentie; die zijn daar
+hersteld. Stand aan de repo-kant:
+
+1. **Mijn uren bestaat al** — alleen getoetst, niets gebouwd. Nieuw:
+   [DASH-H-035] legt de opbouw vast (kolommen Ma–Vr, datum boven het veld, 0/8/9
+   eronder, weektotaal rechts). 0/8/9 per dag stond al onder [SKIN-H-025].
+2. **Huidige stapbol** — nu een massieve `var(--warning)` met het teken in
+   `var(--navy)`, zoals de referentie; mijn eigen afwijking (lichte tint met
+   amber teken) is weg. [DASH-H-033] toetst nu de kleuren zelf (navy teken,
+   amber vlak) in licht en donker, niet alleen het contrast.
+3. **Klanturenstaat** — de GUI is gelijkgetrokken met Wild: altijd zichtbaar,
+   `heeftTaak` telt ook nog niet ingediend mee, en de vierde toestand "Bijlage
+   verstuurd". De Klassieke kaart deed dit al.
+   **Nog niet in de referentie verwerkt** (andere punten dan de drie die zijn
+   rechtgezet):
+   - de mailroute: in Wild een link "Ik heb hem zelf naar de klant gemaild" in
+     de lege kaart, in de GUI een knop "Die heb ik al gemaild";
+   - na zelf mailen zegt Wild "Deze maand is daarmee afgerond — je hoeft niets
+     meer te doen" (r204, ook r751/r903), maar de app laat dat oranje tot
+     Backoffice bevestigt;
+   - Wild biedt na verzenden nog "Ik heb hem zelf gemaild" (r200).
+
+   Gebouwd is wat de app toestaat: de knop, de GUI-tekst en geen maillink na
+   verzenden.
+4. **Spreukenlijst** — raakt alleen Modern (geparkeerde branch), en die gebruikte
+   de werkelijke lengte al.
+5. **Verloopteksten** — "Uren ingevuld" telt nu open dagen ("1 dag open" /
+   "N dagen open"), met dezelfde gaten als Hele maand, in plaats van "N weken
+   open". De overige detailteksten ("Ingediend", "Klaar om in te dienen", "Nog
+   niet aangeleverd") stonden al zo. De teksten komen uit `statusKetenStappen`,
+   dus ook de Modern-stappenlijst noemt nu dagen.
+
+**Export 04:14:00Z.** Design heeft Wild op de drie open klanturenstaatpunten
+naar de app en de GUI rechtgetrokken:
+- zelf mailen is een knop "Die heb ik al gemaild" in plaats van een link;
+- na zelf mailen staat er "De Backoffice verwerkt hem zodra hij binnen is" met
+  amber • "Wacht op de Backoffice", zonder "afgerond"-belofte, ook in de
+  dashboardtekst;
+- na verzenden is de maillink weg.
+
+Aan Klassiek verandert daardoor niets. De verlopen link naar
+`HANDOFF-MEDEWERKER-MOBIEL.md` is vervangen; die versie zegt nu ook max 2 MB.
+
+## Sync history
 
 ### Ronde 14 sep (derde) — scope gewijzigd: Klassiek eerst
 Export 2026-09-14T03:24:33Z, bijgewerkt 03:58:15Z (alleen "maximaal 2 MB" en de drie antwoorden). Verschil met de vorige export, gelezen uit de
@@ -94,8 +140,6 @@ risico dan de lege listener zelf.
 Tegenproeven gedaan door de verwachting in de test te verdraaien, zonder
 productiecode te wijzigen: DASH-H-033, SKIN-H-035, SKIN-H-039 en DASH-H-034 (twee
 keer: bestandsnaam in het verzoek, tekst van de terugweg) vielen allemaal om.
-
-## Sync history
 
 ### Ronde 14 sep (tweede) — vervangt de zip-ronde van eerder vandaag
 Zeven punten in `OPDRACHT.md`. Stand per punt aan de repo-kant:

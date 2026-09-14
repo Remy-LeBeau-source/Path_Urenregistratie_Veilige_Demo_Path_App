@@ -1741,14 +1741,13 @@ html:not([data-skin="new"]) #view-historie { max-width: var(--pagina); margin-in
 /* Teken in de bol volgens de referentie (medewerker-gui.html r373: 10px/900 in
    de maandlijst; r276: 11px op het dashboard). Op mint altijd var(--navy),
    nooit wit: wit op #3abd9d haalt 2,35:1 (DESIGN-BESLUITEN "Contrast op mint en
-   amber"). De huidige bol is in Klassiek geen gevulde amberbol maar een lichte
-   (donker: bruine) tint; navy zou daar in donker wegvallen, dus daar de
-   amber-teksttint van dezelfde stap. */
+   amber"). De huidige stap is sinds de export van 14 sep 04:07Z een massieve
+   amberbol var(--warning) met het teken in var(--navy), in licht en donker
+   (DESIGN-BESLUITEN "Vijf terugmeldingen uit de bouw", punt 2). */
 .keten-bol { position: relative; z-index: 1; display: grid; place-items: center; width: 20px; height: 20px; margin-top: 1px; border: 2px solid var(--line); border-radius: 50%; background: var(--vlak); font-size: 10px; font-weight: 900; line-height: 1; }
 .employee-status-keten .keten-bol { font-size: 11px; }
 .status-keten-lijst li.is-af .keten-bol { border-color: var(--mint); background: var(--mint); color: var(--navy); }
-.status-keten-lijst li.is-nu .keten-bol { color: var(--warning-tekst); }
-.status-keten-lijst li.is-nu .keten-bol { border-color: var(--warning-rand); background: var(--warning-bg); box-shadow: 0 0 0 4px var(--warning-bg); }
+.status-keten-lijst li.is-nu .keten-bol { border-color: var(--warning); background: var(--warning); color: var(--navy); box-shadow: 0 0 0 4px var(--warning-bg); }
 .status-keten-lijst li strong { grid-column: 2; color: var(--navy-tekst); font-size: 14px; }
 .status-keten-lijst li small { grid-column: 2; margin-top: 2px; color: var(--muted); font-size: 11.5px; }
 .status-keten-lijst li.is-af strong { color: var(--mint-dark-tekst); }

@@ -5486,12 +5486,7 @@ function newEmployeeBentoWeekIndex(period) {
 // was geen hypothetisch risico: "Afgerond" hing aan de factuurstatus terwijl de
 // klanturenstaat buiten de keten stond, dus een maand die nog concept was kon
 // een groene eindstap tonen.
-//
-// De teksten komen uit handoff/medewerker-wild.bron.txt. Eén bewuste afwijking:
-// de bron zegt "N dagen open", want daar bestaan gaten per dag. De app rekent
-// met hele weken (isTimesheetWeekComplete), dus hier staat "N weken open".
-// Gaten per dag hangen aan een besluit dat nog openstaat -- zie de terugmelding
-// over toekomstige werkdagen in github.md.
+
 // Toont die ontbrekende dagen als chips onder de weekkiezer. Alleen in de
 // maandweergave: kijk je naar één week, dan is de weekkaart zelf al het
 // overzicht en zou een tweede lijst dat verdubbelen.
@@ -5542,14 +5537,19 @@ function statusKetenStappen(record, period) {
   const totalWeeks = period.weekRows.length;
   const filledWeeks = completedTimesheetWeeks(record, period);
   const urenCompleet = totalWeeks > 0 && filledWeeks === totalWeeks;
-  const wekenOpen = Math.max(0, totalWeeks - filledWeeks);
+  // De teksten volgen handoff/medewerker-wild.bron.txt en -gui.bron.txt, die
+  // sinds de export van 14 sep 04:07Z in alle blokken gelijk zijn. "N dagen
+  // open" telt dezelfde gaten als Hele maand (ontbrekendeWerkdagen: elke lege
+  // werkdag, een bewuste 0 telt als ingevuld) -- dat zijn precies de dagen
+  // waardoor een week niet compleet is, dus "Compleet" en nul dagen vallen samen.
+  const dagenOpen = ontbrekendeWerkdagen(record, period).length;
 
   const ruw = [
     {
       key: "fill",
       titel: "Uren ingevuld",
       af: urenCompleet,
-      detail: urenCompleet ? "Compleet" : wekenOpen === 1 ? "1 week open" : wekenOpen + " weken open"
+      detail: urenCompleet ? "Compleet" : dagenOpen === 1 ? "1 dag open" : dagenOpen + " dagen open"
     },
     {
       key: "submit",
