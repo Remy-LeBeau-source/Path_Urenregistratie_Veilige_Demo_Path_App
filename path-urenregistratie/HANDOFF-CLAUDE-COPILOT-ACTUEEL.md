@@ -146,3 +146,37 @@ Haal alleen logs op wanneer een job rood is.
 
 - 2026-09-14: tijdelijke fix lokaal toegepast in tests helper `tests/playwright/pages/TopbarMenu.ts` om flakiness bij het openen van het profielmenu te mitigeren (wacht op DOM-attachment in plaats van strikte zichtbaarheid). Dit is lokaal en niet gecommit.
 2026-09-14T14:40:55 - run 34844009341 - NOT SUCCESS () - logs downloaded to gh-run-34844009341-logs - https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App/actions/runs/34844009341
+
+---
+## Testaanpak — vastgelegd door Gio, 14 september 2026 avond (geldt voor Claude, Copilot en Codex)
+
+**Volledige regressie gaat via de pipeline.** CI draait alle apparaten op 8 shards met een schone
+database in ~20 minuten. Start lokaal geen suite over meerdere spec-bestanden: dat duurt uren op
+`workers: 1`, de laptop heeft te weinig RAM en de machine wordt gedeeld.
+
+**Wat lokaal wél moet, vóór elke push:**
+1. **Gericht bewijzen:** alleen de cases die de wijziging raakt,
+   `node scripts/run-playwright-e2e.mjs --project=<project> <spec> -g "<ID|ID>"`, op de breedtes
+   waar de wijziging actief is (binnen én op de rand van een media query; bij medewerker-UI minimaal
+   één desktop- en één telefoonproject).
+2. **Tegenproef:** draai de verwachting in de test om (niet `app.js` muteren), laat hem rood worden,
+   zet terug en controleer dat er geen `TEGENPROEF`-markers achterblijven.
+3. **Verkenningscases op Klassiek:** nieuwe assertions op wat we verwachten (geen horizontale scroll,
+   geen consolefouten, geen afgekapte of onleesbare tekst, tikvlakken ≥44px op touch, licht én
+   donker, alle vier medewerkerschermen) lokaal op één project controleren; CI toont ze daarna op
+   alle apparaten.
+4. **Goedkope poorten:** `node --check assets/app.js`, `npm run test:design`,
+   `npm run test:bdd:design`, `npm run docs:sync` (gegenereerde bestanden meecommitten),
+   `npm run version:check`.
+5. **Na CI:** alleen de rode cases lokaal nadraaien, oorzaak fixen, weer via stap 1–4.
+
+Nooit twee lokale runs tegelijk; meld "machine bezet/vrij" aan de andere sessies; nooit
+`npx playwright test` rechtstreeks. Bundel wijzigingen per push. CI-fouten ophalen met
+`gh api repos/{owner}/{repo}/actions/jobs/<id>/logs`, niet met `gh run watch`.
+
+### Stand na overname door Claude (14 sep, ~17:15)
+- `329391e2`: `body[data-view]` → `data-scherm` (strict-mode-fout in ADM-WR-H-010/-012/-015/-016);
+  topbalk op Vandaag weer zichtbaar zonder titel (profielmenu, bel, maandkiezer bereikbaar);
+  horizontale medewerkernavigatie ook in donker; Berichten op `--pagina` (SKIN-H-037).
+- `5c3890e9`: living docs. CI-run `34859854199` loopt.
+- Versiemismatch 2.0.61/2.0.62 bij Gio: vrijwel zeker browsercache/service worker, geen serverfout.
