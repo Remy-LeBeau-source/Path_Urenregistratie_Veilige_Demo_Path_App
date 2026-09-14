@@ -82,7 +82,7 @@ Feature: Klanturenstaten en documentverwerking
   @happy
   Scenario: [CTS-API-H-013] medewerker registreert rechtstreeks gemaild zichtbaar vanuit een lege actuele maand
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 20
+    # Aantoonbare Playwright-assertions in deze case: 21
     Given de medewerker in september start zonder klanturenstaatrecord
     When de medewerker de zichtbare registratie met verplichte reden afrondt
     Then serverreadback en F5 dezelfde status tonen en herstel opnieuw werkt

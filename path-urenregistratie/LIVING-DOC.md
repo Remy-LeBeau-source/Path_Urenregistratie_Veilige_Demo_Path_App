@@ -184,7 +184,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 543 Playwri
 - [CTS-API-H-017] markeren als verzonden en als naar de broker verzonden volgt de toegestane volgorde — Techniek: API-contract + equivalentieklasse · Assertions: 20
 - [CTS-API-N-013] request_resubmit zonder toelichting wordt door de server geweigerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 7
 - [CTS-API-H-004] employee kan mark_skipped registreren en restore_missing terugdraaien — Techniek: Toestandsovergang · Assertions: 15
-- [CTS-API-H-013] medewerker registreert rechtstreeks gemaild zichtbaar vanuit een lege actuele maand — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 20
+- [CTS-API-H-013] medewerker registreert rechtstreeks gemaild zichtbaar vanuit een lege actuele maand — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 21
 - [CTS-API-N-005] employee krijgt 400 bij ongeldig bestandstype — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 - [CTS-API-H-005] JPG- en PNG-upload worden als inline bekijkbare PDF opgeslagen — Techniek: Equivalentieklassen · Assertions: 34
 - [CTS-API-H-006] medewerker uploadt zichtbaar een afbeelding en kan die na nieuwe login bekijken — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 23
