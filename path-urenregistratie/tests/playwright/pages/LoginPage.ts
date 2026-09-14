@@ -91,7 +91,12 @@ export class LoginPage {
         document.addEventListener(type, event => {
           const doel = event.target as Element | null;
           const naam = doel ? `${doel.tagName.toLowerCase()}${doel.id ? '#' + doel.id : ''}` : '?';
-          w.__inlogEvents?.push(`${type}@${naam}${event.defaultPrevented ? '(prevented)' : ''}`);
+          // scrollY en de bovenkant van de knop per event: CI (0ba8c066) liet zien
+          // dat indrukken op de knop landt en loslaten op #auth-forgot-password
+          // eronder. Dit onderscheidt scrollen van een layoutverschuiving.
+          const knopTop = Math.round(document.querySelector('#auth-login-submit')?.getBoundingClientRect().top ?? -1);
+          const muisY = 'clientY' in event ? Math.round((event as MouseEvent).clientY) : -1;
+          w.__inlogEvents?.push(`${type}@${naam}${event.defaultPrevented ? '(prevented)' : ''}[sy${Math.round(scrollY)},kt${knopTop},my${muisY}]`);
         }, { capture: true });
       }
     }).catch(() => undefined);

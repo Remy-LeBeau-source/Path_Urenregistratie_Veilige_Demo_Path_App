@@ -3042,6 +3042,14 @@ zinloos was geweest.
   pointerdown/mouseup/click/submit met het doelelement. Lokaal bewezen dat hij verschijnt met een
   onderschepte, nooit beantwoorde login-POST. De eerstvolgende WebKit-uitval in CI zegt daarmee waar het
   strandt: loslaten op een ander element, geen click, of click zonder submit.
+- **Doorbraak 14 sep, CI op herontwerp 0ba8c066 (vier uitvallers met de nieuwe diagnose).** Elke keer:
+  velden gevuld, formulier geldig, knop aan, geen melding, en de eventreeks
+  `pointerdown@#auth-login-submit → mousedown@#auth-login-submit → pointerup@#auth-forgot-password
+  (of @form) → mouseup@idem → click@form`. **Indrukken landt op de knop, loslaten eronder**, dus de
+  browser maakt er geen submit van. Tussen indrukken en loslaten verschuift de knop ten opzichte van de
+  muis. `#auth-forgot-password` staat direct onder de knop, dus het beeld past bij verschuiven met
+  ongeveer één knophoogte. Scrollen of een layoutwijziging is nog niet onderscheiden; de reeks legt nu per
+  event ook `scrollY`, de bovenkant van de knop en `clientY` vast. Geen fix voordat dat bekend is.
 - **Apart, niet hetzelfde:** in `[DASH-H-008]` opent de accountkiezer na "Andere rol kiezen" niet
   (paneel blijft `hidden`, eerst drie keer "element is not stable"). Ook een klik op het inlogscherm
   zonder effect, maar daar in demo-modus en zonder formulier.
