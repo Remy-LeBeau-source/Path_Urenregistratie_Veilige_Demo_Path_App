@@ -124,6 +124,9 @@ gedrag. Wie in Modern op het dashboard staat, krijgt de week van de bento, ook n
 een eerder gekozen "Hele maand"; op Mijn uren zelf blijft de keuze staan.
 [DASH-N-032] toetst Klassiek, Modern op Mijn uren, en dat de bento op het
 dashboard nog wel zijn week zet. Groen op desktop, mobile-chrome en mobile-safari.
+Rood-proef door main: dezelfde case tegen de ongerepareerde app.js faalt op
+desktop-chromium en mobile-safari in de stap "When de app op de achtergrond
+opnieuw tekent" (verwacht "all", kreeg "week-4").
 
 ## Sync history
 
