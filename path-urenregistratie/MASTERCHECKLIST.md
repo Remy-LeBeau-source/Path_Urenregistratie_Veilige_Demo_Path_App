@@ -3042,9 +3042,45 @@ zinloos was geweest.
   pointerdown/mouseup/click/submit met het doelelement. Lokaal bewezen dat hij verschijnt met een
   onderschepte, nooit beantwoorde login-POST. De eerstvolgende WebKit-uitval in CI zegt daarmee waar het
   strandt: loslaten op een ander element, geen click, of click zonder submit.
+- **Doorbraak 14 sep, CI op herontwerp 0ba8c066 (vier uitvallers met de nieuwe diagnose).** Elke keer:
+  velden gevuld, formulier geldig, knop aan, geen melding, en de eventreeks
+  `pointerdown@#auth-login-submit → mousedown@#auth-login-submit → pointerup@#auth-forgot-password
+  (of @form) → mouseup@idem → click@form`. **Indrukken landt op de knop, loslaten eronder**, dus de
+  browser maakt er geen submit van. Tussen indrukken en loslaten verschuift de knop ten opzichte van de
+  muis. `#auth-forgot-password` staat direct onder de knop, dus het beeld past bij verschuiven met
+  ongeveer één knophoogte. Scrollen of een layoutwijziging is nog niet onderscheiden; de reeks legt nu per
+  event ook `scrollY`, de bovenkant van de knop en `clientY` vast. Geen fix voordat dat bekend is.
 - **Apart, niet hetzelfde:** in `[DASH-H-008]` opent de accountkiezer na "Andere rol kiezen" niet
   (paneel blijft `hidden`, eerst drie keer "element is not stable"). Ook een klik op het inlogscherm
   zonder effect, maar daar in demo-modus en zonder formulier.
+
+**OPEN (app-fout, bij herontwerp): een render zet "Hele maand" terug naar één week en verbergt de indienknop (E2E-N-019).**
+- CI 984cd06a, mobile-safari: de time-out op waitForResponse was een gevolg. De echte fout was de klik op
+  `#submit-timesheet`, die `hidden` en `disabled` stond in de correctiemaand augustus.
+- Oorzaak: `renderNewEmployeeBento()` (app.js:5824, sinds 06-09) schrijft bij elke render
+  `state.hoursWeekScope = "week-" + weekIndex`. `renderEmployeeDashboard()` roept hem altijd aan, ook in
+  Klassiek. `updateTimesheetSubmitUi()` toont de knop alleen bij scope `all`.
+- Bewijs, lokaal op mobile-safari: na "Hele maand" is de knop zichtbaar. Eén `renderAll()` later is hij
+  `hidden`. Met `renderNewEmployeeBento` als no-op blijft hij zichtbaar.
+- Gevolg voor een gebruiker: kiest die Hele maand en typt die uren, dan springt de weergave na de
+  conceptopslag terug naar een week en is de indienknop weg. In CI treedt het alleen op als de render
+  tussen de twee klikken valt, dus vaker op het tragere WebKit.
+- Overgedragen aan de herontwerplane (bento is hun regio), inclusief de eis van een regressiecase die
+  zonder fix rood is.
+
+**OPEN: accountkiezer opent op mobile-safari soms niet na een rolwissel (DASH-H-008, E2E-H-002).**
+- Gezien in de releases op 5e0bfbda (DASH-H-008, twee pogingen) en 984cd06a (E2E-H-002, pas bij de
+  herhaling groen). In beide gevallen: klik op `#login-*-trigger` direct na `logout()`, daarna blijft
+  `#login-*-choices` `hidden`.
+- Het paneel gaat alleen dicht via `closeLoginAccountPanels()`: bij een klik buiten
+  `.login-account-picker`, bij Escape, en synchroon in `logoutLocal()`. Die laatste is al gelopen
+  voordat de test het inlogscherm ziet.
+- De trace van DASH-H-008 laat de trigger drie keer "not stable" zien (ongeveer 800 ms beweging) vóór
+  de klik. Mijn vermoeden: de klik valt op een verschuivende plek naast de kiezer en sluit alles.
+  **Niet bewezen.** Wat er beweegt is onbekend; animaties en smooth scroll staan onder reducedMotion uit.
+- Lokaal is E2E-H-002 op mobile-safari 8 van de 8 keer groen, dus er is geen reproductie en geen fix.
+  Volgende stap bij een nieuwe uitval: in de trace nagaan welke `scrollY` en rect de trigger had tussen
+  de laatste stabiliteitscontrole en de klik.
 
 **OPEN: dekkingsgat op desktop door het Klassieke Vandaag-scherm (14 sep, herontwerp).**
 Vanaf 721px vervangt Vandaag het oude medewerkerdashboard. Negen cases zijn daarom op 390px vastgezet.
