@@ -3063,6 +3063,27 @@ meeste bestaat nog geen desktop-assertie; vastzetten zonder vervanging zou dekki
 De herontwerplane bouwt hiervoor desktopcases (KPI, prioriteitsroute, verloop, contrast). Afvinken pas als
 de nieuwe case-ID bestaat en rood is geweest tegen een kapotte variant.
 
+*Stand na herontwerp 5e2c5565:* DASH-H-037 (003/004/SKIN-H-009), DASH-H-038 (005/014/N-016 en het
+chipcontrast) en DASH-H-039 (SKIN-H-031/-032) bestaan op origin/herontwerp; SKIN-H-024 draait weer op
+desktop. Bestaan door mij nagekeken; de tegenproeven zijn gemeld door de herontwerplane en niet door mij
+herhaald. Daarom pas afvinken zodra ze groen op main in een release staan. De eigenaarregel bij
+DASH-H-005 blijft zonder desktopfunctie en dus zonder desktopcase -- dat is een productkeuze voor Gio.
+
+**OPGELOST: `[HELP-N-001]` op mobile-safari faalde bij het uitloggen, niet bij het inloggen (14 sep).**
+Het hulppaneel onderschepte 15 s lang de klik op `#switch-role`.
+- **Oorzaak, gemeten:** `openHelp()` haalt `hidden` meteen weg, maar zet `is-open` pas in de volgende
+  animatieframe. `LoginPage.logout()` keek of `#help-panel.is-open` er was, vond direct na het openen
+  niets en sloeg het sluiten over; een frame later lag het paneel over de knop. Lokaal gemeten op
+  mobile-safari direct na de klik: `is-open` 0, zichtbaar 1.
+- **Fix in de testhulp:** controleren op `#help-panel:not([hidden])`. Een klik op `#help-close` die het
+  paneel niet sluit wordt niet meer stil ingeslikt maar faalt met klikfout en posities. Een sluitknop die
+  op iOS soms niet sluit zou een echt probleem zijn, dus geen herhaalpoging die dat verbergt.
+- **Bewijs:** vóór de fix faalde HELP-N-001 lokaal bij de eerste run. De tegenproef (sluitknop zonder
+  handler) faalt nu met "Hulppaneel bleef open". Na de fix is help-widget 4 keer op mobile-safari 24/24
+  groen, en help-widget plus auth op desktop-chromium 23/23.
+- **App-kant, niet aangepast:** wie het paneel binnen die ene frame weer sluit, laat `is-open` op een
+  verborgen paneel staan. Onzichtbaar voor de gebruiker, dus geen fix zonder aanleiding.
+
 **Herhaald probleem: onze twee sessies draaien tests door elkaar heen (vier keer op 13/14 sep).**
 Telkens hetzelfde gevolg: een meting die geldig lijkt omdat hij reproduceerbaar is, terwijl de
 vervuiling elke herhaling meereist. **Herkenningsteken dat het contention is en geen defect:**
