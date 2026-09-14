@@ -246,7 +246,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 550 Playwri
 - [DASH-H-046] op telefoon zweeft "Andere rol kiezen" niet over de inhoud; de actie staat in de topbalk — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbalk, en Vandaag begint met de begroeting — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 25
 - [DASH-H-048] de kop toont de maand als vakjes per week, en een dagvakje opent Mijn uren op die dag — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 19
-- [DASH-H-049] licht Klassiek heeft bij de medewerker één vast veld over de pagina en een doorschijnende menubalk — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
+- [DASH-H-049] licht Klassiek heeft bij de medewerker één vast veld over de pagina en een doorschijnende menubalk — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [DASH-H-050] zodra de laatste lege week gevuld is, staat Maand indienen ook in de weekweergave — Techniek: Toestandsovergang · Assertions: 7
 - [DASH-H-051] Mijn uren: dagen buiten de maand zijn gedempt met datum, en van week naar week gaat met pijltjes en Tab op vrijdag — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 15
 - [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1

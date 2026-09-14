@@ -22,7 +22,7 @@ Feature: Dashboard en open werkvoorraad
     Given dashboard en open werkvoorraad is voorbereid
     When de flow voor DASH-H-025 wordt uitgevoerd
     Then heeft Mijn maanden geen losse Klanturenstaat-kolom meer
-    And toont elke maandkaart precies één statuspil die de wachtende stap noemt
+    And toont elke maandkaart precies één statuspil die de wachtende stap zelf noemt, niet een vaste samenvatting
 
   @happy
   Scenario: [DASH-H-021] de medewerker keert zowel via Dashboard als via Mijn uren terug naar de actuele maand na een blik op een oudere maand
@@ -402,7 +402,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-049] licht Klassiek heeft bij de medewerker één vast veld over de pagina en een doorschijnende menubalk
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 10
+    # Aantoonbare Playwright-assertions in deze case: 11
     Given dashboard en open werkvoorraad is voorbereid
     When de flow voor DASH-H-049 wordt uitgevoerd
     Then hangt het veld aan het venster, met de waarden van de referentie voor deze breedte

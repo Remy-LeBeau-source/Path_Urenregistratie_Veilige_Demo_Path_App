@@ -63,14 +63,40 @@ test('[DASH-H-025] "Mijn maanden" toont één statuspil per maand en geen losse 
     await expect(page.locator('#employee-history')).not.toContainText(/in behandeling/i);
   });
 
-  await test.step('And toont elke maandkaart precies één statuspil die de wachtende stap noemt', async () => {
+  await test.step('And toont elke maandkaart precies één statuspil die de wachtende stap zelf noemt, niet een vaste samenvatting', async () => {
+    // De verwachte tekst komt uit dezelfde bron als de pil zelf
+    // (statusKetenStappen): geen losse, geraden lijst met mogelijke teksten,
+    // anders bewijst deze case niet dat de pil de wérkelijke stap noemt --
+    // exact de fout die hier zat (een vaste "Urenstaat open" ook wanneer de
+    // medewerker zelf had gemaild).
+    const verwacht = await page.evaluate(() => {
+      const w = window as unknown as {
+        currentEmployee: () => { id: number };
+        recordFor: (id: number, key: string) => { timesheetStatus: string };
+        periodFromKey: (key: string) => unknown;
+        statusKetenStappen: (record: unknown, period: unknown) => Array<{ key: string; detail: string; stand: string }>;
+        activeCorrection: (record: unknown) => unknown;
+      };
+      const emp = w.currentEmployee();
+      const pil = (key: string) => {
+        const record = w.recordFor(emp.id, key);
+        const period = w.periodFromKey(key);
+        const stappen = w.statusKetenStappen(record, period);
+        const huidig = stappen.find(stap => stap.stand === 'nu');
+        if (!huidig) return 'Afgerond';
+        const correction = w.activeCorrection(record);
+        return correction && huidig.key === 'fill' ? 'Correctie gevraagd' : huidig.detail;
+      };
+      return { augustus: pil('2026-08'), juli: pil('2026-07') };
+    });
+
     const augustusRow = page.locator('#employee-history .employee-history-row', { hasText: 'Augustus 2026' });
     await expect(augustusRow.locator('.status-pill')).toHaveCount(1);
-    await expect(augustusRow.locator('.status-pill')).toHaveText(/Correctie gevraagd|Uren open|Urenstaat open|Ingediend|Klanturenstaat open|Afgerond/);
+    await expect(augustusRow.locator('.status-pill')).toHaveText(verwacht.augustus);
 
     const juliRow = page.locator('#employee-history .employee-history-row', { hasText: 'Juli 2026' });
     await expect(juliRow.locator('.status-pill')).toHaveCount(1);
-    await expect(juliRow.locator('.status-pill')).toHaveText(/Correctie gevraagd|Uren open|Urenstaat open|Ingediend|Klanturenstaat open|Afgerond/);
+    await expect(juliRow.locator('.status-pill')).toHaveText(verwacht.juli);
   });
 });
 
@@ -2521,15 +2547,25 @@ test('[DASH-N-033] geen misleidend bericht aan Backoffice, en zelf gemaild in me
     const stand = await page.evaluate(() => {
       const w = window as unknown as {
         currentEmployee: () => { id: number; name: string };
-        currentPeriod: () => { key: string };
-        recordFor: (id: number, key: string) => { customerTimesheet: Record<string, unknown> };
+        currentPeriod: () => { key: string; weekRows: Array<{ days: Array<unknown> }> };
+        recordFor: (id: number, key: string) => { customerTimesheet: Record<string, unknown>; entries: number[][]; confirmedEntries: boolean[][]; timesheetStatus: string };
         renderAll: () => void;
         showCustomerTimesheetDetails: (id: number, key: string, review: boolean) => void;
         closeModal: () => void;
       };
       const emp = w.currentEmployee();
-      const key = w.currentPeriod().key;
-      const doc = w.recordFor(emp.id, key).customerTimesheet;
+      const period = w.currentPeriod();
+      const key = period.key;
+      const record = w.recordFor(emp.id, key);
+      // De statuspil in Mijn maanden noemt de huidige kétenstap: zonder volledig
+      // ingevulde en goedgekeurde uren staat "fill" of "review" nog open, en komt
+      // de klanturenstaat-tekst nooit aan de beurt. Uren dus eerst compleet en
+      // goedgekeurd zetten, zodat de keten écht bij de klanturenstaat staat --
+      // dezelfde regel die statusKetenStappen zelf gebruikt.
+      record.entries = period.weekRows.map(week => week.days.map(day => (day ? 8 : 0)));
+      record.confirmedEntries = period.weekRows.map(week => week.days.map(day => Boolean(day)));
+      record.timesheetStatus = 'approved';
+      const doc = record.customerTimesheet;
       // Zelf gemaild, nog niet extern bevestigd.
       Object.assign(doc, { status: 'skipped', skippedReason: 'De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.', skippedBy: emp.name, skippedAt: '14-09-2026 10:00', reviewNote: '' });
       w.renderAll();
@@ -2859,6 +2895,17 @@ test('[DASH-H-049] licht Klassiek heeft bij de medewerker één vast veld over d
   await loginPage.open();
   await loginPage.loginAsEmployee();
   await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  // Klassiek start standaard donker (besluit 14 sep); deze case gaat specifiek
+  // over licht, dus expliciet zetten via de echte voorkeur -- niet het kale
+  // data-theme-attribuut, want alleen applyTheme() herberekent het merk en de
+  // afgeleide kleuren die deze case toetst.
+  await page.evaluate(() => {
+    const staat = (0, eval)('state');
+    staat.preferences.theme = 'light';
+    staat.preferences.classicTheme = 'light';
+    (0, eval)('applyTheme')();
+  });
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   const breed = (page.viewportSize()?.width ?? 0) >= 721;
 
   await test.step('Then hangt het veld aan het venster, met de waarden van de referentie voor deze breedte', async () => {

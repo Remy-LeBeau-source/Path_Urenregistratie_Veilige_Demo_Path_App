@@ -20,7 +20,7 @@ Then("alleen medewerkersinformatie wordt getoond zonder consolefouten");
 Given("dashboard en open werkvoorraad is voorbereid");
 When("de flow voor DASH-H-025 wordt uitgevoerd");
 Then("heeft Mijn maanden geen losse Klanturenstaat-kolom meer");
-And("toont elke maandkaart precies één statuspil die de wachtende stap noemt");
+And("toont elke maandkaart precies één statuspil die de wachtende stap zelf noemt, niet een vaste samenvatting");
 Given("de medewerker heeft op Mijn uren zelf een eerdere maand geopend");
 When("de medewerker op Dashboard klikt");
 Then("staat de maandkiezer weer op de actuele kalendermaand augustus");

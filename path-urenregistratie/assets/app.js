@@ -5760,18 +5760,17 @@ function statusKetenItemsHtml(stappen) {
 function historyStatusPill(record, period) {
   const stappen = statusKetenStappen(record, period);
   const huidig = stappen.find(stap => stap.stand === "nu");
+  if (!huidig) return { label: "Afgerond", tone: "status-done" };
   const correction = activeCorrection(record);
-  if (!huidig) {
-    return { label: "Afgerond", tone: "status-done" };
-  }
-  if (correction && huidig.key === "fill") {
-    return { label: "Correctie gevraagd", tone: "status-warning" };
-  }
-  if (huidig.key === "fill") return { label: "Uren open", tone: "status-warning" };
-  if (huidig.key === "submit") return { label: "Urenstaat open", tone: "status-warning" };
-  if (huidig.key === "review") return { label: "Ingediend", tone: "status-pending" };
-  if (huidig.key === "customer") return { label: "Klanturenstaat open", tone: "status-warning" };
-  return { label: huidig.titel, tone: "status-pending" };
+  const tone = huidig.key === "review" ? "status-pending" : "status-warning";
+  // De pil noemt de stap waar het op wacht, met dezelfde detailtekst als het
+  // uitgeklapte verloop en het dashboard -- één bron (statusKetenStappen), geen
+  // tweede, eigen formulering hier. Eerder stond hier per stap een vaste,
+  // generieke tekst (bv. altijd "Urenstaat open" bij "submit", ook als de
+  // medewerker zelf had gemaild); dat verloor precies het onderscheid
+  // ("Door jou gemaild · wacht op Backoffice") dat deze pil juist moet tonen.
+  const label = correction && huidig.key === "fill" ? "Correctie gevraagd" : huidig.detail;
+  return { label, tone };
 }
 
 function historyMainAction(record, period) {
