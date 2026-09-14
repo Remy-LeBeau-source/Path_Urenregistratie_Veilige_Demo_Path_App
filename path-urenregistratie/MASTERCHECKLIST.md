@@ -3067,6 +3067,23 @@ zinloos was geweest.
   muis. `#auth-forgot-password` staat direct onder de knop, dus het beeld past bij verschuiven met
   ongeveer één knophoogte. Scrollen of een layoutwijziging is nog niet onderscheiden; de reeks legt nu per
   event ook `scrollY`, de bovenkant van de knop en `clientY` vast. Geen fix voordat dat bekend is.
+- **Vervolg 14 sep middag.** De uitgebreide reeks (CI d13089a9, zes vangsten): tussen indrukken en loslaten
+  scrolt de pagina 29-39 px, muis stil, knop mee omhoog. Eerste fix (55d69a3a, knop naar het midden)
+  **hielp niet**: CI op herontwerp 3205146a (acht vangsten, mét centrering) toont een zachte
+  scrollanimatie die al loopt vóór het indrukken en steeds op dezelfde stand eindigt (sy422, knop tegen
+  de onderrand). De klik valt midden in die beweging. Tweede fix (dd6db2fd): zelf centreren, wachten tot
+  scrollY tien frames stilstaat, controleren dat de knop volledig in beeld is, dan `page.mouse.click` op
+  het midden -- een klik die zelf niet meer scrollt. Lokaal auth + help-widget mobile-safari/desktop
+  45/46 (AUTH-H-020 faalde lokaal al eerder). Moet in CI bevestigd worden.
+- **Onderliggend, gemeten: `reducedMotion: 'reduce'` in playwright.config.ts werkt in geen enkel project.**
+  Het staat direct onder `use`, maar dat is geen testoptie (in de typedefinities hoort het onder
+  `use.contextOptions`) en wordt stil genegeerd. Op desktop-chromium, mobile-chrome en mobile-safari:
+  `matchMedia('(prefers-reduced-motion: reduce)')` false, `scroll-behavior` smooth. Pas
+  `page.emulateMedia` zet het aan. Elke aanname "animaties staan uit in de tests" was dus onwaar.
+  **Nog niet aangepast:** het raakt de hele suite, en `[HELP-H-002]` ("Given geen voorkeur voor
+  verminderde beweging") slaagt nu juist dankzij de kapotte instelling en krijgt dan een expliciete
+  `no-preference`. Voorgelegd aan de andere lanes; als aparte commit na een landing, met een volledige
+  CI-run als toets.
 - **Apart, niet hetzelfde:** in `[DASH-H-008]` opent de accountkiezer na "Andere rol kiezen" niet
   (paneel blijft `hidden`, eerst drie keer "element is not stable"). Ook een klik op het inlogscherm
   zonder effect, maar daar in demo-modus en zonder formulier.
