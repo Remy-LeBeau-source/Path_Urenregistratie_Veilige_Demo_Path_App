@@ -3002,6 +3002,30 @@ melding -- dus vermoedelijk echt, in onderzoek (sessie -ad):**
 Een eerste poging na de herstart telde niet: MySQL deed er 5,5 minuut over om InnoDB te
 initialiseren, en de run liep op `ECONNREFUSED 3306` stuk vóór er één case draaide.
 
+**OPEN, maar verklaard: op mobile-safari verstuurt de browser soms geen inlogverzoek (14 sep).**
+Aanleiding: de release op 3f3a6ff4 viel op mobile-safari om met `page.waitForFunction: Timeout 30000ms`
+in de inlogstap (`[DASH-N-030]`, `[DASH-H-020]`, `[SKIN-H-029]`, allemaal rond 34 s). De reflex was de
+inlogbegroting in `LoginPage.ts` nog eens verhogen. Niet gedaan, en de meting laat zien waarom dat
+zinloos was geweest.
+- **Geen serverbelasting.** De release-pijplijn stopt zijn eigen PHP-server vóór de tests; de runner
+  start er een met `PHP_CLI_SERVER_WORKERS=4` (op Linux). Geslaagde mobile-safari-cases op dezelfde shard
+  duren gemiddeld 9,9 s.
+- **De serverlog uit de CI-run, per uitval:** de pagina laadt, `csrf.php`, `me.php` en
+  `local-login-hints.php` komen binnen -- en daarna **33 seconden lang geen enkel verzoek, ook geen
+  `POST /server/auth/login.php`**. De direct voorafgaande geslaagde case stuurde zijn inlogverzoek 1,5 s
+  na die drie aanroepen. De server stond dus stil; het inlogverzoek heeft de browser nooit verlaten.
+- **Niet het vastzetten van requests.** `[DASH-N-030]` houdt `bootstrap.php` vast vóór het inloggen,
+  wat een plausibele impasse leek -- maar `[DASH-H-020]` en `[SKIN-H-029]` onderscheppen niets en
+  vertonen exact hetzelfde beeld.
+- **Dus:** de klik op de inlogknop levert op WebKit af en toe geen formulierverzending op. De
+  voorafgaande stappen in `LoginPage.login()` slagen (scherm zichtbaar, auth-modus klaar, knop actief,
+  velden gevuld), de wachtstap daarna niet. Een ruimere time-out helpt niet: er is niets onderweg om op
+  te wachten.
+- **Volgende stap, nog niet gedaan:** lokaal op mobile-safari met netwerklogging nagaan of de klik de
+  submit-handler bereikt, en of de automatische invulling van `local-login-hints.php` het formulier
+  opnieuw tekent net nadat Playwright het heeft ingevuld. `[HELP-N-001]` (22 s, al voorbij het inloggen)
+  hoort hier niet bij.
+
 **Herhaald probleem: onze twee sessies draaien tests door elkaar heen (vier keer op 13/14 sep).**
 Telkens hetzelfde gevolg: een meting die geldig lijkt omdat hij reproduceerbaar is, terwijl de
 vervuiling elke herhaling meereist. **Herkenningsteken dat het contention is en geen defect:**
