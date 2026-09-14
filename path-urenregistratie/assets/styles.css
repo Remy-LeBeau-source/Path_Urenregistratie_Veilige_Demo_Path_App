@@ -804,6 +804,8 @@ html:not([data-skin="new"]) .button-primary:active:not(:disabled) { transform: s
    ook bij daglicht te weinig voor een statuslabel. */
 .status-concept { background: var(--vlak-zacht); color: var(--muted); }
 .status-warning { background: var(--warning-bg); color: var(--warning-tekst); }
+.status-done { background: rgba(58,189,157,.16); color: var(--mint-tekst); }
+.status-pending { background: var(--surface-muted); color: var(--muted); }
 
 .view-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 25px; margin: 35px 0 22px; }
 .view-heading h2 { margin: 5px 0 7px; font-family: var(--letter-kop); font-size: var(--kop-scherm); letter-spacing: -.025em; }
@@ -1786,24 +1788,22 @@ html:not([data-skin="new"]) #view-employee-announcements { max-width: var(--pagi
 .employee-open-action-copy strong { margin-top: 4px; color: var(--navy-tekst); font-size: 12px; }
 .employee-open-action-copy small { margin-top: 3px; color: var(--muted); font-size: 10px; line-height: 1.5; }
 .employee-open-month-heading .status-pill { min-width: 138px; justify-content: center; }
-.employee-history { display: grid; }
-.employee-history-head { display: grid; grid-template-columns: 1fr .8fr .8fr auto; gap: 18px; align-items: center; border-top: 1px solid var(--line); background: var(--surface-muted); color: var(--muted); font-size: 9px; font-weight: 900; letter-spacing: .08em; padding: 10px 24px; text-transform: uppercase; }
-.employee-history-row { display: grid; grid-template-columns: 1fr .8fr .8fr auto; gap: 18px; align-items: center; border-top: 1px solid var(--line); padding: 15px 24px; }
-/* Met een aparte klanturenstaat-kolom (alleen als de medewerker er een moet
-   aanleveren) een extra statuskolom erbij, zonder de knopkolom smaller te
-   maken dan haar inhoud. */
-#employee-history.has-customer-timesheet-column .employee-history-head,
-#employee-history.has-customer-timesheet-column .employee-history-row { grid-template-columns: 1fr .8fr .8fr .8fr auto; }
-/* Het verloop van één maand, uitgeklapt onder zijn regel. Hij is een kind van
-   dezelfde grid als de cellen, dus grid-column: 1 / -1 laat hem over de volle
-   breedte lopen zonder de kolommen te verstoren. */
-.employee-history-actions { display: flex; align-items: center; gap: 8px; }
-.employee-history-verloop { grid-column: 1 / -1; margin-top: 12px; border-top: 1px solid var(--line); padding-top: 14px; }
+.employee-history { display: grid; gap: 10px; padding: 18px 24px 24px; }
+.employee-history-head { display: none; }
+.employee-history-row { border: 1px solid var(--line-zacht); border-radius: 15px; background: var(--surface); overflow: hidden; }
+.employee-history-row.is-open { border-color: var(--mint); box-shadow: 0 12px 28px rgba(13,27,56,.08); }
+.employee-history-summary { display: grid; width: 100%; grid-template-columns: minmax(0,1fr) minmax(90px,.34fr) auto auto; gap: 16px; align-items: center; border: 0; background: transparent; color: inherit; cursor: pointer; font: inherit; padding: 15px 16px; text-align: left; }
+.employee-history-summary:hover { background: var(--green-light); }
+.employee-history-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+.employee-history-verloop { border-top: 1px solid var(--line); background: var(--surface-muted); padding: 14px 16px 16px; }
 .employee-history-verloop .status-keten-lijst { padding: 0; }
-.employee-history-verloop-chevron { display: inline-block; margin-left: 6px; border-top: 4px solid currentColor; border-right: 4px solid transparent; border-left: 4px solid transparent; vertical-align: middle; transition: transform .16s ease; }
-.employee-history-verloop-toggle[aria-expanded="true"] .employee-history-verloop-chevron { transform: rotate(180deg); }
+.employee-history-weeks { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; margin-bottom: 14px; }
+.employee-history-weeks > div { border: 1px solid var(--line-zacht); border-radius: 12px; background: color-mix(in srgb, var(--surface) 82%, var(--green-light)); padding: 10px 12px; }
+.employee-history-pdf { display: grid; gap: 4px; }
+.employee-history-verloop-chevron { width: 9px; height: 9px; border-right: 2px solid var(--navy-tekst); border-bottom: 2px solid var(--navy-tekst); transform: rotate(45deg); transition: transform .16s ease; }
+.employee-history-summary[aria-expanded="true"] .employee-history-verloop-chevron { transform: rotate(-135deg); }
 .employee-history-row strong, .employee-history-row small { display: block; }
-.employee-history-row strong { font-size: 11px; }
+.employee-history-row strong { font-size: 15.5px; }
 .employee-history-row small { margin-top: 3px; color: var(--muted); font-size: 9px; }
 .employee-history-current { display: inline-flex; margin-left: 8px; border-radius: 999px; background: var(--green-light); color: var(--mint-dark-tekst); font-size: 9px; font-weight: 900; padding: 4px 7px; vertical-align: middle; }
 
@@ -2430,11 +2430,9 @@ html[data-theme="dark"] .reminder-schedule-summary span { background: rgba(13,27
   .notification-button { display: block; }
   .profile-menu-button { width: 38px; height: 38px; }
   .topbar-actions { gap: 6px; }
-  .employee-history-row { grid-template-columns: 1fr 1fr; }
+  .employee-history-summary { grid-template-columns: minmax(0, 1fr) auto; }
+  .employee-history-hours, .employee-history-summary .status-pill { grid-column: 1 / -1; }
   .employee-history-head { display: none; }
-  /* Zelfde specificiteit als de basisregel hierboven (id + 2 klassen),
-     anders wint die op smalle schermen alsnog van deze collapse. */
-  #employee-history.has-customer-timesheet-column .employee-history-row { grid-template-columns: 1fr 1fr; }
   .administrator-row { grid-template-columns: 1fr auto; }
   .mail-recipient-setting, .mail-route-choice { grid-template-columns: 1fr auto; }
   body[data-role="employee"] .nav-list { grid-template-columns: repeat(4,1fr); }
@@ -2453,8 +2451,7 @@ html[data-theme="dark"] .reminder-schedule-summary span { background: rgba(13,27
   .employee-open-action-row { grid-template-columns: minmax(0, 1fr); }
   .employee-open-action-row .small-button { width: 100%; }
   .employee-hero-actions .button { width: 100%; }
-  .employee-history-row { grid-template-columns: minmax(0, 1fr); }
-  #employee-history.has-customer-timesheet-column .employee-history-row { grid-template-columns: minmax(0, 1fr); }
+  .employee-history { padding-inline: 18px; }
   .admin-task-month-heading, .admin-task-owner-heading, .admin-task-row { padding-inline: 18px; }
   .open-periods-intro { padding-inline: 18px; }
   .correction-banner.dashboard-correction { grid-template-columns: auto 1fr; }
@@ -2989,14 +2986,7 @@ html[data-theme="dark"] .reminder-schedule-summary span { background: rgba(13,27
     font-size: var(--kop-scherm-mobiel);
   }
 
-  .employee-customer-timesheet-card,
-  .employee-history-row {
-    grid-template-columns: 1fr;
-  }
-
-  #employee-history.has-customer-timesheet-column .employee-history-row {
-    grid-template-columns: 1fr;
-  }
+  .employee-customer-timesheet-card { grid-template-columns: 1fr; }
 
   .employee-customer-timesheet-actions {
     justify-content: stretch;
@@ -3601,7 +3591,6 @@ body.toont-installatieaanbod .main-content {
   .employee-details strong { font-size: 12px; }
   .employee-hero p { font-size: 16px; }
   .employee-history-current { font-size: 11px; }
-  .employee-history-head { font-size: 11px; }
   .employee-history-row small { font-size: 11px; }
   .employee-history-row strong { font-size: 13px; }
   .employee-identity small { font-size: 12px; }

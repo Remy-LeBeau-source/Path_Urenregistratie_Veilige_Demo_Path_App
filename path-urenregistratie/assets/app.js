@@ -5745,6 +5745,48 @@ function statusKetenItemsHtml(stappen) {
   ).join("");
 }
 
+function historyStatusPill(record, period) {
+  const stappen = statusKetenStappen(record, period);
+  const huidig = stappen.find(stap => stap.stand === "nu");
+  const correction = activeCorrection(record);
+  if (!huidig) {
+    return { label: "Afgerond", tone: "status-done" };
+  }
+  if (correction && huidig.key === "fill") {
+    return { label: "Correctie gevraagd", tone: "status-warning" };
+  }
+  if (huidig.key === "fill") return { label: "Uren open", tone: "status-warning" };
+  if (huidig.key === "submit") return { label: "Urenstaat open", tone: "status-warning" };
+  if (huidig.key === "review") return { label: "Ingediend", tone: "status-pending" };
+  if (huidig.key === "customer") return { label: "Klanturenstaat open", tone: "status-warning" };
+  return { label: huidig.titel, tone: "status-pending" };
+}
+
+function historyMainAction(record, period) {
+  const stappen = statusKetenStappen(record, period);
+  const huidig = stappen.find(stap => stap.stand === "nu");
+  const correction = activeCorrection(record);
+  if (!huidig) return null;
+  if (huidig.key === "customer") {
+    return { type: "customer", label: "Klanturenstaat aanleveren" };
+  }
+  if (huidig.key === "fill" || huidig.key === "submit") {
+    return { type: "hours", label: correction ? "Correctie doorvoeren" : "Uren invullen" };
+  }
+  return null;
+}
+
+function historyWeekTotalsHtml(record, period) {
+  return period.weekRows.map((week, index) => {
+    const total = (record.entries[index] || []).reduce((sum, value) => sum + (Number(value) || 0), 0);
+    const days = week.days.filter(Boolean);
+    const range = days.length
+      ? days[0].day + (days.length > 1 ? "–" + days[days.length - 1].day : "") + " " + period.month.slice(0, 3)
+      : period.month;
+    return '<div><small>Week ' + escapeHtml(week.number) + ' · ' + escapeHtml(range) + '</small><strong>' + hoursFormat.format(total) + ' uur</strong></div>';
+  }).join("");
+}
+
 function vulStatusKeten(record, period) {
   const lijst = document.querySelector("#employee-status-keten-list");
   if (!lijst) return;
@@ -6720,47 +6762,44 @@ function renderEmployeeDashboard() {
     }
   }
   history.splice(6);
-  // Op verzoek (testerfeedback): naast de urenstatus ook de
-  // klanturenstaat-status per maand tonen, i.p.v. die alleen voor de ene
-  // geselecteerde maand zichtbaar te maken. Geen duplicaat van iets
-  // bestaands -- customerTimesheetStatusPill() bestond al voor de huidige
-  // maand, hier hergebruikt over de hele historie.
-  const showsCustomerTimesheetColumn = employee.customerTimesheetExpected !== false;
   const historyRows = history.map(key => {
     const historyRecord = recordFor(employee.id, key);
+    const historyPeriod = periodFromKey(key);
     const historyTotal = totalEntries(historyRecord.entries) + Number(historyRecord.leave || 0) + Number(historyRecord.sick || 0);
     const correction = latestCorrection(historyRecord);
     const historyNote = correction
       ? "Correctie door " + correction.requestedBy + " · " + correction.requestedAt
       : "Eigen urenregistratie";
     const currentLabel = key === currentCalendarPeriodKey() ? '<span class="employee-history-current">Huidige maand</span>' : '';
-    const customerCell = showsCustomerTimesheetColumn
-      ? '<div>' + customerTimesheetStatusPill(historyRecord) + '</div>'
-      : '';
-    // "totaal verantwoord" stond hier eerder onder elk uurtotaal. Dat is geen
-    // gegeven per maand maar de betekenis van de kolom, en zes keer dezelfde
-    // regel onder elkaar leest als ruis. Staat nu één keer in de kolomkop.
-    // Ontwerpronde 13 sep: een opengeklapte maand toont zijn eigen verloop in
-    // vijf stappen. Hier als uitklap onder de regel, met dezelfde
-    // toggle-opzet als de maanden in "Open acties per maand" -- dat patroon
-    // staat al in Klassiek, dus dit voegt geen tweede manier van uitklappen
-    // toe. De knop "Open maand" blijft wat hij was (die kiest de maand voor de
-    // hele app); dit staat ernaast en verandert niets aan die betekenis.
     const verloopId = "employee-history-verloop-" + key;
     const verloopOpen = state.historyVerloopOpen === key;
-    const verloopStappen = statusKetenStappen(historyRecord, periodFromKey(key));
-    return '<div class="employee-history-row"><div><strong>' + escapeHtml(periodFromKey(key).label) + currentLabel + '</strong><small>' + escapeHtml(historyNote) + '</small></div><div><strong>' + hoursFormat.format(historyTotal) + ' uur</strong></div><div>' + timesheetStatusPill(employee, historyRecord) + '</div>' + customerCell
-      + '<div class="employee-history-actions">'
-      + '<button class="small-button employee-history-verloop-toggle" type="button" data-history-verloop="' + key + '" aria-expanded="' + (verloopOpen ? "true" : "false") + '" aria-controls="' + verloopId + '">Verloop<span class="employee-history-verloop-chevron" aria-hidden="true"></span></button>'
-      + '<button class="small-button" data-history-period="' + key + '">Open maand</button>'
+    const verloopStappen = statusKetenStappen(historyRecord, historyPeriod);
+    const status = historyStatusPill(historyRecord, historyPeriod);
+    const mainAction = historyMainAction(historyRecord, historyPeriod);
+    const completed = !verloopStappen.some(stap => stap.stand === "nu");
+    const actionHtml = mainAction
+      ? '<button class="primary-button" type="button" data-history-' + (mainAction.type === "customer" ? "customer" : "period") + '="' + key + '">' + escapeHtml(mainAction.label) + '</button>'
+      : '';
+    const pdfHtml = completed
+      ? '<div class="employee-history-pdf"><button class="small-button" type="button" data-history-receipt-period="' + key + '">PDF Urenoverzicht</button><small>Dezelfde PDF die je per mail kreeg — je uren per week.</small></div>'
+      : '';
+    return '<article class="employee-history-row' + (verloopOpen ? ' is-open' : '') + '">'
+      + '<button class="employee-history-summary" type="button" data-history-verloop="' + key + '" aria-expanded="' + (verloopOpen ? "true" : "false") + '" aria-controls="' + verloopId + '">'
+        + '<span class="employee-history-main"><strong>' + escapeHtml(historyPeriod.label) + currentLabel + '</strong><small>' + escapeHtml(historyNote) + '</small></span>'
+        + '<span class="employee-history-hours"><strong>' + hoursFormat.format(historyTotal) + ' uur</strong><small>uren verantwoord</small></span>'
+        + '<span class="status-pill ' + status.tone + '">' + escapeHtml(status.label) + '</span>'
+        + '<span class="employee-history-verloop-chevron" aria-hidden="true"></span>'
+      + '</button>'
+      + '<div class="employee-history-verloop" id="' + verloopId + '"' + (verloopOpen ? "" : " hidden") + '>'
+        + '<div class="employee-history-weeks">' + historyWeekTotalsHtml(historyRecord, historyPeriod) + '</div>'
+        + '<ol class="status-keten-lijst">' + statusKetenItemsHtml(verloopStappen) + '</ol>'
+        + '<div class="employee-history-actions">' + actionHtml + pdfHtml + '</div>'
       + '</div>'
-      + '<div class="employee-history-verloop" id="' + verloopId + '"' + (verloopOpen ? "" : " hidden") + '><ol class="status-keten-lijst">' + statusKetenItemsHtml(verloopStappen) + '</ol></div>'
-      + '</div>';
+      + '</article>';
   }).join("");
-  const historyHeadCustomerColumn = showsCustomerTimesheetColumn ? '<span>Klanturenstaat</span>' : '';
-  document.querySelector("#employee-history").classList.toggle("has-customer-timesheet-column", showsCustomerTimesheetColumn);
+  document.querySelector("#employee-history").classList.remove("has-customer-timesheet-column");
   document.querySelector("#employee-history").innerHTML = historyRows
-    ? '<div class="employee-history-head" aria-hidden="true"><span>Maand</span><span>Uren verantwoord</span><span>Status</span>' + historyHeadCustomerColumn + '<span>Actie</span></div>' + historyRows
+    ? historyRows
     // Zelfde vorm als de andere .dashboard-action-empty-blokken (korte kop,
     // één regel uitleg); dit was als enige nog een kale zin zonder uitleg.
     : '<div class="dashboard-action-empty"><strong>Nog geen maanden beschikbaar.</strong><br>Zodra je een maand hebt ingevuld en ingediend, verschijnt die hier.</div>';
@@ -14334,6 +14373,31 @@ function toonInstallatieAanbod() {
     persistState();
     renderHoursGrid();
     updateHoursTotal(false);
+    return;
+  }
+
+  const historyReceipt = event.target.closest("[data-history-receipt-period]");
+  if (historyReceipt) {
+    const periodKey = historyReceipt.dataset.historyReceiptPeriod;
+    if (!parsePeriodKey(periodKey)) return;
+    const employee = currentEmployee();
+    const period = periodFromKey(periodKey);
+    const record = recordFor(employee.id, period.key);
+    const pdfBase64 = buildTimesheetReceiptPdfBase64(employee, period, record);
+    if (!pdfBase64) return;
+    const filename = safeFilename("Urenoverzicht_" + employee.name + "_" + period.key) + ".pdf";
+    deliverBlobDownload(dataUrlToBlob("data:application/pdf;base64," + pdfBase64), filename);
+    return;
+  }
+
+  const historyCustomer = event.target.closest("[data-history-customer]");
+  if (historyCustomer) {
+    const periodKey = historyCustomer.dataset.historyCustomer;
+    if (!parsePeriodKey(periodKey)) return;
+    setPeriod(periodKey);
+    showView("timesheet");
+    const customerPanel = document.querySelector("#customer-timesheet-upload-panel");
+    if (customerPanel && typeof customerPanel.scrollIntoView === "function") customerPanel.scrollIntoView({ behavior: smoothScrollBehavior(), block: "start" });
     return;
   }
 

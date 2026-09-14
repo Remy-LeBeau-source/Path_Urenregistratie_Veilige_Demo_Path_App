@@ -204,7 +204,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 549 Playwri
 - Cases: 66
 
 - [DASH-H-002] employee dashboard opent zonder console errors — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
-- [DASH-H-025] "Mijn maanden" toont naast de urenstatus ook de klanturenstaat-status per maand — Techniek: Toestandsovergang · Assertions: 7
+- [DASH-H-025] "Mijn maanden" toont één statuspil per maand en geen losse klanturenstaat-kolom — Techniek: Toestandsovergang · Assertions: 9
 - [DASH-H-021] de medewerker keert zowel via Dashboard als via Mijn uren terug naar de actuele maand na een blik op een oudere maand — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
 - [DASH-N-023] een medewerker kan niet naar een maand vóór de eigen indiensttreding bladeren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [DASH-N-030] ook vóórdat de serverdata binnen is, opent een medewerker geen maand vóór zijn indiensttreding — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
@@ -225,7 +225,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 549 Playwri
 - [DASH-N-029] de pijl springt naar de eerstvolgende week met een leeg urenvak, ook terug in de tijd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [DASH-H-026] het medewerkerdashboard houdt op telefoonbreedte de afgesproken prioriteitsvolgorde aan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [DASH-H-030] de indienbevestiging noemt werkdagen die bewust op 0,0 staan — Techniek: Toestandsovergang · Assertions: 9
-- [DASH-H-031] het verloop van een maand klapt open in Mijn maanden en overleeft een hertekening — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 14
+- [DASH-H-031] het verloop van een maand klapt open in Mijn maanden en overleeft een hertekening — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 19
 - [DASH-H-032] Mijn uren noemt onderin hoeveel werkdagen nog leeg zijn, inclusief dagen die nog moeten komen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 12
 - [DASH-H-033] de verloopstappen in Klassiek tonen ✓ en • in de bol, leesbaar in licht en donker — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 14
 - [DASH-H-034] de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 32

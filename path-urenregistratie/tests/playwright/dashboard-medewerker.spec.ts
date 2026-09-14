@@ -47,32 +47,30 @@ test('[DASH-H-002] employee dashboard opent zonder console errors', async ({ pag
   });
 });
 
-test('[DASH-H-025] "Mijn maanden" toont naast de urenstatus ook de klanturenstaat-status per maand', async ({ page }) => {
-  // Testerfeedback (WhatsApp, Kristel/Stasjo): een compact statuslijstje per
-  // maand voor de klanturenstaat ("Sept - ingediend, Okt - open") bestond nog
-  // niet -- alleen de urenstatus stond al per maand in "Mijn maanden", de
-  // klanturenstaat-status alleen voor de ene geselecteerde maand. Nu een
-  // eigen kolom, hergebruikt customerTimesheetStatusPill() die al bestond
-  // voor de huidige maand.
+test('[DASH-H-025] "Mijn maanden" toont één statuspil per maand en geen losse klanturenstaat-kolom', async ({ page }) => {
+  // Ontwerpbesluit 14 sep: Maanden is geen tabel meer met aparte uren- en
+  // klanturenstaatkolommen. Elke maandkaart krijgt één pil die de wachtende
+  // stap noemt; details staan pas in de uitklap.
   const loginPage = new LoginPage(page);
   await loginPage.open();
   await loginPage.loginAsEmployee();
   await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i);
 
-  await test.step('Then heeft de historietabel een eigen Klanturenstaat-kolom naast Status', async () => {
-    const head = page.locator('#employee-history .employee-history-head');
-    await expect(head).toContainText('Status');
-    await expect(head).toContainText('Klanturenstaat');
+  await test.step('Then heeft Mijn maanden geen losse Klanturenstaat-kolom meer', async () => {
+    await expect(page.locator('#employee-history .employee-history-head')).toHaveCount(0);
+    await expect(page.locator('#employee-history')).not.toContainText('Naar broker gecontroleerd');
+    await expect(page.locator('#employee-history')).not.toContainText('Opnieuw uploaden');
+    await expect(page.locator('#employee-history')).not.toContainText(/in behandeling/i);
   });
 
-  await test.step('And toont elke maandrij een eigen klanturenstaat-statuspil, niet gelijk aan de urenstatus', async () => {
+  await test.step('And toont elke maandkaart precies één statuspil die de wachtende stap noemt', async () => {
     const augustusRow = page.locator('#employee-history .employee-history-row', { hasText: 'Augustus 2026' });
-    await expect(augustusRow).toContainText('Correctie nodig');
-    await expect(augustusRow).toContainText('Naar broker gecontroleerd');
+    await expect(augustusRow.locator('.status-pill')).toHaveCount(1);
+    await expect(augustusRow.locator('.status-pill')).toHaveText(/Correctie gevraagd|Uren open|Urenstaat open|Ingediend|Klanturenstaat open|Afgerond/);
 
     const juliRow = page.locator('#employee-history .employee-history-row', { hasText: 'Juli 2026' });
-    await expect(juliRow).toContainText('Wacht op klanturenstaat');
-    await expect(juliRow).toContainText('Opnieuw uploaden');
+    await expect(juliRow.locator('.status-pill')).toHaveCount(1);
+    await expect(juliRow.locator('.status-pill')).toHaveText(/Correctie gevraagd|Uren open|Urenstaat open|Ingediend|Klanturenstaat open|Afgerond/);
   });
 });
 
@@ -1340,6 +1338,8 @@ test('[DASH-H-031] het verloop van een maand klapt open in Mijn maanden en overl
     await expect(stappen.locator('strong')).toHaveText([
       'Uren ingevuld', 'Maand ingediend', 'Uren goedgekeurd', 'Klanturenstaat', 'Afgerond',
     ]);
+    await expect(page.locator('#employee-history .employee-history-verloop:visible .employee-history-weeks > div')).toHaveCount(5);
+    await expect(page.locator('#employee-history .employee-history-verloop:visible .employee-history-actions')).toBeVisible();
   });
 
   await test.step('And blijft hij open staan na een hertekening van het scherm', async () => {
@@ -1363,6 +1363,18 @@ test('[DASH-H-031] het verloop van een maand klapt open in Mijn maanden en overl
   await test.step('And sluit een tweede tik op dezelfde maand hem weer', async () => {
     await page.locator('#employee-history [data-history-verloop]').nth(1).click();
     await expect(page.locator('#employee-history .employee-history-verloop:visible')).toHaveCount(0);
+  });
+
+  await test.step('And toont PDF Urenoverzicht alleen bij afgeronde maanden met de vaste uitleg', async () => {
+    const afgerond = page.locator('#employee-history .employee-history-row', { has: page.locator('.status-pill', { hasText: 'Afgerond' }) }).first();
+    const afgerondCount = await afgerond.count();
+    if (afgerondCount > 0) {
+      await afgerond.locator('[data-history-verloop]').click();
+      await expect(afgerond.locator('[data-history-receipt-period]')).toHaveText('PDF Urenoverzicht');
+      await expect(afgerond).toContainText('Dezelfde PDF die je per mail kreeg — je uren per week.');
+    }
+    const openRij = page.locator('#employee-history .employee-history-row', { hasNot: page.locator('.status-pill', { hasText: 'Afgerond' }) }).first();
+    await expect(openRij.locator('[data-history-receipt-period]')).toHaveCount(0);
   });
 });
 

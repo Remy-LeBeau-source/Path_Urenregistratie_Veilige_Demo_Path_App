@@ -16,13 +16,13 @@ Feature: Dashboard en open werkvoorraad
     Then alleen medewerkersinformatie wordt getoond zonder consolefouten
 
   @happy
-  Scenario: [DASH-H-025] "Mijn maanden" toont naast de urenstatus ook de klanturenstaat-status per maand
+  Scenario: [DASH-H-025] "Mijn maanden" toont één statuspil per maand en geen losse klanturenstaat-kolom
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 7
+    # Aantoonbare Playwright-assertions in deze case: 9
     Given dashboard en open werkvoorraad is voorbereid
     When de flow voor DASH-H-025 wordt uitgevoerd
-    Then heeft de historietabel een eigen Klanturenstaat-kolom naast Status
-    And toont elke maandrij een eigen klanturenstaat-statuspil, niet gelijk aan de urenstatus
+    Then heeft Mijn maanden geen losse Klanturenstaat-kolom meer
+    And toont elke maandkaart precies één statuspil die de wachtende stap noemt
 
   @happy
   Scenario: [DASH-H-021] de medewerker keert zowel via Dashboard als via Mijn uren terug naar de actuele maand na een blik op een oudere maand
@@ -198,7 +198,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-031] het verloop van een maand klapt open in Mijn maanden en overleeft een hertekening
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 14
+    # Aantoonbare Playwright-assertions in deze case: 19
     Given de medewerker staat op Mijn maanden in Klassiek
     Then staat het verloop dicht tot je erom vraagt
     When het verloop van de eerste maand wordt opengeklapt
@@ -206,6 +206,7 @@ Feature: Dashboard en open werkvoorraad
     And blijft hij open staan na een hertekening van het scherm
     And staat er hoogstens één maand tegelijk open
     And sluit een tweede tik op dezelfde maand hem weer
+    And toont PDF Urenoverzicht alleen bij afgeronde maanden met de vaste uitleg
 
   @happy
   Scenario: [DASH-H-032] Mijn uren noemt onderin hoeveel werkdagen nog leeg zijn, inclusief dagen die nog moeten komen

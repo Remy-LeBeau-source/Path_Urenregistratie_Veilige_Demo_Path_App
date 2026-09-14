@@ -2,6 +2,36 @@
 
 Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
 
+## Update Codex 14 sep 19:15 — lokaal klaar, nog niet gepusht
+
+- Vorige CI-run `34871247686` op `d2f4a441` stond bij de laatste check nog `in_progress`. Daarom is 2.0.70
+  lokaal gecommit in deze 2.0.70-commit maar nog niet gepusht.
+- **Maanden als uitklaplijst is lokaal gebouwd in 2.0.70**:
+  - `renderEmployeeHistory` rendert maandkaarten in plaats van een tabel.
+  - Klanturenstaat-kolom is weg; elke maandkaart heeft één statuspil via `historyStatusPill()`.
+  - Uitklap bevat weektotalen via `historyWeekTotalsHtml()`, de vijf stappen uit `statusKetenStappen()`,
+    één hoofdactie via `historyMainAction()`, en alleen bij afgerond `PDF Urenoverzicht` met de vaste regel
+    `Dezelfde PDF die je per mail kreeg — je uren per week.`
+  - Nieuwe clickhandlers: `[data-history-receipt-period]` downloadt de bestaande urenoverzicht-PDF zonder
+    navigatie; `[data-history-customer]` opent de klanturenstaatroute voor die maand.
+- Tests/documentatie aangepast:
+  - `DASH-H-025` gaat nu over één statuspil per maand en géén losse klanturenstaat-kolom.
+  - `DASH-H-031` dekt nu ook weektotalen, actieblok en PDF-regel alleen bij afgerond.
+- Lokaal groen:
+  - `node --check assets/app.js`
+  - `npm run test:design`
+  - `node scripts/run-playwright-e2e.mjs --project=desktop-chromium --grep "DASH-H-025"`
+  - `node scripts/run-playwright-e2e.mjs --project=desktop-chromium --grep "DASH-H-031"`
+  - `node scripts/run-playwright-e2e.mjs --project=mobile-chrome --grep "DASH-H-025"`
+  - `node scripts/run-playwright-e2e.mjs --project=mobile-chrome --grep "DASH-H-031"`
+  - `node scripts/contrast-licht-donker.mjs`
+  - `npm run test:bdd:design`
+  - `npm run docs:sync`
+  - `npm run version:check`
+  - `git diff --check -- . ':!node_modules'` geeft alleen CRLF-waarschuwingen, geen whitespace-fout.
+- Let op: `tests/playwright/features/skin.feature` en `tests/playwright/steps/skin.steps.ts` blijven in status
+  modified door CRLF-only ruis; ze hebben geen inhoudelijke diff en moeten niet mee in de commit.
+
 ## Stand
 
 - Branch `herontwerp`, werkmap `C:\Path-herontwerp-actief\path-urenregistratie`.
