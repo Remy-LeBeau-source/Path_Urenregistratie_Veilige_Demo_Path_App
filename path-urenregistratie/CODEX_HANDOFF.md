@@ -2,6 +2,26 @@
 
 Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
 
+## Update Claude Code 14 sep, later op de avond — CI-shardtimeout (exit 124) opgelost
+
+- De wachtrij naar main liep vast: shard 6 (commit `d9ed7c31`, run `34887610479`) en shard 7 (commit
+  `085e96dc`, run `34894362929`) liepen allebei tegen de interne `timeout ... 22m` van de "Run E2E tests"-stap
+  aan (exitcode 124), terwijl alle tot dan gedraaide cases groen waren. Bevestigd via `gh api` dat dit al
+  bestond vóór deze sessies eigen commits — een structureel capaciteitsprobleem: `mobile-ui.spec.ts`
+  (mobile-safari-zwaar) plus retries op de bekende flaky cases `MOB-H-018`/`MOB-H-025` (elk ~34s per retry)
+  bovenop `dashboard-medewerker.spec.ts` (114 ondeelbare cases) duwden die shards over de 22m heen.
+- `.github/workflows/ci.yml` is aangepast op de `herontwerp`-branch (op expliciet verzoek van Gio zelf gedaan,
+  niet doorgegeven aan main/-a0, om main niet te blokkeren):
+  - interne E2E-timeout `timeout --signal=TERM --kill-after=30s 22m` → **32m**;
+  - staplimiet "Run E2E tests" `timeout-minutes: 23` → **33m**;
+  - joblimiet `timeout-minutes: 35` → **50m** (marge boven de staplimiet plus shard 1's extra stappen: smoke,
+    DB-CRUD, security audit, BDD-pilot, die vóór de E2E-stap lopen).
+  - Het bestaande, uitgebreide commentaar over "acht shards, niet meer" (empirisch getest, geen verbetering
+    bij twaalf) is intact gelaten — dat blijft de juiste conclusie, alleen de tijdslimiet was te krap.
+- Nog te doen: pushen, een verse CI-run afwachten op zowel deze wijziging als de eerder gefixte
+  branding-/historypil-regressies, en bevestigen dat geen enkele shard nog exit 124 geeft voordat de
+  wachtrij naar main weer doorstroomt.
+
 ## Update Codex 14 sep 19:40 — 2.0.74 in voorbereiding
 
 - 2.0.70 is gepusht: Maanden als uitklapkaarten, klanturenstaat-kolom weg, één statuspil, weektotalen,

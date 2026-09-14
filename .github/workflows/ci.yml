@@ -17,11 +17,12 @@ jobs:
   validate-and-test:
     name: Validate and test (${{ matrix.shard }}/8)
     runs-on: ubuntu-latest
-    # Ruim boven de E2E-stap (23m) plus de opbouw eromheen, die in de gemeten
-    # runs zo'n twee minuten kostte. Zonder deze marge kapt de job-limiet af
-    # voordat de staplimiet zijn werk kan doen, en verlies je de duidelijke
-    # melding van die laatste.
-    timeout-minutes: 35
+    # Ruim boven de E2E-stap (31m) plus de opbouw eromheen, die in de gemeten
+    # runs zo'n twee minuten kostte, en boven shard 1 se extra stappen (smoke,
+    # DB-CRUD, security audit, BDD-pilot) die vóór de E2E-stap lopen. Zonder
+    # deze marge kapt de job-limiet af voordat de staplimiet zijn werk kan
+    # doen, en verlies je de duidelijke melding van die laatste.
+    timeout-minutes: 50
     # Iedere shard heeft een eigen runner, MySQL-service en PHP-server. Zo blijft
     # de volledige suite draaien, maar wachten de delen niet op elkaar.
     #
@@ -274,20 +275,25 @@ jobs:
         run: npm run test:bdd
 
       - name: Run E2E tests
-        timeout-minutes: 23
+        timeout-minutes: 33
         env:
           PATH_APP_BASE_URL: http://127.0.0.1:8000
         # GitHub-cancel kan bij een vastgelopen browser traag reageren. GNU
         # timeout stuurt eerst TERM en forceert uiterlijk 30 seconden later KILL.
         #
-        # Van 14m naar 22m. Deze limiet is er om een vastgelopen browser te
-        # vangen, en daarvoor hoeft hij alleen boven de legitieme maximumduur te
-        # liggen -- niet er vlak tegenaan. De shard met dashboard.spec.ts erin
-        # (114 ondeelbare cases, zie de toelichting bij de matrix) heeft er
-        # ongeveer 17 minuten voor nodig en werd op 14m afgekapt met exitcode
-        # 124, terwijl elke tot dan gedraaide case groen was. 22m geeft die
-        # shard ruimte en houdt een echte hang nog steeds binnen de perken.
-        run: timeout --signal=TERM --kill-after=30s 22m npm run test:e2e -- --shard=${{ matrix.shard }}/8
+        # Van 14m naar 22m: de shard met dashboard.spec.ts erin (114 ondeelbare
+        # cases, zie de toelichting bij de matrix) had ongeveer 17 minuten nodig
+        # en werd op 14m afgekapt met exitcode 124, terwijl elke tot dan
+        # gedraaide case groen was.
+        #
+        # Van 22m naar 32m (14 sep 2026): shard 6 liep op d9ed7c31 en shard 7
+        # op 085e96dc allebei alsnog tegen de 22m aan (exit 124), veroorzaakt
+        # door mobile-safari-tests (mobile-ui.spec.ts) plus retries op bekende
+        # flaky cases (MOB-H-018, MOB-H-025, elk ~34s per retry) die er samen
+        # met dashboard.spec.ts overheen kwamen. 32m geeft die combinatie
+        # ruimte en houdt een echte hang nog steeds binnen de perken; de
+        # staplimiet (33m) en de joblimiet (50m) hebben er allebei marge boven.
+        run: timeout --signal=TERM --kill-after=30s 32m npm run test:e2e -- --shard=${{ matrix.shard }}/8
 
       - name: Upload Playwright report artifact
         if: always()
