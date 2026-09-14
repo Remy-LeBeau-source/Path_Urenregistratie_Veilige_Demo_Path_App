@@ -462,12 +462,12 @@ function freshState() {
     employeeScope: "active",
     announcementArchiveFilter: "all",
     preferences: {
-      theme: "light",
-      themeDefaultVersion: 1,
+      theme: "dark",
+      themeDefaultVersion: 2,
       skin: "classic",
-      classicTheme: "light",
+      classicTheme: "dark",
       newTheme: "dark",
-      skinThemeDefaultVersion: 1,
+      skinThemeDefaultVersion: 2,
       hourReminders: true,
       statusNotifications: true,
       approvalNotifications: true,
@@ -743,19 +743,20 @@ function loadState() {
       }))
       : {};
     const previousPreferences = saved.preferences && typeof saved.preferences === "object" ? saved.preferences : {};
-    const hadLightDefault = previousPreferences.themeDefaultVersion === 1;
-    const hadSkinThemeDefault = previousPreferences.skinThemeDefaultVersion === 1;
-    const previousTheme = ["light", "dark", "system"].includes(previousPreferences.theme) ? previousPreferences.theme : "light";
+    const hadDarkClassicDefault = previousPreferences.themeDefaultVersion === 2;
+    const hadSkinThemeDefault = previousPreferences.skinThemeDefaultVersion === 2;
     saved.preferences = Object.assign({}, fallback.preferences, previousPreferences);
-    if (!hadLightDefault) {
-      saved.preferences.theme = "light";
-      saved.preferences.themeDefaultVersion = 1;
+    if (!hadDarkClassicDefault) {
+      saved.preferences.skin = "classic";
+      saved.preferences.theme = "dark";
+      saved.preferences.classicTheme = "dark";
+      saved.preferences.themeDefaultVersion = 2;
     }
     if (!hadSkinThemeDefault) {
-      saved.preferences.classicTheme = previousTheme;
+      saved.preferences.classicTheme = "dark";
       saved.preferences.newTheme = "dark";
-      saved.preferences.skinThemeDefaultVersion = 1;
-      saved.preferences.theme = saved.preferences.skin === "new" ? "dark" : previousTheme;
+      saved.preferences.skinThemeDefaultVersion = 2;
+      saved.preferences.theme = "dark";
     }
     const previousSettings = saved.settings || {};
     saved.settings = Object.assign({}, fallback.settings, previousSettings);
@@ -13921,7 +13922,7 @@ function showPreferences() {
   const skinRow = testAccountToolsAllowed(window.location.hostname)
     ? '<div class="preference-row"><span><strong>Vormgeving</strong><small>Klassiek is de huidige stijl; Modern is de vernieuwde TEST-weergave</small></span><select id="pref-skin" aria-label="Vormgeving"><option value="classic"' + (state.preferences.skin !== "new" ? " selected" : "") + '>Klassiek</option><option value="new"' + (state.preferences.skin === "new" ? " selected" : "") + '>Modern (pilot)</option></select></div>'
     : '';
-  const summary = '<div class="preference-list"><div class="preference-row"><span><strong>Uiterlijk</strong><small>Nieuw begint standaard donker; je keuze wordt per vormgeving onthouden</small></span><select id="pref-theme" aria-label="Uiterlijk"><option value="light"' + (state.preferences.theme === "light" ? " selected" : "") + '>Licht</option><option value="system"' + (state.preferences.theme === "system" ? " selected" : "") + '>Automatisch</option><option value="dark"' + (state.preferences.theme === "dark" ? " selected" : "") + '>Donker</option></select></div>' + skinRow + adminRows + emailRow + '</div>';
+  const summary = '<div class="preference-list"><div class="preference-row"><span><strong>Uiterlijk</strong><small>Klassiek begint standaard donker; je keuze wordt per vormgeving onthouden</small></span><select id="pref-theme" aria-label="Uiterlijk"><option value="light"' + (state.preferences.theme === "light" ? " selected" : "") + '>Licht</option><option value="system"' + (state.preferences.theme === "system" ? " selected" : "") + '>Automatisch</option><option value="dark"' + (state.preferences.theme === "dark" ? " selected" : "") + '>Donker</option></select></div>' + skinRow + adminRows + emailRow + '</div>';
   showModal({
     label: "Voorkeuren",
     title: "Uiterlijk en meldingen",

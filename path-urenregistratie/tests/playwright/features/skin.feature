@@ -40,7 +40,7 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     Then zijn de 1414/1919-tokens en lokale serif alleen daar actief
 
   @happy
-  Scenario: [SKIN-H-005] Klassiek start licht en Nieuw donker en onthoudt daarna elk eigen thema
+  Scenario: [SKIN-H-005] Klassiek start donker en Nieuw donker en onthoudt daarna elk eigen thema
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 13
     Given een ingelogde administrator met de standaardvoorkeuren
