@@ -31,8 +31,28 @@ export class LoginPage {
     // vanzelf gesloten zijn (bv. na een navigatie-knop erin) -- dan is er
     // niets meer te sluiten, en een lange actionability-wait op een element
     // dat nooit meer stabiel wordt, mag de test niet laten vastlopen.
-    if (await this.page.locator('#help-panel.is-open').count()) {
-      await this.page.locator('#help-close').click({ timeout: 3_000 }).catch(() => {});
+    // Op zichtbaarheid toetsen, niet op .is-open: openHelp() haalt hidden meteen weg
+    // maar zet is-open pas in de volgende animatieframe. Direct na het openen vond
+    // deze check daardoor niets, sloeg het sluiten over, en een frame later lag het
+    // paneel over #switch-role ([HELP-N-001] op mobile-safari, 14 sep; lokaal
+    // gemeten: direct na de klik is-open 0, zichtbaar 1).
+    if (await this.page.locator('#help-panel:not([hidden])').count()) {
+      const sluitFout = await this.page.locator('#help-close').click({ timeout: 3_000 }).then(() => '', e => (e as Error).message.split('\n')[0]);
+      // Diagnose (14 sep): in [HELP-N-001] op mobile-safari bleef het paneel na deze
+      // stap open en blokkeerde het 15 s lang de klik op #switch-role, zonder te zeggen
+      // waarom. Een sluitknop die op WebKit soms niet sluit kan een echt iOS-probleem
+      // zijn, dus hier geen stille herhaalpoging die dat maskeert: blijft het paneel
+      // open, dan faalt de stap hier met wat er gebeurde.
+      // closeHelp() haalt is-open synchroon in de klikhandler weg, dus direct na een
+      // geslaagde klik hoort deze selector al niets meer te vinden.
+      if (await this.page.locator('#help-panel.is-open:not([hidden])').count()) {
+        const staat = await this.page.evaluate(() => {
+          const knop = document.querySelector('#help-close')?.getBoundingClientRect();
+          const paneel = document.querySelector('#help-panel')?.getBoundingClientRect();
+          return { knop: knop && [knop.x, knop.y, knop.width, knop.height].map(Math.round), paneel: paneel && [paneel.x, paneel.y, paneel.width, paneel.height].map(Math.round), viewport: [innerWidth, innerHeight], scrollY: Math.round(scrollY) };
+        }).catch(() => null);
+        throw new Error(`Hulppaneel bleef open na #help-close (klikfout: ${sluitFout || 'geen, klik uitgevoerd'}). Staat: ${JSON.stringify(staat)}`);
+      }
     }
 
     const desktop = this.page.locator('#switch-role');
