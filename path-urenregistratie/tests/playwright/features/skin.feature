@@ -334,14 +334,6 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     And ruimt het sluiten van de dialoog de aanpassing op
 
   @happy
-  Scenario: [SKIN-H-037] de weekchips in Modern passen op 360px naast elkaar, gelijk breed en zonder scrollen
-    # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 9
-    Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
-    When de flow voor SKIN-H-037 wordt uitgevoerd
-    Then staat er per week één chip, en scrolt de strook niet horizontaal
-
-  @happy
   Scenario: [SKIN-H-039] de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect toont
     # Testtechniek: End-to-end use-case + visuele contractasserties
     # Aantoonbare Playwright-assertions in deze case: 2

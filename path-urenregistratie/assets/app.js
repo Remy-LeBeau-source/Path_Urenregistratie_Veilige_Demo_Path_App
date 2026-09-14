@@ -5813,33 +5813,6 @@ function focusEersteLegeBentoDag(record, period, weekIndex) {
   if (input) input.focus();
 }
 
-// Vult de drie kerncijfers in de Modern-hero: een statuspil die zegt wie aan
-// zet is, het maandtotaal als groot getal en de contractregel eronder. Uit de
-// ontwerpreferentie handoff/medewerker-wild.html. De zichtbaarheid zit in de
-// opmaak (alleen telefoonbreedte), niet hier -- dat is een breedtevraag, geen
-// datavraag.
-function vulModernHerokop(record, period, aanZet) {
-  const oog = document.querySelector("#new-bento-oog");
-  const oogLabel = document.querySelector("#new-bento-oog-label");
-  const maanduren = document.querySelector("#new-bento-maanduren");
-  const contractregel = document.querySelector("#new-bento-contractregel");
-  if (!oog || !oogLabel || !maanduren || !contractregel) return;
-
-  oog.dataset.stand = aanZet ? "jij" : "backoffice";
-  oogLabel.textContent = aanZet ? "Jij bent aan zet" : "Bij de Backoffice";
-
-  // Zelfde optelling als #hours-total en de voortgangskaart: uren plus verlof
-  // en ziekte. Bewust geen eigen som -- twee verschillende maandtotalen op een
-  // scherm is precies de verwarring die in v1.0.67 al is opgelost.
-  const totaal = totalEntries(record.entries) + Number(record.leave || 0) + Number(record.sick || 0);
-  maanduren.textContent = hoursFormat.format(totaal);
-
-  const totaalWeken = period.weekRows.length;
-  const gevuldeWeken = completedTimesheetWeeks(record, period);
-  contractregel.textContent = "van " + hoursFormat.format(record.contractHours) + " uur contract · "
-    + gevuldeWeken + " van " + totaalWeken + " " + (totaalWeken === 1 ? "week" : "weken") + " ingevuld";
-}
-
 // Ligt de bal bij de medewerker of bij Backoffice? Zelfde bron als de rest van
 // het scherm gebruikt (timesheetStatus en de klanturenstaat-status), zodat de
 // pil nooit iets anders beweert dan de statusregels eronder.
@@ -5875,31 +5848,6 @@ function vulHeroKerncijfers(record, period, aanZet) {
     + gevuldeWeken + " van " + totaalWeken + " " + (totaalWeken === 1 ? "week" : "weken") + " ingevuld";
 }
 
-// Weekstrook: één compacte chip per week van de maand, met het weeknummer en
-// het weektotaal. Uit de ontwerpronde van 13 sep, die de eerdere hoge kaarten
-// verving omdat die in een horizontale strip werden afgesneden -- overflow-x
-// klemt ook de hoogte, dat staat als valkuil in het handoff-document.
-// De chip zegt alleen waar je bent en waar je heen kunt; het invullen zelf
-// gebeurt onveranderd in de dagenlijst eronder.
-function renderWeekstrip(record, period, actieveWeekIndex) {
-  const strip = document.querySelector("#new-bento-weekstrip");
-  if (!strip) return;
-  strip.innerHTML = period.weekRows.map((week, index) => {
-    const uren = (record.entries?.[index] || []).reduce((som, waarde) => som + Number(waarde || 0), 0);
-    const actief = index === actieveWeekIndex;
-    return '<button type="button" role="tab" class="new-bento-weekchip"'
-      + (actief ? ' aria-selected="true"' : ' aria-selected="false"')
-      + ' data-weekstrip-index="' + index + '"'
-      + ' aria-label="Week ' + week.number + ', ' + hoursFormat.format(uren) + ' uur">'
-      // "W36" en niet "Week 36": vijf gelijke chips passen anders niet naast
-      // elkaar op 360px (ontwerpronde 14 sep, tweede). Het volledige woord staat
-      // in de aria-label, dus een schermlezer hoort nog steeds "Week 36".
-      + '<span aria-hidden="true">W' + week.number + '</span>'
-      + '<strong>' + hoursFormat.format(uren) + '</strong>'
-      + '</button>';
-  }).join("");
-}
-
 function renderNewEmployeeBento(record, employee, period) {
   const bento = document.querySelector("#new-employee-bento");
   if (!bento) return;
@@ -5930,13 +5878,11 @@ function renderNewEmployeeBento(record, employee, period) {
     }
   }
   document.querySelector("#new-bento-period-label").textContent = period.label;
-  vulModernHerokop(record, period, needsHours || needsCustomerTimesheet);
   document.querySelector("#new-bento-week-title").textContent = "Week " + week.number;
   const actualDays = week.days.filter(Boolean);
   document.querySelector("#new-bento-week-range").textContent = actualDays.length
     ? actualDays[0].label + " – " + actualDays[actualDays.length - 1].label
     : period.label;
-  renderWeekstrip(record, period, weekIndex);
   document.querySelector("#new-bento-days").innerHTML = renderBentoDayCards(week, weekIndex, record, editable, period);
   const weekTotal = record.entries[weekIndex].reduce((sum, value) => sum + Number(value || 0), 0);
   const weekBusinessDays = actualDays.length;
@@ -13936,20 +13882,6 @@ function toonInstallatieAanbod() {
     persistState();
     rerenderActiveTimesheetView();
     focusEersteLegeBentoDag(record, period, nextIndex);
-    return;
-  }
-
-  const weekstripChip = event.target.closest("[data-weekstrip-index]");
-  if (weekstripChip) {
-    // Rechtstreeks naar de gekozen week, zonder de sprong-naar-eerste-lege-week
-    // logica van de pijlen: wie een week aanwijst bedoelt precies die week.
-    const gekozen = Number(weekstripChip.dataset.weekstripIndex);
-    if (Number.isFinite(gekozen)) {
-      state.hoursWeekScope = "week-" + gekozen;
-      state.hoursWeekScopeTouched = true;
-      persistState();
-      rerenderActiveTimesheetView();
-    }
     return;
   }
 

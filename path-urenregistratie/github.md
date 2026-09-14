@@ -3,7 +3,37 @@ branch: main
 path: path-urenregistratie
 
 ## Last sync
-date: 2026-09-14T06:20:00Z
+date: 2026-09-14T07:10:00Z
+
+### Ronde 14 sep (vierde) — scope rechtgezet: de referentie ís Klassiek, export 04:40:22Z
+**Waar het misging.** Op 13 sep om 14:14 zei Gio dat de ontwerpen voor Klassiek
+waren. In 3909db80 (13 sep 18:37) heb ik het werk toch naar Modern verhuisd, met
+de afweging "twee documenten die New-skin zeggen wegen zwaarder dan die ene
+aanwijzing". Daaruit volgden de Modern-hero en de weekstrook in `styles-new.css`,
+het Vandaag-scherm in de Modern-skin en het parkeren daarvan. Afspraak vanaf nu:
+botst een document met wat Gio zegt, dan vraag ik het na in plaats van het af te
+wegen.
+
+**Teruggedraaid uit Modern** (besluit Gio: optie a):
+- `styles-new.css` staat weer op de stand van vóór 13 sep 12:36 (224 regels uit
+  3909db80, 85d23b64 en 3d3a50b5);
+- in `index.html` zijn de statuspil, het maandtotaal, de contractregel en de
+  weekstrook uit de bento weg;
+- in `app.js` zijn `vulModernHerokop`, `renderWeekstrip` en de chiphandler weg;
+- [SKIN-H-037] is verwijderd, want hij toetste de weekstrook die niet meer
+  bestaat.
+
+Wat blijft: de gedeelde correcties die ook in Modern zichtbaar zijn ("N dagen
+open", "dien de maand in", de ✓/•-bollen in Mijn maanden). Zichtbaar op TEST na
+uitrol: Modern op telefoon toont geen statuspil, maandtotaal, contractregel en
+weekstrook meer.
+
+**Volgorde verder:** eerst het desktopscherm Vandaag van
+`modern-vandaag-geparkeerd` naar Klassiek, dan de telefoonversie uit Wild, dan de
+tabs in plaats van de zijbalk. De parkeerbranch blijft bestaan tot het
+desktopscherm in Klassiek staat.
+
+## Sync history
 
 ### Ronde 14 sep (derde, vervolg) — terugmeldingen verwerkt, export 04:07:28Z
 Vier van de vijf terugmeldingen waren fouten in de referentie; die zijn daar
@@ -48,8 +78,6 @@ naar de app en de GUI rechtgetrokken:
 
 Aan Klassiek verandert daardoor niets. De verlopen link naar
 `HANDOFF-MEDEWERKER-MOBIEL.md` is vervangen; die versie zegt nu ook max 2 MB.
-
-## Sync history
 
 ### Ronde 14 sep (derde) — scope gewijzigd: Klassiek eerst
 Export 2026-09-14T03:24:33Z, bijgewerkt 03:58:15Z (alleen "maximaal 2 MB" en de drie antwoorden). Verschil met de vorige export, gelezen uit de

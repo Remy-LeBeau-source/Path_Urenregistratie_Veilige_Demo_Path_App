@@ -273,16 +273,6 @@
             <div class="new-bento-hero-copy">
               <span class="new-bento-greeting" id="new-bento-greeting">Goedemiddag</span>
               <span class="section-label" id="new-bento-period-label">Deze maand</span>
-              <!-- Statuspil, maandtotaal en contractregel uit de mobiele
-                   referentie (handoff/medewerker-wild.html). Zichtbaarheid zit
-                   volledig in de opmaak, niet in JavaScript: het hidden-attribuut
-                   werkt hier niet omdat styles.css [hidden] op display:none
-                   !important zet, en geen media query komt daaroverheen. -->
-              <span class="new-bento-oog" id="new-bento-oog"><span class="new-bento-oog-stip" aria-hidden="true"></span><span id="new-bento-oog-label"></span></span>
-              <div class="new-bento-maandtotaal" id="new-bento-maandtotaal">
-                <strong id="new-bento-maanduren">0,00</strong><span class="new-bento-maandtotaal-eenheid">uur</span>
-              </div>
-              <small class="new-bento-contractregel" id="new-bento-contractregel"></small>
               <h2 id="new-bento-hero-title">Begin met<br>je uren</h2>
               <p id="new-bento-hero-copy">Registreer je uren voor deze week. Je wijzigingen worden veilig als concept bewaard.</p>
             </div>
@@ -296,12 +286,6 @@
               <div><strong id="new-bento-week-title">Week</strong><small id="new-bento-week-range"></small></div>
               <button type="button" data-new-bento-week="next" aria-label="Volgende week">›</button>
             </header>
-            <!-- Weekstrook uit de ontwerpronde van 13 sep: compacte chips op een
-                 horizontale scrollijn in plaats van hoge kaarten die afbreken.
-                 Alleen zichtbaar op telefoonbreedte; de pijlen ernaast blijven
-                 bestaan, want die hebben hun eigen gedrag (springen naar de
-                 eerstvolgende week met een leeg urenvak). -->
-            <div class="new-bento-weekstrip" id="new-bento-weekstrip" role="tablist" aria-label="Weken"></div>
             <div class="new-bento-days" id="new-bento-days"></div>
             <div class="new-bento-week-total"><span id="new-bento-week-total-label">Totaal deze week</span><strong id="new-bento-week-total">0,00</strong></div>
             <p class="new-bento-fill-pattern-note" id="new-bento-fill-pattern-note" hidden></p>
