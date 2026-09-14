@@ -783,8 +783,9 @@ test.describe('customer timesheet api', () => {
       await page.locator('#period-month-picker').click();
       await page.locator('[data-period-month="12"][data-month-control="#period-month-picker"]').click();
       await expect(page.locator('#period-picker')).toHaveValue(period);
-      await page.locator('button[data-view="timesheet"]').click();
-      await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+      // Het paneel staat sinds 14 sep op het eigen Klanturenstaat-scherm.
+      await page.evaluate(() => { window.location.hash = 'customer-timesheet'; });
+      await expect(page.locator('#view-customer-timesheet')).toHaveClass(/is-active/);
     });
 
     await test.step('Then verschijnt het serverdocument en levert Klanturenstaat bekijken een inline PDF-response', async () => {
