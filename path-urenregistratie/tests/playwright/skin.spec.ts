@@ -150,14 +150,14 @@ test('[SKIN-H-004] de nieuwe skin activeert uitsluitend zijn eigen visuele funda
   });
 });
 
-test('[SKIN-H-005] Klassiek start licht en Nieuw donker en onthoudt daarna elk eigen thema', async ({ page }) => {
+test('[SKIN-H-005] Klassiek start donker en Nieuw donker en onthoudt daarna elk eigen thema', async ({ page }) => {
   const loginPage = new LoginPage(page);
 
   await test.step('Given een ingelogde administrator met de standaardvoorkeuren', async () => {
     await loginPage.open();
     await loginPage.loginAsAdmin();
     await expect(page.locator('#app-shell')).toBeVisible();
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
   });
 
@@ -172,7 +172,7 @@ test('[SKIN-H-005] Klassiek start licht en Nieuw donker en onthoudt daarna elk e
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
     await page.locator('#quick-skin-toggle').click();
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
-    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await page.locator('#quick-skin-toggle').click();
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
