@@ -62,6 +62,19 @@ export class LoginPage {
     await expect(this.page.locator('#auth-login-submit')).toBeEnabled();
     await this.page.locator('#auth-login-email').fill(email);
     await this.page.locator('#auth-login-password').fill(password);
+    // Diagnose, verandert niets aan het verloop: legt vast welke events de klik
+    // oplevert en op welk element. Zie de toelichting bij de time-out hieronder.
+    await this.page.evaluate(() => {
+      const w = window as unknown as { __inlogEvents?: string[] };
+      w.__inlogEvents = [];
+      for (const type of ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click', 'submit']) {
+        document.addEventListener(type, event => {
+          const doel = event.target as Element | null;
+          const naam = doel ? `${doel.tagName.toLowerCase()}${doel.id ? '#' + doel.id : ''}` : '?';
+          w.__inlogEvents?.push(`${type}@${naam}${event.defaultPrevented ? '(prevented)' : ''}`);
+        }, { capture: true });
+      }
+    }).catch(() => undefined);
     await this.page.locator('#auth-login-submit').click();
 
     // Hoe lang we op de uitkomst van het inloggen wachten. 30 s, en dat is geen
@@ -97,7 +110,34 @@ export class LoginPage {
 
       return null;
       // 30 s in plaats van 12 s (zie de toelichting boven deze aanroep).
-    }, undefined, { timeout: LOGIN_UITKOMST_TIMEOUT_MS });
+    }, undefined, { timeout: LOGIN_UITKOMST_TIMEOUT_MS }).catch(async error => {
+      // Alleen diagnose, de uitkomst blijft een fout. Op mobile-safari verlaat het
+      // inlogverzoek soms de browser niet (MASTERCHECKLIST, 14 sep). Deze momentopname
+      // onderscheidt de kandidaten: leeg of ongeldig veld (native validatie blokkeert),
+      // knop uitgeschakeld (verzending loopt nog of hangt), of alles in orde en toch
+      // geen verzending. In dat laatste geval zegt de eventreeks waar het strandt:
+      // geen mouseup op de knop (verschuiving tussen indrukken en loslaten), geen
+      // click, of click zonder submit. Tot nu toe (34 keer in 18 releases, alleen
+      // mobile-safari) toonde het snapshot velden gevuld, knop actief met focus,
+      // geen melding: de handler is dus nooit bereikt.
+      const staat = await this.page.evaluate(() => {
+        const email = document.querySelector<HTMLInputElement>('#auth-login-email');
+        const wachtwoord = document.querySelector<HTMLInputElement>('#auth-login-password');
+        const knop = document.querySelector<HTMLButtonElement>('#auth-login-submit');
+        const formulier = document.querySelector<HTMLFormElement>('#auth-login-form');
+        return {
+          emailGevuld: Boolean(email?.value),
+          wachtwoordLengte: wachtwoord?.value.length ?? -1,
+          formulierGeldig: formulier ? formulier.checkValidity() : null,
+          knopUit: knop ? knop.disabled : null,
+          melding: String(document.querySelector('#auth-login-feedback')?.textContent || '').trim(),
+          authModus: document.querySelector('#auth-mode-indicator')?.textContent?.trim() ?? '',
+          inlogschermZichtbaar: !document.querySelector('#login-screen')?.hasAttribute('hidden'),
+          events: (window as unknown as { __inlogEvents?: string[] }).__inlogEvents ?? null,
+        };
+      }).catch(() => null);
+      throw new Error(`${(error as Error).message}\nInlogstaat bij time-out: ${JSON.stringify(staat)}`);
+    });
 
     const result = await outcome.jsonValue() as { type: 'success' | 'error'; message: string };
     if (result.type === 'error') {

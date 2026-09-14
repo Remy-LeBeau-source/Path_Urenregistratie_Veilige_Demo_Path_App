@@ -3021,10 +3021,30 @@ zinloos was geweest.
   voorafgaande stappen in `LoginPage.login()` slagen (scherm zichtbaar, auth-modus klaar, knop actief,
   velden gevuld), de wachtstap daarna niet. Een ruimere time-out helpt niet: er is niets onderweg om op
   te wachten.
-- **Volgende stap, nog niet gedaan:** lokaal op mobile-safari met netwerklogging nagaan of de klik de
-  submit-handler bereikt, en of de automatische invulling van `local-login-hints.php` het formulier
-  opnieuw tekent net nadat Playwright het heeft ingevuld. `[HELP-N-001]` (22 s, al voorbij het inloggen)
-  hoort hier niet bij.
+- `[HELP-N-001]` (22 s, al voorbij het inloggen) hoort hier niet bij.
+
+*Vervolg 14 sep, na de release op 5e0bfbda (8 keer dit kenmerk).*
+- **Geen regressie van vannacht, en alleen WebKit.** Over de laatste 18 afgeronde releases: 34 uitvallers
+  met het inlog-time-outkenmerk (rond 16 s zolang de begroting 12 s was, rond 34 s sinds 916e1ec7),
+  **alle 34 op mobile-safari**, nul op Chromium. Het zat er al in op 13 sep 13:22.
+- **Weerlegd: de automatische invulling wist het wachtwoord.** `prefillAuthCredentialsFromSelection()`
+  maakt het veld synchroon leeg, maar in dezelfde tik als `applyAuthUiMode("auth")` de knop aanzet --
+  en de test wacht op die knop. Het asynchrone deel vult alleen een leeg of gelijk veld en wist nooit.
+  Geen ander pad schrijft het veld leeg behalve na een mislukte of afgebroken login.
+- **Weerlegd: smooth scrolling of de indrukgloed.** `html { scroll-behavior: smooth }` en de
+  `:active`-schaal staan allebei onder `prefers-reduced-motion: reduce` uit, en de config zet
+  `reducedMotion: 'reduce'`.
+- **Wat het snapshot van de mislukte poging (DASH-H-027) laat zien:** e-mail en wachtwoord gevuld,
+  formulier geldig, knop "Inloggen" actief **en met focus**, geen melding. Had de submit-handler
+  gelopen, dan stond er "Inloggen..." en was de knop uit. De indruk kwam dus aan, de submit niet.
+- **Diagnose ingebouwd in `LoginPage.login()`** (verandert het verloop niet, alleen de foutmelding):
+  bij de time-out een momentopname van velden, geldigheid, knop, melding en de eventreeks
+  pointerdown/mouseup/click/submit met het doelelement. Lokaal bewezen dat hij verschijnt met een
+  onderschepte, nooit beantwoorde login-POST. De eerstvolgende WebKit-uitval in CI zegt daarmee waar het
+  strandt: loslaten op een ander element, geen click, of click zonder submit.
+- **Apart, niet hetzelfde:** in `[DASH-H-008]` opent de accountkiezer na "Andere rol kiezen" niet
+  (paneel blijft `hidden`, eerst drie keer "element is not stable"). Ook een klik op het inlogscherm
+  zonder effect, maar daar in demo-modus en zonder formulier.
 
 **Herhaald probleem: onze twee sessies draaien tests door elkaar heen (vier keer op 13/14 sep).**
 Telkens hetzelfde gevolg: een meting die geldig lijkt omdat hij reproduceerbaar is, terwijl de
