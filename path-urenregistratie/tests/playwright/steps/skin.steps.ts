@@ -151,5 +151,9 @@ Then("passen zonder aanpassing de knoppen niet in 300px -- de uitgangssituatie o
 When("het toetsenbord het zichtbare deel verkleint tot 300px");
 Then("blijven de indienknop, de sluitactie en het typveld binnen dat deel");
 And("ruimt het sluiten van de dialoog de aanpassing op");
+When("de medewerker Berichten opent op een breed scherm");
+Then("begrenst Klassiek licht Berichten en staat de navigatie horizontaal");
+And("gebruikt Klassiek donker dezelfde horizontale navigatie en compacte breedte");
+And("behoudt Nieuw zijn eigen full-width berichtenkop zonder klassieke sidebar");
 When("de flow voor SKIN-H-039 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect toont");

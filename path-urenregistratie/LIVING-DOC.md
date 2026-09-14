@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 546 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 547 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 546 unieke case-ID's
+- Playwright executable cases: 547 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 547 unieke case-ID's
+- Totaal executable cases: 548 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 588
-- Niet-mobile projectuitvoeringen: 504
+- Uitvoeringen: 589
+- Niet-mobile projectuitvoeringen: 505
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 546 Playwright-functionele cases in totaal 588 resultaten op: 504 + (42 x 2) = 588.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 547 Playwright-functionele cases in totaal 589 resultaten op: 505 + (42 x 2) = 589.
 
 ## Documentatieketen
 
@@ -242,7 +242,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 546 Playwri
 - [DASH-H-043] een vrije dag uit beheer telt als ingevuld en staat niet in het rode blok; een 0 op een werkdag wel — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 10
 - [DASH-H-044] bij een zelf gemailde klanturenstaat zegt het verloop "wacht op Backoffice" en "Volgt na bevestiging", met ongewijzigde standen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
 - [DASH-N-033] geen misleidend bericht aan Backoffice, en zelf gemaild in medewerkertaal terwijl Backoffice zijn eigen term houdt — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
-- [DASH-H-045] de tabbalk van de medewerker heeft Vandaag · Mijn uren · Maanden · Berichten, en Maanden opent Mijn maanden — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 19
+- [DASH-H-045] de tabbalk van de medewerker heeft Vandaag · Mijn uren · Maanden · Berichten, en Maanden opent Mijn maanden — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 21
 - [DASH-H-046] op telefoon zweeft "Andere rol kiezen" niet over de inhoud; de actie staat in de topbalk — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbalk, en Vandaag begint met de begroeting — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 19
 - [DASH-H-048] het maandspoor heeft per kalenderdag een streep en de weken zijn zo breed als hun dagen, en ze leiden naar die week — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 16
@@ -640,7 +640,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 546 Playwri
 
 - Feature: `tests/playwright/features/skin.feature`
 - Source: `tests/playwright/skin.spec.ts`
-- Cases: 37
+- Cases: 38
 
 - [SKIN-H-001] de app start standaard in de klassieke vormgeving — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [SKIN-H-002] Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
@@ -675,6 +675,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 546 Playwri
 - [SKIN-H-031] de vijf stappen lopen in volgorde en geen stap staat groen terwijl een eerdere nog open is — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
 - [SKIN-H-032] Klassiek en Modern tonen dezelfde statusketen, uit dezelfde bron — Techniek: Toestandsovergang · Assertions: 14
 - [SKIN-H-033] de medewerkerschermen rekken op een breed scherm niet verder uit dan 1060px en staan gecentreerd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
+- [SKIN-H-037] Klassiek houdt Berichten compact in licht en donker, Nieuw behoudt zijn eigen kopnavigatie — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [SKIN-H-034] een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgloed — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [SKIN-H-035] op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle breedte — Techniek: Toestandsovergang · Assertions: 21
 - [SKIN-H-036] een dialoog met open toetsenbord houdt de knoppen, de sluitactie en het typveld in beeld — Techniek: Toestandsovergang · Assertions: 7

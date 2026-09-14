@@ -334,6 +334,16 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     And ruimt het sluiten van de dialoog de aanpassing op
 
   @happy
+  Scenario: [SKIN-H-037] Klassiek houdt Berichten compact in licht en donker, Nieuw behoudt zijn eigen kopnavigatie
+    # Testtechniek: Equivalentieklassen
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given dashboard en open werkvoorraad is voorbereid
+    When de medewerker Berichten opent op een breed scherm
+    Then begrenst Klassiek licht Berichten en staat de navigatie horizontaal
+    And gebruikt Klassiek donker dezelfde horizontale navigatie en compacte breedte
+    And behoudt Nieuw zijn eigen full-width berichtenkop zonder klassieke sidebar
+
+  @happy
   Scenario: [SKIN-H-039] de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect toont
     # Testtechniek: End-to-end use-case + visuele contractasserties
     # Aantoonbare Playwright-assertions in deze case: 2

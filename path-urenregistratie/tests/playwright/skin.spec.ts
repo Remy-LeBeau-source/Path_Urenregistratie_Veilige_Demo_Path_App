@@ -2222,7 +2222,7 @@ test('[SKIN-H-033] de medewerkerschermen rekken op een breed scherm niet verder 
     // voor het dashboard; deze case toetste toen alleen de breedte, en zou dus
     // groen zijn gebleven met een links uitgelijnde kolom. Daarom nu ook de
     // verdeling van de ruimte links en rechts, op alle drie de schermen.
-    for (const scherm of ['employee-dashboard', 'timesheet', 'historie']) {
+    for (const scherm of ['employee-dashboard', 'timesheet', 'historie', 'employee-announcements']) {
       await page.evaluate(v => { window.location.hash = v; }, scherm);
       await expect(page.locator(`#view-${scherm}`)).toHaveClass(/is-active/);
       const maat = await page.locator(`#view-${scherm}`).evaluate(el => {
@@ -2249,6 +2249,45 @@ test('[SKIN-H-033] de medewerkerschermen rekken op een breed scherm niet verder 
     const breedte = await page.locator('#view-employee-dashboard')
       .evaluate(el => Math.round(el.getBoundingClientRect().width));
     expect(breedte, 'op een gewoon desktopvenster hoort de grens niets te doen').toBeGreaterThan(850);
+  });
+});
+
+test('[SKIN-H-037] Klassiek houdt Berichten compact in licht en donker, Nieuw behoudt zijn eigen kopnavigatie', async ({ page }) => {
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await page.setViewportSize({ width: 1800, height: 1000 });
+
+  await test.step('Then begrenst Klassiek licht Berichten en staat de navigatie horizontaal', async () => {
+    await page.evaluate(() => {
+      document.documentElement.setAttribute('data-skin', 'classic');
+      document.documentElement.setAttribute('data-theme', 'light');
+      window.location.hash = 'employee-announcements';
+    });
+    await expect(page.locator('#view-employee-announcements')).toHaveClass(/is-active/);
+    const layout = await page.locator('.sidebar').evaluate(el => ({
+      direction: getComputedStyle(el).flexDirection,
+      width: Math.round(document.querySelector('#view-employee-announcements')!.getBoundingClientRect().width)
+    }));
+    expect(layout.direction).toBe('row');
+    expect(layout.width).toBeLessThanOrEqual(1060);
+  });
+
+  await test.step('And gebruikt Klassiek donker dezelfde horizontale navigatie en compacte breedte', async () => {
+    await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+    const layout = await page.locator('.sidebar').evaluate(el => ({
+      direction: getComputedStyle(el).flexDirection,
+      width: Math.round(document.querySelector('#view-employee-announcements')!.getBoundingClientRect().width)
+    }));
+    expect(layout.direction).toBe('row');
+    expect(layout.width).toBeLessThanOrEqual(1060);
+  });
+
+  await test.step('And behoudt Nieuw zijn eigen full-width berichtenkop zonder klassieke sidebar', async () => {
+    await page.evaluate(() => document.documentElement.setAttribute('data-skin', 'new'));
+    await expect(page.locator('.sidebar')).toBeHidden();
+    await expect(page.locator('.mobile-topbar-home')).toBeVisible();
   });
 });
 

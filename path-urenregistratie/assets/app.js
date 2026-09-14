@@ -11542,7 +11542,9 @@ function showView(view, options = {}) {
   document.querySelector("#page-title").textContent = pageTitles[view];
   // Voor CSS die per scherm verschilt, zoals de paginatitel die op Vandaag
   // wegvalt (TEST 2.0.59, punt 8).
-  document.body.dataset.view = view;
+  // Niet data-view: dat attribuut is de selector van de navigatieknoppen, en op
+  // body gezet matchte [data-view="employees"] twee elementen (CI 14 sep).
+  document.body.dataset.scherm = view;
   // A dashboard can select another action month while the hidden hours grid still
   // contains the previously opened month. Always render after the timesheet view
   // becomes active so an equal-period navigation cannot expose stale locked input.

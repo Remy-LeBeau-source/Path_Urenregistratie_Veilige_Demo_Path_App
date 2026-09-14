@@ -1660,7 +1660,8 @@ html:not([data-skin="new"]) .button-primary:active:not(:disabled) { transform: s
 :root { --pagina: 1060px; }
 html:not([data-skin="new"]) #view-employee-dashboard,
 html:not([data-skin="new"]) #view-timesheet,
-html:not([data-skin="new"]) #view-historie { max-width: var(--pagina); margin-inline: auto; }
+html:not([data-skin="new"]) #view-historie,
+html:not([data-skin="new"]) #view-employee-announcements { max-width: var(--pagina); margin-inline: auto; }
 .employee-hero { display: grid; grid-template-columns: minmax(0, 720px); gap: 34px; align-items: center; margin: 30px 0 18px; border-radius: 24px; background: linear-gradient(135deg, #0d1b38, #174b55); color: #fff; padding: 36px 40px; box-shadow: 0 18px 45px rgba(13,27,56,.14); }
 .employee-hero.is-complete { padding-block: 28px; }
 /* Shawn's punt (WhatsApp, screenshot met "MIJN OPEN ACTIES" rood omcirkeld):
@@ -4470,7 +4471,7 @@ html:not([data-skin="new"]) .testbalk .appearance-switch { min-height: 34px; col
 /* De omgeving en versie staan nu in de balk; niet nog eens onder de titel. En
    op Vandaag begint het scherm met de begroeting: geen paginatitel erboven. */
 html:not([data-skin="new"]) body[data-role="employee"] .topbar-context { display: none; }
-html:not([data-skin="new"]) body[data-role="employee"][data-view="employee-dashboard"] .topbar-title { display: none; }
+html:not([data-skin="new"]) body[data-role="employee"][data-scherm="employee-dashboard"] .topbar-title { display: none; }
 
 /* TEST 2.0.59, punt 9: op telefoon zweefde deze knop over de klanturenstaat-
    kaart en de tabbalk. Daar staat dezelfde actie al in de topbalk
@@ -4505,14 +4506,15 @@ html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] 
 
 /* Desktopnavigatie uit medewerker-gui.html r83-113. Op de lichte Klassieke
    medewerkerskant is dit een horizontale, doorschijnende menubalk boven het
-   veld; de oude donkerblauwe zijbalk hoort bij de vorige vorm. Beheer, Modern,
-   donker en de bestaande onderste navigatie tot 820px blijven ongemoeid.
+   veld; de oude donkerblauwe zijbalk hoort bij de vorige vorm. Geldt in licht
+   én donker (verzoek Gio 14 sep: in donker viel het menu terug op de zijbalk).
+   Beheer, Modern en de onderste navigatie tot 820px blijven ongemoeid.
 
    De bestaande sidebar-markup blijft bewust staan: dezelfde vier knoppen en
    telbolletjes houden daardoor hun gedrag, focusvolgorde en toegankelijke naam.
    Alleen hun plaats en vorm veranderen. */
 @media (min-width: 821px) {
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .sidebar {
+  html:not([data-skin="new"]) body[data-role="employee"] .sidebar {
     position: sticky;
     inset: 0 auto auto;
     z-index: 20;
@@ -4522,7 +4524,7 @@ html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] 
     flex-direction: row;
     align-items: flex-end;
     gap: 24px;
-    border-bottom: 1px solid #bfcec8;
+    border-bottom: 1px solid var(--nav-rand, #bfcec8);
     background: transparent;
     color: var(--ink);
     padding: 6px max(14px, calc((100vw - var(--pagina)) / 2)) 0;
@@ -4530,23 +4532,23 @@ html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] 
     backdrop-filter: blur(12px);
   }
 
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .brand {
+  html:not([data-skin="new"]) body[data-role="employee"] .brand {
     flex: 0 0 auto;
     align-self: stretch;
     color: var(--ink);
     padding-bottom: 11px;
   }
 
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .brand img {
+  html:not([data-skin="new"]) body[data-role="employee"] .brand img {
     width: 68px;
   }
 
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .brand span {
+  html:not([data-skin="new"]) body[data-role="employee"] .brand span {
     display: none;
   }
 
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .nav-list,
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .nav-group:not([hidden]) {
+  html:not([data-skin="new"]) body[data-role="employee"] .nav-list,
+  html:not([data-skin="new"]) body[data-role="employee"] .nav-group:not([hidden]) {
     display: flex;
     min-width: 0;
     flex: 1;
@@ -4556,7 +4558,7 @@ html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] 
     margin: 0;
   }
 
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .nav-item {
+  html:not([data-skin="new"]) body[data-role="employee"] .nav-item {
     min-height: 42px;
     flex: 0 0 auto;
     gap: 7px;
@@ -4570,30 +4572,30 @@ html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] 
     white-space: nowrap;
   }
 
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .nav-item:hover {
+  html:not([data-skin="new"]) body[data-role="employee"] .nav-item:hover {
     background: transparent;
     color: var(--ink);
   }
 
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .nav-item.is-active {
+  html:not([data-skin="new"]) body[data-role="employee"] .nav-item.is-active {
     border-bottom-color: var(--mint);
     background: transparent;
     color: var(--ink);
     font-weight: 700;
   }
 
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .nav-item.is-active::before,
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .nav-marker {
+  html:not([data-skin="new"]) body[data-role="employee"] .nav-item.is-active::before,
+  html:not([data-skin="new"]) body[data-role="employee"] .nav-marker {
     display: none;
   }
 
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .nav-count {
+  html:not([data-skin="new"]) body[data-role="employee"] .nav-count {
     margin-left: 0;
     font-size: 9.5px;
     padding: 1px 6px;
   }
 
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .sidebar-footer {
+  html:not([data-skin="new"]) body[data-role="employee"] .sidebar-footer {
     position: relative;
     display: block;
     width: 32px;
@@ -4603,11 +4605,11 @@ html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] 
     padding: 5px 0;
   }
 
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .sidebar-footer .workspace-user {
+  html:not([data-skin="new"]) body[data-role="employee"] .sidebar-footer .workspace-user {
     display: block;
   }
 
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .workspace-user .avatar {
+  html:not([data-skin="new"]) body[data-role="employee"] .workspace-user .avatar {
     width: 32px;
     height: 32px;
     border-radius: 9px;
@@ -4616,13 +4618,13 @@ html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] 
     font-size: 11px;
   }
 
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .workspace-user > span:last-child,
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .sidebar-footer .demo-badge {
+  html:not([data-skin="new"]) body[data-role="employee"] .workspace-user > span:last-child,
+  html:not([data-skin="new"]) body[data-role="employee"] .sidebar-footer .demo-badge {
     display: none;
   }
 
   /* De avatar is tegelijk de bestaande, toegankelijke rolwisselactie. */
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] #switch-role {
+  html:not([data-skin="new"]) body[data-role="employee"] #switch-role {
     position: absolute;
     inset: 5px 0;
     z-index: 1;
@@ -4637,35 +4639,36 @@ html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] 
     padding: 0;
   }
 
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] #switch-role:hover {
+  html:not([data-skin="new"]) body[data-role="employee"] #switch-role:hover {
     background: rgba(58,189,157,.1);
   }
 
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .main-content {
+  html:not([data-skin="new"]) body[data-role="employee"] .main-content {
     margin-left: 0;
     padding-inline: clamp(18px, 3vw, 36px);
   }
 
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .topbar,
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] .testbalk {
+  html:not([data-skin="new"]) body[data-role="employee"] .topbar,
+  html:not([data-skin="new"]) body[data-role="employee"] .testbalk {
     max-width: var(--pagina);
     margin-inline: auto;
   }
 
-  /* Vandaag heeft zijn maandbediening en begroeting in de ene kopkaart. Een
-     tweede koprij erboven zou die informatie opnieuw tonen. */
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"][data-view="employee-dashboard"] .topbar {
-    display: none;
+  /* Op Vandaag blijft de topbalk staan, zonder titel: bel, profielmenu en de
+     maandkiezer moeten bereikbaar blijven (CI 14 sep: met display:none waren
+     Voorkeuren, uitloggen en maandkeuze op het desktopdashboard onbereikbaar).
+     De safe-area-regel blijft de laatste .topbar-regel (smoke-contract). */
+  html:not([data-skin="new"]) body[data-role="employee"][data-scherm="employee-dashboard"] .topbar {
+    min-height: 0;
     padding-top: env(safe-area-inset-top, 0px);
   }
-
-  html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"][data-view="employee-dashboard"] #view-employee-dashboard {
-    padding-top: clamp(18px, 3vw, 30px);
-  }
 }
+html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] { --nav-rand: var(--line); }
+
 @media (max-width: 720px) {
   html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] {
     background-color: #dfe9e4;
     background-image: linear-gradient(176deg, #c4dbd1 0%, #d6e8e0 26%, #e9f3ef 58%, #f8fcfa 82%, #ffffff 100%);
   }
 }
+

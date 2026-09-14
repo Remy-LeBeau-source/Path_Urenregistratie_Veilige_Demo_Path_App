@@ -2617,7 +2617,12 @@ test('[DASH-H-045] de tabbalk van de medewerker heeft Vandaag · Mijn uren · Ma
     expect(vorm.blur).toContain('blur(12px)');
     expect(vorm.hoofdmarge).toBe('0px');
     expect(vorm.rijen).toHaveLength(1);
-    await expect(page.locator('.topbar')).toBeHidden();
+    // Op Vandaag valt alleen de titel weg; profielmenu, bel en maandkiezer blijven
+    // bereikbaar (CI 14 sep: met een verborgen topbalk waren Voorkeuren,
+    // uitloggen en maandkeuze op het desktopdashboard onbereikbaar).
+    await expect(page.locator('#page-title')).toBeHidden();
+    await expect(page.locator('#profile-menu-button')).toBeVisible();
+    await expect(page.locator('#period-month-picker')).toBeVisible();
   });
 
   await test.step('When de medewerker op Maanden tikt, then staat Mijn maanden open en is die tab actief', async () => {
