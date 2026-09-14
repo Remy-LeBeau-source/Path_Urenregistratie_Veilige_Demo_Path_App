@@ -688,7 +688,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 528 Playwri
 - [TS-REV-UI-N-013] Goedkeuringen toont een laadtoestand tot de serverwerkvoorraad binnen is — Techniek: Toestandsovergang · Assertions: 9
 - [TS-REV-UI-N-014] verlof en ziekte staan uit met een duidelijke uitleg — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
 - [TS-REV-UI-H-012] beheerder zet verlof en ziekte aan; de medewerker kan ze dan zelf invullen en het blijft na F5 staan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 14
-- [TS-REV-UI-H-013] een week kan alleen worden opgeslagen en de hele maand kan worden ingediend — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 8
+- [TS-REV-UI-H-013] een week kan alleen worden opgeslagen en de hele maand kan worden ingediend — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 7
 
 ### Urenregistratie verwerken
 

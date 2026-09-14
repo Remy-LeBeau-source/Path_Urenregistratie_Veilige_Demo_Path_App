@@ -231,7 +231,7 @@ Feature: Dashboard en open werkvoorraad
     When de hele maand leeg is op één bewust op 0,0 gezette dag na
     Then staan de ontbrekende dagen er bij naam, niet als kaal aantal
     And telt de bewust op 0,0 gezette dag niet mee, ook al ligt hij aan het eind van de maand
-    And zegt de indienknop hoeveel dagen er nog open staan, gedempt maar niet op slot
+    And noemt de indienknop wat hij doet en hoeveel dagen er nog open staan, gedempt
     And brengt een chip je naar de week waar die dag in zit
     And verdwijnt de waarschuwing zodra alles is ingevuld
 

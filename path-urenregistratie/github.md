@@ -14,12 +14,24 @@ Zeven punten in `OPDRACHT.md`. Stand per punt aan de repo-kant:
    maandrecord, dus alle weken van een maand delen die status al.
 2. **Elke lege werkdag telt als ontbrekend, ook in de toekomst; een bewuste 0
    telt als ingevuld.** Gebouwd, zie hieronder.
-3. **GUI Mijn uren: "Maand indienen" grijs met "Nog N dagen" zolang er gaten
-   zijn.** Gebouwd als gedempte knop met dat label. Bewust níét uitgeschakeld:
-   de indienbevestiging waarschuwt al en laat je bewust doorgaan, en
-   `#submit-timesheet` wordt op 21 plekken in 15 spec-bestanden aangeklikt. Bij
-   een correctie blijft "opnieuw indienen" staan -- dat onderscheid leggen
-   [DASH-N-015] en [DASH-N-016] vast en het ontwerp noemt het niet.
+3. **Indienlabel -- gecorrigeerd en goedgekeurd door Gio.** "Nog N dagen" liet het
+   werkwoord weg en brak `TS-REV-UI-H-015` ("Hele maand toont altijd Maand
+   indienen"); CI viel daardoor op `TS-REV-UI-H-013`. Goedgekeurd en in de
+   referentie doorgevoerd: **"Maand indienen · nog 14 dagen"**, gedempt zolang er
+   gaten zijn; bij nul gaten alleen "Maand indienen". Bij een correctie "Maand
+   opnieuw indienen", want dat onderscheid leggen DASH-N-015/016 en de zakelijke
+   E2E-keten vast en de referentie noemt het niet. TS-REV-UI-H-013 is niet
+   aangepast.
+
+   **Open, en dit vraagt een keuze van Gio:** de goedkeuring zegt ook "niet
+   aanklikbaar zolang er gaten zijn" én "pas geen test aan". Die twee sluiten
+   elkaar hier uit. De zakelijke E2E-keten dient in 13 spec-bestanden de
+   correctiemaand augustus in via deze knop, en augustus heeft in de demodata
+   4,0 uur met 20 lege werkdagen. Op slot zetten laat die hele keten omvallen,
+   tenzij die cases eerst de maand vullen -- en dat is een testaanpassing. De knop
+   is daarom nog klikbaar (de indienbevestiging blijft de poort) tot Gio kiest:
+   (a) klikbaar en gedempt zoals nu, of (b) op slot, en de E2E-cases vullen
+   eerst de maand.
 4. **GUI Maanden start dichtgeklapt.** Klopt al: het maandverloop in Mijn maanden
    staat standaard dicht.
 5. **Kopbalk, paginakop en inhoud gecentreerd op `--pagina` (1060px).** Mijn

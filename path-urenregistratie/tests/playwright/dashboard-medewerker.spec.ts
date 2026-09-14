@@ -1518,14 +1518,14 @@ test('[DASH-H-032] "Hele maand" noemt de ontbrekende werkdagen bij naam, inclusi
       .toBe(werkdagen - 1);
   });
 
-  await test.step('And zegt de indienknop hoeveel dagen er nog open staan, gedempt maar niet op slot', async () => {
-    // Ontwerpronde 14 sep (tweede): "grijs met Nog N dagen zolang er gaten
-    // zijn". Gedempt en niet uitgeschakeld -- de indienbevestiging blijft de
-    // poort. Deze stap toetst beide helften, want een uitgeschakelde knop met
-    // hetzelfde label zou er hetzelfde uitzien en toch een workflow blokkeren.
+  await test.step('And noemt de indienknop wat hij doet en hoeveel dagen er nog open staan, gedempt', async () => {
+    // Goedgekeurd label (14 sep): altijd "Maand indienen", met het aantal lege
+    // werkdagen erachter zolang die er zijn. De eerdere versie "Nog N dagen"
+    // liet het werkwoord weg; deze stap eist daarom beide delen. Klikbaar is hij
+    // nog wel -- de keuze over op slot zetten ligt open, zie github.md.
     const knop = page.locator('#submit-timesheet');
     await expect(knop).toBeVisible();
-    await expect(knop).toHaveText(/^Nog \d+ dagen$/);
+    await expect(knop).toHaveText(/^Maand indienen · nog \d+ dagen$/);
     await expect(knop).toHaveClass(/is-gedempt/);
     await expect(knop, 'de knop hoort klikbaar te blijven; de bevestiging is de poort').toBeEnabled();
   });
@@ -1557,8 +1557,8 @@ test('[DASH-H-032] "Hele maand" noemt de ontbrekende werkdagen bij naam, inclusi
     await expect(page.locator('#hours-missing-days')).toHaveClass(/is-compleet/);
     await expect(page.locator('#hours-missing-days-title')).toHaveText('Geen ontbrekende werkdagen.');
     await expect(page.locator('#hours-missing-days-chips .hours-missing-day')).toHaveCount(0);
-    // En de indienknop valt terug op zijn gewone label en is niet meer gedempt.
-    await expect(page.locator('#submit-timesheet')).toHaveText(/indienen$/);
+    // En de indienknop valt terug op alleen het werkwoord en is niet meer gedempt.
+    await expect(page.locator('#submit-timesheet')).toHaveText('Maand indienen');
     await expect(page.locator('#submit-timesheet')).not.toHaveClass(/is-gedempt/);
   });
 

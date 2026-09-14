@@ -9271,30 +9271,29 @@ function updateTimesheetSubmitUi(record) {
   if (submit) {
     submit.hidden = !showSubmit;
     submit.disabled = !showSubmit;
-    // Zolang er nog lege werkdagen zijn zegt de knop hoeveel het er zijn, en
-    // staat hij gedempt. Ontwerpronde 14 sep: "grijs met Nog N dagen zolang er
-    // gaten zijn".
+    // Het indienlabel, goedgekeurd door Gio op 14 sep en zo ook in de referentie
+    // doorgevoerd: de knop heet altijd "Maand indienen", met het aantal lege
+    // werkdagen erachter zolang die er zijn -- "Maand indienen · nog 14 dagen".
+    // Een eerdere versie liet het werkwoord weg ("Nog 14 dagen"); een knop die
+    // alleen een aantal noemt zegt niet wat hij doet, en dat brak de eis in
+    // TS-REV-UI-H-015 dat Hele maand altijd Maand indienen toont.
     //
-    // Gedempt, niet uitgeschakeld -- en dat is een bewuste lezing van "grijs".
-    // Uitschakelen zou een workflowpoort toevoegen die er nu niet is: de
-    // indienbevestiging waarschuwt al over niet volledig ingevulde weken en
-    // laat je daarna bewust doorgaan, en #submit-timesheet wordt op 21 plekken
-    // in 15 spec-bestanden aangeklikt. Een knop die niet meer klikt, keert dat
-    // gedrag om. Dat staat als vraag in github.md.
-    // Bij een correctie blijft "opnieuw indienen" staan, ook met gaten. Het
-    // ontwerp beschrijft alleen de gewone indienknop; een correctie vervangen
-    // door "Nog N dagen" zou het onderscheid tussen een eerste indiening en een
-    // herindiening wissen, en dat onderscheid is bestaand gedrag dat
-    // [DASH-N-015] en [DASH-N-016] vastleggen. De knop wordt dan wel gedempt en
-    // het aantal staat in de tooltip.
+    // Bij een correctie "Maand opnieuw indienen". De referentie beschrijft
+    // alleen de gewone indiening, en het onderscheid met een herindiening is
+    // bestaand gedrag dat DASH-N-015/016 en de zakelijke E2E-keten vastleggen.
+    //
+    // Nog klikbaar, gedempt. De goedkeuring zegt "niet aanklikbaar zolang er
+    // gaten zijn", maar dat botst met een tweede eis uit dezelfde goedkeuring,
+    // "pas geen test aan": de zakelijke E2E-keten dient in 13 spec-bestanden de
+    // correctiemaand augustus in via deze knop, en augustus heeft in de demodata
+    // 4,0 uur met 20 lege werkdagen. Die keuze ligt als vraag bij Gio (github.md).
     const gaten = ontbrekendeWerkdagen(record, currentPeriod());
     const opnieuw = normalizedStatus !== "draft";
+    const basis = opnieuw ? "Maand opnieuw indienen" : "Maand indienen";
     submit.classList.toggle("is-gedempt", gaten.length > 0);
-    submit.textContent = gaten.length > 0 && !opnieuw
-      ? "Nog " + gaten.length + (gaten.length === 1 ? " dag" : " dagen")
-      : opnieuw
-        ? "Uren " + currentPeriod().month + " opnieuw indienen"
-        : "Uren " + currentPeriod().month + " indienen";
+    submit.textContent = gaten.length > 0
+      ? basis + " · nog " + gaten.length + (gaten.length === 1 ? " dag" : " dagen")
+      : basis;
     submit.title = gaten.length > 0
       ? gaten.length + (gaten.length === 1 ? " werkdag staat" : " werkdagen staan") + " nog leeg. Je kunt de maand wel indienen; je krijgt eerst een bevestiging te zien."
       : "";
