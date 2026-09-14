@@ -212,12 +212,9 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 544 Playwri
 - [DASH-N-025] een gekozen klanturenstaat-bestand blijft niet hangen na een gewone maandwissel — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
 - [DASH-N-021] een lege oudere maand openen voegt geen fantoom-open-acties toe en houdt de kalendermaand in beeld — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 12
 - [DASH-N-009] medewerker teller blijft stabiel bij aug-juli-aug en dashboard triggert geen verborgen timesheet-read — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
-- [DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
-- [DASH-H-004] terugkeren naar medewerkerdashboard ververst de uren en behoudt maandlabels bij themawissel — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
-- [DASH-H-005] medewerker ziet open maanden compact en kan direct naar de juiste maand springen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
-- [DASH-H-014] medewerker krijgt de eerstvolgende concrete actie met juiste maand en taakroute — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 22
+- [DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
 - [DASH-N-015] medewerkerprioriteit kiest correctie boven document en toont niets als alles klaar is — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 15
-- [DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere maand — Techniek: Toestandsovergang · Assertions: 11
+- [DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere maand — Techniek: Toestandsovergang · Assertions: 9
 - [DASH-N-018] medewerkerdashboard toont een laadtoestand tot de eerste werkvoorraad-sync — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [DASH-H-006] medewerker mag tot 2 jaar vooruitkijken zonder fantoom-werkactie, maar niet verder — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [DASH-H-007] september toont alleen historie vanaf de persoonlijke startmaand, en oktober blijft geen werkactie ondanks dat vooruitkijken nu mag — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
@@ -234,7 +231,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 544 Playwri
 - [DASH-H-034] de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 32
 - [DASH-H-035] Mijn uren op desktop toont alleen Ma–Vr, de datum boven elk veld, 0/8/9 eronder en het weektotaal rechts — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
 - [DASH-N-031] de volgende actie is één zin zonder aangeplakte maand, en de maand staat in de regel eronder — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
-- [DASH-H-036] Vandaag staat op desktop in Klassiek volgens de referentie, en hero, ring en Nog te doen kloppen met elkaar — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 27
+- [DASH-H-036] Vandaag staat op desktop in Klassiek volgens de referentie, en hero, ring en Nog te doen kloppen met elkaar — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 31
 - [DASH-H-037] Vandaag ververst het restcijfer meteen na ureninvoer en na terugnavigeren — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 8
 - [DASH-H-038] Nog te doen in Vandaag opent per maand de juiste route, ook voor een correctie, en blijft leesbaar in donker — Techniek: Toestandsovergang · Assertions: 17
 - [DASH-H-039] het verloop in Vandaag volgt de volgorderegel en is gelijk aan de stappen in Modern — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
@@ -245,6 +242,9 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 544 Playwri
 - [DASH-H-043] een vrije dag uit beheer telt als ingevuld en staat niet in het rode blok; een 0 op een werkdag wel — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 10
 - [DASH-H-044] bij een zelf gemailde klanturenstaat zegt het verloop "wacht op Backoffice" en "Volgt na bevestiging", met ongewijzigde standen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
 - [DASH-N-033] geen misleidend bericht aan Backoffice, en zelf gemaild in medewerkertaal terwijl Backoffice zijn eigen term houdt — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
+- [DASH-H-045] de tabbalk van de medewerker heeft Vandaag · Mijn uren · Maanden · Berichten, en Maanden opent Mijn maanden — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
+- [DASH-H-046] op telefoon zweeft "Andere rol kiezen" niet over de inhoud; de actie staat in de topbalk — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
+- [DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbalk, en Vandaag begint met de begroeting — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 19
 - [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 29
 - [DASH-N-022] een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
@@ -647,7 +647,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 544 Playwri
 - [SKIN-H-005] Klassiek start licht en Nieuw donker en onthoudt daarna elk eigen thema — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
 - [SKIN-H-006] de echte medewerkerroute toont de live bento en blijft mobiel bedienbaar — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 24
 - [SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en terugschakelen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 13
-- [SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en Klassiek — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 19
+- [SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en Klassiek — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 20
 - [SKIN-H-010] de admin-verhaallijn wisselt van medewerker en toont bijbehorende status — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [SKIN-H-026] tab-navigatie tussen uren-invoervelden in Nieuw springt niet terug naar het begin — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 4
 - [SKIN-H-011] een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in Mijn uren — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
@@ -671,7 +671,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 544 Playwri
 - [SKIN-H-029] nog niet opgeslagen uren overleven rotatie, themawissel, modal, designwissel en browser-back — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 15
 - [SKIN-H-030] een lang e-mailadres duwt de statuspil niet buiten beeld op 360px — Techniek: Toestandsovergang · Assertions: 6
 - [SKIN-H-031] de vijf stappen lopen in volgorde en geen stap staat groen terwijl een eerdere nog open is — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
-- [SKIN-H-032] Klassiek en Modern tonen dezelfde statusketen, uit dezelfde bron — Techniek: Toestandsovergang · Assertions: 12
+- [SKIN-H-032] Klassiek en Modern tonen dezelfde statusketen, uit dezelfde bron — Techniek: Toestandsovergang · Assertions: 14
 - [SKIN-H-033] de medewerkerschermen rekken op een breed scherm niet verder uit dan 1060px en staan gecentreerd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [SKIN-H-034] een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgloed — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [SKIN-H-035] op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle breedte — Techniek: Toestandsovergang · Assertions: 21
@@ -695,7 +695,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 544 Playwri
 - Source: `tests/playwright/timesheet-review-ui.spec.ts`
 - Cases: 10
 
-- [TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en heropening blijven servergestuurd — Techniek: Toestandsovergang · Assertions: 32
+- [TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en heropening blijven servergestuurd — Techniek: Toestandsovergang · Assertions: 30
 - [TS-REV-UI-H-009] ingediende urenstaat blijft vergrendeld tot Backoffice een correctie vraagt — Techniek: Toestandsovergang · Assertions: 5
 - [TS-REV-UI-H-010] submitknop is verborgen bij goedgekeurde urenstaat — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [TS-REV-UI-N-011] localhost kan demo-uren zonder serverversie voor correctie terugsturen — Techniek: Toestandsovergang · Assertions: 4

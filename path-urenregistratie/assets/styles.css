@@ -437,12 +437,6 @@ summary:focus-visible,
   }
   .switch-role:hover { background: var(--navy-soft); border-color: transparent; color: #fff; }
 }
-/* TEST 2.0.59, punt 9: op telefoon zweefde deze knop over de klanturenstaat-
-   kaart en de tabbalk. Daar staat dezelfde actie al in de topbalk
-   (#mobile-switch-role), dus in Klassiek hoeft de zwevende knop er niet. */
-@media (max-width: 720px) {
-  html:not([data-skin="new"]) #switch-role { display: none; }
-}
 
 .main-content {
   min-height: 100vh;
@@ -4397,3 +4391,48 @@ html[data-theme="dark"]:not([data-skin="new"]) #vd-tel {
   html:not([data-skin="new"]) #view-employee-dashboard > .employee-metrics { display: none !important; }
 }
 html:not([data-skin="new"]) #view-employee-dashboard > #employee-history-teaser { display: none !important; }
+
+/* ===========================================================================
+   Testomgevingsbalk, TEST 2.0.59 punt 8 (gecorrigeerd 14 sep). Alleen bij de
+   medewerker in Klassiek; plaatsTestknoppen() in app.js zet de knoppen hier.
+   Een smalle balk in de omgevingskleur boven de topbalk: hij hoort bij de
+   testomgeving, niet bij het scherm, en scrolt dus gewoon mee weg. Binnen de
+   zijmarge van de inhoud, want die verschilt per breedte.
+   ======================================================================== */
+.testbalk { display: none; }
+html:not([data-skin="new"]) body[data-role="employee"] .testbalk:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  margin: 8px 0 0;
+  border: 1px solid #edc58f;
+  border-radius: 10px;
+  background: #fff5e8;
+  color: #8b5200;
+  padding: 4px 6px 4px 12px;
+}
+html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] .testbalk:not([hidden]) {
+  border-color: #5a4526;
+  background: #2d2313;
+  color: #f0bd7a;
+}
+.testbalk-label { font-size: 10px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.testbalk-knoppen { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+html:not([data-skin="new"]) .testbalk .topbar-quick-reset { margin-left: 0; min-height: 34px; color: inherit; }
+html:not([data-skin="new"]) .testbalk .appearance-switches { border-color: transparent; background: transparent; padding: 0; }
+html:not([data-skin="new"]) .testbalk .appearance-switch { min-height: 34px; color: inherit; }
+/* De omgeving en versie staan nu in de balk; niet nog eens onder de titel. En
+   op Vandaag begint het scherm met de begroeting: geen paginatitel erboven. */
+html:not([data-skin="new"]) body[data-role="employee"] .topbar-context { display: none; }
+html:not([data-skin="new"]) body[data-role="employee"][data-view="employee-dashboard"] .topbar-title { display: none; }
+
+/* TEST 2.0.59, punt 9: op telefoon zweefde deze knop over de klanturenstaat-
+   kaart en de tabbalk. Daar staat dezelfde actie al in de topbalk
+   (#mobile-switch-role), dus in Klassiek hoeft de zwevende knop er niet.
+   Onderaan het bestand en niet bij .switch-role: [MOB-H-028] leest de eerste
+   max-width:720px-query in dit bestand. */
+@media (max-width: 720px) {
+  html:not([data-skin="new"]) #switch-role { display: none; }
+}

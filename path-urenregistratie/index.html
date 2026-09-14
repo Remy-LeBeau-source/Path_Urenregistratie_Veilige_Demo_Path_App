@@ -197,6 +197,14 @@
     </aside>
 
     <main class="main-content">
+      <!-- TEST 2.0.59, punt 8 (gecorrigeerd 14 sep): de testknoppen blijven tot de
+           productiestap, maar staan bij de medewerker in Klassiek in deze balk en
+           niet tussen paginatitel en hero. app.js (plaatsTestknoppen) verhuist ze
+           hierheen en zet ze voor andere rollen en Modern terug. -->
+      <div class="testbalk" id="testbalk" hidden>
+        <span class="testbalk-label" id="testbalk-label"></span>
+        <span class="testbalk-knoppen" id="testbalk-knoppen"></span>
+      </div>
       <header class="topbar">
         <div class="mobile-topbar-home" aria-label="Mobiele snelkeuzes">
           <button class="mobile-brand-home" type="button" data-home aria-label="Ga naar startpagina">

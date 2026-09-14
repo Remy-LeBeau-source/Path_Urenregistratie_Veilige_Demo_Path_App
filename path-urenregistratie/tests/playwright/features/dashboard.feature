@@ -85,7 +85,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-003] medewerkerdashboard ververst meteen na ureninvoer en themakiezer blijft leesbaar
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 12
+    # Aantoonbare Playwright-assertions in deze case: 9
     Given een medewerker die een urenstaat vult en het thema wisselt
     When de medewerker uren invult en terug naar het medewerkerdashboard gaat
     Then blijven de maandnamen zichtbaar in donkere modus
@@ -102,7 +102,7 @@ Feature: Dashboard en open werkvoorraad
   @negative
   Scenario: [DASH-N-016] correctieactie ververst een verborgen rooster uit een eerdere maand
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 11
+    # Aantoonbare Playwright-assertions in deze case: 9
     Given juli als goedgekeurde verborgen urenstaat is achtergebleven
     When het dashboard augustus prioriteert en Open correctie wordt gekozen
     Then toont Mijn uren augustus als bewerkbare correctie met herindienknop
@@ -183,7 +183,7 @@ Feature: Dashboard en open werkvoorraad
     # Aantoonbare Playwright-assertions in deze case: 11
     Given een ingelogde medewerker op telefoonbreedte in Klassiek
     When de flow voor DASH-H-026 wordt uitgevoerd
-    Then staat in Klassiek de volgende actie bovenaan, dan open acties, dan de klanturenstaat, dan de rest
+    Then staat in Klassiek Vandaag uit medewerker-wild.html: hero met de actie, dan het verloop, dan de klanturenstaat
     And staat in Nieuw open acties in ieder geval boven de correctie- en archiefingang
 
   @happy
@@ -259,16 +259,16 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-036] Vandaag staat op desktop in Klassiek volgens de referentie, en hero, ring en Nog te doen kloppen met elkaar
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 27
+    # Aantoonbare Playwright-assertions in deze case: 31
     Given dashboard en open werkvoorraad is voorbereid
     When de flow voor DASH-H-036 wordt uitgevoerd
     Then staat Vandaag er in Klassiek, en zijn de oude blokken en de klanturenstaatkaart verhuisd of weg
     And komt het gezegde letterlijk uit de lijst van de referentie
-    And zeggen hero en ring hetzelfde aantal open weken
+    And noemt de hero de open dagen uit dezelfde telling als Hele maand, en toont de ring de complete weken
     And toont Nog te doen een chip per open maand, oudste eerst en uitgelicht
     And brengt de hoofdknop je naar Mijn uren zolang er weken open staan
     And staat Vandaag niet in Modern, en daar blijft de bento
-    And staat Vandaag op telefoonbreedte nog niet, en keert de kaart terug naar zijn eigen plek
+    And toont Vandaag op telefoon de opbouw uit medewerker-wild.html, met de kaart onder het verloop
 
   @happy
   Scenario: [DASH-H-037] Vandaag ververst het restcijfer meteen na ureninvoer en na terugnavigeren
@@ -361,21 +361,30 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-045] de tabbalk van de medewerker heeft Vandaag · Mijn uren · Maanden · Berichten, en Maanden opent Mijn maanden
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 9
+    # Aantoonbare Playwright-assertions in deze case: 10
     Given dashboard en open werkvoorraad is voorbereid
-    When de flow voor DASH-H-045 wordt uitgevoerd
     Then staan de vier tabs in de volgorde van de referentie
+    When de medewerker op Maanden tikt, then staat Mijn maanden open en is die tab actief
     And toont Berichten een telbolletje gelijk aan het aantal ongelezen berichten
 
   @happy
   Scenario: [DASH-H-046] op telefoon zweeft "Andere rol kiezen" niet over de inhoud; de actie staat in de topbalk
-    # Testtechniek: Grenswaardenanalyse
-    # Aantoonbare Playwright-assertions in deze case: 5
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 4
     Given dashboard en open werkvoorraad is voorbereid
-    When de flow voor DASH-H-046 wordt uitgevoerd
     Then is de zwevende knop weg en staat de topbalkknop er wel
     And ligt geen vast gepositioneerde knop over de tabbalk
+    When de medewerker via de topbalk van rol wisselt, then staat het inlogscherm er
 
+  @happy
+  Scenario: [DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbalk, en Vandaag begint met de begroeting
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 19
+    Given dashboard en open werkvoorraad is voorbereid
+    Then staan omgeving, versie en beide testknoppen in de balk
+    And begint Vandaag met de begroeting, zonder paginatitel; Mijn uren houdt zijn titel
+    When de medewerker naar Modern wisselt, then staan de knoppen weer in de topbalk en is de balk weg
+    And houdt beheer de knoppen in zijn eigen topbalk
 
   @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors

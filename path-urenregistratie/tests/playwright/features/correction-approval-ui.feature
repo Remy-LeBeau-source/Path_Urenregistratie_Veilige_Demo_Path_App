@@ -10,7 +10,7 @@ Feature: Correcties en goedkeuringen behandelen
   @happy
   Scenario: [TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en heropening blijven servergestuurd
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 32
+    # Aantoonbare Playwright-assertions in deze case: 30
     Given de medewerker een urenstaat indient in de browser
     When de administrator een correctieverzoek plaatst
     Then ziet de medewerker het correctieverzoek en dient opnieuw in

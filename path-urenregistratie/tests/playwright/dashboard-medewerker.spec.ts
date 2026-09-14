@@ -2627,3 +2627,53 @@ test('[DASH-H-046] op telefoon zweeft "Andere rol kiezen" niet over de inhoud; d
     await loginPage.assertLoggedOut();
   });
 });
+
+test('[DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbalk, en Vandaag begint met de begroeting', async ({ page }) => {
+  // TEST 2.0.59, punt 8, gecorrigeerd 14 sep: "Herstel demo" en Licht/Klassiek
+  // blijven tot productie, maar in de testomgevingsbalk. De paginatitel boven
+  // Vandaag verdwijnt. Beheer en Modern houden hun eigen topbalk.
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  const balk = page.locator('#testbalk');
+
+  await test.step('Then staan omgeving, versie en beide testknoppen in de balk', async () => {
+    await expect(balk).toBeVisible();
+    await expect(page.locator('#testbalk-label')).toHaveText(/(TESTOMGEVING|LOKAAL) · Versie \d+\.\d+\.\d+/);
+    await expect(page.locator('#testbalk-knoppen #quick-reset-demo')).toBeVisible();
+    await expect(page.locator('#testbalk-knoppen #quick-skin-toggle')).toBeVisible();
+    await expect(page.locator('#testbalk-knoppen #quick-theme-toggle')).toBeVisible();
+    await expect(page.locator('.topbar-actions #quick-skin-toggle')).toHaveCount(0);
+  });
+
+  await test.step('And begint Vandaag met de begroeting, zonder paginatitel; Mijn uren houdt zijn titel', async () => {
+    await expect(page.locator('#page-title')).toBeHidden();
+    const groet = page.locator('#vd-kop-label:visible, #vdt-groet:visible').first();
+    await expect(groet).toHaveText(/^Goede(morgen|middag|navond)/);
+    const balkOnder = (await balk.boundingBox())!.y + (await balk.boundingBox())!.height;
+    expect((await groet.boundingBox())!.y, 'de begroeting hoort onder de testbalk te staan').toBeGreaterThan(balkOnder);
+    await page.locator('button[data-view="timesheet"]:visible').first().click();
+    await expect(page.locator('#page-title')).toBeVisible();
+    await expect(page.locator('#page-title')).toHaveText('Mijn uren');
+    await page.locator('button[data-view="employee-dashboard"]:visible').first().click();
+  });
+
+  await test.step('When de medewerker naar Modern wisselt, then staan de knoppen weer in de topbalk en is de balk weg', async () => {
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await expect(balk).toBeHidden();
+    await expect(page.locator('.topbar-actions #quick-skin-toggle')).toHaveCount(1);
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+    await expect(page.locator('#testbalk-knoppen #quick-skin-toggle')).toHaveCount(1);
+  });
+
+  await test.step('And houdt beheer de knoppen in zijn eigen topbalk', async () => {
+    await loginPage.logout();
+    await loginPage.loginAsAdmin();
+    await expect(balk).toBeHidden();
+    await expect(page.locator('.topbar-actions #quick-reset-demo')).toHaveCount(1);
+  });
+});

@@ -130,7 +130,7 @@ When("de maand nog concept is maar de factuurstatus al op verwerkt staat");
 And("schuift de huidige stap mee zodra de maand is ingediend");
 Given("een maand die nog concept is terwijl de factuurstatus al op verwerkt staat");
 And("lopen beide gelijk mee zodra de maand is ingediend");
-And("is de Klassieke keten zichtbaar in Klassiek en de bento in Modern");
+And("is het verloop zichtbaar in Klassiek en de bento in Modern");
 When("de flow voor SKIN-H-032 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat klassiek en Modern tonen dezelfde statusketen, uit dezelfde bron");
 When("de flow voor SKIN-H-033 wordt uitgevoerd");

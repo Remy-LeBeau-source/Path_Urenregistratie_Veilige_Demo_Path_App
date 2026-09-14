@@ -67,7 +67,7 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
   @happy
   Scenario: [SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en Klassiek
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 19
+    # Aantoonbare Playwright-assertions in deze case: 20
     Given een medewerkerdashboard met geladen urenstatus
     When de medewerker Nieuw activeert en via de bento naar Mijn uren navigeert
     Then de dashboardstatus gelijk blijft en Klassiek dezelfde gegevens toont
@@ -285,10 +285,10 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
   @happy
   Scenario: [SKIN-H-032] Klassiek en Modern tonen dezelfde statusketen, uit dezelfde bron
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 12
+    # Aantoonbare Playwright-assertions in deze case: 14
     Given een maand die nog concept is terwijl de factuurstatus al op verwerkt staat
     And lopen beide gelijk mee zodra de maand is ingediend
-    And is de Klassieke keten zichtbaar in Klassiek en de bento in Modern
+    And is het verloop zichtbaar in Klassiek en de bento in Modern
     When de flow voor SKIN-H-032 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat klassiek en Modern tonen dezelfde statusketen, uit dezelfde bron
 

@@ -5217,6 +5217,35 @@ function applySkin(hostname = window.location.hostname) {
   if (changed && typeof applyOrganizationBranding === "function") {
     applyOrganizationBranding();
   }
+  plaatsTestknoppen();
+}
+
+// TEST 2.0.59, punt 8 (gecorrigeerd 14 sep, DESIGN-BESLUITEN "Twee testknoppen
+// blijven tot productie"): "Herstel demo" en de Licht/Klassiek-schakelaar staan
+// bij de medewerker in Klassiek in de testomgevingsbalk boven de topbalk, naast
+// "TESTOMGEVING · VERSIE x". Voor beheer en in Modern gaan ze terug naar hun
+// eigen plek in de topbalk. Zelfde verhuispatroon als plaatsVandaagKlantKaart.
+let testknoppenThuis = null;
+function plaatsTestknoppen() {
+  const balk = document.querySelector("#testbalk");
+  const vak = document.querySelector("#testbalk-knoppen");
+  const reset = document.querySelector("#quick-reset-demo");
+  const schakelaars = document.querySelector(".appearance-switches");
+  if (!balk || !vak || !reset || !schakelaars) return;
+  if (!testknoppenThuis) testknoppenThuis = { ouder: reset.parentElement, volgende: schakelaars.nextElementSibling };
+  const inBalk = state.currentRole === "employee" && document.documentElement.dataset.skin !== "new";
+  if (inBalk) {
+    if (reset.parentElement !== vak) vak.append(reset, schakelaars);
+  } else if (reset.parentElement === vak) {
+    testknoppenThuis.ouder.insertBefore(reset, testknoppenThuis.volgende);
+    testknoppenThuis.ouder.insertBefore(schakelaars, testknoppenThuis.volgende);
+  }
+  const omgeving = document.querySelector("#environment-badge");
+  const versie = (document.querySelector(".sidebar-footer .demo-badge")?.textContent || "").trim();
+  const omgevingZichtbaar = Boolean(omgeving && !omgeving.hidden && omgeving.textContent.trim());
+  document.querySelector("#testbalk-label").textContent = [omgevingZichtbaar ? omgeving.textContent.trim() : "", versie].filter(Boolean).join(" · ");
+  const knoppenZichtbaar = !reset.hidden || !schakelaars.hidden;
+  balk.hidden = !(inBalk && (omgevingZichtbaar || knoppenZichtbaar));
 }
 
 function syncAppearanceSwitches(hostname = window.location.hostname) {
@@ -11381,6 +11410,9 @@ function showView(view, options = {}) {
   // [data-view], [data-pilot-view]).
   document.querySelectorAll(".new-admin-topnav button").forEach(item => item.classList.toggle("is-active", item.dataset.pilotView === view));
   document.querySelector("#page-title").textContent = pageTitles[view];
+  // Voor CSS die per scherm verschilt, zoals de paginatitel die op Vandaag
+  // wegvalt (TEST 2.0.59, punt 8).
+  document.body.dataset.view = view;
   // A dashboard can select another action month while the hidden hours grid still
   // contains the previously opened month. Always render after the timesheet view
   // becomes active so an equal-period navigation cannot expose stale locked input.
