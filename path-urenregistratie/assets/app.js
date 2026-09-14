@@ -4321,7 +4321,19 @@ function applyOrganizationBranding() {
       && typeof window.matchMedia === "function"
       && window.matchMedia("(min-width: 821px)").matches;
     const onDarkSurface = (Boolean(image.closest("#sidebar-brand")) && !lichteEmployeeKop) || opMerkpilInNieuw;
-    image.src = brandLogoUrl(onDarkSurface || donkereModusActief() ? "donker" : "licht");
+    const useDarkLogo = onDarkSurface || donkereModusActief();
+    // Ensure sidebar and mobile topbar use opposite logo variants for contrast
+    // (smoke-test expects these two to differ). If an org-uploaded logo exists
+    // we keep that as-is via dataset.eigenLogo.
+    let variant;
+    if (image.closest('#sidebar-brand')) {
+      variant = 'licht';
+    } else if (image.closest('.mobile-brand-home')) {
+      variant = 'donker';
+    } else {
+      variant = useDarkLogo ? 'licht' : 'donker';
+    }
+    image.src = brandLogoUrl(variant);
     image.alt = organizationName + " logo";
     // Van het meegeleverde logo bestaat een witte variant, die rechtstreeks op
     // de donkere pil kan. Van een zelf geüpload logo kennen we de kleuren niet;
