@@ -106,7 +106,7 @@ een tegenproef die omviel:
 - DASH-H-034 op mobile-safari: WebKit geeft in een onderschept verzoek de inhoud
   van het bestandsdeel niet mee. De bestandsnaam en de actie gelden in elke
   browser; de inhoudscontrole alleen buiten WebKit.
-- HELP-N-001 (mobile-safari) is de bekende WebKit-inloguitval van main.
+- HELP-N-001 (mobile-safari) staat hier los van. Volgens main faalt hij bij het uitloggen: het hulppaneel blijft open en onderschept de klik op #switch-role. Main pakt dat op in LoginPage.logout().
 
 ## Sync history
 
