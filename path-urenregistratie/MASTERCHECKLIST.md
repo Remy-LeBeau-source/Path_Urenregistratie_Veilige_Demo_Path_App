@@ -3046,6 +3046,23 @@ zinloos was geweest.
   (paneel blijft `hidden`, eerst drie keer "element is not stable"). Ook een klik op het inlogscherm
   zonder effect, maar daar in demo-modus en zonder formulier.
 
+**OPEN: dekkingsgat op desktop door het Klassieke Vandaag-scherm (14 sep, herontwerp).**
+Vanaf 721px vervangt Vandaag het oude medewerkerdashboard. Negen cases zijn daarom op 390px vastgezet.
+Navraag bij de herontwerplane: bij acht is het gedrag **vervangen, niet alleen verborgen**. Voor de
+meeste bestaat nog geen desktop-assertie; vastzetten zonder vervanging zou dekking stil laten verdwijnen.
+- [ ] DASH-H-003 -- KPI `#vd-kpi-waarde` ververst na ureninvoer; contrast van de chips in donker.
+- [ ] DASH-H-004 -- KPI klopt na terugnavigeren (de maandkiezer in de topbalk blijft op desktop getoetst).
+- [ ] DASH-H-005 -- aantal en volgorde gedekt door DASH-H-036, klik naar Mijn uren door E2E-H-003.
+  De eigenaarregel "Urenregistraties" is verborgen en **niet vervangen** (productvraag, niet stil laten liggen).
+- [ ] DASH-H-014 -- hoofdknop en eerste chip openen de geprioriteerde óudere maand en de juiste taakroute.
+- [ ] DASH-N-016 -- het achtergebleven rooster uit juli via de correctiechip op desktop.
+- [ ] SKIN-H-009 -- Klassieke urenstatus in de KPI.
+- [ ] SKIN-H-024 -- was verkeerd vastgezet (toetst Modern, dat op desktop nog bestaat); gaat terug naar desktop.
+- [ ] SKIN-H-031 -- verloop op desktop: geen groen na een open stap.
+- [ ] SKIN-H-032 -- verloop in Vandaag gelijk aan de Modern-bento.
+De herontwerplane bouwt hiervoor desktopcases (KPI, prioriteitsroute, verloop, contrast). Afvinken pas als
+de nieuwe case-ID bestaat en rood is geweest tegen een kapotte variant.
+
 **Herhaald probleem: onze twee sessies draaien tests door elkaar heen (vier keer op 13/14 sep).**
 Telkens hetzelfde gevolg: een meting die geldig lijkt omdat hij reproduceerbaar is, terwijl de
 vervuiling elke herhaling meereist. **Herkenningsteken dat het contention is en geen defect:**
