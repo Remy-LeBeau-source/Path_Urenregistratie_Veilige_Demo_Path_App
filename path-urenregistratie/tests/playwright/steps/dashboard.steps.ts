@@ -223,6 +223,9 @@ Then("wordt met Playwright-assertions bevestigd dat gUI-closeout verwerkt alle 1
 Given("de administrator is ingelogd, reset naar vaste baseline en keurt een ingediende urenstaat goed");
 When("de nieuwe verzendcontrole (invoice-delivery) wordt afgerond");
 Then("blijft de afgeronde verzendcontrole weg en de teller stabiel na F5");
+Given("een facturenverzoek dat vertrekt voordat de administrator de demo herstelt");
+When("een ingediende urenstaat wordt goedgekeurd en daarna pas het oude antwoord binnenkomt");
+Then("vult het oude antwoord de cache niet en opent de verzendcontrole gewoon");
 Given("de vaste GUI-baseline met twaalf open acties en zes actieve accounts");
 When("de flow voor DASH-H-012 wordt uitgevoerd");
 Then("toont het dashboard zeven Backoffice-acties en vijf wachttaken zonder medewerkerbadge in het menu");

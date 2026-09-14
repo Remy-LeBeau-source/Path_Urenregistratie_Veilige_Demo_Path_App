@@ -3179,7 +3179,7 @@ Een echt defect geeft steeds dezelfde fout op dezelfde plek. **Werkafspraak:** w
 meldt "machine bezet" en bij het eind "machine vrij" -- geen tijdsinschatting, alleen bezet of vrij.
 Voor het laatst gebroken doordat ik "vrij" meldde en daarna zelf opnieuw begon zonder het te zeggen.
 
-**NOG OPEN: in `[DASH-N-012]` opent de klik op de verzendcontrole soms geen modal; de oude
+**OPGELOST (14 sep, zie onderaan dit blok): in `[DASH-N-012]` opent de klik op de verzendcontrole soms geen modal; de oude
 knoptekst blijft staan.** (Oorspronkelijke titel: "wisselwerking tussen cases", zie bijstelling.) In de run
 waarin DASH-N-007 groen werd, viel `[DASH-N-012]` om op `#modal-confirm`: verwacht "Controle
 afronden", gekregen "Voorbeeldgegevens herstellen" -- dus een andere modal stond nog open. Los
@@ -3199,6 +3199,28 @@ bewezen. Verworpen: wachten tot de server de urenstaat op approved zet. De serve
 "submitted" terwijl de case gewoon slaagt, dus dat legde een eis op die de app niet stelt; niet
 opnieuw doen. In de hermeting na de herstart was de case groen. **Afspraak: niets bouwen tot er
 een rode run is mét de toast in de melding.** Pas dan is vast te stellen welke uitstap het was.
+
+*Opgelost en bewezen (14 sep, sessie -ad).* De rode run met de toast kwam er: herontwerp-CI
+1cd3e34c (run 34793143874, tablet-chromium, groen op retry) meldde "Deze uren wachten nog op
+servergoedkeuring" -- uitstap (2). E2E-H-018 was in geen van de 13 doorzochte CI-runs rood of flaky.
+- **Oorzaak, gemeten:** "Herstel demo" wist de leescaches (`resetReadApiCaches()`) en zet de
+  resetbewaking, maar die bewaking kijkt alleen bij *vertrek* van een leesverzoek. Een
+  `invoices.php`-verzoek dat vlak na het inloggen al onderweg was, schreef bij *aankomst* de
+  serverfactuur (urenstaat "submitted") alsnog in de gewiste cache. Na de lokale goedkeuring stapte
+  de verzendcontrole daarop uit. Meldingen hadden hier al een volgnummer voor; facturen niet.
+- **Eerste vermoeden verworpen:** twee elkaar inhalende factuurverzoeken rond de goedkeuring. Kan
+  na een reset niet: de bewaking laat dan geen verzoek vertrekken. De eerste opzet van de case bleef
+  daardoor al in de Given hangen, en dat bracht de echte volgorde aan het licht.
+- **Nieuwe case `[DASH-N-040]`:** houdt een facturenantwoord van vóór de reset vast tot na de
+  goedkeuring. Zonder fix rood op `serverInvoiceFor(...).timesheetStatus === "submitted"`, en met
+  die controle tijdelijk op `expect.soft` exact het CI-beeld: "verwacht Controle afronden, gekregen
+  Voorbeeldgegevens herstellen" (proef teruggedraaid).
+- **Fix (`assets/app.js`):** `readApiRuntime.invoicesCacheEpoch`, opgehoogd in `resetReadApiCaches()`;
+  `refreshInvoicesReadApi()` negeert een antwoord uit een eerder tijdperk. Bewust géén volgnummer per
+  verzoek: dat zou ook gelijktijdige verzoeken voor verschillende perioden weggooien, en die race is
+  niet bewezen.
+- **Checks:** DASH-N-040 en DASH-N-012 op desktop- en tablet-chromium 4/4 groen; `dashboard.spec.ts`
+  volledig op desktop-chromium 21/21.
 
 **Latent risico, los van bovenstaande: `customerTimesheetFor()` heet als een getter maar schrijft.**
 Regel ~4494: hij maakt `record.customerTimesheet` aan als die ontbreekt en vult standaardwaarden,

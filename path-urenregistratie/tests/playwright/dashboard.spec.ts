@@ -778,6 +778,118 @@ test('[DASH-N-012] afgeronde verzendcontrole blijft na F5 weg, ongeacht het begi
   });
 });
 
+test('[DASH-N-040] een facturenantwoord van vóór "Herstel demo" vult de cache niet alsnog, en blokkeert de verzendcontrole niet', async ({ page }) => {
+  // Waarom deze case bestaat (14 sep 2026).
+  // [DASH-N-012] viel in herontwerp-CI (run 34793143874, tablet-chromium) om met
+  // de toast "Deze uren wachten nog op servergoedkeuring": de tweede uitstap in
+  // showInvoiceDeliveryCheck(), die afgaat als er een gecachte serverfactuur is
+  // waarvan de urenstaat niet op approved/invoiced staat.
+  //
+  // Na "Herstel demo" hoort die cache leeg te zijn: resetReadApiCaches() wist
+  // hem, en de resetbewaking (isLocalResetAuthoritative) laat geen nieuwe
+  // leesverzoeken meer vertrekken. Maar een facturenverzoek dat vóór de reset al
+  // onderweg was, schreef bij aankomst gewoon in de gewiste cache -- de
+  // bewaking keek alleen bij vertrek. Meldingen hadden hier al een volgnummer
+  // voor (notificationsRequestSerial); facturen niet. Direct na inloggen vuurt
+  // het dashboard zo'n verzoek af, en DASH-N-012 klikt meteen op reset: op
+  // trage CI landt het antwoord pas daarna.
+  //
+  // DASH-N-012 hoopt dat die volgorde niet voorkomt; deze case dwingt haar af:
+  // een facturenantwoord van vóór de reset wordt opgehouden tot na de
+  // goedkeuring.
+  test.setTimeout(120_000);
+  type FactuurVenster = {
+    refreshInvoicesReadApi: (periodKey: string, force: boolean) => Promise<unknown>;
+    serverInvoiceFor: (employeeId: number, periodKey: string) => { timesheetStatus?: string } | null;
+  };
+  const loginPage = new LoginPage(page);
+  let employeeId = 0;
+  let periodKey = '';
+  let resetGedaan = false;
+  let laatOudAntwoordDoor: () => void = () => {};
+  const oudAntwoordPoort = new Promise<void>(resolve => { laatOudAntwoordDoor = resolve; });
+  let oudAntwoordOpgehouden = false;
+  let oudAntwoordAfgeleverd = false;
+
+  try {
+    await test.step('Given een facturenverzoek dat vertrekt voordat de administrator de demo herstelt', async () => {
+      await loginPage.open();
+      await loginPage.loginAsAdmin();
+      await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+
+      // Alleen het verzoek zonder periode: invoiceApiRowsForPeriod() valt daarop
+      // terug zolang er voor de periode zelf niets in de cache staat.
+      await page.route(/\/server\/api\/invoices\.php(\?(?!.*period=).*)?$/, async route => {
+        if (resetGedaan || oudAntwoordOpgehouden) {
+          await route.continue();
+          return;
+        }
+        oudAntwoordOpgehouden = true;
+        // Nu ophalen, dus met de serverstaat van vóór de reset; pas later afleveren.
+        const oud = await route.fetch();
+        await oudAntwoordPoort;
+        await route.fulfill({ response: oud });
+        oudAntwoordAfgeleverd = true;
+      });
+      await page.evaluate(() => {
+        void (window as unknown as FactuurVenster).refreshInvoicesReadApi('', true);
+      });
+      await expect.poll(() => oudAntwoordOpgehouden, { timeout: 10_000 }).toBe(true);
+
+      await page.locator('#quick-reset-demo').click();
+      await page.locator('#modal-confirm').click();
+      resetGedaan = true;
+      await expect(page.locator('#hero-task-total')).toHaveText('12 open acties');
+    });
+
+    await test.step('When een ingediende urenstaat wordt goedgekeurd en daarna pas het oude antwoord binnenkomt', async () => {
+      const review = await page.evaluate(() => {
+        const task = window.adminOpenTasks().find(item => item.type === 'hours-review');
+        return task ? { employeeId: task.employee.id, employeeName: task.employee.name, periodKey: task.periodKey } : null;
+      });
+      expect(review).not.toBeNull();
+      employeeId = review!.employeeId;
+      periodKey = review!.periodKey;
+
+      await page.locator('button[data-view="approvals"]').click();
+      const card = page
+        .locator(`article.approval-card[data-approval-period="${periodKey}"]`)
+        .filter({ hasText: review!.employeeName });
+      await expect(card).toBeVisible();
+      await card.locator('[data-approve]').click();
+      await expect(card).toHaveCount(0);
+      await expect.poll(() => page.evaluate(
+        ({ employeeId, periodKey }) => window.adminOpenTasks().some(
+          task => task.type === 'invoice-delivery' && task.employee.id === employeeId && task.periodKey === periodKey
+        ),
+        { employeeId, periodKey }
+      ), { timeout: 10_000 }).toBe(true);
+
+      laatOudAntwoordDoor();
+      await expect.poll(() => oudAntwoordAfgeleverd, { timeout: 10_000 }).toBe(true);
+      // De .then() van het oude antwoord een paar ticks geven om te verwerken.
+      await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 250)));
+    });
+
+    await test.step('Then vult het oude antwoord de cache niet en opent de verzendcontrole gewoon', async () => {
+      const cacheStatus = await page.evaluate(
+        ({ employeeId, periodKey }) => String((window as unknown as FactuurVenster).serverInvoiceFor(employeeId, periodKey)?.timesheetStatus || '(geen)'),
+        { employeeId, periodKey }
+      );
+      expect(cacheStatus, 'een facturenantwoord van vóór de reset hoort de gewiste cache niet alsnog te vullen').toBe('(geen)');
+
+      await page.locator('button[data-view="dashboard"]').click();
+      await page.locator('#hero-backoffice-filter').click();
+      const maand = page.locator(`[data-admin-task-month-toggle="${periodKey}"]`);
+      if (await maand.getAttribute('aria-expanded') !== 'true') await klikNaScroll(maand);
+      await klikNaScroll(page.locator(`[data-admin-task-invoice="${employeeId}"][data-period-key="${periodKey}"]`));
+      await expect(page.locator('#modal-confirm')).toHaveText('Controle afronden');
+    });
+  } finally {
+    laatOudAntwoordDoor();
+  }
+});
+
 test('[DASH-H-012] GUI-smoke scheidt werkacties van medewerkers- en beheerdersaccounts', async ({ page }) => {
   const loginPage = new LoginPage(page);
 
