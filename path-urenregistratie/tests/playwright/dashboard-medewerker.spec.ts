@@ -1378,7 +1378,7 @@ test('[DASH-H-031] het verloop van een maand klapt open in Mijn maanden en overl
 //
 // Een dag die de medewerker bewust op 0,0 zette telt wél als ingevuld --
 // dezelfde regel die isTimesheetWeekComplete() al hanteert.
-test('[DASH-H-032] "Hele maand" noemt de ontbrekende werkdagen bij naam, inclusief dagen die nog moeten komen', async ({ page }) => {
+test('[DASH-H-032] Mijn uren noemt onderin hoeveel werkdagen nog leeg zijn, inclusief dagen die nog moeten komen', async ({ page }) => {
   test.setTimeout(120_000);
   const loginPage = new LoginPage(page);
   await suppressInstallBanner(page);
@@ -1430,22 +1430,17 @@ test('[DASH-H-032] "Hele maand" noemt de ontbrekende werkdagen bij naam, inclusi
     });
   });
 
-  await test.step('Then staan de ontbrekende dagen er bij naam, niet als kaal aantal', async () => {
-    const blok = page.locator('#hours-missing-days');
-    await expect(blok).toBeVisible();
-    const chips = page.locator('#hours-missing-days-chips .hours-missing-day');
-    // Maximaal zes chips, daarna een restregel. Een maand heeft altijd meer dan
-    // zes werkdagen, dus beide horen hier te staan.
-    await expect(chips).toHaveCount(6);
-    await expect(page.locator('#hours-missing-days-rest')).toBeVisible();
-    await expect(page.locator('#hours-missing-days-rest')).toContainText('deze maand');
-    // Bij naam: een chip noemt een dagafkorting en een datum.
-    await expect(chips.first()).toHaveText(/^(Ma|Di|Wo|Do|Vr) \d{1,2} \w{3}$/);
+  // Gio 14 sep, "simpel zoals het ontwerp": het oranje blok met dagchips is weg;
+  // onderin staat één regel met het aantal (gui r952).
+  await test.step('Then staat onderin één regel met het aantal lege werkdagen, zonder oranje blok', async () => {
+    await expect(page.locator('#hours-missing-days')).toBeHidden();
+    await expect(page.locator('#hours-target-help')).toBeVisible();
+    await expect(page.locator('#hours-target-help')).toHaveText(/^Automatisch opgeslagen\. Nog \d+ werkdagen niet ingevuld\.$/);
   });
 
   await test.step('And telt de bewust op 0,0 gezette dag niet mee, ook al ligt hij aan het eind van de maand', async () => {
-    const gemeld = await page.locator('#hours-missing-days-title').textContent();
-    const aantal = Number(/^(\d+)/.exec(String(gemeld || '').trim())?.[1] || 0);
+    const gemeld = await page.locator('#hours-target-help').textContent();
+    const aantal = Number(/Nog (\d+) werkdag/.exec(String(gemeld || ''))?.[1] || 0);
     // Besluit Gio (14 sep): een vrije dag volgens beheer telt als ingevuld en is dus
     // geen gat. Die dagen gaan er daarom ook af, net als de ene bewuste 0,0
     // (tenzij die zelf op een vrije dag valt).
@@ -1480,13 +1475,7 @@ test('[DASH-H-032] "Hele maand" noemt de ontbrekende werkdagen bij naam, inclusi
     await expect(knop, 'de knop hoort klikbaar te blijven; de bevestiging is de poort').toBeEnabled();
   });
 
-  await test.step('And brengt een chip je naar de week waar die dag in zit', async () => {
-    await page.locator('#hours-missing-days-chips .hours-missing-day').first().click();
-    await expect(page.locator('#hours-week-filter button.is-active')).not.toHaveText('Hele maand');
-    await expect(page.locator('#hours-missing-days')).toBeHidden();
-  });
-
-  await test.step('And verdwijnt de waarschuwing zodra alles is ingevuld', async () => {
+  await test.step('And zegt de regel dat alles is ingevuld zodra er geen lege werkdag meer is', async () => {
     await page.locator('[data-hours-week-scope="all"]').click();
     await page.evaluate(() => {
       const runtime = window as unknown as {
@@ -1504,9 +1493,7 @@ test('[DASH-H-032] "Hele maand" noemt de ontbrekende werkdagen bij naam, inclusi
       runtime.renderHoursGrid();
       runtime.updateHoursTotal(false);
     });
-    await expect(page.locator('#hours-missing-days')).toHaveClass(/is-compleet/);
-    await expect(page.locator('#hours-missing-days-title')).toHaveText('Geen ontbrekende werkdagen.');
-    await expect(page.locator('#hours-missing-days-chips .hours-missing-day')).toHaveCount(0);
+    await expect(page.locator('#hours-target-help')).toHaveText('Automatisch opgeslagen. Alle werkdagen zijn ingevuld.');
     // En de indienknop valt terug op alleen het werkwoord en is niet meer gedempt.
     await expect(page.locator('#submit-timesheet')).toHaveText('Maand indienen');
     await expect(page.locator('#submit-timesheet')).not.toHaveClass(/is-gedempt/);
@@ -2707,6 +2694,20 @@ test('[DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbal
     await expect(page.locator('#testbalk-knoppen #quick-skin-toggle')).toBeVisible();
     await expect(page.locator('#testbalk-knoppen #quick-theme-toggle')).toBeVisible();
     await expect(page.locator('.topbar-actions #quick-skin-toggle')).toHaveCount(0);
+    // Gio 14 sep: rechtsboven en geen band door de app. Op desktop in de
+    // menubalk vóór de avatar, op telefoon rechts uitgelijnd boven de topbalk.
+    const vorm = await balk.evaluate(el => {
+      const r = el.getBoundingClientRect();
+      return { inMenubalk: el.parentElement?.classList.contains('sidebar'), links: r.left, rechts: r.right, breedte: r.width, hoogte: r.height, vlak: getComputedStyle(el).backgroundColor, venster: innerWidth };
+    });
+    expect(vorm.vlak, 'geen gekleurde band').toBe('rgba(0, 0, 0, 0)');
+    if (vorm.venster >= 821) {
+      expect(vorm.inMenubalk, 'op desktop hoort de balk in de menubalk te staan').toBe(true);
+      expect(vorm.hoogte).toBeLessThanOrEqual(44);
+      expect(vorm.links, 'rechts in de menubalk, niet over de breedte').toBeGreaterThan(vorm.venster / 2);
+    } else {
+      expect(vorm.venster - vorm.rechts, 'rechts uitgelijnd').toBeLessThanOrEqual(24);
+    }
   });
 
   await test.step('And begint Vandaag met de begroeting, zonder paginatitel; Mijn uren houdt zijn titel', async () => {
@@ -2716,8 +2717,12 @@ test('[DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbal
     const balkOnder = (await balk.boundingBox())!.y + (await balk.boundingBox())!.height;
     expect((await groet.boundingBox())!.y, 'de begroeting hoort onder de testbalk te staan').toBeGreaterThan(balkOnder);
     await page.locator('button[data-view="timesheet"]:visible').first().click();
-    await expect(page.locator('#page-title')).toBeVisible();
-    await expect(page.locator('#page-title')).toHaveText('Mijn uren');
+    // Geen dubbele titel: de topbalktitel blijft verborgen, het scherm heeft zijn
+    // eigen kop (Gio 14 sep).
+    await expect(page.locator('#page-title')).toBeHidden();
+    await expect(page.locator('#view-timesheet .view-heading h2')).toBeVisible();
+    const avatars = await page.locator('.avatar:visible, .topbar-avatar:visible').count();
+    expect(avatars, 'precies één zichtbare avatar').toBe(1);
     await page.locator('button[data-view="employee-dashboard"]:visible').first().click();
   });
 
@@ -2805,6 +2810,18 @@ test('[DASH-H-048] het maandspoor heeft per kalenderdag een streep en de weken z
     await expect(page.locator('#vd-wijs-tekst')).toHaveText('Elke streep is een dag — beweeg erover');
   });
 
+  await test.step('When de medewerker op het streepje van een werkdag tikt, then staat de cursor in het urenvak van precies die dag', async () => {
+    // Gio 14 sep: een streepje is één dag, dus daar hoort je uit te komen.
+    const streep = page.locator('#vd-spoor .vd-streep[data-vd-dagindex]:not(.is-vrij)').nth(2);
+    const wi = await streep.getAttribute('data-vd-week');
+    const di = await streep.getAttribute('data-vd-dagindex');
+    await streep.click();
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+    await expect(page.locator(`#hours-grid .hours-input[data-week-index="${wi}"][data-day-index="${di}"]`)).toBeFocused();
+    await page.locator('button.nav-item[data-view="employee-dashboard"]:visible').first().click();
+    await expect(page.locator('#vd-kopkaart')).toBeVisible();
+  });
+
   await test.step('When de medewerker op de laatste week tikt, then opent Mijn uren op die week', async () => {
     const laatste = page.locator('#vd-kopweken .vd-weekkaart').last();
     const wi = await laatste.getAttribute('data-vd-week');
@@ -2831,7 +2848,8 @@ test('[DASH-H-049] licht Klassiek heeft bij de medewerker één vast veld over d
       return { kleur: s.backgroundColor, beeld: s.backgroundImage, vast: s.backgroundAttachment, balk: balk.backgroundColor, blur: balk.backdropFilter || (balk as unknown as Record<string, string>).webkitBackdropFilter };
     });
     expect(veld.vast).toBe('fixed');
-    expect(veld.kleur).toBe(breed ? 'rgb(207, 225, 216)' : 'rgb(223, 233, 228)');
+    // --bg uit het palet "salie" dat beide referenties tijdens het draaien zetten.
+    expect(veld.kleur).toBe('rgb(221, 231, 226)');
     expect(veld.beeld).toContain(breed ? 'rgb(169, 203, 187)' : 'rgb(196, 219, 209)');
     expect(veld.balk).toBe('rgba(0, 0, 0, 0)');
     expect(veld.blur).toContain('blur(12px)');
@@ -2841,6 +2859,8 @@ test('[DASH-H-049] licht Klassiek heeft bij de medewerker één vast veld over d
     const kaart = page.locator('#vd-kopkaart:visible, #vdt-spoorkaart:visible').first();
     await expect(kaart).toBeVisible();
     expect(await kaart.evaluate(el => getComputedStyle(el).backgroundImage)).toBe('none');
+    // Dicht kaartvlak uit het palet "salie" (#eaf2ee), zoals Gio het ontwerp ziet.
+    expect(await kaart.evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(234, 242, 238)');
   });
 
   await test.step('And blijft donker zoals het was: geen veldverloop', async () => {
@@ -2848,4 +2868,60 @@ test('[DASH-H-049] licht Klassiek heeft bij de medewerker één vast veld over d
     expect(await page.evaluate(() => getComputedStyle(document.body).backgroundImage)).toBe('none');
     await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
   });
+});
+
+test('[DASH-H-050] zodra de laatste lege week gevuld is, staat Maand indienen ook in de weekweergave', async ({ page }) => {
+  // Gio 14 sep: wie de laatste lege week invult, moet meteen de maand kunnen
+  // indienen, in welke week hij ook zit; niet eerst naar Hele maand.
+  test.setTimeout(120_000);
+  await page.clock.setFixedTime(new Date('2026-09-14T12:00:00.000Z'));
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('#period-label')).toHaveText('September 2026');
+  const herstelUrenstaat = await bewaarUrenstaat(page);
+  try {
+    const laatste = await page.evaluate(() => {
+      const w = window as unknown as {
+        currentEmployee: () => { id: number };
+        currentPeriod: () => { key: string; weekRows: Array<{ days: Array<unknown | null> }> };
+        recordFor: (id: number, key: string) => { entries: number[][]; confirmedEntries: boolean[][]; timesheetStatus: string };
+        renderAll: () => void; showView: (v: string) => void;
+      };
+      const period = w.currentPeriod();
+      const record = w.recordFor(w.currentEmployee().id, period.key);
+      const laatsteWeek = period.weekRows.length - 1;
+      record.timesheetStatus = 'draft';
+      record.entries = period.weekRows.map((week, wi) => week.days.map(day => (day && wi !== laatsteWeek ? 8 : 0)));
+      record.confirmedEntries = period.weekRows.map((week, wi) => week.days.map(day => Boolean(day) && wi !== laatsteWeek));
+      w.showView('timesheet');
+      // De laatste week kiezen via dezelfde staat als de weekknop; een klik kan
+      // tijdens een hertekening op een losgekoppelde knop landen.
+      const staat = (0, eval)('state') as { hoursWeekScope: string; hoursWeekScopeTouched: boolean };
+      staat.hoursWeekScope = 'week-' + laatsteWeek;
+      staat.hoursWeekScopeTouched = true;
+      w.renderAll();
+      return laatsteWeek;
+    });
+
+    await test.step('Given de laatste week is nog leeg en open in de weekweergave', async () => {
+      await expect(page.locator(`#hours-week-filter [data-hours-week-scope="week-${laatste}"]`)).toHaveClass(/is-active/);
+      await expect(page.locator('#submit-timesheet')).toBeHidden();
+    });
+
+    await test.step('When de medewerker die week invult, then verschijnt Maand indienen zonder restaantal', async () => {
+      const velden = page.locator('#hours-grid .hours-input:not([disabled]):visible');
+      const aantal = await velden.count();
+      expect(aantal).toBeGreaterThan(0);
+      for (let i = 0; i < aantal; i += 1) {
+        await velden.nth(i).fill('8');
+        await velden.nth(i).press('Tab');
+      }
+      await expect(page.locator('#submit-timesheet')).toBeVisible();
+      await expect(page.locator('#submit-timesheet')).toHaveText('Maand indienen');
+      await expect(page.locator(`#hours-week-filter [data-hours-week-scope="week-${laatste}"]`), 'de medewerker blijft in de weekweergave').toHaveClass(/is-active/);
+    });
+  } finally {
+    await herstelUrenstaat();
+  }
 });

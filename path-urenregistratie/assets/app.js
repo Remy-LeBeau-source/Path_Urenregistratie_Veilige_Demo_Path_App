@@ -5227,7 +5227,49 @@ function applySkin(hostname = window.location.hostname) {
   if (changed && typeof applyOrganizationBranding === "function") {
     applyOrganizationBranding();
   }
+  plaatsKopBediening();
   plaatsTestknoppen();
+}
+
+// Op desktop in Klassiek heeft de medewerker één kopregel (gui r83-113 en
+// r189-211; Gio 14 sep: "1 kaart, niets dubbel"). Verhuizen, niet dupliceren:
+// - bel en profielmenu gaan helemaal rechts in de menubalk;
+// - op Vandaag gaat de echte maandkiezer (#global-period-control, met al zijn
+//   knoppen en gedrag) als pil in de kopkaart, en verdwijnt de topbalk.
+// Voor beheer, Modern en telefoon gaat alles terug naar de topbalk.
+let kopBedieningThuis = null;
+function plaatsKopBediening() {
+  const periode = document.querySelector("#global-period-control");
+  const acties = document.querySelector(".topbar-actions");
+  if (!periode || !acties) return;
+  if (!kopBedieningThuis) kopBedieningThuis = { popovers: Array.from(acties.querySelectorAll(":scope > .topbar-popover")) };
+  const { popovers } = kopBedieningThuis;
+  const klassiekMedewerker = state.currentRole === "employee" && document.documentElement.dataset.skin !== "new";
+  const breed = typeof window.matchMedia === "function" && window.matchMedia("(min-width: 821px)").matches;
+  const zijbalk = document.querySelector(".sidebar");
+  const voet = document.querySelector(".sidebar-footer");
+  // Vandaag: de pil in de kopkaart. Andere medewerkerschermen (gui r144-157): de
+  // pil naast de schermtitel.
+  const scherm = document.body.dataset.scherm;
+  const pilPlek = scherm === "employee-dashboard"
+    ? document.querySelector("#vd-kopkaart .vd-kop-rechts")
+    : document.querySelector("#view-" + scherm + " > .view-heading");
+  if (klassiekMedewerker && breed && zijbalk && voet) {
+    // Helemaal rechts, na de testbalk en de rolwissel: de avatar sluit de balk af (gui r109-112).
+    popovers.forEach(popover => { if (popover.parentElement !== zijbalk || popover.nextElementSibling === voet) zijbalk.appendChild(popover); });
+  } else {
+    popovers.forEach(popover => { if (popover.parentElement !== acties) acties.appendChild(popover); });
+  }
+  if (klassiekMedewerker && breed && pilPlek) {
+    const anker = scherm === "employee-dashboard" ? pilPlek.firstChild : pilPlek.children[1] || null;
+    if (periode.parentElement !== pilPlek) pilPlek.insertBefore(periode, anker);
+  } else if (periode.parentElement !== acties) {
+    const eersteThuis = popovers.find(popover => popover.parentElement === acties) || null;
+    acties.insertBefore(periode, eersteThuis);
+  }
+}
+if (typeof window.matchMedia === "function") {
+  window.matchMedia("(min-width: 821px)").addEventListener?.("change", () => plaatsKopBediening());
 }
 
 // TEST 2.0.59, punt 8 (gecorrigeerd 14 sep, DESIGN-BESLUITEN "Twee testknoppen
@@ -5247,8 +5289,9 @@ function plaatsTestknoppen() {
   if (inBalk) {
     if (reset.parentElement !== vak) vak.append(reset, schakelaars);
   } else if (reset.parentElement === vak) {
-    testknoppenThuis.ouder.insertBefore(reset, testknoppenThuis.volgende);
-    testknoppenThuis.ouder.insertBefore(schakelaars, testknoppenThuis.volgende);
+    const anker = testknoppenThuis.volgende?.parentElement === testknoppenThuis.ouder ? testknoppenThuis.volgende : null;
+    testknoppenThuis.ouder.insertBefore(reset, anker);
+    testknoppenThuis.ouder.insertBefore(schakelaars, anker);
   }
   const omgeving = document.querySelector("#environment-badge");
   const versie = (document.querySelector(".sidebar-footer .demo-badge")?.textContent || "").trim();
@@ -5256,6 +5299,21 @@ function plaatsTestknoppen() {
   document.querySelector("#testbalk-label").textContent = [omgevingZichtbaar ? omgeving.textContent.trim() : "", versie].filter(Boolean).join(" · ");
   const knoppenZichtbaar = !reset.hidden || !schakelaars.hidden;
   balk.hidden = !(inBalk && (omgevingZichtbaar || knoppenZichtbaar));
+  // Gio 14 sep: niet als band door de app, maar rechtsboven. Op desktop staat de
+  // balk in de menubalk, vóór de avatar; op telefoon (daar is de menubalk de
+  // tabbalk onderin) blijft hij boven de topbalk, als compacte regel.
+  const zijbalk = document.querySelector(".sidebar");
+  const voet = document.querySelector(".sidebar-footer");
+  const topbalk = document.querySelector(".topbar");
+  const breed = typeof window.matchMedia === "function" && window.matchMedia("(min-width: 821px)").matches;
+  if (inBalk && breed && zijbalk && voet) {
+    if (balk.parentElement !== zijbalk) zijbalk.insertBefore(balk, voet);
+  } else if (topbalk && balk.nextElementSibling !== topbalk) {
+    topbalk.parentElement.insertBefore(balk, topbalk);
+  }
+}
+if (typeof window.matchMedia === "function") {
+  window.matchMedia("(min-width: 821px)").addEventListener?.("change", () => plaatsTestknoppen());
 }
 
 function syncAppearanceSwitches(hostname = window.location.hostname) {
@@ -6192,7 +6250,7 @@ function vandaagKopWaarden(record, employee, period) {
 function vandaagSpoorHtml(kop) {
   return kop.dagen.map(d => {
     const soort = d.vrij ? "vrij" : d.gevuld ? "gevuld" : "leeg";
-    return '<span class="vd-streep is-' + soort + '" title="' + escapeHtml(d.titel) + '" data-vd-dag="' + d.dag + '" data-vd-week="' + d.wi + '" data-vd-wijs="' + escapeHtml(d.wijsTekst) + '">'
+    return '<span class="vd-streep is-' + soort + '" title="' + escapeHtml(d.titel) + '" data-vd-dag="' + d.dag + '" data-vd-week="' + d.wi + '" data-vd-dagindex="' + d.di + '" data-vd-wijs="' + escapeHtml(d.wijsTekst) + '">'
       + '<span style="animation-delay:' + (d.dag * 22) + 'ms"></span></span>';
   }).join("");
 }
@@ -9489,9 +9547,12 @@ function normalizedHoursWeekScope(period, allowReset = true) {
 }
 
 function renderHoursWeekFilter(period, scope) {
+  // Klassiek (gui r326-330): alleen het weeknummer op de knop; "Week" staat al in
+  // de kolomkop eronder. Modern houdt "Week 36".
+  const klassiek = document.documentElement.dataset.skin !== "new";
   const buttons = [{ value: "all", label: "Hele maand" }].concat(period.weekRows.map((week, weekIndex) => ({
     value: "week-" + weekIndex,
-    label: "Week " + week.number + (week.year === period.year ? "" : " · " + week.year)
+    label: (klassiek ? "" : "Week ") + week.number + (week.year === period.year ? "" : " · " + week.year)
   })));
   document.querySelector("#hours-week-filter").innerHTML = buttons.map(button =>
     '<button type="button" class="' + (button.value === scope ? "is-active" : "") + '" data-hours-week-scope="' + button.value + '">' + escapeHtml(button.label) + '</button>'
@@ -9628,6 +9689,12 @@ function renderHoursGrid() {
     if (cardsContainer) { cardsContainer.hidden = true; cardsContainer.innerHTML = ""; }
   }
 
+  // Een hertekening (bv. na de serverread) vervangt alle vakken. Stond de cursor
+  // in een urenvak, dan hoort hij daar te blijven -- anders raakt wie via een
+  // streepje op Vandaag naar een dag sprong zijn plek meteen weer kwijt.
+  const actiefVak = document.activeElement?.matches?.("#hours-grid .hours-input")
+    ? { week: document.activeElement.dataset.weekIndex, dag: document.activeElement.dataset.dayIndex }
+    : null;
   document.querySelector("#hours-grid").innerHTML = period.weekRows.map((week, weekIndex) => {
     if (weekScope !== "all" && weekScope !== "week-" + weekIndex) return "";
     const cells = week.days.map((day, dayIndex) => {
@@ -9643,11 +9710,18 @@ function renderHoursGrid() {
       // <label> een klik op een geneste knop ongewenst nogmaals doorzetten
       // naar het input-element als impliciete label-associatie -- daarom nu
       // een <div>; het veld heeft zijn eigen aria-label al voor toegankelijkheid.
-      return '<td class="workday-cell"><div class="hours-day-entry"><span class="date-number">' + WEEKDAY_SHORT[dayIndex] + ' ' + day.day + ' ' + escapeHtml(period.month.slice(0, 3)) + '</span><input class="hours-input" data-week-index="' + weekIndex + '" data-day-index="' + dayIndex + '" type="number" min="0" max="24" step="0.5" inputmode="decimal" value="' + displayValue + '" placeholder="0" aria-label="' + escapeHtml(WEEKDAY_SHORT[dayIndex] + ' ' + day.label) + '"' + cellDisabled + '><span class="hours-day-presets" aria-label="Snelle urenkeuze"><button type="button" data-hours-set="0"' + cellDisabled + '>0</button><button type="button" data-hours-set="8"' + cellDisabled + '>8</button><button type="button" data-hours-set="9"' + cellDisabled + '>9</button></span></div></td>';
+      return '<td class="workday-cell"><div class="hours-day-entry"><span class="date-number">' + WEEKDAY_SHORT[dayIndex] + ' ' + day.day + ' ' + escapeHtml(period.month.slice(0, 3)) + '</span><input class="hours-input" data-week-index="' + weekIndex + '" data-day-index="' + dayIndex + '" type="number" min="0" max="24" step="0.5" inputmode="decimal" value="' + displayValue + '" placeholder="' + (isNewSkin ? "0" : "–") + '" aria-label="' + escapeHtml(WEEKDAY_SHORT[dayIndex] + ' ' + day.label) + '"' + cellDisabled + '><span class="hours-day-presets" aria-label="Snelle urenkeuze"><button type="button" data-hours-set="0"' + cellDisabled + '>0</button><button type="button" data-hours-set="8"' + cellDisabled + '>8</button><button type="button" data-hours-set="9"' + cellDisabled + '>9</button></span></div></td>';
     }).join("");
     const yearNote = week.year === period.year ? "" : " · " + week.year;
+    if (document.documentElement.dataset.skin !== "new") {
+      // Klassiek, gui r345-348: weeknummer met de stand eronder. In de app wordt per
+      // maand ingediend, dus elke week heeft de stand van de maand.
+      const stand = record.timesheetStatus === "approved" ? "Goedgekeurd" : record.timesheetStatus === "submitted" ? "Ingediend" : "Open";
+      return '<tr data-week-index="' + weekIndex + '"><td class="hours-weekcel"><strong>' + week.number + yearNote + '</strong><small class="is-' + stand.toLowerCase() + '">' + stand + '</small></td>' + cells + '<td class="week-total">0,0</td></tr>';
+    }
     return '<tr data-week-index="' + weekIndex + '"><td>Week ' + week.number + yearNote + "</td>" + cells + '<td class="week-total">0,0</td></tr>';
   }).join("");
+  if (actiefVak) document.querySelector('#hours-grid .hours-input[data-week-index="' + actiefVak.week + '"][data-day-index="' + actiefVak.dag + '"]')?.focus({ preventScroll: true });
   updateHoursTotal(false);
 }
 
@@ -9670,7 +9744,11 @@ function updateTimesheetSubmitUi(record) {
   const canSubmit = normalizedStatus === "draft" || normalizedStatus === "correction";
   const hasAnyInput = totalEntries(record.entries) > 0 || Number(record.leave || 0) > 0 || Number(record.sick || 0) > 0;
   const wholeMonthSelected = state.hoursWeekScope === "all";
-  const showSubmit = canSubmit && wholeMonthSelected;
+  // Gio 14 sep: staat er geen lege werkdag meer in de maand, dan hoort Maand
+  // indienen ook in de weekweergave, in welke week je ook zit. Wie de laatste lege
+  // week vult, hoeft niet eerst naar Hele maand.
+  const maandVol = ontbrekendeWerkdagen(record, currentPeriod()).length === 0;
+  const showSubmit = canSubmit && (wholeMonthSelected || maandVol);
   if (save) {
     save.hidden = !canSubmit;
     save.disabled = !canSubmit;
@@ -9789,8 +9867,11 @@ function updateHoursTotal(markDraft) {
   // de maanduren zijn een richtgetal op basis van wat Backoffice invult (36,
   // 40, ...), geen harde norm om aan te voldoen -- alleen het gedrag van de
   // knoppen blijft hier uitgelegd.
+  // Gio 14 sep, "simpel zoals het ontwerp" (gui r952): één regel onderin in plaats
+  // van het oranje blok met dagchips.
+  const openDagen = ontbrekendeWerkdagen(record, currentPeriod()).length;
   document.querySelector("#hours-target-help").textContent = isTimesheetEditableForEmployee(record)
-    ? "Dit blokkeert indienen nooit -- alleen " + currentPeriod().label + " wordt ingediend."
+    ? "Automatisch opgeslagen. " + (openDagen === 0 ? "Alle werkdagen zijn ingevuld." : openDagen === 1 ? "Nog 1 werkdag niet ingevuld." : "Nog " + openDagen + " werkdagen niet ingevuld.")
     : "Deze maand is vergrendeld (ingediend, goedgekeurd of gefactureerd) en kan niet meer worden aangepast.";
   updateTimesheetSubmitUi(record);
   renderMissingWorkdays(record, currentPeriod());
@@ -11545,6 +11626,7 @@ function showView(view, options = {}) {
   // Niet data-view: dat attribuut is de selector van de navigatieknoppen, en op
   // body gezet matchte [data-view="employees"] twee elementen (CI 14 sep).
   document.body.dataset.scherm = view;
+  plaatsKopBediening();
   // A dashboard can select another action month while the hidden hours grid still
   // contains the previously opened month. Always render after the timesheet view
   // becomes active so an equal-period navigation cannot expose stale locked input.
@@ -14412,6 +14494,15 @@ function toonInstallatieAanbod() {
     state.hoursWeekScope = "week-" + Number(vandaagWeek.dataset.vdWeek || 0);
     state.hoursWeekScopeTouched = true;
     showView("timesheet");
+    // Een streepje is één dag (Gio 14 sep: "als je hierop drukt moet je bij de dag
+    // uitkomen"): cursor in het urenvak van die dag. Weekenddagen hebben geen vak.
+    if (vandaagWeek.dataset.vdDagindex !== undefined) {
+      const veld = document.querySelector('#hours-grid .hours-input[data-week-index="' + Number(vandaagWeek.dataset.vdWeek || 0) + '"][data-day-index="' + Number(vandaagWeek.dataset.vdDagindex) + '"]');
+      if (veld) {
+        veld.scrollIntoView({ block: "center" });
+        veld.focus({ preventScroll: true });
+      }
+    }
     return;
   }
   const vandaagHoofdknop = event.target.closest("#vd-hoofdknop, #vdt-hoofdknop");

@@ -208,16 +208,15 @@ Feature: Dashboard en open werkvoorraad
     And sluit een tweede tik op dezelfde maand hem weer
 
   @happy
-  Scenario: [DASH-H-032] "Hele maand" noemt de ontbrekende werkdagen bij naam, inclusief dagen die nog moeten komen
-    # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 18
+  Scenario: [DASH-H-032] Mijn uren noemt onderin hoeveel werkdagen nog leeg zijn, inclusief dagen die nog moeten komen
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 12
     Given de medewerker staat op Mijn uren in de maandweergave
     When de hele maand leeg is op één bewust op 0,0 gezette dag na
-    Then staan de ontbrekende dagen er bij naam, niet als kaal aantal
+    Then staat onderin één regel met het aantal lege werkdagen, zonder oranje blok
     And telt de bewust op 0,0 gezette dag niet mee, ook al ligt hij aan het eind van de maand
     And noemt de indienknop wat hij doet en hoeveel dagen er nog open staan, gedempt
-    And brengt een chip je naar de week waar die dag in zit
-    And verdwijnt de waarschuwing zodra alles is ingevuld
+    And zegt de regel dat alles is ingevuld zodra er geen lege werkdag meer is
 
   @happy
   Scenario: [DASH-H-033] de verloopstappen in Klassiek tonen ✓ en • in de bol, leesbaar in licht en donker
@@ -381,7 +380,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbalk, en Vandaag begint met de begroeting
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 19
+    # Aantoonbare Playwright-assertions in deze case: 25
     Given dashboard en open werkvoorraad is voorbereid
     Then staan omgeving, versie en beide testknoppen in de balk
     And begint Vandaag met de begroeting, zonder paginatitel; Mijn uren houdt zijn titel
@@ -391,22 +390,31 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-048] het maandspoor heeft per kalenderdag een streep en de weken zijn zo breed als hun dagen, en ze leiden naar die week
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 16
+    # Aantoonbare Playwright-assertions in deze case: 19
     Given dashboard en open werkvoorraad is voorbereid
     Then heeft het spoor per dag een streep met de stand uit dezelfde regel als Hele maand
     And zijn de weken samen de hele maand, elk zo breed als zijn dagen, met bereik en stand
     And zegt de regel boven het spoor wat er op een dag staat zolang de muis erop staat
+    When de medewerker op het streepje van een werkdag tikt, then staat de cursor in het urenvak van precies die dag
     When de medewerker op de laatste week tikt, then opent Mijn uren op die week
 
   @happy
   Scenario: [DASH-H-049] licht Klassiek heeft bij de medewerker één vast veld over de pagina en een doorschijnende menubalk
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 9
+    # Aantoonbare Playwright-assertions in deze case: 10
     Given dashboard en open werkvoorraad is voorbereid
     When de flow voor DASH-H-049 wordt uitgevoerd
     Then hangt het veld aan het venster, met de waarden van de referentie voor deze breedte
     And heeft de kopkaart geen eigen verloop
     And blijft donker zoals het was: geen veldverloop
+
+  @happy
+  Scenario: [DASH-H-050] zodra de laatste lege week gevuld is, staat Maand indienen ook in de weekweergave
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given de laatste week is nog leeg en open in de weekweergave
+    When de medewerker die week invult, then verschijnt Maand indienen zonder restaantal
+    Then wordt met Playwright-assertions bevestigd dat zodra de laatste lege week gevuld is, staat Maand indienen ook in de weekweergave
 
   @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors
