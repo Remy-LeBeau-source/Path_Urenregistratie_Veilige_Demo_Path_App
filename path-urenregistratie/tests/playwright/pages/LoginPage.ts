@@ -87,10 +87,11 @@ export class LoginPage {
     await this.page.evaluate(() => {
       const w = window as unknown as { __inlogEvents?: string[] };
       w.__inlogEvents = [];
-      for (const type of ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click', 'submit']) {
+      for (const type of ['pointerdown', 'mousedown', 'focus', 'scroll', 'pointerup', 'mouseup', 'click', 'submit']) {
+        // scroll vuurt op window/document, focus bubbelt niet: beide via capture.
         document.addEventListener(type, event => {
-          const doel = event.target as Element | null;
-          const naam = doel ? `${doel.tagName.toLowerCase()}${doel.id ? '#' + doel.id : ''}` : '?';
+          const doel = event.target as Element | Document | null;
+          const naam = doel && 'tagName' in doel ? `${doel.tagName.toLowerCase()}${doel.id ? '#' + doel.id : ''}` : 'document';
           // scrollY en de bovenkant van de knop per event: CI (0ba8c066) liet zien
           // dat indrukken op de knop landt en loslaten op #auth-forgot-password
           // eronder. Dit onderscheidt scrollen van een layoutverschuiving.
@@ -100,7 +101,17 @@ export class LoginPage {
         }, { capture: true });
       }
     }).catch(() => undefined);
-    await this.page.locator('#auth-login-submit').click();
+    // Knop eerst naar het midden, dan pas klikken (14 sep). In CI op mobile-safari
+    // (d13089a9, zes vangsten) zette Playwrights eigen scroll de knop precies tegen
+    // de onderrand (bovenkant 613 in een viewport van 664), waarna de pagina tussen
+    // indrukken en loslaten 29-39 px doorscrolde: loslaten viel onder de knop, dus
+    // geen click en geen submit. Lokaal (Windows-WebKit) scrolt er bij geen enkele
+    // randpositie iets, dus dit is een hypothese die CI moet bevestigen: sinds 13 sep
+    // gemiddeld ~2 van deze uitvallers per release. Het blijft een echte klik op de
+    // echte knop; de diagnose hierboven blijft staan voor als het toch terugkomt.
+    const inlogKnop = this.page.locator('#auth-login-submit');
+    await inlogKnop.evaluate(el => el.scrollIntoView({ block: 'center', behavior: 'instant' as ScrollBehavior })).catch(() => undefined);
+    await inlogKnop.click();
 
     // Hoe lang we op de uitkomst van het inloggen wachten. 30 s, en dat is geen
     // verzwakking.
