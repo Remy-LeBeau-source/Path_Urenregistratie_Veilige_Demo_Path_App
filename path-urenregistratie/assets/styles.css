@@ -4985,7 +4985,7 @@ html:not([data-skin="new"]) body[data-role="employee"] .klantkaart-meer { displa
    even groot maar gedempt veld (--surface-muted, rand --line-zacht, tekst --line),
    geen 0/8/9. Op desktop; de kolom blijft staan zodat de weken uitlijnen. */
 @media (min-width: 821px) {
-  html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet td.is-buiten .date-number { color: var(--muted); opacity: .55; }
+  html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet td.is-buiten .date-number { color: var(--muted); }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-buiten-veld { width: 100%; max-width: 84px; min-height: 38px; border: 1px solid var(--line-zacht); border-radius: 9px; background: var(--surface-muted); color: var(--muted); font: inherit; font-size: 15px; font-weight: 700; text-align: center; padding: 0 2px; cursor: default; }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet td.is-buiten .hours-day-entry::after { content: ""; display: block; height: 24px; }
 }
