@@ -3011,12 +3011,26 @@ Een echt defect geeft steeds dezelfde fout op dezelfde plek. **Werkafspraak:** w
 meldt "machine bezet" en bij het eind "machine vrij" -- geen tijdsinschatting, alleen bezet of vrij.
 Voor het laatst gebroken doordat ik "vrij" meldde en daarna zelf opnieuw begon zonder het te zeggen.
 
-**NOG OPEN: `dashboard.spec.ts` heeft wisselwerking tussen cases, in beide richtingen.** In de run
+**NOG OPEN: in `[DASH-N-012]` opent de klik op de verzendcontrole soms geen modal; de oude
+knoptekst blijft staan.** (Oorspronkelijke titel: "wisselwerking tussen cases", zie bijstelling.) In de run
 waarin DASH-N-007 groen werd, viel `[DASH-N-012]` om op `#modal-confirm`: verwacht "Controle
 afronden", gekregen "Voorbeeldgegevens herstellen" -- dus een andere modal stond nog open. Los
 draait die case twee van de twee keer groen. Precies het spiegelbeeld van DASH-N-007. Bewust niet
 vannacht nog "even" gefixt: dat vraagt uitzoeken welke case zijn modal laat staan, en dat is
 echt werk, geen timeout-verhoging. Eerstvolgende kandidaat voor deze lane.
+
+*Bijstelling 14 sep: de oorspronkelijke titel ("wisselwerking tussen cases") klopt vermoedelijk niet.*
+"Voorbeeldgegevens herstellen" is de resetmodal uit de **eigen** Given-stap van DASH-N-012.
+`#modal-confirm` is één herbruikbaar element; opent de klik op de factuurknop géén nieuwe modal,
+dan blijft die oude tekst staan. De echte vraag is dus waarom die klik geen modal opende.
+Kandidaat: `showInvoiceDeliveryCheck()` (app.js ~11389) stapt vóór de modal uit met alleen een
+toast, als (1) de klanturenstaat nog niet klaar is voor facturatie, of (2) er al een serverfactuur
+is terwijl de urenstaat niet op approved/invoiced staat. Sinds v2.0.44 zet de case bij uitval de
+toasttekst in de foutmelding ("de verzendcontrole opende geen modal; toast: ..."), discriminerend
+bewezen. Verworpen: wachten tot de server de urenstaat op approved zet. De server zegt daar
+"submitted" terwijl de case gewoon slaagt, dus dat legde een eis op die de app niet stelt; niet
+opnieuw doen. In de hermeting na de herstart was de case groen. **Afspraak: niets bouwen tot er
+een rode run is mét de toast in de melding.** Pas dan is vast te stellen welke uitstap het was.
 
 **Latent risico, los van bovenstaande: `customerTimesheetFor()` heet als een getter maar schrijft.**
 Regel ~4494: hij maakt `record.customerTimesheet` aan als die ontbreekt en vult standaardwaarden,
