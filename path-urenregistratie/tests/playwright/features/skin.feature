@@ -303,6 +303,16 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     And blijft er op een gewoon desktopvenster niets afgeknepen
 
   @happy
+  Scenario: [SKIN-H-037] Klassiek houdt Berichten compact in licht en donker, Nieuw behoudt zijn eigen kopnavigatie
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
+    When de flow voor SKIN-H-037 wordt uitgevoerd
+    Then begrenst Klassiek licht Berichten en staat de navigatie horizontaal
+    And gebruikt Klassiek donker dezelfde horizontale navigatie en compacte breedte
+    And behoudt Nieuw zijn eigen full-width berichtenkop zonder klassieke sidebar
+
+  @happy
   Scenario: [SKIN-H-034] een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgloed
     # Testtechniek: End-to-end use-case + visuele contractasserties
     # Aantoonbare Playwright-assertions in deze case: 3
@@ -332,16 +342,6 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     When het toetsenbord het zichtbare deel verkleint tot 300px
     Then blijven de indienknop, de sluitactie en het typveld binnen dat deel
     And ruimt het sluiten van de dialoog de aanpassing op
-
-  @happy
-  Scenario: [SKIN-H-037] Klassiek houdt Berichten compact in licht en donker, Nieuw behoudt zijn eigen kopnavigatie
-    # Testtechniek: Equivalentieklassen
-    # Aantoonbare Playwright-assertions in deze case: 6
-    Given dashboard en open werkvoorraad is voorbereid
-    When de medewerker Berichten opent op een breed scherm
-    Then begrenst Klassiek licht Berichten en staat de navigatie horizontaal
-    And gebruikt Klassiek donker dezelfde horizontale navigatie en compacte breedte
-    And behoudt Nieuw zijn eigen full-width berichtenkop zonder klassieke sidebar
 
   @happy
   Scenario: [SKIN-H-039] de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect toont

@@ -362,7 +362,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-045] de tabbalk van de medewerker heeft Vandaag · Mijn uren · Maanden · Berichten, en Maanden opent Mijn maanden
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 19
+    # Aantoonbare Playwright-assertions in deze case: 21
     Given dashboard en open werkvoorraad is voorbereid
     Then staan de vier tabs in de volgorde van de referentie
     And staat die navigatie op een lichte desktop als horizontale, doorschijnende kopbalk zonder oude zijmarge
