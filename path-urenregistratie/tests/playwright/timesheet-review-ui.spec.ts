@@ -48,6 +48,19 @@ async function fillFirstTwoHours(page: Page, first: string, second: string) {
 // startdatum hier terug naar ruim vóór PERIOD_KEY; de rest van bootstrap blijft
 // echt. Was voorheen ook al nodig voor hermetische stabiliteit in de volle
 // seriële run (zie TS-REV-UI-H-008).
+// Wacht tot de app de (gemockte) startdatum van de server heeft overgenomen.
+// Tot de bootstrap binnen is, bewaakt setPeriod() met de ingebouwde catalogus
+// (Stasjo: 2026-05-01, gelijk aan de seed, zie [DASH-N-030]) en weigert het
+// terecht een maand ervoor. Deze spec zegt via mockEmploymentStartDate dat de
+// server 2025-01-01 heeft, dus januari mag pas daarna. Na page.reload() kwam
+// setPeriod() anders vóór de bootstrap en kreeg de lopende maand terug.
+async function wachtOpServerStartdatum(page: Page) {
+  await expect.poll(() => page.evaluate(() => {
+    const huidige = (0, eval)('typeof currentEmployee === "function" ? currentEmployee() : null') as { startDate?: string } | null;
+    return huidige?.startDate ?? '';
+  }), { message: 'de startdatum uit de (gemockte) bootstrap hoort in de app te staan', timeout: 20_000 }).toBe('2025-01-01');
+}
+
 async function mockEmploymentStartDate(page: Page) {
   await page.route('**/server/api/bootstrap.php', async (route) => {
     const response = await route.fetch();
@@ -831,6 +844,7 @@ test('[TS-REV-UI-H-012] beheerder zet verlof en ziekte aan; de medewerker kan ze
 
     await test.step('When de medewerker Mijn uren opent', async () => {
       await loginPage.loginAsEmployee();
+      await wachtOpServerStartdatum(page);
       await setPeriod(page, PERIOD_KEY);
       await openView(page, 'timesheet');
     });
@@ -855,6 +869,7 @@ test('[TS-REV-UI-H-012] beheerder zet verlof en ziekte aan; de medewerker kan ze
       await expect(page.locator('#hours-autosave-status')).toContainText('Gesynchroniseerd', { timeout: 5000 });
       await page.reload();
       await expect(page.locator('#app-shell')).toBeVisible();
+      await wachtOpServerStartdatum(page);
       await setPeriod(page, PERIOD_KEY);
       await openView(page, 'timesheet');
       await expect(page.locator('#summary-leave')).toHaveValue('4');
