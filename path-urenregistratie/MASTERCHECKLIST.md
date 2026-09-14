@@ -2976,6 +2976,15 @@ melding -- dus vermoedelijk echt, in onderzoek (sessie -ad):**
 - `[DASH-H-030]` -- klik op `#submit-timesheet` loopt af terwijl het element "visible, enabled and
   stable" is: iets onderschept de klik. Op 768px zit je in de 721-820px-band; overlay vermoed.
 - `[SKIN-H-023]` -- resettoken "ongeldig of verlopen" waar "wachtwoord ingesteld" verwacht werd.
+  **De melding bewijst niets over het token** (sessie -ad, door main nageverifieerd). In app.js
+  r15376-15380 onderscheidt de `.catch` alleen `token-already-used` en `token-expired`; élke andere
+  fout -- `invalid-token`, maar ook een CSRF-weigering, netwerkfout, 5xx of parsefout -- krijgt
+  dezelfde tekst. Oorzaak dus nog onbekend. Volgende stap: de case laten melden welke status en
+  `error`-code `reset-password.php` teruggaf, zonder extra eis (`skin.spec.ts` is in gebruik bij de
+  herontwerp-lane, dus in overleg).
+  **Voor Gio, los van de test:** een medewerker met een gewoon geldige link die door een netwerk- of
+  CSRF-hapering "ongeldig of verlopen" te zien krijgt, vraagt een nieuwe link aan -- en maakt daarmee
+  zijn eerste link ongeldig. De tekst zegt iets anders dan wat er gebeurde.
 Een eerste poging na de herstart telde niet: MySQL deed er 5,5 minuut over om InnoDB te
 initialiseren, en de run liep op `ECONNREFUSED 3306` stuk vóór er één case draaide.
 
