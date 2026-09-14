@@ -9555,6 +9555,23 @@ function normalizedHoursWeekScope(period, allowReset = true) {
   return scope;
 }
 
+// Van week naar week zonder extra knoppen (DESIGN-BESLUITEN "Van week naar week:
+// drie onzichtbare wegen", 14 sep). De segmentrij blijft de enige zichtbare
+// besturing. Volgorde: Hele maand, week 1 ... week n.
+function stapUrenPeriode(richting, { focusKnop = false } = {}) {
+  const period = currentPeriod();
+  const match = /^week-(\d+)$/.exec(String(state.hoursWeekScope || ""));
+  const nu = match ? Number(match[1]) + 1 : 0;
+  const doel = Math.min(period.weekRows.length, Math.max(0, nu + richting));
+  if (doel === nu) return false;
+  state.hoursWeekScope = doel === 0 ? "all" : "week-" + (doel - 1);
+  state.hoursWeekScopeTouched = true;
+  persistState();
+  renderHoursGrid();
+  if (focusKnop) document.querySelector('#hours-week-filter [data-hours-week-scope="' + state.hoursWeekScope + '"]')?.focus();
+  return true;
+}
+
 function renderHoursWeekFilter(period, scope) {
   // Klassiek (gui r326-330): alleen het weeknummer op de knop; "Week" staat al in
   // de kolomkop eronder. Modern houdt "Week 36".
@@ -9707,7 +9724,16 @@ function renderHoursGrid() {
   document.querySelector("#hours-grid").innerHTML = period.weekRows.map((week, weekIndex) => {
     if (weekScope !== "all" && weekScope !== "week-" + weekIndex) return "";
     const cells = week.days.map((day, dayIndex) => {
-      if (!day) return '<td class="outside-month"><span class="outside-month-mark" aria-hidden="true">—</span></td>';
+      if (!day) {
+        if (isNewSkin) return '<td class="outside-month"><span class="outside-month-mark" aria-hidden="true">—</span></td>';
+        // Klassiek (gui r1045-1062, 14 sep): de datum staat er wél, het veld is even
+        // groot maar gedempt en niet invulbaar, zonder 0/8/9. Eigen klasse, zodat het
+        // nergens als urenvak meetelt.
+        const bekend = week.days.findIndex(Boolean);
+        const datum = new Date(Date.UTC(period.year, period.monthIndex, week.days[bekend].day + dayIndex - bekend));
+        const label = WEEKDAY_SHORT[dayIndex].toLowerCase() + " " + datum.getUTCDate() + " " + MONTH_NAMES[datum.getUTCMonth()].slice(0, 3);
+        return '<td class="outside-month is-buiten"><div class="hours-day-entry"><span class="date-number">' + escapeHtml(label) + '</span><input class="hours-buiten-veld" type="text" placeholder="–" disabled tabindex="-1" aria-label="' + escapeHtml(label + ', buiten ' + period.label) + '"></div></td>';
+      }
       // Een eigen werkpatroon (bv. vrijdag altijd 0 uur) staat hier al in
       // record.entries als beginwaarde -- zie applyTimesheetApiPayload --
       // zodat Nieuw en Klassiek dezelfde functionaliteit bieden.
@@ -16260,3 +16286,36 @@ initializeAuthSession().finally(() => {
   restoreAuthLoginCountdown();
 });
 prefillAuthCredentialsFromSelection("admin", false);
+
+// Pijl links/rechts in de weekkeuze wisselt van periode; de focus verhuist mee.
+document.addEventListener("keydown", event => {
+  if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+  if (!event.target.closest?.("#hours-week-filter [data-hours-week-scope]")) return;
+  event.preventDefault();
+  stapUrenPeriode(event.key === "ArrowRight" ? 1 : -1, { focusKnop: true });
+});
+// Tab op het vrijdagveld van een week gaat naar de volgende week, cursor in het
+// eerste veld. Niet bij Hele maand en niet op de laatste week.
+document.addEventListener("keydown", event => {
+  if (event.key !== "Tab" || event.shiftKey) return;
+  const veld = event.target.closest?.("#hours-grid .hours-input");
+  if (!veld || veld.dataset.dayIndex !== "4") return;
+  const match = /^week-(\d+)$/.exec(String(state.hoursWeekScope || ""));
+  if (!match || Number(match[1]) >= currentPeriod().weekRows.length - 1) return;
+  event.preventDefault();
+  veld.dispatchEvent(new Event("change", { bubbles: true }));
+  stapUrenPeriode(1);
+  const eerste = document.querySelector("#hours-grid .hours-input:not([disabled])");
+  if (eerste) { eerste.focus(); eerste.select?.(); }
+});
+// Vegen op de weekkaart, drempel 55px zodat verticaal scrollen blijft werken.
+let urenVeegX = null;
+document.addEventListener("touchstart", event => {
+  urenVeegX = event.target.closest?.("#hours-table-wrap") && event.touches?.[0] ? event.touches[0].clientX : null;
+}, { passive: true });
+document.addEventListener("touchend", event => {
+  if (urenVeegX === null || !event.changedTouches?.[0]) return;
+  const dx = event.changedTouches[0].clientX - urenVeegX;
+  urenVeegX = null;
+  if (Math.abs(dx) > 55) stapUrenPeriode(dx < 0 ? 1 : -1);
+}, { passive: true });

@@ -417,6 +417,16 @@ Feature: Dashboard en open werkvoorraad
     Then wordt met Playwright-assertions bevestigd dat zodra de laatste lege week gevuld is, staat Maand indienen ook in de weekweergave
 
   @happy
+  Scenario: [DASH-H-051] Mijn uren: dagen buiten de maand zijn gedempt met datum, en van week naar week gaat met pijltjes en Tab op vrijdag
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 15
+    Given dashboard en open werkvoorraad is voorbereid
+    Then toont maandag 31 augustus zijn datum en een gedempt, niet invulbaar veld zonder 0/8/9
+    When de focus in de segmentrij staat, then wisselen pijl rechts en links van periode en loopt de focus mee
+    When de medewerker op het vrijdagveld van een week Tab drukt, then staat de volgende week open met de cursor in het eerste veld
+    And springt Tab op vrijdag bij Hele maand niet naar een andere week
+
+  @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 1

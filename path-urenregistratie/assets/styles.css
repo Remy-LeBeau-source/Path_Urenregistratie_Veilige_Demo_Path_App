@@ -4884,7 +4884,7 @@ html:not([data-skin="new"]) body[data-role="employee"] .hours-table tfoot { disp
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-weekcel strong { display: block; color: var(--mint-tekst); font-size: 12px; font-weight: 700; }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-weekcel small { display: block; color: #8a5c1c; font-size: 9px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-weekcel small:not(.is-open) { color: var(--mint-tekst); }
-  html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-table td.outside-month { background: var(--surface-muted); }
+  html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-table td.outside-month { background: transparent; }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-day-entry { display: grid; justify-items: center; gap: 4px; }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-day-entry .date-number { color: var(--muted); font-size: 9.5px; font-weight: 700; white-space: nowrap; }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-input { width: 100%; max-width: 84px; min-height: 38px; border: 1px solid var(--veld-rand); border-radius: 9px; background: var(--veld-vlak); color: var(--ink); font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: center; padding: 0 2px; box-shadow: none; }
@@ -4979,4 +4979,13 @@ html:not([data-skin="new"]) body[data-role="employee"] .klantkaart-meer { displa
    Klein, naast de maandkiezer. */
 @media (min-width: 821px) {
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .view-heading > #timesheet-status { align-self: center; }
+}
+
+/* Dagen buiten de gekozen maand (gui r1045-1062, 14 sep): datum in --line, een
+   even groot maar gedempt veld (--surface-muted, rand --line-zacht, tekst --line),
+   geen 0/8/9. Op desktop; de kolom blijft staan zodat de weken uitlijnen. */
+@media (min-width: 821px) {
+  html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet td.is-buiten .date-number { color: var(--muted); opacity: .55; }
+  html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-buiten-veld { width: 100%; max-width: 84px; min-height: 38px; border: 1px solid var(--line-zacht); border-radius: 9px; background: var(--surface-muted); color: var(--muted); font: inherit; font-size: 15px; font-weight: 700; text-align: center; padding: 0 2px; cursor: default; }
+  html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet td.is-buiten .hours-day-entry::after { content: ""; display: block; height: 24px; }
 }

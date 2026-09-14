@@ -2932,3 +2932,61 @@ test('[DASH-H-050] zodra de laatste lege week gevuld is, staat Maand indienen oo
     await herstelUrenstaat();
   }
 });
+
+test('[DASH-H-051] Mijn uren: dagen buiten de maand zijn gedempt met datum, en van week naar week gaat met pijltjes en Tab op vrijdag', async ({ page }) => {
+  // DESIGN-BESLUITEN 14 sep: "Dagen buiten de gekozen maand" en "Van week naar
+  // week: drie onzichtbare wegen" (pijltjes in de segmentrij, Tab op vrijdag,
+  // vegen). Vegen vraagt aanraking en valt buiten deze desktopcase.
+  test.setTimeout(120_000);
+  await page.clock.setFixedTime(new Date('2026-09-14T12:00:00.000Z'));
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('#period-label')).toHaveText('September 2026');
+  await page.locator('button.nav-item[data-view="timesheet"]:visible').first().click();
+  await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+  const filter = page.locator('#hours-week-filter');
+
+  await test.step('Then toont maandag 31 augustus zijn datum en een gedempt, niet invulbaar veld zonder 0/8/9', async () => {
+    await page.locator('[data-hours-week-scope="all"]').click();
+    const cel = page.locator('#hours-grid tr[data-week-index="0"] td.is-buiten').first();
+    await expect(cel.locator('.date-number')).toHaveText('ma 31 aug');
+    await expect(cel.locator('.hours-buiten-veld')).toBeVisible();
+    await expect(cel.locator('.hours-buiten-veld')).toBeDisabled();
+    await expect(cel.locator('[data-hours-set]')).toHaveCount(0);
+    const breedtes = await page.evaluate(() => ({
+      buiten: Math.round(document.querySelector('#hours-grid td.is-buiten .hours-buiten-veld')!.getBoundingClientRect().height),
+      binnen: Math.round(document.querySelector('#hours-grid .hours-input')!.getBoundingClientRect().height),
+    }));
+    expect(breedtes.buiten, 'even groot als een gewoon veld').toBe(breedtes.binnen);
+  });
+
+  await test.step('When de focus in de segmentrij staat, then wisselen pijl rechts en links van periode en loopt de focus mee', async () => {
+    await filter.locator('[data-hours-week-scope="all"]').focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(filter.locator('[data-hours-week-scope="week-0"]')).toHaveClass(/is-active/);
+    await expect(filter.locator('[data-hours-week-scope="week-0"]')).toBeFocused();
+    await page.keyboard.press('ArrowRight');
+    await expect(filter.locator('[data-hours-week-scope="week-1"]')).toHaveClass(/is-active/);
+    await page.keyboard.press('ArrowLeft');
+    await expect(filter.locator('[data-hours-week-scope="week-0"]')).toHaveClass(/is-active/);
+    await expect(filter.locator('[data-hours-week-scope="week-0"]')).toBeFocused();
+  });
+
+  await test.step('When de medewerker op het vrijdagveld van een week Tab drukt, then staat de volgende week open met de cursor in het eerste veld', async () => {
+    await filter.locator('[data-hours-week-scope="week-1"]').click();
+    const vrijdag = page.locator('#hours-grid .hours-input[data-week-index="1"][data-day-index="4"]');
+    await vrijdag.focus();
+    await page.keyboard.press('Tab');
+    await expect(filter.locator('[data-hours-week-scope="week-2"]')).toHaveClass(/is-active/);
+    await expect(page.locator('#hours-grid .hours-input[data-week-index="2"][data-day-index="0"]')).toBeFocused();
+  });
+
+  await test.step('And springt Tab op vrijdag bij Hele maand niet naar een andere week', async () => {
+    await filter.locator('[data-hours-week-scope="all"]').click();
+    await page.locator('#hours-grid .hours-input[data-week-index="1"][data-day-index="4"]').focus();
+    await page.keyboard.press('Tab');
+    await expect(filter.locator('[data-hours-week-scope="all"]')).toHaveClass(/is-active/);
+  });
+});

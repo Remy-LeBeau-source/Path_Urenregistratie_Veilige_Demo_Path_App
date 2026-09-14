@@ -182,6 +182,7 @@
 | DASH-H-048 | ui | dashboard.feature | de kop toont de maand als vakjes per week, en een dagvakje opent Mijn uren op die dag | End-to-end use-case + visuele contractasserties | 19 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | de kop toont de maand als vakjes per week, en een dagvakje opent Mijn uren op die dag | Happy | 15 | Actueel |
 | DASH-H-049 | ui | dashboard.feature | licht Klassiek heeft bij de medewerker één vast veld over de pagina en een doorschijnende menubalk | Beslissingstabel rollen en autorisatie | 10 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | licht Klassiek heeft bij de medewerker één vast veld over de pagina en een doorschijnende menubalk | Happy | 15 | Actueel |
 | DASH-H-050 | ui | dashboard.feature | zodra de laatste lege week gevuld is, staat Maand indienen ook in de weekweergave | Toestandsovergang | 7 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | zodra de laatste lege week gevuld is, staat Maand indienen ook in de weekweergave | Happy | 15 | Actueel |
+| DASH-H-051 | ui | dashboard.feature | Mijn uren: dagen buiten de maand zijn gedempt met datum, en van week naar week gaat met pijltjes en Tab op vrijdag | End-to-end use-case + visuele contractasserties | 15 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | Mijn uren: dagen buiten de maand zijn gedempt met datum, en van week naar week gaat met pijltjes en Tab op vrijdag | Happy | 15 | Actueel |
 | DASH-H-001 | ui | dashboard.feature | admin dashboard opent zonder console errors | Beslissingstabel rollen en autorisatie | 1 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | admin dashboard opent zonder console errors | Happy | 15 | Actueel |
 | DASH-H-018 | ui | dashboard.feature | elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen | End-to-end use-case + visuele contractasserties | 29 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen | Happy | 15 | Actueel |
 | DASH-N-022 | ui | dashboard.feature | een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding | Beslissingstabel rollen en autorisatie | 8 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | een medewerker met een toekomstige startdatum verschijnt niet in Teamstatus of Klanturenstaten vóór indiensttreding | Negative | 15 | Actueel |
@@ -570,9 +571,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 548
+- Playwright executable cases: 549
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 549
+- Totaal unieke executable cases: 550
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
