@@ -598,12 +598,18 @@ html[data-theme="dark"] .customer-timesheet-upload-grid .month-choice-panel butt
 
    De gloed alleen op de primaire knop: de mintschaduw hoort bij de hoofdactie,
    en op elke knop zou hij niets meer aanwijzen. Bij minder beweging blijft de
-   knop stilstaan en houdt alleen de lichte verdonkering over. */
+   knop stilstaan en houdt alleen de lichte verdonkering over.
+
+   Het krimpen geldt overal, de mintgloed alleen in Klassiek. In Modern is de
+   primaire knop amber (`--path-amber`, met een amber schaduw in
+   styles-new.css:257) -- een mintgloed eromheen zou daar een tweede accentkleur
+   introduceren die nergens anders in die vormgeving voorkomt. Modern houdt dus
+   het krimpen zonder gloed, tot daar een eigen waarde voor is vastgelegd. */
 .button:active:not(:disabled) { transform: scale(.975); filter: brightness(.97); }
-.button-primary:active:not(:disabled) { transform: scale(.965); box-shadow: 0 2px 26px rgba(58,189,157,.6); }
+html:not([data-skin="new"]) .button-primary:active:not(:disabled) { transform: scale(.965); box-shadow: 0 2px 26px rgba(58,189,157,.6); }
 @media (prefers-reduced-motion: reduce) {
   .button:active:not(:disabled),
-  .button-primary:active:not(:disabled) { transform: none; }
+  html:not([data-skin="new"]) .button-primary:active:not(:disabled) { transform: none; }
 }
 .button:disabled { cursor: not-allowed; filter: grayscale(.25); opacity: .48; transform: none; }
 .button-primary { background: var(--mint); color: var(--navy); box-shadow: 0 8px 18px rgba(58,189,157,.2); }
