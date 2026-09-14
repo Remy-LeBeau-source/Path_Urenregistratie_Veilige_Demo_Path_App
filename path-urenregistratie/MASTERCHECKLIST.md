@@ -3046,6 +3046,20 @@ zinloos was geweest.
   (paneel blijft `hidden`, eerst drie keer "element is not stable"). Ook een klik op het inlogscherm
   zonder effect, maar daar in demo-modus en zonder formulier.
 
+**OPEN: accountkiezer opent op mobile-safari soms niet na een rolwissel (DASH-H-008, E2E-H-002).**
+- Gezien in de releases op 5e0bfbda (DASH-H-008, twee pogingen) en 984cd06a (E2E-H-002, pas bij de
+  herhaling groen). In beide gevallen: klik op `#login-*-trigger` direct na `logout()`, daarna blijft
+  `#login-*-choices` `hidden`.
+- Het paneel gaat alleen dicht via `closeLoginAccountPanels()`: bij een klik buiten
+  `.login-account-picker`, bij Escape, en synchroon in `logoutLocal()`. Die laatste is al gelopen
+  voordat de test het inlogscherm ziet.
+- De trace van DASH-H-008 laat de trigger drie keer "not stable" zien (ongeveer 800 ms beweging) vóór
+  de klik. Mijn vermoeden: de klik valt op een verschuivende plek naast de kiezer en sluit alles.
+  **Niet bewezen.** Wat er beweegt is onbekend; animaties en smooth scroll staan onder reducedMotion uit.
+- Lokaal is E2E-H-002 op mobile-safari 8 van de 8 keer groen, dus er is geen reproductie en geen fix.
+  Volgende stap bij een nieuwe uitval: in de trace nagaan welke `scrollY` en rect de trigger had tussen
+  de laatste stabiliteitscontrole en de klik.
+
 **OPEN: dekkingsgat op desktop door het Klassieke Vandaag-scherm (14 sep, herontwerp).**
 Vanaf 721px vervangt Vandaag het oude medewerkerdashboard. Negen cases zijn daarom op 390px vastgezet.
 Navraag bij de herontwerplane: bij acht is het gedrag **vervangen, niet alleen verborgen**. Voor de
