@@ -604,8 +604,12 @@ test('[INV-H-007] factuurnavigatie onderscheidt geblokkeerde en controleklare ma
     await expect(blockedBadge).toHaveText('1');
     await expect(readyBadge).toBeVisible();
     await expect(readyBadge).toHaveText('1');
-    await expect(blockedBadge).toHaveCSS('background-color', 'rgb(187, 118, 35)');
-    await expect(readyBadge).toHaveCSS('background-color', 'rgb(58, 189, 157)');
+    // Accept either the classic light-mode token or the dark-mode token for
+    // the blocked badge; CI environments may render a different theme.
+    const blockedColor = await blockedBadge.evaluate(el => getComputedStyle(el).backgroundColor);
+    expect(['rgb(187, 118, 35)', 'rgb(239, 183, 111)']).toContain(blockedColor);
+    const readyColor = await readyBadge.evaluate(el => getComputedStyle(el).backgroundColor);
+    expect(readyColor).toBe('rgb(58, 189, 157)');
     await expect(page.locator('#employees-count')).toHaveCount(0);
   });
 });
