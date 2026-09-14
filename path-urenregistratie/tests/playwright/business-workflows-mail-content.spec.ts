@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { LoginPage } from './pages/LoginPage';
+import { kiesHeleMaand } from './fixtures/heleMaand';
 
 const execFileAsync = promisify(execFile);
 
@@ -112,7 +113,7 @@ async function ketenTotFactuur(page: Page, loginPage: LoginPage): Promise<{ fact
   if (await invoer.count()) {
     await invoer.fill('8');
     await invoer.press('Tab');
-    await page.locator('[data-hours-week-scope="all"]').click();
+    await kiesHeleMaand(page);
     const schrijf = page.waitForResponse(response =>
       response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
     await page.locator('#submit-timesheet').click();
