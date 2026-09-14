@@ -41,8 +41,19 @@ import { useFixedDemoClock } from './fixtures/fixedDemoClock';
 // Deze helper haalt die afhankelijkheid weg: eerst bewust in beeld scrollen, dan
 // klikken. Geen enkele assertie verandert, en een knop die echt nooit
 // verschijnt laat de klik nog steeds aflopen.
+//
+// Correctie (14 sep, gevonden door de release-run op 3f3a6ff4): de eerste
+// versie deed `await element.scrollIntoViewIfNeeded()` zonder vangnet, en dat
+// gooide op tablet-chromium in [DASH-H-020] "Element is not attached to the
+// DOM". Het takenpaneel hertekent op een achtergrondsync; raakt het element
+// tussen het opzoeken en het scrollen los, dan faalt de voorscroll -- terwijl
+// `click()` in precies dat geval de locator opnieuw oplost en het goed afhandelt.
+// Mijn fix introduceerde dus een nieuwe manier om om te vallen.
+// De voorscroll is een hulpstap, geen eis: mislukt hij, dan doet `click()` het
+// scrollen en wachten zelf. Een element dat echt nooit klikbaar wordt, laat
+// `click()` nog steeds aflopen, dus er wordt niets verborgen.
 async function klikNaScroll(element: Locator): Promise<void> {
-  await element.scrollIntoViewIfNeeded();
+  await element.scrollIntoViewIfNeeded().catch(() => undefined);
   await element.click();
 }
 
