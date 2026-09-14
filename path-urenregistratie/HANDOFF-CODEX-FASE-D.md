@@ -1,5 +1,59 @@
 # HANDOFF — Codex, Fase D vervolg (herontwerp)
 
+## 14 september 2026 (avond) — LIVE status na push 804fc2ca
+
+Gebruiker vroeg expliciet om deze handoff vanaf nu actueel te houden bij elke
+betekenisvolle actie. Laatste bevestigde remote commit op `origin/herontwerp`:
+`804fc2ca design: rond medewerker Klassiek licht af`.
+
+Wat af is:
+
+- Medewerker Klassiek licht is omgezet naar de GUI/Wild-richting uit de verse
+  Claude-handoff: desktop met horizontale transparante kopnavigatie en één
+  samengestelde dashboardkopkaart; mobiel/PWA met Wild-opbouw.
+- Donker, Modern en beheer zijn bewust niet herontworpen.
+- Versie staat op `2.0.62`.
+- Lokale gerichte checks waren groen: `version:check`, `node --check`,
+  `test:design`, `test:bdd:design`, `git diff --check` en
+  DASH-H-045 t/m DASH-H-049 als compacte desktop/mobile regressie.
+
+CI na push:
+
+- Run `34842770470` startte op `herontwerp` commit `804fc2ca`.
+- Shard `Validate and test (1/8)` faalde vroeg bij `Smoke check`, vóór de brede
+  E2E-suite van die shard.
+- Fout uit CI-log:
+  `De bovenbalk moet env(safe-area-inset-top) aanhouden, anders valt hij op iOS achter de statusbalk`.
+- Oorzaak: de nieuwe Klassiek-licht employee dashboard override was de laatste
+  `.topbar { ... }`-regel in `assets/styles.css`; de smoke-contractcheck zoekt
+  bewust in de laatste `.topbar`-regel naar `padding-top:
+  env(safe-area-inset-top, 0px)`.
+
+Lokale herstelstand op dit moment, nog niet gecommit:
+
+- `assets/styles.css`: dashboard-topbar blijft verborgen, maar behoudt expliciet
+  `padding-top: env(safe-area-inset-top, 0px);` zodat het iOS-safe-area contract
+  aantoonbaar blijft.
+- `assets/app.js`: `applyOrganizationBranding()` kreeg een defensieve
+  `typeof window.matchMedia === "function"` guard. Zonder die guard faalt
+  `scripts/smoke-test.mjs` lokaal in jsdom, omdat jsdom geen `matchMedia` heeft.
+- `node --check assets/app.js` is groen na deze guard.
+- Een lokale `node scripts/smoke-test.mjs` liep lang stil; daarna bleek eerst de
+  `matchMedia`-fout. Na de guard is de smoke opnieuw gestart, maar op verzoek om
+  zuinig met usage te werken onderbroken voordat hij eindigde. Eerstvolgende
+  zuinige stap: exact deze smoke opnieuw draaien, daarna bij groen committen en
+  pushen.
+
+Aanpak vanaf hier:
+
+- Niet opnieuw breed lokaal testen tenzij de smoke een echte codefout aanwijst.
+- Bij groene smoke: commit `fix: behoud safe-area contract medewerkerkop`
+  maken, push naar `origin/herontwerp`, CI met korte JSON-statuschecks volgen.
+- Geen `gh run watch` meer gebruiken: dat produceert enorme 8-shard output en
+  jaagt usage onnodig omhoog. Alleen `gh run list/view --json` en logs bij rood.
+- Geen main-taken of PROD-route starten zonder nieuwe expliciete keuze van de
+  gebruiker. Deze ronde blijft medewerker-only op `herontwerp`.
+
 ## 14 september 2026 (avond) — actuele overdracht medewerker Klassiek licht
 
 De verse Claude-designhandoff is uitgevoerd voor uitsluitend de medewerkerkant.

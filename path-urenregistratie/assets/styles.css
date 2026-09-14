@@ -4656,6 +4656,7 @@ html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"] 
      tweede koprij erboven zou die informatie opnieuw tonen. */
   html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"][data-view="employee-dashboard"] .topbar {
     display: none;
+    padding-top: env(safe-area-inset-top, 0px);
   }
 
   html:not([data-skin="new"]):not([data-theme="dark"]) body[data-role="employee"][data-view="employee-dashboard"] #view-employee-dashboard {

@@ -4317,6 +4317,7 @@ function applyOrganizationBranding() {
     const lichteEmployeeKop = state.currentRole === "employee"
       && document.documentElement.dataset.skin !== "new"
       && !donkereModusActief()
+      && typeof window.matchMedia === "function"
       && window.matchMedia("(min-width: 821px)").matches;
     const onDarkSurface = (Boolean(image.closest("#sidebar-brand")) && !lichteEmployeeKop) || opMerkpilInNieuw;
     image.src = brandLogoUrl(onDarkSurface || donkereModusActief() ? "donker" : "licht");
