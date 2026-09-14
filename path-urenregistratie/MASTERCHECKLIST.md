@@ -3122,6 +3122,39 @@ desktop. Bestaan door mij nagekeken; de tegenproeven zijn gemeld door de herontw
 herhaald. Daarom pas afvinken zodra ze groen op main in een release staan. De eigenaarregel bij
 DASH-H-005 blijft zonder desktopfunctie en dus zonder desktopcase -- dat is een productkeuze voor Gio.
 
+**Nieuwe cases van 13-14 sep die hier nog ontbraken (aangevuld door main, sessie -ad).**
+Nagekeken tegen `git log -S` per case-ID; alleen cases die nog nergens in deze checklist stonden.
+CI-stand: in herontwerp-CI d13089a9 (run 34824806534) is geen van deze cases rood of flaky; daar faalde
+alleen `[SKIN-H-028]`, en dat staat al hierboven. "Rood geweest tegen een kapotte variant" is gemeld
+door de lane die de case schreef en niet door mij herhaald.
+- [x] `[MOB-H-031]` op 360px valt ook op de medewerkerschermen niets buiten de rechterrand
+  (`mobile-ui.spec.ts`, e8f68b41, main). Meet per element de rechterrand, want `overflow-x: hidden`
+  maakt `scrollWidth` onbruikbaar; met zelfcontrole.
+- [x] `[DASH-H-031]` het verloop van een maand klapt open in Mijn maanden en overleeft een hertekening
+  (`dashboard-medewerker.spec.ts`, 2fc77dd3).
+- [x] `[DASH-H-032]` "Hele maand" noemt de ontbrekende werkdagen bij naam, inclusief dagen die nog moeten
+  komen (2c161960, herontwerp, ontwerpronde "elke lege werkdag telt als ontbrekend, ook toekomstige").
+- [x] `[DASH-H-033]` de verloopstappen in Klassiek tonen ✓ en • in de bol, leesbaar in licht en donker
+  (4c350d52, herontwerp).
+- [x] `[DASH-H-034]` de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het
+  gekozen bestand echt mee (541d862c, herontwerp). Was rood op mobile-safari in herontwerp-CI f8129093 en
+  ebe60553, groen in d13089a9. **Niet verklaard in deze checklist**; bij een nieuwe uitval eerst naar kijken.
+- [x] `[DASH-H-035]` Mijn uren op desktop toont alleen Ma–Vr, de datum boven elk veld, 0/8/9 eronder en het
+  weektotaal rechts (824797b7, herontwerp).
+- [x] `[DASH-N-031]` de volgende actie is één zin zonder aangeplakte maand, en de maand staat in de regel
+  eronder (5e7ac013, herontwerp).
+- [x] `[SKIN-H-033]` de medewerkerschermen rekken op een breed scherm niet verder uit dan 1060px en staan
+  gecentreerd (3ca3a291, herontwerp). Was rood op mobile-chrome en mobile-safari in ebe60553, groen in d13089a9.
+- [x] `[SKIN-H-034]` een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgloed (e26ce73d, herontwerp).
+- [x] `[SKIN-H-035]` op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle
+  breedte (306c8189, herontwerp) -- **dekt Gio's punt 1** (onder elkaar, 10px, ≥44px hoog).
+- [x] `[SKIN-H-036]` een dialoog met open toetsenbord houdt de knoppen, de sluitactie en het typveld in beeld
+  (306c8189, herontwerp) -- **dekt Gio's punt 3 in simulatie**: het zichtbare deel wordt teruggebracht tot
+  300px, met eerst een zelfcontrole dat de knoppen zonder aanpassing níét passen. Geen echt iOS-toetsenbord
+  of Safari-browserbalk; dat blijft een toesteltest (zie punt 4).
+- [x] `[SKIN-H-039]` de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect
+  toont (4c350d52, herontwerp).
+
 **OPGELOST: `[HELP-N-001]` op mobile-safari faalde bij het uitloggen, niet bij het inloggen (14 sep).**
 Het hulppaneel onderschepte 15 s lang de klik op `#switch-role`.
 - **Oorzaak, gemeten:** `openHelp()` haalt `hidden` meteen weg, maar zet `is-open` pas in de volgende
