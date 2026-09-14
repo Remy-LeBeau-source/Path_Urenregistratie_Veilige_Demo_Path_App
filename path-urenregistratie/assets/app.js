@@ -4657,10 +4657,16 @@ function fillStandardHoursInRecord(record, employee, period, weekIndexes, option
     if (!week || !record.entries || !record.entries[weekIndex]) return;
     week.days.forEach((day, dayIndex) => {
       if (!day) return;
-      if (record.confirmedEntries?.[weekIndex]?.[dayIndex]) return;
       if (Number(record.entries[weekIndex][dayIndex] || 0) > 0) return;
       const nextValue = standardHoursForDay(employee, dayIndex);
+      // Besluit Gio (14 sep): wie op "vullen" drukt, geeft een nieuwe instructie,
+      // en die weegt zwaarder dan een eerdere bewuste 0 (bijvoorbeeld na "Week
+      // terugzetten"). Een knop die zichtbaar niets doet is het ergste soort
+      // fout. Vullen zet het patroon terug en wist op die dagen de
+      // bewuste-0-markering; wie daarna toch een 0 wil, tikt die dag aan. Dagen
+      // met uren blijven ongemoeid. Eerder sloeg vullen bewuste nullen over.
       if (Number(record.entries[weekIndex][dayIndex] || 0) === nextValue) return;
+      if (record.confirmedEntries?.[weekIndex]?.[dayIndex]) record.confirmedEntries[weekIndex][dayIndex] = false;
       record.entries[weekIndex][dayIndex] = nextValue;
       changed += 1;
     });
@@ -5583,9 +5589,12 @@ function statusKetenStappen(record, period) {
       key: "customer",
       titel: "Klanturenstaat",
       af: klanturenstaatAf,
+      // Zelf gemaild blijft open tot Backoffice extern bevestigt; de stand
+      // verandert daarom niet, alleen de tekst zegt wie aan zet is. Teksten van
+      // Gio (14 sep), ook in de referentie doorgevoerd.
       detail: !submitted ? "Volgt na indienen"
         : klanturenstaatAf ? "Aangeleverd"
-        : zelfGemaild ? "Rechtstreeks gemaild"
+        : zelfGemaild ? "Door jou gemaild · wacht op Backoffice"
         : "Nog niet aangeleverd"
     },
     {
@@ -5595,6 +5604,7 @@ function statusKetenStappen(record, period) {
       detail: done ? "De Backoffice heeft alles verwerkt"
         : !submitted ? "Volgt"
         : klanturenstaatAf ? "De Backoffice verwerkt de maand"
+        : zelfGemaild ? "Volgt na bevestiging"
         : "Volgt na de klanturenstaat"
     }
   ];
@@ -5644,15 +5654,51 @@ function vulStatusKeten(record, period) {
   }
 }
 
+// Bij welke medewerker hoort dit record? Records staan in state.records per
+// maand onder het medewerker-id, maar dragen dat id zelf niet. De vrije dag komt
+// uit het werkpatroon van de medewerker, dus de gatentelling moet hem kunnen
+// vinden. Onthouden per record-object; bij een nieuw object opnieuw zoeken.
+const medewerkerPerRecord = new WeakMap();
+function medewerkerVoorRecord(record) {
+  if (!record || typeof record !== "object") return null;
+  if (medewerkerPerRecord.has(record)) return medewerkerPerRecord.get(record);
+  let gevonden = null;
+  Object.values(state.records || {}).some(maand => Object.entries(maand || {}).some(([id, kandidaat]) => {
+    if (kandidaat !== record) return false;
+    gevonden = employeeById(Number(id)) || null;
+    return true;
+  }));
+  if (gevonden) medewerkerPerRecord.set(record, gevonden);
+  return gevonden;
+}
+
+// Een vrije dag volgens beheer: het werkpatroon van de medewerker zet die weekdag
+// uitdrukkelijk op 0 uur. Alleen een ingevuld patroon telt; zonder patroon
+// (gelijk verdeeld, bv. 36 / 5 = 7,2) is elke werkdag een werkdag. Besluit Gio
+// (14 sep): ontbreekt de vrije dag in beheer, dan hoort die dag als werkdag te
+// tellen, zodat onvolledige beheerdata zichtbaar blijft.
+function isVrijeDagVolgensBeheer(employee, dayIndex) {
+  const waarde = employee && employee.dayHours ? employee.dayHours[dayIndex + 1] : undefined;
+  if (waarde === undefined || waarde === null || waarde === "") return false;
+  return Number(String(waarde).replace(",", ".")) === 0;
+}
+
+// De ene regel voor "telt deze werkdag als ingevuld". Gebruikt door de complete
+// weken, de gaten (Hele maand, het verloop, het indienlabel) en het rode blok bij
+// indienen, zodat die nooit iets anders kunnen zeggen. Ingevuld is: uren > 0, of
+// bewust op 0 gezet, of een vrije dag volgens beheer (besluit Gio 14 sep: het
+// systeem weet al dat die dag vrij is, dus erom vragen is werk zonder informatie).
+function werkdagTeltAlsIngevuld(record, weekIndex, dayIndex, employee = medewerkerVoorRecord(record)) {
+  if (Number(record.entries?.[weekIndex]?.[dayIndex] || 0) > 0) return true;
+  if (record.confirmedEntries?.[weekIndex]?.[dayIndex]) return true;
+  return isVrijeDagVolgensBeheer(employee, dayIndex);
+}
+
 function isTimesheetWeekComplete(record, periodWeek, weekIndex) {
   const businessDayIndexes = periodWeek.days.map((day, dayIndex) => day ? dayIndex : -1).filter(dayIndex => dayIndex >= 0);
-  // Een werkdag telt mee zodra er uren > 0 op staan, óf zodra de dag bewust
-  // is opgeslagen (ook als dat toen leeg/0 uur was) — zo telt een expliciet
-  // opgeslagen 0 uur wél mee, terwijl een dag die nooit is bekeken dat niet doet.
+  const employee = medewerkerVoorRecord(record);
   return businessDayIndexes.length > 0 && businessDayIndexes.every(dayIndex =>
-    Number(record.entries[weekIndex] && record.entries[weekIndex][dayIndex] || 0) > 0
-    || Boolean(record.confirmedEntries && record.confirmedEntries[weekIndex] && record.confirmedEntries[weekIndex][dayIndex])
-  );
+    werkdagTeltAlsIngevuld(record, weekIndex, dayIndex, employee));
 }
 
 function completedTimesheetWeeks(record, period) {
@@ -5691,11 +5737,11 @@ function incompleteTimesheetWeekLabels(record, period) {
 // vanzelf uit de day-check.
 function ontbrekendeWerkdagen(record, period) {
   const dagen = [];
+  const employee = medewerkerVoorRecord(record);
   period.weekRows.forEach((periodWeek, weekIndex) => {
     periodWeek.days.forEach((day, dayIndex) => {
       if (!day) return;
-      if (Number(record.entries?.[weekIndex]?.[dayIndex] || 0) > 0) return;
-      if (record.confirmedEntries?.[weekIndex]?.[dayIndex]) return;
+      if (werkdagTeltAlsIngevuld(record, weekIndex, dayIndex, employee)) return;
       dagen.push({
         weekIndex,
         // "Di 15 sep" -- de notatie die #hours-grid al gebruikt. De
@@ -5724,11 +5770,15 @@ function ontbrekendeWerkdagen(record, period) {
 // niet over het doorbreken van een bestaande conventie.
 function deliberateZeroWorkdayLabels(record, period) {
   const labels = [];
+  const employee = medewerkerVoorRecord(record);
   period.weekRows.forEach((periodWeek, weekIndex) => {
     periodWeek.days.forEach((day, dayIndex) => {
       if (!day) return;
       if (!record.confirmedEntries?.[weekIndex]?.[dayIndex]) return;
       if (Number(record.entries?.[weekIndex]?.[dayIndex] || 0) > 0) return;
+      // Een vrije dag volgens beheer is geen signaal voor Backoffice. Vier vrije
+      // vrijdagen duwden de ene echte 0 anders uit dit blok (besluit Gio 14 sep).
+      if (isVrijeDagVolgensBeheer(employee, dayIndex)) return;
       labels.push(WEEKDAY_SHORT[dayIndex] + " " + day.day + " " + period.month.slice(0, 3));
     });
   });

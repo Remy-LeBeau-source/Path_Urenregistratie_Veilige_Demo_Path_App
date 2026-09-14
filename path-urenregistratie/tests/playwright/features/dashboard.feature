@@ -333,6 +333,46 @@ Feature: Dashboard en open werkvoorraad
     Then wordt met Playwright-assertions bevestigd dat een hertekening op de achtergrond zet "Hele maand" in Mijn uren niet terug naar één week
 
   @happy
+  Scenario: [DASH-H-040] Standaardmaand vullen vult elke werkdag van de maand volgens het werkpatroon uit beheer, ook de vrije dag, en laat geen gaten
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given dashboard en open werkvoorraad is voorbereid
+    When de flow voor DASH-H-040 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat standaardmaand vullen vult elke werkdag van de maand volgens het werkpatroon uit beheer, ook de vrije dag, en laat geen gaten
+
+  @happy
+  Scenario: [DASH-H-041] Maand terugzetten zet elke werkdag van de maand op 0,0, niet alleen één week
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given dashboard en open werkvoorraad is voorbereid
+    When de flow voor DASH-H-041 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat maand terugzetten zet elke werkdag van de maand op 0,0, niet alleen één week
+
+  @happy
+  Scenario: [DASH-H-042] Standaardweek vullen na Week terugzetten vult de week weer volgens het werkpatroon
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given dashboard en open werkvoorraad is voorbereid
+    When de flow voor DASH-H-042 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat standaardweek vullen na Week terugzetten vult de week weer volgens het werkpatroon
+
+  @happy
+  Scenario: [DASH-H-043] een vrije dag uit beheer telt als ingevuld en staat niet in het rode blok; een 0 op een werkdag wel
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given dashboard en open werkvoorraad is voorbereid
+    When de flow voor DASH-H-043 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat een vrije dag uit beheer telt als ingevuld en staat niet in het rode blok; een 0 op een werkdag wel
+
+  @happy
+  Scenario: [DASH-H-044] bij een zelf gemailde klanturenstaat zegt het verloop "wacht op Backoffice" en "Volgt na bevestiging", met ongewijzigde standen
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given dashboard en open werkvoorraad is voorbereid
+    When de flow voor DASH-H-044 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat bij een zelf gemailde klanturenstaat zegt het verloop "wacht op Backoffice" en "Volgt na bevestiging", met ongewijzigde standen
+
+  @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 1

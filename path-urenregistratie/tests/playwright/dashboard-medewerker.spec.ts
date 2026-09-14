@@ -1590,12 +1590,26 @@ test('[DASH-H-032] "Hele maand" noemt de ontbrekende werkdagen bij naam, inclusi
   await test.step('And telt de bewust op 0,0 gezette dag niet mee, ook al ligt hij aan het eind van de maand', async () => {
     const gemeld = await page.locator('#hours-missing-days-title').textContent();
     const aantal = Number(/^(\d+)/.exec(String(gemeld || '').trim())?.[1] || 0);
-    const werkdagen = await page.evaluate(() => {
-      const runtime = window as unknown as { currentPeriod: () => { weekRows: Array<{ days: Array<unknown> }> } };
-      return runtime.currentPeriod().weekRows.reduce((som, week) => som + week.days.filter(Boolean).length, 0);
+    // Besluit Gio (14 sep): een vrije dag volgens beheer telt als ingevuld en is dus
+    // geen gat. Die dagen gaan er daarom ook af, net als de ene bewuste 0,0
+    // (tenzij die zelf op een vrije dag valt).
+    const telling = await page.evaluate(() => {
+      const runtime = window as unknown as {
+        currentPeriod: () => { weekRows: Array<{ days: Array<unknown> }> };
+        currentEmployee: () => unknown;
+        isVrijeDagVolgensBeheer: (e: unknown, d: number) => boolean;
+      };
+      const emp = runtime.currentEmployee();
+      let werkdagen = 0; let vrij = 0; let laatste = -1;
+      runtime.currentPeriod().weekRows.forEach(week => week.days.forEach((day, di) => {
+        if (!day) return;
+        werkdagen += 1; laatste = di;
+        if (runtime.isVrijeDagVolgensBeheer(emp, di)) vrij += 1;
+      }));
+      return { werkdagen, vrij, laatsteIsVrij: laatste >= 0 && runtime.isVrijeDagVolgensBeheer(emp, laatste) };
     });
-    expect(aantal, 'alle werkdagen op één na horen als ontbrekend te tellen; toekomstige dagen tellen mee, een bewuste 0,0 niet')
-      .toBe(werkdagen - 1);
+    expect(aantal, 'alle werkdagen horen als ontbrekend te tellen, behalve vrije dagen uit beheer en de ene bewuste 0,0; toekomstige dagen tellen mee')
+      .toBe(telling.werkdagen - telling.vrij - (telling.laatsteIsVrij ? 0 : 1));
   });
 
   await test.step('And noemt de indienknop wat hij doet en hoeveel dagen er nog open staan, gedempt', async () => {
@@ -2299,4 +2313,267 @@ test('[DASH-N-032] een hertekening op de achtergrond zet "Hele maand" in Mijn ur
     await page.locator('#quick-skin-toggle').click();
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
   });
+});
+
+// Melding Gio op TEST (14 sep, telefoon, Klassiek): "Standaardweek vullen werkt
+// nog niet goed, evenals Standaardmaand vullen", en "Maand terugzetten ook niet".
+// De regel (Gio): het werkpatroon komt uit beheer, bijvoorbeeld 36 uur = 4 x 9 met
+// een vaste vrije dag, 40 uur = 5 x 8. Stasjo van Bakel staat in de demodata op
+// 36 uur met vrijdag vrij.
+//
+// Beide cases lokken de omstandigheid uit die op TEST optrad: eerst "Hele maand"
+// kiezen, dan een hertekening op de achtergrond (zoals na een serversync), en
+// pas daarna de knop. Alles in één evaluate, zodat er geen echte sync tussen kan
+// vallen en de uitkomst niet van timing afhangt.
+type VulStand = {
+  label: string; afwijkend: string[]; gaten: number; indienTekst: string; weken: number;
+};
+
+async function vulScenario(page: import('@playwright/test').Page, actie: 'vullen' | 'terugzetten'): Promise<VulStand> {
+  return page.evaluate(async soort => {
+    const w = window as unknown as {
+      currentEmployee: () => { id: number };
+      currentPeriod: () => { key: string; weekRows: Array<{ days: Array<unknown | null> }> };
+      recordFor: (id: number, key: string) => { entries: number[][]; confirmedEntries: boolean[][]; timesheetStatus: string };
+      standardHoursForDay: (emp: unknown, dayIndex: number) => number;
+      ontbrekendeWerkdagen: (r: unknown, p: unknown) => unknown[];
+      renderAll: () => void;
+      showView: (v: string) => void;
+    };
+    const emp = w.currentEmployee();
+    const period = w.currentPeriod();
+    const record = w.recordFor(emp.id, period.key);
+    w.showView('timesheet');
+    // Beginstand: vulscenario = maand leeg en onbevestigd; terugzetscenario = elke
+    // werkdag 9 uur en bevestigd.
+    record.timesheetStatus = 'draft';
+    record.entries = period.weekRows.map(week => week.days.map(day => (day && soort === 'terugzetten' ? 9 : 0)));
+    record.confirmedEntries = period.weekRows.map(week => week.days.map(day => Boolean(day && soort === 'terugzetten')));
+    w.renderAll();
+    (document.querySelector('[data-hours-week-scope="all"]') as HTMLElement).click();
+    // De hertekening op de achtergrond tussen kiezen en klikken.
+    w.renderAll();
+    const knop = document.querySelector(soort === 'vullen' ? '#fill-standard-hours' : '#reset-standard-hours') as HTMLElement;
+    const label = (knop.textContent || '').trim();
+    knop.click();
+    if (soort === 'terugzetten') (document.querySelector('#modal-confirm') as HTMLElement).click();
+    const na = w.recordFor(emp.id, period.key);
+    const afwijkend: string[] = [];
+    period.weekRows.forEach((week, wi) => week.days.forEach((day, di) => {
+      if (!day) return;
+      const verwacht = soort === 'vullen' ? w.standardHoursForDay(emp, di) : 0;
+      const echt = Number(na.entries[wi]?.[di] || 0);
+      if (echt !== verwacht) afwijkend.push(`week ${wi + 1} dag ${di + 1}: ${echt} i.p.v. ${verwacht}`);
+    }));
+    return {
+      label,
+      afwijkend,
+      gaten: w.ontbrekendeWerkdagen(na, period).length,
+      indienTekst: (document.querySelector('#submit-timesheet')?.textContent || '').trim(),
+      weken: period.weekRows.length,
+    };
+  }, actie);
+}
+
+test('[DASH-H-040] Standaardmaand vullen vult elke werkdag van de maand volgens het werkpatroon uit beheer, ook de vrije dag, en laat geen gaten', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.clock.setFixedTime(new Date('2026-09-14T12:00:00.000Z'));
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('#period-label')).toHaveText('September 2026');
+  const herstelUrenstaat = await bewaarUrenstaat(page);
+  try {
+    const patroon = await page.evaluate(() => {
+      const w = window as unknown as { currentEmployee: () => unknown; standardHoursForDay: (e: unknown, d: number) => number };
+      return [0, 1, 2, 3, 4].map(d => w.standardHoursForDay(w.currentEmployee(), d));
+    });
+    // Voorwaarde, zodat de case echt over een patroon met een vrije dag gaat.
+    expect(patroon, 'Stasjo hoort in de demodata 4 x 9 met vrijdag vrij te hebben').toEqual([9, 9, 9, 9, 0]);
+
+    const stand = await vulScenario(page, 'vullen');
+    expect(stand.label, 'na "Hele maand" hoort de knop over de maand te gaan').toBe('Standaardmaand vullen');
+    expect(stand.afwijkend, 'elke werkdag van de maand hoort het patroon te krijgen, niet alleen één week').toEqual([]);
+    expect(stand.gaten, 'een vrije dag uit het patroon hoort als ingevuld te tellen, niet als gat').toBe(0);
+    expect(stand.indienTekst, 'zonder gaten hoort de knop gewoon "Maand indienen" te heten').toBe('Maand indienen');
+  } finally {
+    await herstelUrenstaat();
+  }
+});
+
+test('[DASH-H-041] Maand terugzetten zet elke werkdag van de maand op 0,0, niet alleen één week', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.clock.setFixedTime(new Date('2026-09-14T12:00:00.000Z'));
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('#period-label')).toHaveText('September 2026');
+  const herstelUrenstaat = await bewaarUrenstaat(page);
+  try {
+    const stand = await vulScenario(page, 'terugzetten');
+    expect(stand.label, 'na "Hele maand" hoort de knop over de maand te gaan').toBe('Maand terugzetten');
+    expect(stand.weken).toBeGreaterThan(1);
+    expect(stand.afwijkend, 'elke werkdag in elke week hoort op 0,0 te staan').toEqual([]);
+  } finally {
+    await herstelUrenstaat();
+  }
+});
+
+// Besluit Gio (14 sep): wie op "vullen" drukt, geeft een nieuwe instructie, en die
+// weegt zwaarder dan een eerdere bewuste 0. Op TEST deed "Standaardweek vullen" na
+// "Week terugzetten" zichtbaar niets, want terugzetten markeert de dagen als
+// bewust op 0 en vullen sloeg die over.
+test('[DASH-H-042] Standaardweek vullen na Week terugzetten vult de week weer volgens het werkpatroon', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.clock.setFixedTime(new Date('2026-09-14T12:00:00.000Z'));
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('#period-label')).toHaveText('September 2026');
+  const herstelUrenstaat = await bewaarUrenstaat(page);
+  try {
+    const stand = await page.evaluate(() => {
+      const w = window as unknown as {
+        currentEmployee: () => { id: number };
+        currentPeriod: () => { key: string; weekRows: Array<{ days: Array<unknown | null> }> };
+        recordFor: (id: number, key: string) => { entries: number[][]; confirmedEntries: boolean[][]; timesheetStatus: string };
+        standardHoursForDay: (emp: unknown, dayIndex: number) => number;
+        ontbrekendeWerkdagen: (r: unknown, p: unknown) => Array<{ weekIndex: number }>;
+        deliberateZeroWorkdayLabels: (r: unknown, p: unknown) => string[];
+        renderAll: () => void; showView: (v: string) => void;
+      };
+      const emp = w.currentEmployee();
+      const period = w.currentPeriod();
+      const record = w.recordFor(emp.id, period.key);
+      w.showView('timesheet');
+      record.timesheetStatus = 'draft';
+      record.entries = period.weekRows.map(week => week.days.map(day => (day ? 9 : 0)));
+      record.confirmedEntries = period.weekRows.map(week => week.days.map(day => Boolean(day)));
+      w.renderAll();
+      // Een volle week midden in de maand kiezen, zodat alle vijf de weekdagen meedoen.
+      const weekIndex = period.weekRows.findIndex(week => week.days.every(Boolean));
+      (document.querySelector(`[data-hours-week-scope="week-${weekIndex}"]`) as HTMLElement).click();
+      (document.querySelector('#reset-standard-hours') as HTMLElement).click();
+      (document.querySelector('#modal-confirm') as HTMLElement).click();
+      const naTerugzetten = w.recordFor(emp.id, period.key).entries[weekIndex].slice();
+      const vulKnop = document.querySelector('#fill-standard-hours') as HTMLElement;
+      const label = (vulKnop.textContent || '').trim();
+      vulKnop.click();
+      const na = w.recordFor(emp.id, period.key);
+      return {
+        weekIndex, label, naTerugzetten,
+        naVullen: na.entries[weekIndex].slice(),
+        // Welke dagen van deze week staan nog als "bewust op 0" in het rode blok?
+        rodeBlok: w.deliberateZeroWorkdayLabels(na, period).filter(label => period.weekRows[weekIndex].days.some(d => d && label.includes(' ' + (d as { day: number }).day + ' '))),
+        patroon: [0, 1, 2, 3, 4].map(d => w.standardHoursForDay(emp, d)),
+        gatenInWeek: w.ontbrekendeWerkdagen(na, period).filter(g => g.weekIndex === weekIndex).length,
+      };
+    });
+    expect(stand.weekIndex).toBeGreaterThanOrEqual(0);
+    expect(stand.naTerugzetten, 'terugzetten hoort de week op 0,0 te zetten').toEqual([0, 0, 0, 0, 0]);
+    expect(stand.label).toBe('Standaardweek vullen');
+    expect(stand.naVullen, 'vullen hoort het patroon uit beheer terug te zetten').toEqual(stand.patroon);
+    // De eis is dat de bewuste 0 weg is. Of de app de dag daarna als "bewust
+    // meegestuurd" markeert (dat doet de conceptopslag voor de bekeken week) maakt
+    // voor een dag met uren niet uit: een bewuste 0 bestaat alleen zonder uren.
+    expect(stand.rodeBlok, 'geen dag van deze week hoort nog als bewust op 0 te staan').toEqual([]);
+    expect(stand.gatenInWeek, 'na vullen hoort de week geen gaten meer te hebben').toBe(0);
+  } finally {
+    await herstelUrenstaat();
+  }
+});
+
+// Besluit Gio (14 sep): een vrije dag volgens beheer telt als ingevuld. Het systeem
+// weet al dat die dag vrij is, en vier vrije vrijdagen duwden de ene echte 0 uit
+// het rode blok bij indienen. Een 0 op een contractdag blijft wel een signaal. En
+// zonder patroon in beheer is elke werkdag een werkdag: onvolledige beheerdata
+// hoort zichtbaar te blijven.
+test('[DASH-H-043] een vrije dag uit beheer telt als ingevuld en staat niet in het rode blok; een 0 op een werkdag wel', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.clock.setFixedTime(new Date('2026-09-14T12:00:00.000Z'));
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('#period-label')).toHaveText('September 2026');
+  const herstelUrenstaat = await bewaarUrenstaat(page);
+  try {
+    const stand = await page.evaluate(() => {
+      const w = window as unknown as {
+        currentEmployee: () => { id: number; dayHours?: Record<number, number> };
+        currentPeriod: () => { key: string; weekRows: Array<{ days: Array<{ day: number } | null> }> };
+        recordFor: (id: number, key: string) => { entries: number[][]; confirmedEntries: boolean[][]; timesheetStatus: string };
+        ontbrekendeWerkdagen: (r: unknown, p: unknown) => unknown[];
+        completedTimesheetWeeks: (r: unknown, p: unknown) => number;
+        deliberateZeroWorkdayLabels: (r: unknown, p: unknown) => string[];
+        statusKetenStappen: (r: unknown, p: unknown) => Array<{ key: string; detail: string }>;
+        werkdagTeltAlsIngevuld: (r: unknown, wi: number, di: number, emp?: unknown) => boolean;
+        renderAll: () => void; showView: (v: string) => void;
+      };
+      const emp = w.currentEmployee();
+      const period = w.currentPeriod();
+      const record = w.recordFor(emp.id, period.key);
+      w.showView('timesheet');
+      record.timesheetStatus = 'draft';
+      // Ma-do 9 uur, vrijdag leeg en niet aangetikt: precies het patroon uit beheer.
+      record.entries = period.weekRows.map(week => week.days.map((day, di) => (day && di < 4 ? 9 : 0)));
+      record.confirmedEntries = period.weekRows.map(week => week.days.map(() => false));
+      w.renderAll();
+      const zonderNul = {
+        gaten: w.ontbrekendeWerkdagen(record, period).length,
+        weken: w.completedTimesheetWeeks(record, period),
+        totaalWeken: period.weekRows.length,
+        fill: w.statusKetenStappen(record, period).find(s => s.key === 'fill')!.detail,
+        indienTekst: (document.querySelector('#submit-timesheet')?.textContent || '').trim(),
+      };
+      // Nu één echte werkdag bewust op 0 (de eerste maandag), en de vrijdagen ook
+      // aangetikt: in het rode blok hoort alleen die maandag te staan.
+      const wi = period.weekRows.findIndex(week => week.days.every(Boolean));
+      record.entries[wi][0] = 0;
+      record.confirmedEntries[wi][0] = true;
+      period.weekRows.forEach((week, i) => { if (week.days[4]) record.confirmedEntries[i][4] = true; });
+      const labels = w.deliberateZeroWorkdayLabels(record, period);
+      const maandagLabel = 'Ma ' + period.weekRows[wi].days[0]!.day;
+      // Zonder patroon in beheer is een lege vrijdag gewoon een gat.
+      const zonderPatroon = w.werkdagTeltAlsIngevuld({ entries: [[0, 0, 0, 0, 0]], confirmedEntries: [[false, false, false, false, false]] }, 0, 4, { dayHours: undefined });
+      const metPatroon = w.werkdagTeltAlsIngevuld({ entries: [[0, 0, 0, 0, 0]], confirmedEntries: [[false, false, false, false, false]] }, 0, 4, { dayHours: { 5: 0 } });
+      return { patroonVrijdag: emp.dayHours?.[5], zonderNul, labels, maandagLabel, zonderPatroon, metPatroon };
+    });
+    expect(Number(stand.patroonVrijdag), 'Stasjo hoort in beheer vrijdag vrij te hebben').toBe(0);
+    expect(stand.zonderNul.gaten, 'lege vrije vrijdagen horen geen gat te zijn').toBe(0);
+    expect(stand.zonderNul.weken, 'elke week met ma-do ingevuld hoort compleet te zijn').toBe(stand.zonderNul.totaalWeken);
+    expect(stand.zonderNul.fill, 'het verloop hoort dezelfde telling te gebruiken').toBe('Compleet');
+    expect(stand.zonderNul.indienTekst).toBe('Maand indienen');
+    expect(stand.labels.length, 'in het rode blok hoort alleen de ene echte werkdag op 0 te staan').toBe(1);
+    expect(stand.labels[0]).toContain(stand.maandagLabel);
+    expect(stand.zonderPatroon, 'zonder vrije dag in beheer hoort een lege dag een gat te blijven').toBe(false);
+    expect(stand.metPatroon).toBe(true);
+  } finally {
+    await herstelUrenstaat();
+  }
+});
+
+// Besluit Gio (14 sep): bij een zelf gemailde klanturenstaat blijven de standen
+// gelijk (open tot Backoffice bevestigt), maar de teksten zeggen wie aan zet is.
+test('[DASH-H-044] bij een zelf gemailde klanturenstaat zegt het verloop "wacht op Backoffice" en "Volgt na bevestiging", met ongewijzigde standen', async ({ page }) => {
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  const stappen = await page.evaluate(() => {
+    const w = window as unknown as {
+      statusKetenStappen: (r: unknown, p: unknown) => Array<{ key: string; stand: string; detail: string }>;
+      currentPeriod: () => { weekRows: Array<{ days: Array<unknown | null> }> };
+    };
+    const period = w.currentPeriod();
+    const record = {
+      entries: period.weekRows.map(week => week.days.map(day => (day ? 8 : 0))),
+      confirmedEntries: period.weekRows.map(week => week.days.map(day => Boolean(day))),
+      timesheetStatus: 'submitted', invoiceStatus: 'concept',
+      customerTimesheet: { status: 'skipped' },
+    };
+    return w.statusKetenStappen(record, period).map(s => ({ key: s.key, stand: s.stand, detail: s.detail }));
+  });
+  expect(stappen.map(s => s.stand), 'de standen blijven: goedkeuring is de huidige stap').toEqual(['af', 'af', 'nu', 'wacht', 'wacht']);
+  expect(stappen.find(s => s.key === 'customer')!.detail).toBe('Door jou gemaild · wacht op Backoffice');
+  expect(stappen.find(s => s.key === 'done')!.detail).toBe('Volgt na bevestiging');
 });

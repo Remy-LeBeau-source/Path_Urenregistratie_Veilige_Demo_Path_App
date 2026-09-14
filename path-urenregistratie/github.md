@@ -128,6 +128,32 @@ Rood-proef door main: dezelfde case tegen de ongerepareerde app.js faalt op
 desktop-chromium en mobile-safari in de stap "When de app op de achtergrond
 opnieuw tekent" (verwacht "all", kreeg "week-4").
 
+**Vullen, terugzetten en de vrije dag (melding en besluiten Gio, 14 sep).** Op
+TEST: "Standaardweek vullen", "Standaardmaand vullen" en "Maand terugzetten"
+werkten niet goed.
+- **Maand vullen en terugzetten raakten één week.** Welke weken ze raken, komt
+  uit `state.hoursWeekScope`, dezelfde waarde die de bento op de achtergrond
+  terugzette. Opgelost met de scope-fix hierboven. [DASH-H-040] (vullen) en
+  [DASH-H-041] (terugzetten) lokken de hertekening tussen kiezen en klikken uit.
+- **Standaardweek vullen na Week terugzetten deed niets.** Besluit Gio: een klik
+  op vullen is een nieuwe instructie en weegt zwaarder dan een eerdere bewuste 0.
+  Vullen zet het patroon terug en wist op die dagen de bewuste-0-markering; dagen
+  met uren blijven ongemoeid. [DASH-H-042]
+- **Vrije dag volgens beheer telt als ingevuld** (patroon uitdrukkelijk 0 uur):
+  - geen gat in Hele maand, het verloop, het indienlabel of de complete weken
+    (één regel: `werkdagTeltAlsIngevuld`);
+  - niet in het rode blok bij indienen, waar alleen een 0 op een contractdag
+    blijft staan, als signaal voor Backoffice.
+  Zonder patroon in beheer (bijvoorbeeld 36 uur gelijk verdeeld) telt elke
+  werkdag als werkdag, zodat onvolledige beheerdata zichtbaar blijft; daar zit
+  bewust geen slimmigheid omheen. [DASH-H-043]
+- **Zelf gemailde klanturenstaat:** de standen blijven gelijk, de teksten worden
+  "Door jou gemaild · wacht op Backoffice" en "Afgerond · Volgt na bevestiging".
+  Gio past de referentie ook aan. [DASH-H-044]
+
+Alle vijf de cases zijn groen, en een tegenproef met verdraaide verwachting viel
+bij elk om.
+
 ## Sync history
 
 ### Ronde 14 sep (derde, vervolg) — terugmeldingen verwerkt, export 04:07:28Z
