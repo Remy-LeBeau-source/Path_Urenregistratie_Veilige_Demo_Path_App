@@ -109,9 +109,40 @@ export class LoginPage {
     // randpositie iets, dus dit is een hypothese die CI moet bevestigen: sinds 13 sep
     // gemiddeld ~2 van deze uitvallers per release. Het blijft een echte klik op de
     // echte knop; de diagnose hierboven blijft staan voor als het toch terugkomt.
+    //
+    // Bijstelling na CI op herontwerp 3205146a (acht vangsten, mét de centrering):
+    // de scroll-events tonen een zachte animatie die al loopt vóór het indrukken en
+    // steeds eindigt op dezelfde stand (sy422, knop tegen de onderrand). Centreren
+    // alleen hielp dus niet: Playwrights eigen "scroll into view" bij click() werd
+    // een animatie (html { scroll-behavior: smooth } -- de reduced-motion-emulatie
+    // lijkt in CI-WebKit niet te gelden, de diagnose legt dat nu vast) en de klik
+    // viel midden in die beweging. Daarom: zelf centreren, wachten tot de scroll
+    // echt stilstaat, controleren dat de knop volledig in beeld is, en dan met de
+    // muis op het midden klikken -- een klik die zelf niet meer scrollt. Het blijft
+    // een echte muisklik op de echte knop.
     const inlogKnop = this.page.locator('#auth-login-submit');
+    await expect(inlogKnop).toBeVisible();
     await inlogKnop.evaluate(el => el.scrollIntoView({ block: 'center', behavior: 'instant' as ScrollBehavior })).catch(() => undefined);
-    await inlogKnop.click();
+    await this.page.evaluate(() => new Promise<void>(resolve => {
+      // Stil = tien opeenvolgende frames dezelfde scrollY, met een plafond van 3 s.
+      let vorige = scrollY;
+      let stil = 0;
+      const einde = performance.now() + 3_000;
+      const stap = () => {
+        stil = scrollY === vorige ? stil + 1 : 0;
+        vorige = scrollY;
+        if (stil >= 10 || performance.now() > einde) resolve();
+        else requestAnimationFrame(stap);
+      };
+      requestAnimationFrame(stap);
+    }));
+    const vak = await inlogKnop.boundingBox();
+    const viewport = this.page.viewportSize();
+    if (vak && viewport && vak.y >= 0 && vak.y + vak.height <= viewport.height) {
+      await this.page.mouse.click(vak.x + vak.width / 2, vak.y + vak.height / 2);
+    } else {
+      await inlogKnop.click();
+    }
 
     // Hoe lang we op de uitkomst van het inloggen wachten. 30 s, en dat is geen
     // verzwakking.
@@ -170,6 +201,8 @@ export class LoginPage {
           authModus: document.querySelector('#auth-mode-indicator')?.textContent?.trim() ?? '',
           inlogschermZichtbaar: !document.querySelector('#login-screen')?.hasAttribute('hidden'),
           events: (window as unknown as { __inlogEvents?: string[] }).__inlogEvents ?? null,
+          minderBeweging: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+          scrollGedrag: getComputedStyle(document.documentElement).scrollBehavior,
         };
       }).catch(() => null);
       throw new Error(`${(error as Error).message}\nInlogstaat bij time-out: ${JSON.stringify(staat)}`);
