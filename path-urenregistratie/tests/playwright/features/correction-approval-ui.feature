@@ -89,7 +89,7 @@ Feature: Correcties en goedkeuringen behandelen
   @happy
   Scenario: [TS-REV-UI-H-013] een week kan alleen worden opgeslagen en de hele maand kan worden ingediend
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 7
+    # Aantoonbare Playwright-assertions in deze case: 8
     Given correcties en goedkeuringen behandelen is voorbereid
     When de flow voor TS-REV-UI-H-013 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat een week kan alleen worden opgeslagen en de hele maand kan worden ingediend
