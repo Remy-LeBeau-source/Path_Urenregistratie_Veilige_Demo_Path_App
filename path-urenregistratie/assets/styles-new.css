@@ -1035,7 +1035,7 @@ html[data-skin="new"] #view-timesheet .customer-timesheet-mail-preview pre {
    manier om zijn eerdere urenstaten terug te zien -- terwijl dat in Klassiek
    wel kan. De open-actiekaart dekt die behoefte niet: die gaat over wat nog
    open staat, niet over wat je eerder hebt ingediend en goedgekeurd gekregen. */
-html[data-skin="new"] #view-employee-dashboard > :not(.new-employee-bento):not(#employee-open-overview):not(#employee-dashboard-correction):not(#employee-history-teaser) {
+html[data-skin="new"] #view-employee-dashboard > :not(.new-employee-bento):not(#employee-open-overview):not(#employee-dashboard-correction):not(#employee-history-teaser):not(#modern-vandaag) {
   display: none !important;
 }
 
@@ -3589,4 +3589,146 @@ html[data-skin="new"] #new-bento-weekstrip { display: none; }
     font-variant-numeric: tabular-nums;
     line-height: 1;
   }
+}
+
+/* ===========================================================================
+   Modern "Vandaag" op desktop -- 1-op-1 nabouw van handoff/medewerker-gui.html
+   (opdracht 14 sep, derde ronde). Elke waarde hieronder is overgenomen uit de
+   referentie; het regelnummer staat erbij zodat hij na te trekken is in
+   handoff/medewerker-gui.bron.txt.
+
+   Waar de referentie en de bestaande bento botsen, volgt de referentie: op
+   desktop verdwijnen de bento, "Open acties per maand", de correctiebanner en
+   de archiefregel, want de referentie heeft die blokken niet ("Nog te doen"
+   neemt de open acties over). Op telefoon blijft voorlopig de bento staan; de
+   nabouw van medewerker-wild.html is de volgende stap.
+
+   Tokens alleen op dit blok, zodat de rest van Modern zijn eigen palet houdt.
+   ======================================================================== */
+html[data-skin="new"] #modern-vandaag {
+  /* r11-29 */
+  --mv-navy: #0d1b38; --mv-mint: #3abd9d; --mv-mint-tekst: #037f63;
+  --mv-ink: #172332; --mv-muted: #485651; --mv-line: #bfcec8; --mv-line-zacht: #d0dcd6;
+  --mv-surface: #eaf2ee; --mv-surface-muted: #d5e0da;
+  --mv-warning: #bb7623; --mv-warning-tekst: #a5600d; --mv-warning-rand: #edc58f;
+  --mv-ring-leeg: rgba(16,34,53,.1);
+  --mv-kaart-glans: rgba(255,255,255,.9); --mv-halo: rgba(58,189,157,.42);
+  --mv-schaduw: 0 6px 18px rgba(16,34,53,.07);
+  --mv-oog-taak: #8a5c1c; --mv-oog-klaar: #1f6b4f;
+  --mv-kop: "Segoe UI Variable Display", "Segoe UI Semibold", "Segoe UI", system-ui, Arial, sans-serif;
+  --mv-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  /* r184: data-kolom gap 18px, max-width var(--pagina), margin 0 auto */
+  display: grid;
+  gap: 18px;
+  max-width: var(--pagina);
+  margin: 0 auto;
+  color: var(--mv-ink);
+  font-family: var(--mv-sans);
+}
+html[data-skin="new"][data-theme="dark"] #modern-vandaag {
+  /* r30-45 */
+  --mv-ink: #dde6ea; --mv-muted: #93a2ac; --mv-line: #22323d; --mv-line-zacht: #1d2c36;
+  --mv-surface: #101c26; --mv-surface-muted: #16242f;
+  --mv-mint-tekst: #5fd3b3; --mv-warning-tekst: #f0bd7a; --mv-warning-rand: #5a4526;
+  --mv-ring-leeg: rgba(255,255,255,.13);
+  --mv-kaart-glans: rgba(255,255,255,.07); --mv-halo: rgba(58,189,157,.5);
+  --mv-schaduw: 0 6px 20px rgba(0,0,0,.3);
+  --mv-oog-taak: #f0bd7a; --mv-oog-klaar: #7fe0c0;
+}
+
+/* Paginakop, r139-153 */
+html[data-skin="new"] #modern-vandaag .mv-kop { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 18px; margin-bottom: clamp(18px, 2.4vw, 26px); }
+html[data-skin="new"] #modern-vandaag .mv-kop-tekst { min-width: 0; flex: 0 1 auto; }
+html[data-skin="new"] #modern-vandaag .mv-kop-label { display: block; color: var(--mv-mint-tekst); font-size: 10px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+html[data-skin="new"] #modern-vandaag .mv-kop-titel { margin: 5px 0 0; color: var(--mv-ink); font-family: var(--mv-kop); font-size: clamp(25px, 2.7vw, 33px); font-weight: 700; letter-spacing: -.022em; line-height: 1.12; }
+html[data-skin="new"] #modern-vandaag .mv-spreuk { display: flex; align-items: baseline; gap: 7px; margin: 8px 0 0; color: var(--mv-muted); font-size: 12.5px; font-style: italic; }
+html[data-skin="new"] #modern-vandaag .mv-spreuk-lijn { flex: 0 0 auto; width: 2px; align-self: stretch; border-radius: 2px; background: var(--mv-mint); opacity: .5; font-style: normal; }
+html[data-skin="new"] #modern-vandaag .mv-maandpil { display: flex; flex: 0 0 auto; align-items: center; gap: 2px; border: 1px solid var(--mv-line-zacht); border-radius: 999px; background: var(--mv-surface); padding: 3px; box-shadow: inset 0 1px 0 var(--mv-kaart-glans); }
+html[data-skin="new"] #modern-vandaag .mv-maandpil button { display: grid; width: 36px; height: 36px; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--mv-muted); cursor: pointer; font-size: 17px; }
+html[data-skin="new"] #modern-vandaag .mv-maandpil button:hover:not(:disabled) { background: var(--mv-surface-muted); color: var(--mv-ink); }
+html[data-skin="new"] #modern-vandaag .mv-maandpil button:disabled { color: var(--mv-line); cursor: default; }
+html[data-skin="new"] #modern-vandaag .mv-maandpil strong { min-width: 112px; text-align: center; font-size: 12.5px; font-weight: 800; letter-spacing: .01em; }
+
+/* Nog te doen, r186-195. De referentie zet de achtergrond op
+   var(--warning-vlak), een token dat in medewerker-gui.html niet bestaat; de
+   declaratie vervalt daar en het vlak is transparant. Zo overgenomen. */
+html[data-skin="new"] #modern-vandaag .mv-nogtedoen { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; border: 1px solid var(--mv-warning-rand); border-radius: 14px; background: transparent; padding: 12px 15px; box-shadow: inset 0 1px 0 var(--mv-kaart-glans); }
+html[data-skin="new"] #modern-vandaag .mv-nogtedoen[hidden] { display: none; }
+html[data-skin="new"] #modern-vandaag .mv-nogtedoen > strong { flex: 0 0 auto; color: var(--mv-warning-tekst); font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+html[data-skin="new"] #modern-vandaag .mv-nogtedoen-chips { display: flex; flex-wrap: wrap; flex: 1; min-width: 0; gap: 7px; }
+html[data-skin="new"] #modern-vandaag .mv-maandchip { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; border: 1px solid var(--mv-line); border-radius: 10px; background: transparent; color: var(--mv-muted); cursor: pointer; min-height: 34px; font-size: 12px; font-weight: 700; padding: 0 11px; white-space: nowrap; }
+html[data-skin="new"] #modern-vandaag .mv-maandchip.is-eerste { border-color: var(--mv-warning-rand); background: rgba(187,118,35,.2); color: var(--mv-warning-tekst); }
+html[data-skin="new"] #modern-vandaag .mv-maandchip:active { transform: scale(.97); }
+html[data-skin="new"] #modern-vandaag .mv-maandchip small { font-weight: 600; opacity: .75; }
+html[data-skin="new"] #modern-vandaag .mv-maandchip span[aria-hidden] { opacity: .5; }
+
+/* Hero, r197-231 */
+@keyframes mv-ademen { 0%, 100% { opacity: .45; transform: scale(1); } 50% { opacity: .68; transform: scale(1.07); } }
+html[data-skin="new"] #modern-vandaag .mv-hero { position: relative; border: 1px solid var(--mv-line); border-radius: 16px; background: var(--mv-surface); background-image: linear-gradient(122deg, rgba(58,189,157,.1), rgba(58,189,157,0) 52%); padding: 0; overflow: hidden; box-shadow: inset 0 1px 0 var(--mv-kaart-glans), var(--mv-schaduw); }
+html[data-skin="new"] #modern-vandaag .mv-hero-halo { position: absolute; top: -40px; right: -30px; width: 150px; height: 150px; border-radius: 50%; background: var(--mv-halo); filter: blur(34px); opacity: .55; animation: mv-ademen 7s ease-in-out infinite; pointer-events: none; }
+html[data-skin="new"] #modern-vandaag .mv-hero-kop { position: relative; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; padding: 22px clamp(18px, 3vw, 28px) 16px; }
+html[data-skin="new"] #modern-vandaag .mv-hero-kop-tekst { min-width: 0; }
+html[data-skin="new"] #modern-vandaag .mv-hero h2 { margin: 0; color: var(--mv-ink); font-family: var(--mv-kop); font-size: clamp(21px, 2.2vw, 26px); font-weight: 700; letter-spacing: -.015em; line-height: 1.25; text-wrap: balance; }
+html[data-skin="new"] #modern-vandaag .mv-oog { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 7px; border: 1px solid rgba(47,106,76,.36); border-radius: 999px; background: rgba(47,106,76,.14); color: var(--mv-oog-klaar); font-size: 10px; font-weight: 800; white-space: nowrap; letter-spacing: .1em; padding: 6px 10px; text-transform: uppercase; }
+html[data-skin="new"] #modern-vandaag .mv-oog.is-taak { border-color: rgba(187,118,35,.4); background: rgba(187,118,35,.16); color: var(--mv-oog-taak); }
+html[data-skin="new"] #modern-vandaag .mv-oog-stip { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+html[data-skin="new"] #modern-vandaag .mv-hero-midden { display: flex; flex-wrap: wrap; border-top: 1px solid var(--mv-line-zacht); border-bottom: 1px solid var(--mv-line-zacht); }
+html[data-skin="new"] #modern-vandaag .mv-ringblok { display: flex; flex: 1 1 260px; min-width: 0; align-items: center; gap: 14px; padding: 16px clamp(18px, 3vw, 28px); }
+html[data-skin="new"] #modern-vandaag .mv-ring { position: relative; display: grid; width: 52px; height: 52px; flex: 0 0 auto; place-items: center; }
+html[data-skin="new"] #modern-vandaag .mv-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+html[data-skin="new"] #modern-vandaag .mv-ring circle { fill: none; stroke-width: 10; }
+html[data-skin="new"] #modern-vandaag .mv-ring-leeg { stroke: var(--mv-ring-leeg); }
+html[data-skin="new"] #modern-vandaag .mv-ring-boog { stroke: #2f9e80; stroke-linecap: round; stroke-dasharray: 229.3; stroke-dashoffset: 229.3; transition: stroke-dashoffset .8s cubic-bezier(.22,1,.36,1); }
+html[data-skin="new"] #modern-vandaag .mv-ring strong { position: relative; color: var(--mv-ink); font-family: var(--mv-kop); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+html[data-skin="new"] #modern-vandaag .mv-ringblok p { margin: 0; color: var(--mv-muted); font-size: 12px; line-height: 1.5; text-wrap: pretty; }
+html[data-skin="new"] #modern-vandaag .mv-kpi { display: flex; flex: 1 1 180px; flex-direction: column; justify-content: center; padding: 16px 24px; }
+html[data-skin="new"] #modern-vandaag .mv-kpi[hidden] { display: none; }
+html[data-skin="new"] #modern-vandaag .mv-kpi strong { color: var(--mv-ink); font-family: var(--mv-kop); font-size: 22px; font-variant-numeric: tabular-nums; line-height: 1; }
+html[data-skin="new"] #modern-vandaag .mv-kpi small { margin-top: 4px; color: var(--mv-muted); font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+html[data-skin="new"] #modern-vandaag .mv-hero-acties { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 14px clamp(18px, 3vw, 28px); }
+html[data-skin="new"] #modern-vandaag .mv-knop-hoofd { min-height: 46px; border: 0; border-radius: 12px; background: var(--mv-mint); color: var(--mv-navy); cursor: pointer; font-size: 13.5px; font-weight: 700; padding: 0 22px; flex: 0 0 auto; white-space: nowrap; box-shadow: 0 8px 20px rgba(58,189,157,.3); transition: transform .16s cubic-bezier(.22,1,.36,1), box-shadow .16s; }
+html[data-skin="new"] #modern-vandaag .mv-knop-hoofd:hover { box-shadow: 0 11px 26px rgba(58,189,157,.44); }
+html[data-skin="new"] #modern-vandaag .mv-knop-hoofd:active { transform: scale(.97); box-shadow: 0 2px 22px rgba(58,189,157,.55); }
+html[data-skin="new"] #modern-vandaag .mv-knop-mail { min-height: 46px; border: 1px solid var(--mv-line); border-radius: 12px; background: transparent; color: var(--mv-ink); cursor: pointer; font-size: 13px; font-weight: 700; padding: 0 18px; flex: 0 0 auto; white-space: nowrap; transition: border-color .16s; }
+html[data-skin="new"] #modern-vandaag .mv-knop-mail:hover { border-color: var(--mv-mint); }
+html[data-skin="new"] #modern-vandaag .mv-knop-mail[hidden] { display: none; }
+
+/* Onder de hero, r233-234: één kolom met de klanturenstaatkaart en het verloop. */
+html[data-skin="new"] #modern-vandaag .mv-onder { display: grid; gap: 16px; align-content: start; min-width: 0; }
+html[data-skin="new"] #modern-vandaag .mv-klant-plek:empty { display: none; }
+
+/* Verloop, r272-283 */
+html[data-skin="new"] #modern-vandaag .mv-verloop { display: grid; gap: 14px; border: 1px solid var(--mv-line-zacht); border-radius: 16px; background: var(--mv-surface); padding: 16px 18px; box-shadow: inset 0 1px 0 var(--mv-kaart-glans), var(--mv-schaduw); }
+html[data-skin="new"] #modern-vandaag .mv-verloop-kop { font-size: 10px; font-weight: 800; letter-spacing: .1em; color: var(--mv-muted); text-transform: uppercase; }
+html[data-skin="new"] #modern-vandaag .mv-verloop-lijst { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; }
+html[data-skin="new"] #modern-vandaag .mv-stap { display: flex; align-items: flex-start; gap: 12px; }
+html[data-skin="new"] #modern-vandaag .mv-stap-bol { display: grid; width: 24px; height: 24px; flex: 0 0 auto; place-items: center; border-radius: 50%; background: var(--mv-surface-muted); color: var(--mv-muted); font-size: 11px; font-weight: 900; }
+html[data-skin="new"] #modern-vandaag .mv-stap strong { display: block; color: var(--mv-muted); font-size: 13px; font-weight: 700; }
+html[data-skin="new"] #modern-vandaag .mv-stap small { display: block; margin-top: 1px; color: var(--mv-muted); font-size: 11.5px; }
+/* Afwijking van de referentie, en de enige in dit blok: r564-565 zet het vinkje
+   wit (#fff) op mint (#3abd9d). Dat is 2,35:1 -- onder de 4,5:1 van de
+   contrastpoort en ook onder de 3:1 die voor iconen geldt. De referentie zet
+   zelf navy op mint voor zijn knoppen (r226); die combinatie is hier overgenomen.
+   Teruggemeld aan de designkant. */
+html[data-skin="new"] #modern-vandaag .mv-stap.is-af .mv-stap-bol { background: #3abd9d; color: var(--mv-navy); }
+html[data-skin="new"] #modern-vandaag .mv-stap.is-af strong { color: var(--mv-mint-tekst); }
+html[data-skin="new"] #modern-vandaag .mv-stap.is-nu .mv-stap-bol { background: var(--mv-warning); color: #fff; }
+html[data-skin="new"] #modern-vandaag .mv-stap.is-nu strong { color: var(--mv-warning-tekst); }
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="new"] #modern-vandaag .mv-hero-halo { animation: none; }
+  html[data-skin="new"] #modern-vandaag .mv-ring-boog { transition: none; }
+}
+
+/* Welke opbouw waar. Desktop (vanaf 721px): de referentie, en de blokken die de
+   referentie niet heeft gaan weg. Telefoon: voorlopig de bento, tot de nabouw
+   van medewerker-wild.html er is. */
+@media (min-width: 721px) {
+  html[data-skin="new"] #view-employee-dashboard > #new-employee-bento,
+  html[data-skin="new"] #view-employee-dashboard > #employee-open-overview,
+  html[data-skin="new"] #view-employee-dashboard > #employee-dashboard-correction,
+  html[data-skin="new"] #view-employee-dashboard > #employee-history-teaser { display: none !important; }
+}
+@media (max-width: 720px) {
+  html[data-skin="new"] #modern-vandaag { display: none; }
 }

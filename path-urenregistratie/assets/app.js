@@ -5944,6 +5944,133 @@ function renderNewEmployeeBento(record, employee, period) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Modern "Vandaag", 1-op-1 nagebouwd naar handoff/medewerker-gui.html
+// (opdracht 14 sep, derde ronde). Opbouw, teksten en kleuren volgen de
+// referentie; de getallen en toestanden komen uit de appdata.
+//
+// De spreuken staan letterlijk zoals in de referentie. Eén bewuste afwijking:
+// de referentie kiest met "% 100" uit een lijst van 98, zodat twee op de honderd
+// sessies "undefined" tonen. Hier wordt op de werkelijke lengte gekozen.
+const MODERN_SPREUKEN = ["Een uur geschreven is een uur gewonnen.","Wie zijn week bijhoudt, hoeft de maand niet in te halen.","Klein bijhouden voorkomt groot inhalen.","Uren invullen is als afwassen: elke dag een beetje scheelt een berg.","Een ingevulde week is een opgeruimd hoofd.","Uitstel van uren is nog geen kwijtschelding.","Beter een leeg vakje ingevuld dan een volle maand vergeten.","Wie vandaag boekt, hoeft morgen niet te gokken.","Een week op tijd is een maand zonder gedoe.","Achterstallige uren wegen zwaarder dan ze lijken.","De klok liegt niet, ook niet als je hem negeert.","Kleine vinkjes, grote rust.","Wat je nu niet invult, zoek je straks terug.","Een correcte week is stiller dan een correctieverzoek.","Uren zijn als post: hoe langer je wacht, hoe meer er stapelt.","Vandaag negen, morgen geen stress.","De beste tijd om je uren in te vullen was gisteren; de op één na beste is nu.","Een lege week is geen vrije week.","Wat je bijhoudt, hoef je niet te onthouden.","Klaar is klaar, ook in uren.","Een goedgekeurde maand slaapt beter.","Consequent invullen is de kortste weg naar niks meer in te halen.","Uren zijn geen wijn — ze worden niet beter met uitstel.","Vul in wat je weet, corrigeer wat je niet wist.","Wie zijn uren negeert, wordt er zelf aan herinnerd.","Elke dag een beetje is nooit een berg.","Tijd schrijf je op, niet in je hoofd.","De snelste weg naar 'Afgerond' is 'Vandaag beginnen'.","Uren invullen kost minuten; achterstand inhalen kost avonden.","Zet vandaag neer wat je vandaag deed.","Een ingevulde maand is een geruste maand.","Wachten maakt de weekstaat niet korter.","Een half ingevulde week is een halve gerustheid.","Beter zelf ingevuld dan later gecorrigeerd.","Uren zijn feiten, geen herinneringen.","De snelste correctie is er geen nodig hebben.","Elke maandag is een nieuwe kans op een schone lei.","Wat vandaag klaar is, hoeft morgen niet meer.","Invullen went, inhalen niet.","Een week zonder gaten is een week zonder gedoe.","De kortste route naar goedgekeurd is op tijd ingediend.","Wat je niet noteert, verdwijnt niet — het wacht.","Rustige maanden beginnen met rustige weken.","Klanturenstaat wacht niet op het geheugen.","Wie op tijd indient, wacht nooit op zichzelf.","Vandaag negen uur schrijven scheelt volgende week zoeken.","Een status 'open' is geen status 'later'.","De rustigste vrijdag is die zonder ingehaalde uren.","Correctie vragen is makkelijker dan uren onthouden.","Wat je bijhoudt, hoeft niemand je te vragen.","Een lege chip wacht op jou, niet andersom.","De beste planning begint bij vandaag invullen.","Uren zijn licht, tot je ze moet inhalen.","Consequent is sneller dan perfect achteraf.","Wie zijn week afsluit, opent zijn maand.","Een ingevulde dag is een afgevinkte zorg.","Klanturenstaat aanleveren kan niet wachten op het weekend.","De rustigste maandcijfers komen van de stipste weken.","Invullen kost seconden, vergeten kost herinneringen.","Elke ingevulde dag is een stapje dichter bij Afgerond.","Wat vandaag ingevuld is, vraagt morgen niets meer.","De snelste weg naar rust is een lege takenlijst.","Uren bijhouden is geen taak, het is een gewoonte.","Wie nu vult, hoeft straks niet te reconstrueren.","Een status 'ingediend' is rustiger dan een status 'open'.","Klein en op tijd wint van laat en compleet.","De beste week is er een zonder losse eindjes.","Wat je invult, hoef je niet te verantwoorden.","Elke ingevulde week is een streepje minder op de lijst.","Op tijd indienen voorkomt op tijd corrigeren.","Uren zijn sneller ingevuld dan uitgelegd.","De rustigste maand is degene die je zelf hebt bijgehouden.","Wat vandaag genoteerd is, hoeft morgen niet herinnerd.","Een schone urenstaat begint bij een schone week.","Invullen is de korte weg, inhalen de lange.","Wie zijn uren volgt, loopt nooit achter.","De beste tijd voor je uren is nu, niet vrijdag.","Klaar vandaag is rustig morgen.","Een ingevulde week weegt lichter dan een lege.","Status 'open' wordt vanzelf status 'te laat'.","Wat je noteert, hoef je niet te bewaken.","De rustigste Backoffice-mail begint bij een volledige week.","Elke chip die verdwijnt, is een zorg minder.","Invullen nu is sneller dan reconstrueren later.","Een ingevulde maand vraagt geen vragen.","Wie op tijd is, wacht nooit op zichzelf.","De beste gewoonte is de kleinste: elke dag even invullen.","Uren onthouden is moeilijker dan uren noteren.","Status 'goedgekeurd' begint bij status 'op tijd'.","Wat je nu regelt, hoef je later niet te verklaren.","Een rustige maandafsluiting begint bij rustige weken.","Invullen is klein werk, inhalen is groot werk.","De snelste weg naar niets meer te doen is alles nu doen.","Elke week die je afrondt, is een week die je niet meer ziet.","Wat vandaag is ingevuld, is morgen vergeten — in de goede zin.","De rustigste vrijdagmiddag begint bij een volle weekstaat.","Uren zijn kort te noteren, lang te missen.","Wie vandaag vult, hoeft morgen niet te zoeken."];
+const MODERN_SPREUK_INDEX = Math.floor(Math.random() * 1e6);
+
+// Het aantal weken dat nog "in te vullen" is. De referentie telt weken zonder
+// een enkel uur ("x.uren.every(u => u === 0)"), en gebruikt dat ene getal voor
+// de hero, de ring én het verloop. In de app is "ingevuld" iets anders: een
+// week is pas af als elke werkdag uren heeft of bewust op 0 staat
+// (isTimesheetWeekComplete). De eerste versie hiervan telde de referentiemanier
+// in de hero en de appmanier in het verloop, en toonde dus "Nog 4 weken in te
+// vullen" boven "5 weken open". Nu één telling, de app-betekenis, zodat hero,
+// ring en verloop hetzelfde zeggen -- zoals in de referentie.
+function modernLegeWeken(record, period) {
+  return Math.max(0, period.weekRows.length - completedTimesheetWeeks(record, period));
+}
+
+function modernKlanturenstaatOpen(employee, record) {
+  if (employee.customerTimesheetExpected === false) return false;
+  const document_ = customerTimesheetFor(record);
+  return ["missing", "draft", "resubmit"].includes(document_.status);
+}
+
+// De klanturenstaatkaart hoort op desktop in Modern onder de hero (referentie
+// medewerker-gui.html) en op telefoon nog in de bento. Verplaatsen in plaats van
+// dupliceren: de kaart heeft zijn eigen upload- en mailflow met gedelegeerde
+// events, en een tweede kopie zou twee keer dezelfde id's in de pagina zetten.
+let modernKlantKaartThuis = null;
+function plaatsModernKlantKaart() {
+  const kaart = document.querySelector("#new-bento-customer");
+  const plek = document.querySelector("#mv-klant-plek");
+  if (!kaart || !plek) return;
+  if (!modernKlantKaartThuis) modernKlantKaartThuis = { ouder: kaart.parentElement, volgende: kaart.nextElementSibling };
+  const breed = typeof window.matchMedia === "function" && window.matchMedia("(min-width: 721px)").matches;
+  const modern = document.documentElement.dataset.skin === "new";
+  if (modern && breed) {
+    if (kaart.parentElement !== plek) plek.appendChild(kaart);
+  } else if (kaart.parentElement === plek) {
+    modernKlantKaartThuis.ouder.insertBefore(kaart, modernKlantKaartThuis.volgende);
+  }
+}
+if (typeof window.matchMedia === "function") {
+  const breedte = window.matchMedia("(min-width: 721px)");
+  if (typeof breedte.addEventListener === "function") breedte.addEventListener("change", plaatsModernKlantKaart);
+}
+
+function renderModernVandaag(record, employee, period) {
+  const vak = document.querySelector("#modern-vandaag");
+  if (!vak) return;
+  plaatsModernKlantKaart();
+  const zet = (selector, tekst) => { const el = document.querySelector(selector); if (el) el.textContent = tekst; };
+  const nWeken = period.weekRows.length;
+  const leeg = modernLegeWeken(record, period);
+  const klantOpen = modernKlanturenstaatOpen(employee, record);
+  const heeftTaak = leeg > 0 || klantOpen;
+  const ingevuld = nWeken > 0 ? (nWeken - leeg) / nWeken : 0;
+  const maandNaam = period.month.charAt(0).toUpperCase() + period.month.slice(1);
+
+  // Paginakop
+  zet("#mv-kop-label", greetingForNow());
+  zet("#mv-kop-titel", employee.name || "");
+  zet("#mv-spreuk", MODERN_SPREUKEN[MODERN_SPREUK_INDEX % MODERN_SPREUKEN.length]);
+  zet("#mv-periode", period.label);
+
+  // Nog te doen: de maanden met open acties, oudste eerst, de eerste uitgelicht.
+  const openMaanden = employeeOpenMonthSummaries(employee.id, period.key);
+  const nogTeDoen = document.querySelector("#mv-nogtedoen");
+  nogTeDoen.hidden = openMaanden.length === 0;
+  zet("#mv-nogtedoen-kop", openMaanden.length === 1 ? "Nog te doen" : "Nog te doen — " + openMaanden.length + " maanden");
+  document.querySelector("#mv-nogtedoen-chips").innerHTML = openMaanden.map((maand, index) => {
+    const uren = maand.actions.find(actie => actie.type === "hours");
+    const maandRecord = recordFor(employee.id, maand.periodKey);
+    const wat = uren
+      ? (maandRecord.timesheetStatus === "correction" ? "correctie"
+        : ontbrekendeWerkdagen(maandRecord, maand.period).length > 0 ? "uren invullen" : "maand indienen")
+      : "urenstaat";
+    const naam = maand.period.month.charAt(0).toUpperCase() + maand.period.month.slice(1);
+    return '<button type="button" class="mv-maandchip' + (index === 0 ? ' is-eerste' : '') + '" data-mv-open-maand="' + escapeHtml(maand.periodKey) + '" data-mv-open-soort="' + (uren ? 'uren' : 'klant') + '">'
+      + '<span>' + escapeHtml(naam) + '</span><small>' + escapeHtml(wat) + '</small><span aria-hidden="true">›</span></button>';
+  }).join("");
+
+  // Hero
+  zet("#mv-antwoord", heeftTaak
+    ? (leeg > 0 ? "Nog " + leeg + (leeg === 1 ? " week" : " weken") + " in te vullen." : "Bijna rond. Nog één ding.")
+    : maandNaam + " is klaar.");
+  const oog = document.querySelector("#mv-oog");
+  oog.classList.toggle("is-taak", heeftTaak);
+  zet("#mv-oog-label", heeftTaak ? "Jij bent aan zet" : "Het ligt bij ons");
+  zet("#mv-pct", Math.round(ingevuld * 100) + "%");
+  const boog = document.querySelector("#mv-ring-boog");
+  if (boog) boog.style.strokeDashoffset = (229.3 * (1 - ingevuld)).toFixed(1);
+  const document_ = customerTimesheetFor(record);
+  zet("#mv-toelichting", heeftTaak
+    ? (leeg > 0 ? "Eén tik vult een hele week met je standaardweek." : "Alleen de klanturenstaat ontbreekt nog.")
+    : document_.status === "skipped"
+      ? "Je uren staan erin en je gaf aan de urenstaat zelf te hebben gemaild. De Backoffice pakt het op."
+      : "Alles is binnen en goedgekeurd. We laten het weten als er iets nodig is.");
+  const contract = defaultContractHours(employee, period.key);
+  document.querySelector("#mv-kpi").hidden = !heeftTaak;
+  zet("#mv-kpi-waarde", hoursFormat.format(Math.max(0, contract - totalEntries(record.entries))) + "u");
+  zet("#mv-kpi-label", "Nog in te vullen (van " + hoursFormat.format(contract) + "u)");
+  const hoofdknop = document.querySelector("#mv-hoofdknop");
+  hoofdknop.textContent = heeftTaak ? (leeg > 0 ? "Uren invullen" : "Klanturenstaat toevoegen") : "Mijn maanden bekijken";
+  hoofdknop.dataset.mvActie = heeftTaak ? (leeg > 0 ? "uren" : "klant") : "maanden";
+  document.querySelector("#mv-mailknop").hidden = !(heeftTaak && leeg === 0 && klantOpen);
+
+  // Verloop: dezelfde vijf stappen en standen als overal, uit
+  // statusKetenStappen(). Alleen de detailregel van de eerste stap volgt de
+  // desktopreferentie ("1 van 5 weken", r697); de rest van de detailteksten
+  // verschilt tussen de twee referenties en is teruggemeld.
+  zet("#mv-verloop-kop", "Verloop van " + period.month);
+  const verloopStappen = statusKetenStappen(record, period).map(stap => stap.key === "fill"
+    ? Object.assign({}, stap, { detail: (nWeken - leeg) + " van " + nWeken + " weken" })
+    : stap);
+  document.querySelector("#mv-verloop-lijst").innerHTML = verloopStappen.map(stap =>
+    '<li class="mv-stap is-' + escapeHtml(stap.stand) + '" data-mv-stap="' + escapeHtml(stap.key) + '">'
+      + '<span class="mv-stap-bol" aria-hidden="true">' + (stap.stand === "af" ? "✓" : stap.stand === "nu" ? "!" : "·") + '</span>'
+      + '<div><strong>' + escapeHtml(stap.titel) + '</strong><small>' + escapeHtml(stap.detail) + '</small></div></li>'
+  ).join("");
+}
+
 function renderEmployeeDashboard() {
   const employee = currentEmployee();
   const employeeId = Number(employee.id);
@@ -6248,6 +6375,7 @@ function renderEmployeeDashboard() {
       : "Mijn maanden · nog geen maanden";
   }
   renderNewEmployeeBento(record, employee, period);
+  renderModernVandaag(record, employee, period);
 }
 
 function adminOpenTasks() {
@@ -13729,6 +13857,45 @@ function toonInstallatieAanbod() {
   // wordt bij elke render opnieuw opgebouwd -- zonder die stand klapte hij bij
   // de eerstvolgende hertekening weer dicht. Eén maand tegelijk: de vijf
   // stappen zijn hoog genoeg dat twee open maanden de lijst onleesbaar maken.
+  // Modern "Vandaag": acties uit de referentie medewerker-gui.html.
+  // Maandchip in "Nog te doen": uren -> Mijn uren van die maand; alleen een
+  // klanturenstaat -> Mijn maanden met die maand opengeklapt, zoals de
+  // referentie een eerdere maand afhandelt.
+  const modernMaandChip = event.target.closest("[data-mv-open-maand]");
+  if (modernMaandChip) {
+    const periodKey = modernMaandChip.dataset.mvOpenMaand;
+    if (!parsePeriodKey(periodKey)) return;
+    setPeriod(periodKey);
+    if (modernMaandChip.dataset.mvOpenSoort === "uren") {
+      showView("timesheet");
+    } else {
+      state.historyVerloopOpen = periodKey;
+      showView("historie");
+    }
+    return;
+  }
+  // Maandpil: vorige maand -> Mijn maanden met die maand opengeklapt. Vooruit
+  // staat in de markup uitgeschakeld (referentie: maandVoorUit).
+  if (event.target.closest("[data-mv-maand-terug]")) {
+    state.historyVerloopOpen = shiftPeriodKey(currentPeriod().key, -1);
+    showView("historie");
+    return;
+  }
+  const modernHoofdknop = event.target.closest("#mv-hoofdknop");
+  if (modernHoofdknop) {
+    const actie = modernHoofdknop.dataset.mvActie;
+    if (actie === "uren") showView("timesheet");
+    else if (actie === "maanden") showView("historie");
+    else document.querySelector("[data-new-bento-customer]")?.click();
+    return;
+  }
+  if (event.target.closest("#mv-mailknop")) {
+    // De app legt bij "rechtstreeks gemaild" een reden vast; die flow zit achter
+    // de bestaande knop. Niet omzeilen, alleen doorverwijzen.
+    document.querySelector("#employee-customer-timesheet-skip")?.click();
+    return;
+  }
+
   // Een chip met een ontbrekende werkdag brengt je naar de week waar die dag in
   // zit. Niet naar de dag zelf: de weekweergave is de kleinste eenheid die
   // Mijn uren kent, en daarbinnen staat de dag in beeld.

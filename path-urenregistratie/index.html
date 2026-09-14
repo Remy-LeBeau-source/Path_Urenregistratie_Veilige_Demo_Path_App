@@ -267,6 +267,63 @@
       </header>
 
       <section class="view role-employee-only" id="view-employee-dashboard" data-title="Mijn overzicht">
+        <!-- Modern "Vandaag", 1-op-1 nagebouwd naar handoff/medewerker-gui.html
+             (opdracht 14 sep, derde ronde). Opbouw en volgorde volgen de
+             referentie; de inhoud komt uit de appdata, niet uit de demodata van
+             het artefact. Alleen zichtbaar in Modern -- Klassiek verbergt hem in
+             styles.css. Gevuld door renderModernVandaag() in app.js. -->
+        <section class="modern-vandaag" id="modern-vandaag" aria-label="Vandaag">
+          <header class="mv-kop">
+            <div class="mv-kop-tekst">
+              <span class="mv-kop-label" id="mv-kop-label"></span>
+              <h1 class="mv-kop-titel" id="mv-kop-titel"></h1>
+              <p class="mv-spreuk"><span class="mv-spreuk-lijn" aria-hidden="true"></span><span id="mv-spreuk"></span></p>
+            </div>
+            <div class="mv-maandpil">
+              <button type="button" data-mv-maand-terug aria-label="Vorige maand">‹</button>
+              <strong id="mv-periode"></strong>
+              <button type="button" aria-label="Volgende maand" disabled>›</button>
+            </div>
+          </header>
+          <section class="mv-nogtedoen" id="mv-nogtedoen" hidden>
+            <strong id="mv-nogtedoen-kop"></strong>
+            <div class="mv-nogtedoen-chips" id="mv-nogtedoen-chips"></div>
+          </section>
+          <section class="mv-hero" id="mv-hero">
+            <span class="mv-hero-halo" aria-hidden="true"></span>
+            <div class="mv-hero-kop">
+              <div class="mv-hero-kop-tekst"><h2 id="mv-antwoord"></h2></div>
+              <span class="mv-oog" id="mv-oog"><span class="mv-oog-stip" aria-hidden="true"></span><span id="mv-oog-label"></span></span>
+            </div>
+            <div class="mv-hero-midden">
+              <div class="mv-ringblok">
+                <div class="mv-ring" aria-hidden="true">
+                  <svg viewBox="0 0 82 82"><circle class="mv-ring-leeg" cx="41" cy="41" r="36.5"></circle><circle class="mv-ring-boog" id="mv-ring-boog" cx="41" cy="41" r="36.5"></circle></svg>
+                  <strong id="mv-pct"></strong>
+                </div>
+                <p id="mv-toelichting"></p>
+              </div>
+              <div class="mv-kpi" id="mv-kpi">
+                <strong id="mv-kpi-waarde"></strong>
+                <small id="mv-kpi-label"></small>
+              </div>
+            </div>
+            <div class="mv-hero-acties">
+              <button type="button" class="mv-knop-hoofd" id="mv-hoofdknop"></button>
+              <button type="button" class="mv-knop-mail" id="mv-mailknop" hidden>Die heb ik al gemaild</button>
+            </div>
+          </section>
+          <div class="mv-onder">
+            <!-- Plek voor de klanturenstaatkaart op desktop, zoals in de referentie
+                 onder de hero. De bestaande kaart (#new-bento-customer, met zijn
+                 upload- en mailflow) wordt hierheen verplaatst, niet nagebouwd. -->
+            <div class="mv-klant-plek" id="mv-klant-plek"></div>
+            <section class="mv-verloop">
+              <strong class="mv-verloop-kop" id="mv-verloop-kop"></strong>
+              <ol class="mv-verloop-lijst" id="mv-verloop-lijst"></ol>
+            </section>
+          </div>
+        </section>
         <section class="new-employee-bento" id="new-employee-bento" aria-label="Modern medewerkeroverzicht">
           <article class="new-bento-hero">
             <img src="pilot/assets/1919/bento-foliage-v2.png" alt="" aria-hidden="true">

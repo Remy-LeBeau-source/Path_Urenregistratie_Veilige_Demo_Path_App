@@ -2494,3 +2494,82 @@ test('[SKIN-H-037] de weekchips in Modern passen op 360px naast elkaar, gelijk b
     }
   });
 });
+
+// Opdracht 14 sep, derde ronde: het Modern-dashboard op desktop is een 1-op-1
+// nabouw van handoff/medewerker-gui.html. Deze case bewaakt de opbouw en,
+// belangrijker, dat de blokken elkaar niet tegenspreken. De eerste versie toonde
+// "Nog 4 weken in te vullen" in de hero en "5 weken open" in het verloop, omdat
+// beide een ander begrip van "ingevuld" gebruikten; de referentie gebruikt één
+// getal voor hero, ring en verloop.
+test('[SKIN-H-038] het Modern-dashboard op desktop volgt de referentie en hero, ring en verloop zeggen hetzelfde', async ({ page }) => {
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+
+  await test.step('Given Klassiek toont het nieuwe blok niet', async () => {
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+    await expect(page.locator('#modern-vandaag')).toBeHidden();
+  });
+
+  await test.step('When de medewerker naar Modern wisselt', async () => {
+    await page.locator('#quick-skin-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+  });
+
+  await test.step('Then staat de opbouw uit de referentie er, en is de oude bento weg', async () => {
+    await expect(page.locator('#modern-vandaag')).toBeVisible();
+    await expect(page.locator('#new-employee-bento')).toBeHidden();
+    await expect(page.locator('#employee-open-overview')).toBeHidden();
+    await expect(page.locator('#mv-kop-titel')).not.toBeEmpty();
+    await expect(page.locator('#mv-periode')).not.toBeEmpty();
+    await expect(page.locator('#mv-verloop-lijst .mv-stap')).toHaveCount(5);
+  });
+
+  await test.step('And zeggen hero, ring en verloop hetzelfde aantal weken', async () => {
+    const stand = await page.evaluate(() => {
+      const tekst = (sel: string) => String(document.querySelector(sel)?.textContent || '').trim();
+      return {
+        antwoord: tekst('#mv-antwoord'),
+        pct: tekst('#mv-pct'),
+        eersteStap: tekst('#mv-verloop-lijst [data-mv-stap="fill"] small'),
+      };
+    });
+    const verloop = /^(\d+) van (\d+) weken$/.exec(stand.eersteStap);
+    expect(verloop, `de eerste stap hoort "X van N weken" te zeggen, niet "${stand.eersteStap}"`).toBeTruthy();
+    const ingevuld = Number(verloop![1]);
+    const totaal = Number(verloop![2]);
+    const open = totaal - ingevuld;
+    expect(stand.pct, 'de ring hoort het aandeel ingevulde weken te tonen').toBe(Math.round((ingevuld / totaal) * 100) + '%');
+    if (open > 0) {
+      expect(stand.antwoord, 'de hero hoort hetzelfde aantal open weken te noemen als het verloop')
+        .toBe('Nog ' + open + (open === 1 ? ' week' : ' weken') + ' in te vullen.');
+    }
+  });
+
+  await test.step('And toont Nog te doen een chip per open maand, de eerste uitgelicht', async () => {
+    const verwacht = await page.evaluate(() => {
+      const runtime = window as unknown as {
+        currentEmployee: () => { id: number };
+        currentPeriod: () => { key: string };
+        employeeOpenMonthSummaries: (id: number, key: string) => unknown[];
+      };
+      return runtime.employeeOpenMonthSummaries(runtime.currentEmployee().id, runtime.currentPeriod().key).length;
+    });
+    const chips = page.locator('#mv-nogtedoen-chips .mv-maandchip');
+    await expect(chips).toHaveCount(verwacht);
+    if (verwacht > 0) {
+      await expect(chips.first()).toHaveClass(/is-eerste/);
+      await expect(page.locator('#mv-nogtedoen-kop')).toHaveText(verwacht === 1 ? 'Nog te doen' : `Nog te doen — ${verwacht} maanden`);
+    }
+  });
+
+  await test.step('And brengt de hoofdknop je naar Mijn uren zolang er weken open staan', async () => {
+    const actie = await page.locator('#mv-hoofdknop').getAttribute('data-mv-actie');
+    if (actie === 'uren') {
+      await page.locator('#mv-hoofdknop').click();
+      await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+    }
+  });
+});

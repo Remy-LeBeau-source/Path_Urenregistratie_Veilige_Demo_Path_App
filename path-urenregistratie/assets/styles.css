@@ -392,6 +392,9 @@ summary:focus-visible,
    onderaan zijn beland. */
 .sidebar-footer { display: grid; gap: 14px; border-top: 1px solid rgba(255, 255, 255, .08); padding-top: 18px; }
 .new-employee-bento { display: none; }
+/* Modern "Vandaag" (nabouw van handoff/medewerker-gui.html) bestaat alleen in
+   Modern; de opmaak staat in styles-new.css. */
+.modern-vandaag { display: none; }
 .app-footer { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; margin-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 9px; padding: 16px 2px 4px; }
 .app-footer-version { margin-left: auto; }
 .workspace-user { display: flex; align-items: center; gap: 10px; }
