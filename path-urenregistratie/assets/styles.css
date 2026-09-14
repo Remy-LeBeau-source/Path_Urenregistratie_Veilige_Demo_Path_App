@@ -1691,6 +1691,33 @@ html:not([data-skin="new"]) #view-historie { max-width: var(--pagina); margin-in
 .employee-customer-timesheet-heading h3 { margin: 0; color: var(--navy-tekst); font-family: var(--letter-kop); font-size: var(--kop-sectie); }
 .employee-customer-timesheet-card p { margin: 7px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
 .employee-customer-timesheet-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+/* Klanturenstaatkaart, nieuwe onderdelen in Klassiek (opdracht 14 sep). Waarden
+   1-op-1 uit handoff/medewerker-wild.html r164-212 en medewerker-gui.html
+   r228/r235-270; de kaart zelf houdt zijn Klassieke opmaak. */
+@media (min-width: 821px) { .employee-customer-timesheet-card:has(.klantkaart) { grid-template-columns: minmax(0,1fr) minmax(260px,340px); } }
+.klantkaart { display: grid; gap: 0; justify-content: stretch; }
+.klantkaart-stand[hidden] { display: none; }
+.employee-customer-timesheet-card .klantkaart-uitleg { margin: 11px 0 12px; color: var(--muted); font-size: 12.5px; line-height: 1.55; }
+.klantkaart-stand > .klantkaart-uitleg:first-child { margin-top: 0; }
+.klantkaart-kies { display: grid; gap: 8px; }
+.klantkaart-knop-bestand, .klantkaart-knop-foto { min-height: 48px; border-radius: 12px; cursor: pointer; font: inherit; font-size: 13.5px; font-weight: 700; }
+.klantkaart-knop-bestand { border: 1px dashed var(--line); background: var(--surface-muted); color: var(--ink); }
+.klantkaart-knop-foto { border: 1px solid var(--line); background: transparent; color: var(--muted); }
+.klantkaart-bestand { display: flex; align-items: center; gap: 11px; margin: 0 0 11px; border: 1px solid var(--line-zacht); border-radius: 12px; background: var(--surface-muted); padding: 11px 12px; }
+.klantkaart-badge { display: grid; width: 34px; height: 40px; flex: 0 0 auto; place-items: center; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--muted); font-size: 9px; font-weight: 800; }
+.klantkaart-bestand-tekst { flex: 1; min-width: 0; }
+.klantkaart-bestand-tekst strong { display: block; overflow: hidden; font-size: 12.5px; text-overflow: ellipsis; white-space: nowrap; }
+.klantkaart-bestand-tekst small { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
+.klantkaart-weg { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--muted); cursor: pointer; font-size: 14px; }
+.klantkaart-weg[hidden] { display: none; }
+.klantkaart-verstuur { width: 100%; min-height: 50px; border: 0; border-radius: 12px; background: var(--mint); color: var(--navy); cursor: pointer; font: inherit; font-size: 14px; font-weight: 700; box-shadow: 0 8px 20px rgba(58,189,157,.3); transition: transform .16s cubic-bezier(.22,1,.36,1), box-shadow .16s; }
+.klantkaart-verstuur:active { transform: scale(.975); box-shadow: 0 2px 24px rgba(58,189,157,.58); }
+.klantkaart-klaar { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+.klantkaart-vink { display: grid; width: 18px; height: 18px; flex: 0 0 auto; place-items: center; border-radius: 50%; background: var(--mint); color: var(--navy); font-size: 10px; font-weight: 900; }
+.klantkaart-klaar strong { color: var(--mint-dark-tekst); font-size: 12.5px; font-weight: 700; }
+.klantkaart #employee-customer-timesheet-skip { width: 100%; min-height: 46px; margin-top: 9px; border: 1px solid var(--line); border-radius: 12px; background: transparent; color: var(--ink); font-size: 13px; font-weight: 700; padding: 0 18px; box-shadow: none; transition: border-color .16s; }
+.klantkaart #employee-customer-timesheet-skip:hover { border-color: var(--mint); }
+@media (prefers-reduced-motion: reduce) { .klantkaart-verstuur { transition: none; } .klantkaart-verstuur:active { transform: none; } }
 .employee-metrics .compact-metric { font-size: 20px; }
 /* De vijfstappenketen in Klassiek. Dezelfde standen als in Modern (ze komen
    uit statusKetenStappen in app.js), maar in de Klassieke kaarttaal in plaats

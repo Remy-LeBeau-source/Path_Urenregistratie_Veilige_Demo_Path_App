@@ -3,10 +3,10 @@ branch: main
 path: path-urenregistratie
 
 ## Last sync
-date: 2026-09-14T05:25:00Z
+date: 2026-09-14T06:00:00Z
 
 ### Ronde 14 sep (derde) — scope gewijzigd: Klassiek eerst
-Export 2026-09-14T03:24:33Z. Verschil met de vorige export, gelezen uit de
+Export 2026-09-14T03:24:33Z, bijgewerkt 03:58:15Z (alleen "maximaal 2 MB" en de drie antwoorden). Verschil met de vorige export, gelezen uit de
 uitgepakte bronnen: tekens op mint- en amberbollen `var(--navy)` in plaats van
 `#fff` (GUI r565/r976, Wild r650/r915), en de indienknop `cursor: pointer` ook
 bij gaten (GUI r724). Verder niets.
@@ -34,10 +34,40 @@ Functionele laag naar Klassiek, stand per punt:
    Standaardweek/-maand vullen en Week/Maand terugzetten die met de modus
    meebewegen. Niets gebouwd. Terugmelding: de opdracht zegt dat dit scherm nog
    niet bestaat; dat klopt niet.
-4. **Klanturenstaatkaart met drie toestanden + "Die heb ik al gemaild".** Nog
-   niet gebouwd; volgt als eigen increment. In Klassiek is dit nu een kaart die
-   doorverwijst naar het scherm Klanturenstaat, met de knop "Al rechtstreeks
-   gemaild".
+4. **Klanturenstaatkaart met drie toestanden + "Die heb ik al gemaild".**
+   Gebouwd na drie vragen, alle drie beantwoord (export 03:58:15Z): max 2 MB, de
+   kaart komt erbij en het scherm blijft, en beide nieuwe teksten gelden ook in de
+   app. De kop en de statuspil van de Klassieke kaart blijven, want die kennen zeven
+   serverstanden (ook correctie gevraagd, goedgekeurd, brokerroute). Het
+   actiedeel volgt de referentie:
+   - **leeg**: Bestand kiezen, Foto maken (`capture="environment"`), Die heb ik al gemaild;
+   - **bestand gekozen**: naam, grootte, kruisje en "Als bijlage versturen";
+     ook een opgeslagen concept toont deze stand, zonder kruisje;
+   - **verstuurd**: "Bijlage verstuurd";
+   - **zelf gemaild**: de GUI-tekst met "Toch een bestand toevoegen".
+
+   Versturen gebruikt de indienroute van het scherm Klanturenstaat; mailen gebruikt
+   de bestaande registratie met reden. Op dat scherm heten de knoppen nu ook "Die
+   heb ik al gemaild" en "Toch een bestand toevoegen". De statuspil "Al rechtstreeks
+   gemaild" blijft, want zo heet de registratie bij Backoffice. CTS-API-H-013 en de
+   smoke-test gaan mee met de nieuwe knoptekst. [DASH-H-034] loopt alle standen
+   door en onderschept het indienverzoek, om te bewijzen dat precies het gekozen
+   bestand meegaat, zonder de server te wijzigen.
+
+   Terugmelding, functionele verschillen tussen Wild en GUI (volgens de opdracht
+   een fout in de referentie):
+   - Zelf mailen staat in Wild als link "Ik heb hem zelf naar de klant gemaild"
+     in de lege kaart, in de GUI als knop "Die heb ik al gemaild" naast de
+     hoofdknop. Gebouwd is de knop, zoals DESIGN-BESLUITEN zegt.
+   - Na zelf mailen zegt Wild "Deze maand is daarmee afgerond — je hoeft niets
+     meer te doen" en de GUI "De Backoffice verwerkt hem zodra hij binnen is". De
+     app laat zelf gemaild oranje tot Backoffice extern bevestigt, dus de
+     GUI-tekst klopt en is gebouwd.
+   - Wild biedt in de stand verstuurd nog "Ik heb hem zelf gemaild"; de app
+     staat dat na indienen niet toe, dus die link is weggelaten.
+   - De "Verloop"-detailteksten verschillen tussen GUI en Wild, en de
+     spreukenlijst telt 98 regels maar kiest met `% 100` (bekend uit de
+     Modern-bouw).
 5. **Indienlabel.** Bestond al sinds de vorige ronde.
 
 Vijf beantwoorde vragen:
@@ -55,8 +85,15 @@ Vijf beantwoorde vragen:
    `document`. [SKIN-H-039] registreert de listeners vóór app.js laadt en toetst
    dat hij er is en passief is.
 
+Punt 2 en 5 vallen buiten de medewerkerschermen: de goedkeurkaart is een
+Backoffice-scherm en de touch-handler geldt voor de hele app. Gio bevestigde op
+14 sep dat beide blijven: een toegankelijkheidsfout herstel je waar je hem
+tegenkomt, en de handler kunstmatig tot medewerkerschermen beperken geeft meer
+risico dan de lege listener zelf.
+
 Tegenproeven gedaan door de verwachting in de test te verdraaien, zonder
-productiecode te wijzigen: DASH-H-033, SKIN-H-035 en SKIN-H-039 vielen alle drie om.
+productiecode te wijzigen: DASH-H-033, SKIN-H-035, SKIN-H-039 en DASH-H-034 (twee
+keer: bestandsnaam in het verzoek, tekst van de terugweg) vielen allemaal om.
 
 ## Sync history
 

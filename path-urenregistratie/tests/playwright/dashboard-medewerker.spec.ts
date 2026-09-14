@@ -1684,3 +1684,116 @@ test('[DASH-H-033] de verloopstappen in Klassiek tonen ✓ en • in de bol, lee
   }
   await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
 });
+
+// Opdracht 14 sep (Klassiek eerst) + besluit Gio: de klanturenstaatkaart op het
+// dashboard krijgt de toestanden uit de referentie -- leeg, bestand gekozen,
+// verstuurd, zelf gemaild -- naast het bestaande scherm Klanturenstaat. Max 2 MB
+// blijft (de app-grens, niet de 10 MB uit de referentie). Versturen hergebruikt
+// de indienroute van dat scherm; de case onderschept dat verzoek met een
+// weigering, zodat hij de server niet verandert en tegelijk bewijst dat de kaart
+// het gekozen bestand echt meestuurt en na een weigering niet kwijtraakt.
+test('[DASH-H-034] de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee', async ({ page }) => {
+  test.setTimeout(120_000);
+  // De beforeEach zet de klok op 31 augustus; die maand heeft in de demodata al
+  // een ingediende klanturenstaat. September heeft er nog geen (zie ook
+  // [CTS-API-H-013]), dus daar begint de kaart leeg.
+  await page.clock.setFixedTime(new Date('2026-09-14T12:00:00.000Z'));
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  await expect(page.locator('#period-label')).toHaveText('September 2026');
+  const kaart = page.locator('#employee-customer-timesheet-card');
+  const zichtbareStand = kaart.locator('[data-klantkaart]:not([hidden])');
+
+  await test.step('Given een lege kaart met kiezen, foto en zelf gemaild', async () => {
+    await expect(kaart).toHaveAttribute('data-klantkaart-stand', 'leeg');
+    await expect(zichtbareStand).toHaveCount(1);
+    await expect(zichtbareStand).toContainText('PDF, JPG of PNG, maximaal 2 MB.');
+    await expect(kaart.getByRole('button', { name: 'Bestand kiezen' })).toBeVisible();
+    await expect(kaart.getByRole('button', { name: 'Foto maken' })).toBeVisible();
+    await expect(page.locator('#employee-customer-timesheet-skip')).toHaveText('Die heb ik al gemaild');
+    await expect(page.locator('#employee-customer-timesheet-photo')).toHaveAttribute('capture', 'environment');
+  });
+
+  await test.step('When een verkeerd bestandstype wordt gekozen, dan blijft de kaart leeg met uitleg', async () => {
+    await page.locator('#employee-customer-timesheet-file').setInputFiles({ name: 'urenstaat.docx', mimeType: 'application/msword', buffer: Buffer.from('nee') });
+    await expect(page.locator('#toast')).toContainText('PDF-, JPG- of PNG-bestand');
+    await expect(kaart).toHaveAttribute('data-klantkaart-stand', 'leeg');
+  });
+
+  const pdf = { name: 'klanturenstaat-september.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 klanturenstaat') };
+
+  await test.step('When een PDF wordt gekozen, dan toont de kaart naam, grootte, kruisje en de verstuurknop', async () => {
+    await page.locator('#employee-customer-timesheet-file').setInputFiles(pdf);
+    await expect(kaart).toHaveAttribute('data-klantkaart-stand', 'gekozen');
+    await expect(page.locator('#employee-customer-timesheet-file-name')).toHaveText(pdf.name);
+    await expect(page.locator('#employee-customer-timesheet-file-meta')).toHaveText(/^\d+ KB · zojuist toegevoegd$/);
+    await expect(page.locator('#employee-customer-timesheet-badge')).toHaveText('PDF');
+    await expect(kaart.getByRole('button', { name: 'Bijlage verwijderen' })).toBeVisible();
+    await expect(kaart.getByRole('button', { name: 'Als bijlage versturen' })).toBeVisible();
+    await expect(page.locator('#employee-customer-timesheet-skip'), 'met een bestand klaar hoort zelf mailen niet naast versturen te staan').toBeHidden();
+  });
+
+  await test.step('And het kruisje brengt de kaart terug naar leeg', async () => {
+    await kaart.getByRole('button', { name: 'Bijlage verwijderen' }).click();
+    await expect(kaart).toHaveAttribute('data-klantkaart-stand', 'leeg');
+  });
+
+  await test.step('When het bestand als bijlage wordt verstuurd, dan gaat precies dat bestand mee naar de indienroute', async () => {
+    await page.locator('#employee-customer-timesheet-file').setInputFiles(pdf);
+    await expect(kaart).toHaveAttribute('data-klantkaart-stand', 'gekozen');
+    let verzoek = '';
+    await page.route(/customer-timesheets\.php$/, async route => {
+      if (route.request().method() !== 'POST') return route.continue();
+      verzoek = route.request().postDataBuffer()?.toString('latin1') || '';
+      await route.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify({ ok: false, message: 'Testweigering door DASH-H-034' }) });
+    });
+    await kaart.getByRole('button', { name: 'Als bijlage versturen' }).click();
+    await expect(page.locator('#toast')).toContainText('Testweigering door DASH-H-034');
+    expect(verzoek, 'het verzoek hoort de actie submit te dragen').toMatch(/name="action"\r\n\r\nsubmit/);
+    expect(verzoek, 'het verzoek hoort het gekozen bestand mee te sturen').toContain('filename="' + pdf.name + '"');
+    expect(verzoek).toContain('%PDF-1.4 klanturenstaat');
+    await page.unroute(/customer-timesheets\.php$/);
+  });
+
+  await test.step('And na een weigering blijft het gekozen bestand staan', async () => {
+    await expect(kaart).toHaveAttribute('data-klantkaart-stand', 'gekozen');
+    await expect(page.locator('#employee-customer-timesheet-file-name')).toHaveText(pdf.name);
+  });
+
+  await test.step('Then toont de kaart na verzenden "Bijlage verstuurd", en na zelf mailen de terugweg', async () => {
+    // Zetten, tekenen en lezen in één evaluate: een serversync tussendoor zou de
+    // stand anders al terugzetten. Aan het eind wordt de oude stand teruggezet.
+    const standen = await page.evaluate(() => {
+      const w = window as unknown as {
+        currentEmployee: () => { id: number }; currentPeriod: () => { key: string };
+        recordFor: (id: number, key: string) => { customerTimesheet?: { status: string } };
+        customerTimesheetFor: (r: unknown) => { status: string };
+        renderAll: () => void;
+      };
+      const record = w.recordFor(w.currentEmployee().id, w.currentPeriod().key);
+      const document_ = w.customerTimesheetFor(record);
+      const oud = document_.status;
+      const lees = () => {
+        const kaart = document.querySelector('#employee-customer-timesheet-card') as HTMLElement;
+        const skip = document.querySelector('#employee-customer-timesheet-skip') as HTMLElement;
+        return {
+          stand: kaart.dataset.klantkaartStand,
+          tekst: (kaart.querySelector('[data-klantkaart]:not([hidden])')?.textContent || '').replace(/\s+/g, ' ').trim(),
+          skipZichtbaar: !skip.hidden, skipTekst: skip.textContent,
+        };
+      };
+      document_.status = 'received'; w.renderAll(); const verstuurd = lees();
+      document_.status = 'skipped'; w.renderAll(); const gemaild = lees();
+      document_.status = oud; w.renderAll();
+      return { verstuurd, gemaild };
+    });
+    expect(standen.verstuurd.stand).toBe('verstuurd');
+    expect(standen.verstuurd.tekst).toContain('Bijlage verstuurd');
+    expect(standen.verstuurd.skipZichtbaar, 'na verzenden hoort zelf mailen niet meer te kunnen').toBe(false);
+    expect(standen.gemaild.stand).toBe('gemaild');
+    expect(standen.gemaild.tekst).toContain('De Backoffice verwerkt hem zodra hij binnen is.');
+    expect(standen.gemaild.skipTekst).toBe('Toch een bestand toevoegen');
+  });
+});

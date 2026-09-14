@@ -416,9 +416,37 @@
             <div class="employee-customer-timesheet-heading"><h3 id="employee-customer-timesheet-title">Klanturenstaat staat nog open</h3><span class="status-pill status-concept" id="employee-customer-timesheet-status">Nog niet ontvangen</span></div>
             <p id="employee-customer-timesheet-note">Upload de officiële klanturenstaat of registreer dat je deze al rechtstreeks hebt gemaild.</p>
           </div>
-          <div class="employee-customer-timesheet-actions">
-            <button class="button button-primary" data-go="customer-timesheet" id="employee-customer-timesheet-open">Klanturenstaat openen</button>
-            <button class="button button-ghost" id="employee-customer-timesheet-skip" type="button">Al rechtstreeks gemaild</button>
+          <!-- De kaart uit handoff/medewerker-wild.html r164-212 en
+               medewerker-gui.html r235-270: leeg -> bestand gekozen -> verstuurd,
+               plus zelf gemaild. renderEmployeeCustomerTimesheet() kiest de stand;
+               versturen en mailen lopen via de bestaande routes van het scherm
+               Klanturenstaat (dat scherm blijft bestaan, besluit Gio 14 sep). -->
+          <div class="employee-customer-timesheet-actions klantkaart" id="employee-customer-timesheet-actions">
+            <div class="klantkaart-stand" data-klantkaart="leeg">
+              <p class="klantkaart-uitleg">Het door de klant getekende overzicht. PDF, JPG of PNG, maximaal 2 MB.</p>
+              <div class="klantkaart-kies">
+                <button type="button" class="klantkaart-knop-bestand" data-klantkaart-kies="employee-customer-timesheet-file">Bestand kiezen</button>
+                <button type="button" class="klantkaart-knop-foto" data-klantkaart-kies="employee-customer-timesheet-photo">Foto maken</button>
+              </div>
+              <input type="file" id="employee-customer-timesheet-file" accept="application/pdf,image/jpeg,image/png" hidden>
+              <input type="file" id="employee-customer-timesheet-photo" accept="image/jpeg,image/png" capture="environment" hidden>
+            </div>
+            <div class="klantkaart-stand" data-klantkaart="gekozen" hidden>
+              <div class="klantkaart-bestand">
+                <span class="klantkaart-badge" id="employee-customer-timesheet-badge">PDF</span>
+                <div class="klantkaart-bestand-tekst"><strong id="employee-customer-timesheet-file-name"></strong><small id="employee-customer-timesheet-file-meta"></small></div>
+                <button type="button" class="klantkaart-weg" data-klantkaart-weg aria-label="Bijlage verwijderen">✕</button>
+              </div>
+              <button type="button" class="klantkaart-verstuur" data-klantkaart-verstuur>Als bijlage versturen</button>
+            </div>
+            <div class="klantkaart-stand" data-klantkaart="verstuurd" hidden>
+              <p class="klantkaart-uitleg">De getekende urenstaat is als bijlage verstuurd. De Backoffice verwerkt hem.</p>
+              <div class="klantkaart-klaar"><span class="klantkaart-vink" aria-hidden="true">✓</span><strong>Bijlage verstuurd</strong></div>
+            </div>
+            <div class="klantkaart-stand" data-klantkaart="gemaild" hidden>
+              <p class="klantkaart-uitleg">Je gaf aan de urenstaat zelf te hebben gemaild. De Backoffice verwerkt hem zodra hij binnen is.</p>
+            </div>
+            <button class="button button-ghost" id="employee-customer-timesheet-skip" type="button">Die heb ik al gemaild</button>
           </div>
         </section>
         <div class="metric-grid employee-metrics">

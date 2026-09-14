@@ -5301,6 +5301,11 @@ function customerTimesheetNeedsEmployeeAction(status) {
   return ["missing", "draft", "resubmit"].includes(status);
 }
 
+// Het bestand dat op de dashboardkaart is gekozen maar nog niet verstuurd.
+// Bewust niet in state: een File is niet te bewaren, en na herladen hoort de
+// kaart gewoon weer leeg te beginnen.
+let klantKaartKeuze = null;
+
 function renderEmployeeCustomerTimesheet(record, employee, period) {
   const card = document.querySelector("#employee-customer-timesheet-card");
   if (!card) return;
@@ -5309,7 +5314,6 @@ function renderEmployeeCustomerTimesheet(record, employee, period) {
   const documentRecord = customerTimesheetFor(record);
   const status = customerTimesheetStatusLabels[documentRecord.status] || customerTimesheetStatusLabels.missing;
   const needsAction = customerTimesheetNeedsEmployeeAction(documentRecord.status);
-  const openButton = document.querySelector("#employee-customer-timesheet-open");
   const skipButton = document.querySelector("#employee-customer-timesheet-skip");
   let title = "Klanturenstaat staat nog open";
   let note = "Upload de officiële klanturenstaat of registreer dat je deze al rechtstreeks hebt gemaild.";
@@ -5340,9 +5344,91 @@ function renderEmployeeCustomerTimesheet(record, employee, period) {
   statusElement.textContent = status[0];
   card.classList.toggle("is-open", needsAction);
   card.classList.toggle("is-complete", !needsAction);
-  openButton.textContent = needsAction ? "Klanturenstaat openen" : "Details bekijken";
   skipButton.hidden = !needsAction && documentRecord.status !== "skipped";
-  skipButton.textContent = documentRecord.status === "skipped" ? "Alsnog uploaden" : "Al rechtstreeks gemaild";
+  // Teksten uit DESIGN-BESLUITEN "Klanturenstaat-flow" (besluit Gio 14 sep): niet
+  // meer "Al rechtstreeks gemaild" als knop -- dat blijft wel de statuspil, want
+  // zo heet de registratie bij Backoffice.
+  skipButton.textContent = documentRecord.status === "skipped" ? "Toch een bestand toevoegen" : "Die heb ik al gemaild";
+
+  // Stand van de kaart. Een gekozen maar nog niet verstuurd bestand hoort bij
+  // één maand; na een maandwissel of zodra de server verder is, vervalt het.
+  if (klantKaartKeuze && (klantKaartKeuze.periodKey !== period.key || klantKaartKeuze.employeeId !== employee.id || !needsAction)) {
+    klantKaartKeuze = null;
+  }
+  const concept = documentRecord.status === "draft" && documentRecord.fileName;
+  const stand = klantKaartKeuze || concept ? "gekozen"
+    : documentRecord.status === "skipped" ? "gemaild"
+    : needsAction ? "leeg"
+    : "verstuurd";
+  card.dataset.klantkaartStand = stand;
+  card.querySelectorAll("[data-klantkaart]").forEach(blok => { blok.hidden = blok.dataset.klantkaart !== stand; });
+  // Met een bestand klaar is versturen de enige vervolgstap (referentie: de
+  // mailknop staat alleen bij de lege kaart); het kruisje is de weg terug.
+  if (stand === "gekozen") skipButton.hidden = true;
+  if (stand === "gekozen") {
+    const naam = klantKaartKeuze ? klantKaartKeuze.file.name : documentRecord.fileName;
+    const soort = klantKaartKeuze ? customerTimesheetSourceType(klantKaartKeuze.file) : "pdf";
+    document.querySelector("#employee-customer-timesheet-badge").textContent = soort === "jpeg" ? "JPG" : soort.toUpperCase();
+    document.querySelector("#employee-customer-timesheet-file-name").textContent = naam;
+    document.querySelector("#employee-customer-timesheet-file-meta").textContent = klantKaartKeuze
+      ? klantKaartGrootte(klantKaartKeuze.file.size) + " · zojuist toegevoegd"
+      : "Concept opgeslagen" + (documentRecord.uploadedAt ? " · " + documentRecord.uploadedAt : "");
+    // Een opgeslagen concept weghalen kan alleen op het scherm Klanturenstaat
+    // (Concept vervangen); het kruisje hoort bij een pas gekozen bestand.
+    card.querySelector("[data-klantkaart-weg]").hidden = !klantKaartKeuze;
+  }
+}
+
+function klantKaartGrootte(bytes) {
+  return bytes >= 1024 * 1024
+    ? String((bytes / (1024 * 1024)).toFixed(1)).replace(".", ",") + " MB"
+    : Math.max(1, Math.round(bytes / 1024)) + " KB";
+}
+
+function kiesKlantKaartBestand(input) {
+  const file = input.files && input.files[0];
+  input.value = "";
+  if (!file) return;
+  if (!customerTimesheetSourceType(file)) {
+    toast("Kies de officiële klanturenstaat als PDF-, JPG- of PNG-bestand.");
+    return;
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    toast("Dit bestand is groter dan 2 MB. Kies een kleiner bestand of maak de foto opnieuw.");
+    return;
+  }
+  const employee = currentEmployee();
+  const period = currentPeriod();
+  klantKaartKeuze = { file, periodKey: period.key, employeeId: employee.id };
+  renderEmployeeCustomerTimesheet(recordFor(employee.id, period.key), employee, period);
+}
+
+// "Als bijlage versturen" is dezelfde handeling als "Indienen bij Backoffice" op
+// het scherm Klanturenstaat. Het gekozen bestand gaat daarom in het bestandsveld
+// van dat scherm en de bestaande indienknop doet de rest (lokaal of via de
+// server, met dezelfde meldingen). Bij een opgeslagen concept zonder nieuw
+// bestand dient die knop het concept in.
+function verstuurKlantKaartBestand() {
+  const period = currentPeriod();
+  document.querySelector("#customer-timesheet-period").value = period.key;
+  const input = document.querySelector("#customer-timesheet-file");
+  if (klantKaartKeuze) {
+    try {
+      const overdracht = new DataTransfer();
+      overdracht.items.add(klantKaartKeuze.file);
+      input.files = overdracht.files;
+    } catch {
+      toast("Deze browser kan het bestand niet doorgeven. Gebruik het scherm Klanturenstaat.");
+      return;
+    }
+  }
+  syncCustomerTimesheetUploadActions();
+  const submit = document.querySelector("#customer-timesheet-submit");
+  if (submit.disabled) {
+    toast("Deze klanturenstaat kan nu niet worden verstuurd.");
+    return;
+  }
+  submit.click();
 }
 
 // Vindt de weekindex van vandaag binnen period, los van viewport (in
@@ -7016,7 +7102,7 @@ function renderCustomerTimesheetPanel() {
   document.querySelector("#customer-timesheet-body").textContent = mail.body;
   const current = document.querySelector("#customer-timesheet-current");
   current.innerHTML = documentRecord.status === "skipped"
-    ? '<div><div><strong>Als rechtstreeks gemaild geregistreerd</strong><small>' + escapeHtml(documentRecord.skippedReason || "De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.") + (documentRecord.skippedBy ? " · door " + escapeHtml(documentRecord.skippedBy) : "") + (documentRecord.skippedAt ? " · " + escapeHtml(documentRecord.skippedAt) : "") + '</small></div>' + customerTimesheetStatusPill(record) + '<button class="small-button" data-restore-customer-timesheet>Alsnog uploaden</button></div>'
+    ? '<div><div><strong>Als rechtstreeks gemaild geregistreerd</strong><small>' + escapeHtml(documentRecord.skippedReason || "De klanturenstaat is al rechtstreeks naar Path Backoffice gemaild.") + (documentRecord.skippedBy ? " · door " + escapeHtml(documentRecord.skippedBy) : "") + (documentRecord.skippedAt ? " · " + escapeHtml(documentRecord.skippedAt) : "") + '</small></div>' + customerTimesheetStatusPill(record) + '<button class="small-button" data-restore-customer-timesheet>Toch een bestand toevoegen</button></div>'
     : documentRecord.fileName
       ? '<div><div><strong>' + escapeHtml(documentRecord.fileName) + '</strong><small>' + (documentRecord.isExample ? "Voorbeeldbestand · geen echt klantdocument" : "Opgeslagen " + escapeHtml(documentRecord.uploadedAt || "datum onbekend") + (documentRecord.mimeType === "application/pdf" && /\.(jpe?g|png)$/i.test(documentRecord.originalFileName || "") ? " · " + escapeHtml(documentRecord.originalFileName) + " omgezet naar PDF" : "")) + (documentRecord.status === "received" ? " · Backoffice heeft een melding in de app" : "") + (documentRecord.reviewNote ? " · " + escapeHtml(documentRecord.reviewNote) : "") + '</small></div><span class="status-pill ' + status[1] + '">' + escapeHtml(status[0]) + '</span>' + (documentRecord.fileData ? '<button class="small-button" data-view-customer-timesheet="' + employee.id + '" data-period-key="' + period.key + '">Klanturenstaat bekijken</button>' : '<span></span>') + '</div>'
       : '<div><div><strong>Nog geen klanturenstaat voor ' + escapeHtml(period.label) + '</strong><small>De urenregistratie kan wel gewoon worden ingevuld en ingediend.</small></div>' + customerTimesheetStatusPill(record) + '<span></span></div>';
@@ -7028,7 +7114,7 @@ function renderCustomerTimesheetPanel() {
   saveButton.textContent = ["draft", "resubmit"].includes(documentRecord.status) ? "Concept vervangen" : "Concept opslaan";
   submitButton.textContent = documentRecord.status === "draft" ? "Concept indienen bij Backoffice" : "Indienen bij Backoffice";
   skipButton.hidden = !customerTimesheetNeedsEmployeeAction(documentRecord.status) && documentRecord.status !== "skipped";
-  skipButton.textContent = documentRecord.status === "skipped" ? "Alsnog uploaden" : "Al rechtstreeks gemaild";
+  skipButton.textContent = documentRecord.status === "skipped" ? "Toch een bestand toevoegen" : "Die heb ik al gemaild";
   syncCustomerTimesheetUploadActions();
 }
 
@@ -7058,7 +7144,7 @@ function syncCustomerTimesheetUploadActions() {
     help.textContent = "Deze klanturenstaat is al verwerkt via de brokerroute.";
     help.classList.add("is-warning");
   } else if (documentRecord.status === "skipped") {
-    help.textContent = "Deze klanturenstaat staat geregistreerd als al rechtstreeks gemaild. Kies Alsnog uploaden om deze registratie terug te draaien.";
+    help.textContent = "Deze klanturenstaat staat geregistreerd als al rechtstreeks gemaild. Kies Toch een bestand toevoegen om deze registratie terug te draaien.";
     help.classList.add("is-ready");
   } else if (file && !sourceType) {
     help.textContent = "Dit bestandstype is niet toegestaan. Kies een PDF, JPG of PNG.";
@@ -14884,6 +14970,18 @@ function storeCustomerTimesheetFile(targetStatus) {
 
 document.querySelector("#customer-timesheet-save-draft").addEventListener("click", () => storeCustomerTimesheetFile("draft"));
 document.querySelector("#customer-timesheet-edit-mail").addEventListener("click", showCustomerTimesheetSubmissionMailEditor);
+// Dashboardkaart klanturenstaat (Klassiek): kiezen, weghalen, versturen.
+document.querySelectorAll("[data-klantkaart-kies]").forEach(knop => {
+  knop.addEventListener("click", () => document.getElementById(knop.dataset.klantkaartKies)?.click());
+});
+["#employee-customer-timesheet-file", "#employee-customer-timesheet-photo"].forEach(selector => {
+  document.querySelector(selector)?.addEventListener("change", event => kiesKlantKaartBestand(event.currentTarget));
+});
+document.querySelector("[data-klantkaart-weg]")?.addEventListener("click", () => {
+  klantKaartKeuze = null;
+  renderAll();
+});
+document.querySelector("[data-klantkaart-verstuur]")?.addEventListener("click", verstuurKlantKaartBestand);
 document.querySelector("#employee-customer-timesheet-skip").addEventListener("click", () => {
   const documentRecord = customerTimesheetFor(recordFor(currentEmployee().id, currentPeriod().key));
   if (documentRecord.status === "skipped") restoreSkippedCustomerTimesheet();

@@ -252,6 +252,18 @@ Feature: Dashboard en open werkvoorraad
     Then heeft de huidige stap een • en een wachtende stap geen teken
 
   @happy
+  Scenario: [DASH-H-034] de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee
+    # Testtechniek: End-to-end use-case + visuele contractasserties
+    # Aantoonbare Playwright-assertions in deze case: 32
+    Given een lege kaart met kiezen, foto en zelf gemaild
+    When een verkeerd bestandstype wordt gekozen, dan blijft de kaart leeg met uitleg
+    When een PDF wordt gekozen, dan toont de kaart naam, grootte, kruisje en de verstuurknop
+    And het kruisje brengt de kaart terug naar leeg
+    When het bestand als bijlage wordt verstuurd, dan gaat precies dat bestand mee naar de indienroute
+    And na een weigering blijft het gekozen bestand staan
+    Then wordt met Playwright-assertions bevestigd dat de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee
+
+  @happy
   Scenario: [DASH-H-001] admin dashboard opent zonder console errors
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 1
