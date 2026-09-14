@@ -2932,6 +2932,27 @@ bemoedigend maar niet schoon.
 **Les:** twee keer op een dag een venster verruimen is een signaal, geen oplossing. De derde keer
 hoort de vraag te zijn wat er beweegt, niet hoe lang je erop wacht.
 
+**DE ONDERLIGGENDE OORZAAK VAN ALLE "FLAKINESS" VAN VANNACHT: de machine heeft te weinig geheugen
+(gemeten 14 sep 03:0x).** Dit verklaart meer dan alle losse testfixes samen, en het is met cijfers
+te onderbouwen:
+- **1,37 GB vrij van 15,8 GB**, met een toegewezen geheugen (commit charge) van **33,3 GB** -- meer
+  dan het dubbele van het fysieke geheugen. Windows wisselt dus continu naar schijf.
+- Grootverbruikers: VS Code (33 processen, 3,87 GB), claude (13, 2,05 GB), Chrome (29, 1,50 GB),
+  msedgewebview2 (19, 1,17 GB). Vier fysieke kernen, acht logische.
+- Momentmeting van de CPU: ~14,3 CPU-seconden in 8 seconden wandklok, dus bijna twee kernen
+  permanent bezet door achtergrondbrowsers die niets met onze tests te maken hebben.
+**Het bewijs zit in de correlatie.** Dezelfde `tablet-chromium`-suite, drie keer gedraaid:
+12,6 min -> **0** uitvallers; 19,8 min -> **2**; 32,6 min -> **9**. Hoe trager de machine, hoe meer
+cases omvallen, en telkens andere. Dat is de handtekening van een omgeving die te krap zit, niet van
+negen defecten.
+**Wat dit betekent voor de conclusies van vannacht.** De fixes die we deden zijn op zichzelf goed en
+onderbouwd (`klikNaScroll` na een gemeten verspringing van 1100px, de wachtvensters op assertions,
+de `wachtTot`-helper in de smoke). Maar een deel van wat wij als "tijdgevoelige case" behandelden,
+was in werkelijkheid een machine die aan het wisselbestand hing. **Voor een betrouwbare meting hoort
+de machine eerst opgeruimd te worden** -- browsers en editorvensters sluiten, of herstarten -- en pas
+daarna een suite draaien. Zonder dat blijft elke uitslag een gok, en dat heeft ons vannacht vier
+keer een verkeerde conclusie opgeleverd.
+
 **Herhaald probleem: onze twee sessies draaien tests door elkaar heen (vier keer op 13/14 sep).**
 Telkens hetzelfde gevolg: een meting die geldig lijkt omdat hij reproduceerbaar is, terwijl de
 vervuiling elke herhaling meereist. **Herkenningsteken dat het contention is en geen defect:**
