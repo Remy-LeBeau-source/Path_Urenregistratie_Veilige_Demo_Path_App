@@ -2953,6 +2953,32 @@ de machine eerst opgeruimd te worden** -- browsers en editorvensters sluiten, of
 daarna een suite draaien. Zonder dat blijft elke uitslag een gok, en dat heeft ons vannacht vier
 keer een verkeerde conclusie opgeleverd.
 
+**Hermeting na de herstart (14 sep 03:48, machine opgeruimd door Gio).** Geheugen van 1,4 GB vrij /
+33 GB toegewezen naar 3,3 GB vrij / 16 GB toegewezen. Dezelfde `tablet-chromium`-suite:
+**79 groen, 3 rood, 1 overgeslagen, 16,9 min** -- tegen 9 rood in 32,6 min ervóór. Daarmee is de
+geheugendiagnose bevestigd: zes van de negen uitvallers (DASH-N-007, DASH-N-029, SKIN-H-009, -016,
+-018, -022, -028) zijn groen en waren dus ruis. **Drie blijven, elk met een specifieke, niet-willekeurige
+melding -- dus vermoedelijk echt, in onderzoek (sessie -ad):**
+- `[DASH-N-023]` -- `#period-label` verwacht "Augustus 2026", kreeg "April 2026" (medewerker vóór
+  startdatum). **Oorzaak gevonden (sessie -ad, door main nageverifieerd): een echte race in de app.**
+  `setPeriod()` weigert voor een medewerker een maand vóór `currentEmployee().startDate`. Maar de
+  ingebouwde catalogus zet Marc, Stasjo en Brian op `startDate: "2026-01-01"` (app.js r543/579/615),
+  terwijl de server `employment_start_date = '2026-05-01'` heeft (seed-demo-data.sql r62-64). Zolang
+  de bootstrap-hydratatie niet binnen is, toetst de grens dus tegen januari en laat hij april door;
+  daarna weigert hij april wél. Snelle run: groen; trage run: "April 2026" -- en bij -ad was hij in
+  een tweede meting inderdaad groen. Geen datarisico (de server weigert die maand toch,
+  `period-not-accessible`, zie `[ROLE-N-005]`), maar wel verkeerd gedrag bij een trage verbinding.
+  Voor echte accounts buiten de catalogus is de startdatum vóór hydratatie zelfs leeg en staat de
+  grens helemaal uit. **Fixrichtingen:** (a) catalogusdatums gelijktrekken met de seed -- klein, maar
+  eerst toetsen of `mobile-ui.spec.ts` (`MOBILE_PERIOD = '2026-01'` voor Stasjo) niet juist op dit
+  race-venster leunt; (b) terugbladeren blokkeren tot het serverprofiel binnen is -- gedragswijziging
+  voor elk echt account, dus aan Gio.
+- `[DASH-H-030]` -- klik op `#submit-timesheet` loopt af terwijl het element "visible, enabled and
+  stable" is: iets onderschept de klik. Op 768px zit je in de 721-820px-band; overlay vermoed.
+- `[SKIN-H-023]` -- resettoken "ongeldig of verlopen" waar "wachtwoord ingesteld" verwacht werd.
+Een eerste poging na de herstart telde niet: MySQL deed er 5,5 minuut over om InnoDB te
+initialiseren, en de run liep op `ECONNREFUSED 3306` stuk vóór er één case draaide.
+
 **Herhaald probleem: onze twee sessies draaien tests door elkaar heen (vier keer op 13/14 sep).**
 Telkens hetzelfde gevolg: een meting die geldig lijkt omdat hij reproduceerbaar is, terwijl de
 vervuiling elke herhaling meereist. **Herkenningsteken dat het contention is en geen defect:**
