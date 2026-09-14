@@ -4322,17 +4322,16 @@ function applyOrganizationBranding() {
       && window.matchMedia("(min-width: 821px)").matches;
     const onDarkSurface = (Boolean(image.closest("#sidebar-brand")) && !lichteEmployeeKop) || opMerkpilInNieuw;
     const useDarkLogo = onDarkSurface || donkereModusActief();
-    // Ensure sidebar and mobile topbar use opposite logo variants for contrast
-    // (smoke-test expects these two to differ). If an org-uploaded logo exists
-    // we keep that as-is via dataset.eigenLogo.
-    let variant;
-    if (image.closest('#sidebar-brand')) {
-      variant = 'licht';
-    } else if (image.closest('.mobile-brand-home')) {
-      variant = 'donker';
-    } else {
-      variant = useDarkLogo ? 'licht' : 'donker';
-    }
+    // useDarkLogo rekent hierboven al per positie uit wat de echte ondergrond
+    // is (zijbalk, de New-merkpil, of het thema) -- dat is de enige bron.
+    // Er stonden hier tijdelijk vaste variant-branches per element (om een
+    // smoke-assertie letterlijk te laten slagen: "sidebar en mobiele topbalk
+    // moeten verschillen"), maar die negeerden useDarkLogo juist voor de
+    // gevallen waar hij ertoe doet -- #sidebar-brand kreeg zo een vaste
+    // 'licht'-variant (donker logo) terwijl die zijbalk bij beheer en Modern
+    // juist donker is: het logo werd daar onzichtbaar. Terug naar de ene
+    // regel die alle posities via useDarkLogo afhandelt.
+    const variant = useDarkLogo ? 'donker' : 'licht';
     image.src = brandLogoUrl(variant);
     image.alt = organizationName + " logo";
     // Van het meegeleverde logo bestaat een witte variant, die rechtstreeks op

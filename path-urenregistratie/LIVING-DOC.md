@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 549 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 550 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 549 unieke case-ID's
+- Playwright executable cases: 550 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 550 unieke case-ID's
+- Totaal executable cases: 551 unieke case-ID's
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
 - Database steps mappings: 1
-- Uitvoeringen: 591
-- Niet-mobile projectuitvoeringen: 507
+- Uitvoeringen: 592
+- Niet-mobile projectuitvoeringen: 508
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 549 Playwright-functionele cases in totaal 591 resultaten op: 507 + (42 x 2) = 591.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 550 Playwright-functionele cases in totaal 592 resultaten op: 508 + (42 x 2) = 592.
 
 ## Documentatieketen
 
@@ -642,7 +642,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 549 Playwri
 
 - Feature: `tests/playwright/features/skin.feature`
 - Source: `tests/playwright/skin.spec.ts`
-- Cases: 38
+- Cases: 39
 
 - [SKIN-H-001] de app start standaard in de klassieke vormgeving — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [SKIN-H-002] Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
@@ -682,6 +682,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 549 Playwri
 - [SKIN-H-035] op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle breedte — Techniek: Toestandsovergang · Assertions: 21
 - [SKIN-H-036] een dialoog met open toetsenbord houdt de knoppen, de sluitactie en het typveld in beeld — Techniek: Toestandsovergang · Assertions: 7
 - [SKIN-H-039] de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect toont — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 2
+- [SKIN-H-040] het zijbalklogo volgt zijn eigen (donkere) ondergrond, niet een vast contrast met een ander element — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 
 ### Correctie- en goedkeuringsproces
 

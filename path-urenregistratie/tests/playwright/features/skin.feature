@@ -350,3 +350,11 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
     When de flow voor SKIN-H-039 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect toont
+
+  @happy
+  Scenario: [SKIN-H-040] het zijbalklogo volgt zijn eigen (donkere) ondergrond, niet een vast contrast met een ander element
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
+    When de flow voor SKIN-H-040 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat het zijbalklogo volgt zijn eigen (donkere) ondergrond, niet een vast contrast met een ander element

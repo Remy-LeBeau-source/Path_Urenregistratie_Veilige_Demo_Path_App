@@ -157,3 +157,5 @@ Then("blijven de indienknop, de sluitactie en het typveld binnen dat deel");
 And("ruimt het sluiten van de dialoog de aanpassing op");
 When("de flow voor SKIN-H-039 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect toont");
+When("de flow voor SKIN-H-040 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat het zijbalklogo volgt zijn eigen (donkere) ondergrond, niet een vast contrast met een ander element");

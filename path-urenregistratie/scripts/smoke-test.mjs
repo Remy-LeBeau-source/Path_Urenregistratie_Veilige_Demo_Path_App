@@ -168,7 +168,20 @@ assert(styles.includes("@media (max-width: 590px)"), "Er moet een mobiele layout
 assert(styles.includes("v0.9.45 · mobiele bediening") && styles.includes("@media (max-width: 720px)"), "De expliciete mobiele touch-layout moet aanwezig blijven");
 assert(document.querySelector(".mobile-brand-home [data-brand-logo]") && document.querySelector(".mobile-brand-home [data-brand-logo]").tagName === "IMG", "Mobiel moet het Path-logo als zichtbare Home-knop tonen");
 assert(document.querySelector("#mobile-switch-role")?.textContent.includes("Rol kiezen"), "Mobiel moet een directe knop Rol kiezen hebben zodat verversen niet nodig is");
-assert(document.querySelector("#sidebar-brand [data-brand-logo]")?.src !== document.querySelector(".mobile-brand-home [data-brand-logo]")?.src, "De donkere zijbalk moet de lichte logoversie gebruiken en de lichte topbalk de donkere versie");
+// De zijbalk is vóór een rolkeuze altijd donker en heeft dus het witte logo
+// nodig. De mobiele Home-pil is in Klassiek licht in het lichte thema (dan
+// hoort ze het donkere logo te tonen, en verschilt ze van de zijbalk) maar
+// zelf ook donker in het donkere thema (dan mag ze hetzelfde witte logo tonen
+// als de zijbalk -- dat is geen contrastfout, dat is twee donkere vlakken
+// die allebei het witte logo nodig hebben). Toets daarom per thema wat er
+// werkelijk klopt, niet een blanket "moet altijd verschillen".
+const zijbalkLogoSrc = document.querySelector("#sidebar-brand [data-brand-logo]")?.src;
+const mobielLogoSrc = document.querySelector(".mobile-brand-home [data-brand-logo]")?.src;
+if (document.documentElement.dataset.theme === "dark") {
+  assert(zijbalkLogoSrc === mobielLogoSrc, "In het donkere thema zijn zijbalk en mobiele Home-pil allebei donker en horen ze hetzelfde witte logo te tonen");
+} else {
+  assert(zijbalkLogoSrc !== mobielLogoSrc, "De donkere zijbalk moet het witte logo tonen en de lichte mobiele topbalk het donkere logo");
+}
 dom.window.syncEnvironmentChrome("uren.pathconsultancy.nl");
 assert(document.querySelector("#switch-role")?.textContent === "Uitloggen" && document.querySelector("#mobile-switch-role")?.textContent === "Uitloggen", "Productie moet de afmeldactie duidelijk Uitloggen noemen");
 dom.window.syncEnvironmentChrome("localhost");
@@ -301,7 +314,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 document te controleren · 0 extern te bevestigen · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, externe bevestiging, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("2.0.74"), "Het zichtbare versienummer moet 2.0.74 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("2.0.75"), "Het zichtbare versienummer moet 2.0.75 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -896,7 +909,7 @@ const customerReminderState = JSON.parse(dom.window.localStorage.getItem("path-u
 assert(customerReminderState.notifications.length === notificationsBeforeCustomerReminder + 1 && customerReminderState.notifications.at(-1).title === "Klanturenstaat ontbreekt", "Backoffice moet vanuit de rustige maand een ontbrekende klanturenstaatherinnering kunnen klaarzetten");
 choosePeriod("#period-month-picker", "#period-year-picker", "2026-08");
 assert(document.querySelector("#customer-timesheet-admin-list").textContent.includes("Controle nodig"), "Een geüploade klanturenstaat moet voor Backoffice op Controle nodig staan");
-// Sinds Klanturenstaten een eigen scherm heeft (v2.0.74) bestaat dezelfde
+// Sinds Klanturenstaten een eigen scherm heeft (v2.0.75) bestaat dezelfde
 // data-review-customer-timesheet-knop twee keer: hier in de werkvoorraad
 // (#admin-task-panel, met workflow-vervolg via openAdminTask) en nogmaals in
 // #customer-timesheet-admin-list (losstaand, zonder taak-workflow). Scope
@@ -1926,10 +1939,14 @@ for (const [naam, bestand] of [
   assert(treffer[1] === uitBestand, naam + " loopt niet gelijk met " + bestand + ": draai scripts/build-app-icons.mjs opnieuw");
 }
 assert(!appJsSrc.includes("PATH_LOGO_DATA_URL"), "De oude losse logoconstante hoort weg te zijn: een logo per ondergrond, uit de bouwer");
-// De zijbalk is in beide thema's donker. Andere logoposities volgen het thema.
-// Accept either explicit contrast logic in app.js or enforced contrasting
-// variants; tests running in CI can encounter different skin defaults.
-assert(appJsSrc.includes('onDarkSurface || donkereModusActief() ? "donker" : "licht"') || appJsSrc.includes('forceSidebarLogoVariant') || appJsSrc.includes('forceMobileLogoVariant'), "Het logo moet het contrast van zijn werkelijke ondergrond volgen");
+// De zijbalk is bij beheer en Modern donker, en volgt bij de Klassieke
+// medewerker vanaf 821px de lichte horizontale kopbalk; andere posities
+// volgen het thema. Er stond hier ooit een vaste variant per element (om
+// deze assertie zelf te laten slagen) -- dat maakte het logo op de donkere
+// zijbalk onleesbaar. Toets daarom dat de variant écht uit useDarkLogo komt,
+// en niet meer per positie is vastgezet.
+assert(appJsSrc.includes("useDarkLogo ? 'donker' : 'licht'"), "Het logo moet het contrast van zijn werkelijke ondergrond (useDarkLogo) volgen, niet een vaste variant per positie");
+assert(!/if \(image\.closest\(['"]#sidebar-brand['"]\)\)/.test(appJsSrc), "De zijbalk mag geen vaste logovariant krijgen -- dat maakt het logo onleesbaar zodra de zijbalk donker is (beheer, Modern)");
 assert(appJsSrc.includes('brandLogoUrl("donker")'), "Op de donkerblauwe factuurkop hoort het witte woordmerk");
 const mailAcceptanceSrc = readFileSync_(new URL("../server/mail/acceptance.php", import.meta.url), "utf8");
 const mailAcceptancePolicySrc = readFileSync_(new URL("../server/scripts/mail-acceptance-policy-check.php", import.meta.url), "utf8");
@@ -2150,7 +2167,7 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v2.0.74 volledige smoke test: geslaagd");
+console.log("Path v2.0.75 volledige smoke test: geslaagd");
 // app.js schedules browser refresh timers. In JSDOM those timers can keep Node
 // alive after every assertion has completed, which made the release check look
 // stuck. End explicitly only after the complete smoke contract is green.

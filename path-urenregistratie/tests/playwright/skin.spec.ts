@@ -2590,3 +2590,50 @@ test('[SKIN-H-039] de app hangt een passieve touchstart-luisteraar aan document,
   expect(touch.length, 'de app hoort een touchstart-luisteraar op document te hebben').toBeGreaterThan(0);
   expect(touch.every(l => l.passief), 'elke touchstart-luisteraar op document hoort passief te zijn').toBe(true);
 });
+
+// Regressie 14 sep (avond): een tussenversie zette voor #sidebar-brand een
+// vaste logovariant om een smoke-assertie letterlijk te laten slagen ("sidebar
+// en mobiele topbalk moeten verschillen"). Dat maakte het logo onzichtbaar op
+// de donkerblauwe zijbalk bij beheer, want de vaste variant was juist het
+// donkere (op-licht-ondergrond bedoelde) logo. Deze case toetst het echte
+// contrast: de zijbalk is bij beheer altijd donker en hoort dus altijd het
+// witte logo te tonen, in beide thema's -- niet een variant die toevallig
+// verschilt van een ander element.
+test('[SKIN-H-040] het zijbalklogo volgt zijn eigen (donkere) ondergrond, niet een vast contrast met een ander element', async ({ page }) => {
+  const [lichtBestand, donkerBestand] = await Promise.all([
+    readFile(join(process.cwd(), 'assets', 'path-logo.png')),
+    readFile(join(process.cwd(), 'assets', 'path-logo-wit.png')),
+  ]);
+  const donkerLogoUrl = 'data:image/png;base64,' + donkerBestand.toString('base64');
+  const lichtLogoUrl = 'data:image/png;base64,' + lichtBestand.toString('base64');
+
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+  const zijbalkLogo = page.locator('#sidebar-brand [data-brand-logo]');
+
+  // Klassiek start standaard donker (besluit 14 sep). Wissel via de echte
+  // knop, niet door het data-theme-attribuut los te zetten: alleen de knop
+  // (applyTheme) roept ook applyOrganizationBranding() aan, wat het logo
+  // herberekent. Direct het attribuut zetten laat het logo ongewijzigd staan
+  // en zou deze case dus niets laten bewijzen.
+  const themeKnop = page.locator('#quick-theme-toggle');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+
+  await test.step('In donker thema (de standaard) toont de zijbalk het witte logo', async () => {
+    expect(await zijbalkLogo.getAttribute('src')).toBe(donkerLogoUrl);
+  });
+
+  await test.step('Na wisselen naar licht thema blijft de zijbalk het witte logo tonen: de zijbalk zelf is altijd donker', async () => {
+    await themeKnop.click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    expect(await zijbalkLogo.getAttribute('src')).toBe(donkerLogoUrl);
+  });
+
+  await test.step('De mobiele Home-pil is in Klassiek licht en toont dus het donkere logo, anders dan de zijbalk', async () => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const mobielLogo = page.locator('.mobile-brand-home [data-brand-logo]');
+    await expect(mobielLogo).toBeVisible();
+    expect(await mobielLogo.getAttribute('src')).toBe(lichtLogoUrl);
+  });
+});
