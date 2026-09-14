@@ -4468,8 +4468,17 @@ html:not([data-skin="new"]) body[data-role="employee"] .sidebar > .testbalk:not(
 .testbalk-label { font-size: 9.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; opacity: .8; white-space: nowrap; }
 .testbalk-knoppen { display: inline-flex; flex-wrap: nowrap; align-items: center; gap: 2px; }
 html:not([data-skin="new"]) .testbalk .topbar-quick-reset { margin-left: 0; min-height: 32px; padding-inline: 8px; color: inherit; font-size: 10px; white-space: nowrap; }
-html:not([data-skin="new"]) .testbalk .appearance-switches { border-color: transparent; background: transparent; padding: 0; }
-html:not([data-skin="new"]) .testbalk .appearance-switch { min-height: 32px; padding-inline: 8px; color: inherit; }
+html:not([data-skin="new"]) .testbalk .appearance-switches { border-color: rgba(165,96,13,.24); background: rgba(255,255,255,.26); padding: 2px; }
+html:not([data-skin="new"]) .testbalk .appearance-switch { min-height: 32px; border: 1px solid transparent; padding-inline: 8px; color: inherit; }
+html:not([data-skin="new"]) .testbalk .topbar-quick-reset:hover,
+html:not([data-skin="new"]) .testbalk .appearance-switch:hover,
+html:not([data-skin="new"]) .testbalk .appearance-switch[aria-pressed="true"] { border-color: var(--warning); background: rgba(187,118,35,.14); color: #7a4a09; }
+html[data-theme="dark"]:not([data-skin="new"]) .testbalk .appearance-switches { border-color: #5b4328; background: rgba(255,255,255,.06); }
+html[data-theme="dark"]:not([data-skin="new"]) .testbalk .topbar-quick-reset,
+html[data-theme="dark"]:not([data-skin="new"]) .testbalk .appearance-switch { color: #ffd59b; }
+html[data-theme="dark"]:not([data-skin="new"]) .testbalk .topbar-quick-reset:hover,
+html[data-theme="dark"]:not([data-skin="new"]) .testbalk .appearance-switch:hover,
+html[data-theme="dark"]:not([data-skin="new"]) .testbalk .appearance-switch[aria-pressed="true"] { border-color: #efb76f; background: rgba(239,183,111,.18); color: #fff2dd; }
 @media (max-width: 820px) {
   html:not([data-skin="new"]) .testbalk .topbar-quick-reset,
   html:not([data-skin="new"]) .testbalk .appearance-switch { min-height: 44px; }
@@ -4840,6 +4849,10 @@ html:not([data-skin="new"]) body[data-role="employee"] .hours-table tfoot { disp
     --surface: rgba(255,255,255,.78); --surface-muted: rgba(255,255,255,.46); --line: #bfcec8; --line-zacht: #d0dcd6; --muted: #485651; --ink: #172332;
     --veld-vlak: #fff; --veld-rand: rgba(22,52,42,.22); --kaart-glans: rgba(255,255,255,.9);
   }
+  html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] #view-timesheet {
+    --surface: rgba(17,29,43,.88); --surface-muted: rgba(30,45,61,.82); --line: #3b5064; --line-zacht: #2f4356; --muted: #b6c6d0; --ink: #f2f7f6;
+    --veld-vlak: #f7fbfa; --veld-rand: #d7e3df; --kaart-glans: rgba(255,255,255,.08);
+  }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .view-heading p,
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .assignment-bar,
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-view-toolbar > div:first-child,
@@ -4895,6 +4908,16 @@ html:not([data-skin="new"]) body[data-role="employee"] .hours-table tfoot { disp
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet #submit-timesheet.is-gedempt { background: var(--surface-muted); color: var(--muted); }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet #submit-timesheet:active { transform: scale(.97); }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .timesheet-submit-note { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 11.5px; }
+  html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .timesheet-panel { box-shadow: 0 18px 42px rgba(0,0,0,.22); }
+  html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-table tbody tr { background: rgba(255,255,255,.035); }
+  html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-table tbody tr:hover { background: rgba(58,189,157,.08); }
+  html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-day-presets button { border-color: #4a6175; background: rgba(255,255,255,.04); color: #d8e4e2; }
+  html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-day-presets button:hover { border-color: var(--mint); background: rgba(58,189,157,.18); color: #ffffff; }
+  html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] #view-timesheet #fill-standard-hours:not(:disabled) { border-color: var(--mint); background: var(--mint); color: #07111d; box-shadow: 0 8px 22px rgba(58,189,157,.28); }
+  html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] #view-timesheet #fill-standard-hours:disabled { border-style: dashed; border-color: #5d746d; background: rgba(255,255,255,.05); color: #9fb0b8; opacity: 1; }
+  html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] #view-timesheet #reset-standard-hours,
+  html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] #view-timesheet #save-timesheet { border-color: #6b7f91; background: rgba(255,255,255,.06); color: #edf7f4; }
+  html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] #view-timesheet #submit-timesheet.is-gedempt { border: 1px solid #547067; background: rgba(58,189,157,.12); color: #dcebe7; box-shadow: none; }
 }
 
 /* Dagen buiten de maand (gui r350): alleen het grijze vlak, geen wit blokje. */
