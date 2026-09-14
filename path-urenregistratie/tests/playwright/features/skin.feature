@@ -331,3 +331,11 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     When het toetsenbord het zichtbare deel verkleint tot 300px
     Then blijven de indienknop, de sluitactie en het typveld binnen dat deel
     And ruimt het sluiten van de dialoog de aanpassing op
+
+  @happy
+  Scenario: [SKIN-H-037] de weekchips in Modern passen op 360px naast elkaar, gelijk breed en zonder scrollen
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
+    When de flow voor SKIN-H-037 wordt uitgevoerd
+    Then staat er per week één chip, en scrolt de strook niet horizontaal

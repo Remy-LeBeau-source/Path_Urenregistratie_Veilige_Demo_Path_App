@@ -27,7 +27,12 @@ Zeven punten in `OPDRACHT.md`. Stand per punt aan de repo-kant:
    op dashboard, Mijn uren en Mijn maanden. De topbalk is van de hele app en blijft
    ongemoeid.
 6. **Web app Mijn uren: vijf gelijke weekchips, geen onderbalk, geen vullijn per
-   dagrij.** Nog niet gebouwd -- dat is Modern, en Klassiek had voorrang.
+   dagrij.** De weekchips zijn gebouwd met de waarden uit de bron (regels 236-240:
+   flex 1 1 0, gap 6px, min-height 52px, padding 7px 4px, radius 12px, label
+   9.5px/.06em als "W36"), zonder horizontale scroll; het volle "Week 36" staat
+   in de aria-label. [SKIN-H-037] meet het op 360px -- op deze strook stond nog
+   geen enkele case. De onderbalk en de vullijn per dagrij bestaan in de app niet,
+   dus daar valt niets weg te halen.
 7. **`OPDRACHT-CLAUDE-CODE.md` en `BRIEF.md` verwijderen.** Gedaan.
 
 ### Twee besluiten van Gio die via main binnenkwamen (14 sep)

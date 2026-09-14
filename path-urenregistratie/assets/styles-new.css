@@ -3541,28 +3541,30 @@ html[data-skin="new"] #view-employee-dashboard .new-bento-contractregel { displa
 html[data-skin="new"] #new-bento-weekstrip { display: none; }
 
 @media (max-width: 720px) {
+  /* Ontwerpronde 14 sep (tweede): vijf gelijke chips die passen zonder te
+     scrollen. Waarden uit handoff/medewerker-wild.bron.txt, regels 236-240:
+     container display:flex;gap:6px;padding:2px 0 6px, geen overflow meer en
+     geen negatieve marge. Daarmee vervalt ook de valkuil waar het commentaar
+     hierboven voor waarschuwde: zonder overflow-x klemt er geen hoogte meer. */
   html[data-skin="new"] #new-bento-weekstrip {
     display: flex;
-    gap: 8px;
-    margin: 0 -14px;
-    padding: 2px 14px 6px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    gap: 6px;
+    padding: 2px 0 6px;
   }
 
   html[data-skin="new"] .new-bento-weekchip {
-    display: flex;
-    flex: 0 0 auto;
-    align-items: center;
-    gap: 8px;
-    min-height: 44px;
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 52px;
     border: 1px solid #d7cebe;
-    border-radius: 11px;
+    border-radius: 12px;
     background: #fbf8f2;
     color: #102235;
     cursor: pointer;
-    padding: 0 12px;
-    scroll-snap-align: start;
+    padding: 7px 4px;
     transition: border-color .3s, background .3s;
   }
 
@@ -3573,11 +3575,10 @@ html[data-skin="new"] #new-bento-weekstrip { display: none; }
 
   html[data-skin="new"] .new-bento-weekchip span {
     color: #6b7570;
-    font-size: 10px;
+    font-size: 9.5px;
     font-weight: 900;
-    letter-spacing: .1em;
+    letter-spacing: .06em;
     text-transform: uppercase;
-    white-space: nowrap;
   }
 
   html[data-skin="new"] .new-bento-weekchip strong {

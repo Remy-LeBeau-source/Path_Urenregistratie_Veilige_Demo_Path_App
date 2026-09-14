@@ -5799,7 +5799,10 @@ function renderWeekstrip(record, period, actieveWeekIndex) {
       + (actief ? ' aria-selected="true"' : ' aria-selected="false"')
       + ' data-weekstrip-index="' + index + '"'
       + ' aria-label="Week ' + week.number + ', ' + hoursFormat.format(uren) + ' uur">'
-      + '<span>Week ' + week.number + '</span>'
+      // "W36" en niet "Week 36": vijf gelijke chips passen anders niet naast
+      // elkaar op 360px (ontwerpronde 14 sep, tweede). Het volledige woord staat
+      // in de aria-label, dus een schermlezer hoort nog steeds "Week 36".
+      + '<span aria-hidden="true">W' + week.number + '</span>'
       + '<strong>' + hoursFormat.format(uren) + '</strong>'
       + '</button>';
   }).join("");

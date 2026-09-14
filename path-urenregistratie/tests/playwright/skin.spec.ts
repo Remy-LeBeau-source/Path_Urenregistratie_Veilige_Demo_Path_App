@@ -2431,3 +2431,47 @@ test('[SKIN-H-036] een dialoog met open toetsenbord houdt de knoppen, de sluitac
     await expect(page.locator('#modal')).not.toHaveAttribute('data-zichtbaar', '');
   });
 });
+
+// Ontwerpronde 14 sep (tweede): in Modern op de telefoon staan de weeknummers
+// als vijf gelijke chips die passen zonder scrollen. Waarden uit
+// handoff/medewerker-wild.bron.txt, regels 236-240.
+//
+// Er bestond nog geen enkele case op deze weekstrook, ook niet voor de eerste
+// versie ervan (een horizontaal scrollende rij). Deze legt nu vast wat de
+// ronde vraagt: geen horizontale scroll, gelijke breedtes, de korte notatie op
+// de chip en het volle woord voor de schermlezer. Gemeten op 360px, de smalste
+// breedte waar het moet passen.
+test('[SKIN-H-037] de weekchips in Modern passen op 360px naast elkaar, gelijk breed en zonder scrollen', async ({ page }) => {
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await page.setViewportSize({ width: 360, height: 740 });
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await page.locator('#quick-skin-toggle').click();
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+
+  const strook = page.locator('#new-bento-weekstrip');
+  await expect(strook).toBeVisible();
+
+  await test.step('Then staat er per week één chip, en scrolt de strook niet horizontaal', async () => {
+    const maat = await strook.evaluate(el => ({
+      scrollBreedte: el.scrollWidth,
+      zichtbareBreedte: el.clientWidth,
+      chips: Array.from(el.querySelectorAll('.new-bento-weekchip')).map(chip => {
+        const r = chip.getBoundingClientRect();
+        return { breedte: r.width, hoogte: r.height, rechts: r.right, tekst: chip.querySelector('span')?.textContent?.trim() || '', label: chip.getAttribute('aria-label') || '' };
+      }),
+      weken: (window as unknown as { currentPeriod: () => { weekRows: unknown[] } }).currentPeriod().weekRows.length,
+    }));
+    expect(maat.chips.length, 'er hoort per week in de maand één chip te staan').toBe(maat.weken);
+    expect(maat.scrollBreedte, 'de strook hoort niet horizontaal te scrollen').toBeLessThanOrEqual(maat.zichtbareBreedte + 1);
+    const breedtes = maat.chips.map(chip => chip.breedte);
+    expect(Math.max(...breedtes) - Math.min(...breedtes), 'de chips horen even breed te zijn').toBeLessThanOrEqual(1);
+    for (const chip of maat.chips) {
+      expect(chip.hoogte, 'een chip hoort minstens 52px hoog te zijn').toBeGreaterThanOrEqual(52);
+      expect(chip.rechts, 'geen chip hoort buiten het scherm te vallen').toBeLessThanOrEqual(360);
+      expect(chip.tekst, 'op de chip staat de korte notatie').toMatch(/^W\d{1,2}$/);
+      expect(chip.label, 'voor de schermlezer staat het volle woord').toMatch(/^Week \d{1,2}, /);
+    }
+  });
+});

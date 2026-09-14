@@ -475,6 +475,7 @@
 | SKIN-H-034 | ui | skin.feature | een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgloed | End-to-end use-case + visuele contractasserties | 3 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgloed | Happy | 19 | Actueel |
 | SKIN-H-035 | ui | skin.feature | op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle breedte | Toestandsovergang | 19 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle breedte | Happy | 19 | Actueel |
 | SKIN-H-036 | ui | skin.feature | een dialoog met open toetsenbord houdt de knoppen, de sluitactie en het typveld in beeld | Toestandsovergang | 7 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | een dialoog met open toetsenbord houdt de knoppen, de sluitactie en het typveld in beeld | Happy | 19 | Actueel |
+| SKIN-H-037 | ui | skin.feature | de weekchips in Modern passen op 360px naast elkaar, gelijk breed en zonder scrollen | Beslissingstabel rollen en autorisatie | 9 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de weekchips in Modern passen op 360px naast elkaar, gelijk breed en zonder scrollen | Happy | 19 | Actueel |
 | TS-REV-API-H-005 | integration | correction-approval-workflow.feature | admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking | Concurrency + toestandsovergang | 70 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-REV-API-H-006 | integration | correction-approval-workflow.feature | gelijktijdige approve-requests door twee beheerders leveren exact één winnaar | Concurrency + toestandsovergang | 7 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
 | TS-REV-API-H-007 | integration | correction-approval-workflow.feature | jaarwisseling december naar januari verwerkt urenstaten correct over de jaargrens | API-contract + equivalentieklasse | 7 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
@@ -549,9 +550,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 527
+- Playwright executable cases: 528
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 528
+- Totaal unieke executable cases: 529
 - Playwright features: 30
 - Database features: 1
 - Playwright steps mappings: 30
