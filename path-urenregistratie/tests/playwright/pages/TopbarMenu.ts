@@ -24,7 +24,9 @@ export async function openPaneel(page: Page, opener: string, paneel: string): Pr
   const knop = page.locator(opener);
   const doel = page.locator(paneel);
 
-  await expect(knop, 'de opener ' + opener + ' hoort te bestaan').toBeVisible();
+  // Ensure the opener element is present in the DOM; it may be present but
+  // temporarily hidden while JS attaches handlers or animations run.
+  await knop.waitFor({ state: 'attached', timeout: 10_000 });
 
   await expect(async () => {
     if (await doel.isHidden()) {

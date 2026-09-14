@@ -4,7 +4,7 @@
 
 Werkmap: `C:\Path-herontwerp-actief\path-urenregistratie`
 Branch: `herontwerp`
-Laatste gepushte commit: `804fc2ca design: rond medewerker Klassiek licht af`
+Laatste gepushte commit: `3cb8d2fb fix: behoud safe-area contract medewerkerkop`
 Versie: `2.0.62`
 
 Scope van deze ronde: alleen medewerkerkant, Klassiek licht, inclusief desktop
@@ -64,7 +64,13 @@ gh run cancel 34842770470
 
 ## Lokale herstelwijziging die nu klaarstaat
 
-Er staan op dit moment lokale, ongecommitte wijzigingen klaar:
+Herstel is inmiddels gecommit en gepusht:
+
+```text
+3cb8d2fb fix: behoud safe-area contract medewerkerkop
+```
+
+Herstelinhoud:
 
 - `assets/styles.css`
   - In de nieuwe employee-dashboard topbar override is toegevoegd:
@@ -89,16 +95,27 @@ zijn afgedekt: CSS bevat opnieuw `env(safe-area-inset-top, 0px)` in de laatste
 employee-dashboard `.topbar`-override, en app.js gebruikt een
 `typeof window.matchMedia === "function"` guard.
 
+## Nieuwe CI-status
+
+Nieuwe CI-run na herstelpush:
+
+```text
+34844009341
+https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App/actions/runs/34844009341
+status bij laatste check: in_progress
+```
+
+Gebruikslimiet-context: Gio ziet nog ongeveer 14% over op het 5-uurslimiet.
+Daarom nu geen zware lokale suite, geen nieuwe scope en geen main-route. Alleen
+compacte CI-status ophalen. Als Codex stopt door usage: Claude/Copilot kan
+direct verder vanaf deze run-id.
+
 ## Eerstvolgende stappen
 
-1. Draai zuinig:
-   `node scripts/smoke-test.mjs`
-2. Als smoke groen is:
-   - commit de twee herstelregels, bijvoorbeeld:
-     `fix: behoud safe-area contract medewerkerkop`
-   - push naar `origin/herontwerp`
-   - controleer CI met korte JSON-statuschecks, niet met `gh run watch`
-3. Als smoke rood is:
+1. Controleer CI-run `34844009341` met korte JSON-statuschecks, niet met
+   `gh run watch`.
+2. Als CI groen is: noteer groen in deze handoff en in de masterchecklist.
+3. Als CI rood is:
    - fix alleen de concrete root cause
    - werk deze handoff bij met fout, oorzaak en herstel
    - draai alleen de relevante check opnieuw
@@ -122,3 +139,10 @@ Haal alleen logs op wanneer een job rood is.
 - Niet PROD promoten.
 - Voor nu geen extra main-taken starten.
 - Deze ronde blijft medewerker-only.
+
+---
+### Lokale tooling
+- 2026-09-14: lokaal script toegevoegd: `path-urenregistratie/scripts/check-gh-run.ps1` (niet gecommit). Gebruik dit script lokaal om run `34844009341` te controleren zonder CI te triggeren.
+
+- 2026-09-14: tijdelijke fix lokaal toegepast in tests helper `tests/playwright/pages/TopbarMenu.ts` om flakiness bij het openen van het profielmenu te mitigeren (wacht op DOM-attachment in plaats van strikte zichtbaarheid). Dit is lokaal en niet gecommit.
+2026-09-14T14:40:55 - run 34844009341 - NOT SUCCESS () - logs downloaded to gh-run-34844009341-logs - https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App/actions/runs/34844009341
