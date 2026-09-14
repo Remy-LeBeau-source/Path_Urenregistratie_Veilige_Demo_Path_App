@@ -2576,4 +2576,24 @@ test('[DASH-H-044] bij een zelf gemailde klanturenstaat zegt het verloop "wacht 
   expect(stappen.map(s => s.stand), 'de standen blijven: goedkeuring is de huidige stap').toEqual(['af', 'af', 'nu', 'wacht', 'wacht']);
   expect(stappen.find(s => s.key === 'customer')!.detail).toBe('Door jou gemaild · wacht op Backoffice');
   expect(stappen.find(s => s.key === 'done')!.detail).toBe('Volgt na bevestiging');
+
+  // Opdracht 14 sep, punt 2 en 3: na "Als bijlage versturen" (stand received)
+  // zei stap 4 nog "Nog niet aangeleverd" en Afgerond "Volgt na de klanturenstaat".
+  const ingediend = await page.evaluate(() => {
+    const w = window as unknown as {
+      statusKetenStappen: (r: unknown, p: unknown) => Array<{ key: string; stand: string; detail: string }>;
+      currentPeriod: () => { weekRows: Array<{ days: Array<unknown | null> }> };
+    };
+    const period = w.currentPeriod();
+    const record = {
+      entries: period.weekRows.map(week => week.days.map(day => (day ? 8 : 0))),
+      confirmedEntries: period.weekRows.map(week => week.days.map(day => Boolean(day))),
+      timesheetStatus: 'submitted', invoiceStatus: 'concept',
+      customerTimesheet: { status: 'received' },
+    };
+    return w.statusKetenStappen(record, period).map(s => ({ key: s.key, stand: s.stand, detail: s.detail }));
+  });
+  expect(ingediend.map(s => s.stand), 'ook met een ingediende klanturenstaat blijft goedkeuring de huidige stap').toEqual(['af', 'af', 'nu', 'wacht', 'wacht']);
+  expect(ingediend.find(s => s.key === 'customer')!.detail).toBe('Aangeleverd');
+  expect(ingediend.find(s => s.key === 'done')!.detail).toBe('Volgt na bevestiging');
 });

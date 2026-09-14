@@ -154,6 +154,23 @@ werkten niet goed.
 Alle vijf de cases zijn groen, en een tegenproef met verdraaide verwachting viel
 bij elk om.
 
+**TEST 2.0.59, negen afwijkingen (opdracht export 08:36Z).** Punt 2 en 3 zijn
+gebouwd: een ingediende klanturenstaat (stand `received`) zegt in stap 4
+"Aangeleverd" en in Afgerond "Volgt na bevestiging". De standen blijven gelijk tot
+Backoffice goedkeurt. [DASH-H-044] toetst nu zelf gemaild én ingediend.
+
+Correctie op punt 8 (Gio):
+- "Herstel demo" en de Licht/Klassiek-schakelaar blijven tot de productiestap.
+  Ze verhuizen naar de testomgevingsbalk bij "TESTOMGEVING".
+- De paginatitel "Mijn overzicht · VERSIE" gaat weg van het medewerkerscherm.
+- De maandkiezer blijft als pil bij de kop.
+
+Volgorde verder:
+- punt 4: de resterende oude copy op medewerkerschermen;
+- punt 5, 6 en 7: Vandaag op telefoon;
+- punt 1 en 8: tabbalk met vier tabs en de testomgevingsbalk;
+- punt 9: "Andere rol kiezen".
+
 ## Sync history
 
 ### Ronde 14 sep (derde, vervolg) — terugmeldingen verwerkt, export 04:07:28Z

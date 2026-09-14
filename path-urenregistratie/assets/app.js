@@ -5556,6 +5556,11 @@ function statusKetenStappen(record, period) {
   const klanturenstaatAf = customerTimesheetExternallyConfirmed(customerDocument)
     || ["approved", "sent", "sent_to_broker"].includes(customerDocument.status);
   const zelfGemaild = customerDocument.status === "skipped" && !customerTimesheetExternallyConfirmed(customerDocument);
+  // Ingediend als bijlage, nog niet door Backoffice gecontroleerd. Op TEST zei de
+  // kaart "Klanturenstaat is ingediend" terwijl stap 4 "Nog niet aangeleverd"
+  // bleef zeggen (opdracht 14 sep, punt 2). De stand blijft open tot Backoffice
+  // goedkeurt; alleen de tekst volgt de werkelijkheid.
+  const aangeleverdWachtOpControle = customerDocument.status === "received";
   const totalWeeks = period.weekRows.length;
   const filledWeeks = completedTimesheetWeeks(record, period);
   const urenCompleet = totalWeeks > 0 && filledWeeks === totalWeeks;
@@ -5593,7 +5598,7 @@ function statusKetenStappen(record, period) {
       // verandert daarom niet, alleen de tekst zegt wie aan zet is. Teksten van
       // Gio (14 sep), ook in de referentie doorgevoerd.
       detail: !submitted ? "Volgt na indienen"
-        : klanturenstaatAf ? "Aangeleverd"
+        : klanturenstaatAf || aangeleverdWachtOpControle ? "Aangeleverd"
         : zelfGemaild ? "Door jou gemaild · wacht op Backoffice"
         : "Nog niet aangeleverd"
     },
@@ -5604,7 +5609,7 @@ function statusKetenStappen(record, period) {
       detail: done ? "De Backoffice heeft alles verwerkt"
         : !submitted ? "Volgt"
         : klanturenstaatAf ? "De Backoffice verwerkt de maand"
-        : zelfGemaild ? "Volgt na bevestiging"
+        : zelfGemaild || aangeleverdWachtOpControle ? "Volgt na bevestiging"
         : "Volgt na de klanturenstaat"
     }
   ];

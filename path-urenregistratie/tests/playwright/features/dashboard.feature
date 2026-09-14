@@ -367,7 +367,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-044] bij een zelf gemailde klanturenstaat zegt het verloop "wacht op Backoffice" en "Volgt na bevestiging", met ongewijzigde standen
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 3
+    # Aantoonbare Playwright-assertions in deze case: 6
     Given dashboard en open werkvoorraad is voorbereid
     When de flow voor DASH-H-044 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat bij een zelf gemailde klanturenstaat zegt het verloop "wacht op Backoffice" en "Volgt na bevestiging", met ongewijzigde standen
