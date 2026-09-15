@@ -3199,6 +3199,30 @@ door de lane die de case schreef en niet door mij herhaald.
   hoort die run `cancelled` te eindigen met de notice. Een tijdige goedkeuring (wekker doet dan niets) kan
   alleen Gio zelf laten zien. Kortere proef kan via workflow_dispatch met `prod_wekker_seconden`.
 
+**BIJGESTELD (16 sep, besluit Gio rechtstreeks): de wekker breekt alleen nog af als er écht een nieuwere
+release wacht, niet meer blind na de wachttijd.**
+- De regel van 15 sep loste "een vastgelopen poort blokkeert alles" op, maar brak ook een run af die de
+  nieuwste stand was en niemand in de weg zat -- dat is nu ongewenst gedrag geworden zodra de poort
+  bewust een tijdje open mag blijven staan.
+- Nieuwe check na de wachttijd (nog steeds standaard 600s): vergelijk de HEAD-commit van `main`
+  (`gh api repos/$REPO/commits/main`) met de commit van deze run (`github.sha`). Verschillen ze, dan staat
+  er een nieuwere release in de wachtrij achter deze poort (dankzij `cancel-in-progress: false` op de
+  `release-pipeline`-concurrencygroep) -- dan `force-cancel` zoals voorheen. Zijn ze gelijk, dan is dit de
+  nieuwste release en gebeurt er niets: de goedkeuring blijft gewoon open.
+- **Geen eenmalige meting meer:** de job blijft daarna elke 5 minuten herchecken, tot het tijdbudget op is
+  (`timeout-minutes: 360`, het maximum voor een gehoste runner; de binnenste lus stopt zelf al bij 5 uur na
+  de eerste wachttijd). Zo komt de poort ook vrij als de nieuwere commit pas ná de eerste meting binnenkomt,
+  zonder dat iemand de wekker opnieuw hoeft te starten. Loopt het tijdbudget af zonder ooit iets nieuwers te
+  zien, dan stopt de job gewoon groen (`exit 0`) -- de goedkeuring blijft open, alleen bewaakt er dan niemand
+  meer actief tot de volgende push.
+- `scripts/deployment-contract-check.mjs` uitgebreid: eist de main-vergelijking, eist dat `force-cancel`
+  alleen binnen die vergelijkingstak staat, eist de "blijft open"-melding en de groene afsluiting bij een
+  afgelopen tijdbudget. Tegenproef: een variant die altijd cancelt (`if true` i.p.v. de sha-vergelijking) is
+  rood.
+- **Nog te bevestigen in CI, twee scenario's:** (a) een release zonder iets nieuwers erachter moet na de
+  wachttijd `waiting` blijven in plaats van `cancelled` te eindigen; (b) een release met een echt nieuwere
+  commit erachter moet nog steeds `cancelled` eindigen, zoals eerder al aangetoond in release 34968735951.
+
 **OPGELOST (15 sep, besluit Gio, punt 2 "Mededeling intrekken"): een ingetrokken mededeling blijft voor
 de medewerker zichtbaar, nu wel herkenbaar als ingetrokken.**
 - `employeeAnnouncementItemsFromNotifications()` (app.js) leest de status nu ook uit `state.announcements`

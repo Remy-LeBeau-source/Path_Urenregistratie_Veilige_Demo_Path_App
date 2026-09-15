@@ -1055,13 +1055,30 @@ jobs:
         run: echo "Prod-omgeving goedgekeurd; de gesharde Promote Prod-jobs en de TransIP-deploy mogen door."
 
   prod-gate-wekker:
-    # Besluit Gio (15 sep): wordt PROD niet binnen 10 minuten goedgekeurd, dan
-    # breekt de run zichzelf af, zodat pipeline en merge-wachtrij vrij komen.
+    # Besluit Gio (15 sep, bijgesteld 16 sep): een vastgelopen PROD-poort breekt
+    # zichzelf alleen af als dat ergens goed voor is -- als er een nieuwere
+    # release wacht die door deze poort geblokkeerd wordt. Staat er niets
+    # nieuwers klaar, dan is er niets te winnen met afbreken: de handmatige
+    # goedkeuringsstap blijft dan gewoon open tot Gio hem zelf afhandelt. De
+    # eerdere versie (altijd afbreken na 10 min) loste dat andere geval al op,
+    # maar brak ook een run af die de nieuwste stand was en niemand in de weg
+    # zat.
     #
-    # - TEST loopt altijd door. Deze job heeft exact dezelfde `needs` en `if` als
-    #   prod-gate, dus hij start pas NA een geslaagde "Deploy Test to TransIP" --
-    #   precies op het moment dat de poort gaat wachten. Afbreken kan dus nooit
-    #   een TEST-uitrol afkappen; alleen PROD wordt dan overgeslagen.
+    # - TEST loopt altijd door, ongeacht deze job: deze job heeft exact dezelfde
+    #   `needs` en `if` als prod-gate, dus hij start pas NA een geslaagde "Deploy
+    #   Test to TransIP" -- precies op het moment dat de poort gaat wachten.
+    # - "Nieuwer" wordt bepaald door de HEAD-commit van main te vergelijken met
+    #   de commit van deze run (`github.sha`). Zolang `cancel-in-progress: false`
+    #   geldt voor de `release-pipeline`-concurrencygroep, staat een latere push
+    #   naar main als eigen run in de wachtrij achter deze poort -- main-HEAD
+    #   verschilt dan al van deze run's commit, zonder dat de Actions-runlijst
+    #   zelf bevraagd hoeft te worden.
+    # - Geen eenmalige meting: na de eerste wachttijd blijft de job periodiek
+    #   herchecken (elke 5 min, tot het tijdbudget van de job op is), zodat de
+    #   poort ook vrijkomt als de nieuwere commit pas ná de eerste meting
+    #   binnenkomt. Blijft main op dezelfde commit staan, dan stopt de job na dat
+    #   budget gewoon groen -- de goedkeuring zelf blijft open, alleen bewaakt er
+    #   dan niemand meer actief tot de eerstvolgende push.
     # - Waarom een aparte job: `timeout-minutes` op prod-gate werkt niet, want
     #   wachten op een environment-goedkeuring telt niet als looptijd.
     # - Geen `environment`, dus deze job vraagt zelf geen goedkeuring. Goedkeuren
@@ -1069,13 +1086,15 @@ jobs:
     #   alleen de run cancelen.
     # - De naam begint bewust met "Promote Prod": pilot-merge-queue.yml ziet een
     #   run waarin alleen Promote-Prod-jobs openstaan als niet-blokkerend. Een
-    #   andere naam zou de wachtrij tijdens deze 10 minuten laten wachten.
+    #   andere naam zou de wachtrij tijdens deze wachttijd laten wachten.
     # - Een gecancelde run is `completed`, dus de wachtrij ziet hem daarna niet
     #   meer als actief.
     name: Promote Prod (wekker)
     needs: [test, deploy-test]
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # 360 minuten is het maximum voor een gehoste ubuntu-latest-runner; de
+    # binnenste lus stopt ruim daarvoor uit zichzelf, zie EINDE hieronder.
+    timeout-minutes: 360
     permissions:
       actions: write
     if: >-
@@ -1086,39 +1105,59 @@ jobs:
               || inputs.ref == 'main'
               || inputs.ref == 'refs/heads/main') }}
     steps:
-      - name: PROD niet binnen de wachttijd goedgekeurd? Dan run afbreken
+      - name: PROD niet binnen de wachttijd goedgekeurd? Alleen afbreken als main verder is
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
+          RUN_SHA: ${{ github.sha }}
           WACHT_SECONDEN: ${{ github.event_name == 'workflow_dispatch' && inputs.prod_wekker_seconden || '600' }}
         run: |
           set -euo pipefail
           case "$WACHT_SECONDEN" in (''|*[!0-9]*) WACHT_SECONDEN=600 ;; esac
-          echo "PROD-poort mag ${WACHT_SECONDEN}s wachten op goedkeuring."
+          echo "PROD-poort mag ${WACHT_SECONDEN}s wachten op goedkeuring, daarna alleen afbreken als main verder is dan deze release ($RUN_SHA)."
           sleep "$WACHT_SECONDEN"
-          wachtend="$(gh api "repos/$REPO/actions/runs/$RUN_ID/pending_deployments" --jq '[.[] | select(.environment.name == "prod")] | length')"
-          if [ "${wachtend:-0}" -gt 0 ]; then
-            echo "::notice title=PROD overgeslagen::Prod niet binnen $((WACHT_SECONDEN / 60)) min goedgekeurd, run afgebroken. TEST is al uitgerold."
-            # force-cancel en niet cancel (15 sep, release 34961082434): het gewone
-            # cancel-endpoint werd geregistreerd maar pas uitgevoerd nadat de
-            # wachtende goedkeuring handmatig was afgehandeld -- prod-gate en de
-            # PROD-jobs hebben always() in hun if, en cancel respecteert dat.
-            # force-cancel omzeilt zulke voorwaarden.
-            gh api -X POST "repos/$REPO/actions/runs/$RUN_ID/force-cancel"
-            # Lukt het, dan wordt deze job zelf mee afgebroken en komen we hier niet
-            # meer. Komen we hier wél nog, dan werkt het niet: zichtbaar falen in
-            # plaats van stil "success", zodat Gio of een sessie de poort afhandelt.
-            for _ in $(seq 1 12); do
-              sleep 10
-              status="$(gh api "repos/$REPO/actions/runs/$RUN_ID" --jq '.status')"
-              [ "$status" = "completed" ] && exit 0
-            done
-            echo "::error title=PROD-poort niet afgebroken::force-cancel gaf geen fout, maar de run staat na 2 minuten nog op '${status}'. Wijs de PROD-poort handmatig af."
-            exit 1
-          else
-            echo "PROD-poort wacht niet meer (goedgekeurd of afgewezen); niets te doen."
-          fi
+
+          # Elke 5 minuten herchecken, tot ongeveer 5 uur na de start van deze
+          # stap (ruim binnen de 360 minuten van de job, met marge voor de
+          # force-cancel-controle aan het eind).
+          HERHAAL_SECONDEN=300
+          EINDE=$(( $(date +%s) + 5*3600 - WACHT_SECONDEN ))
+          while true; do
+            wachtend="$(gh api "repos/$REPO/actions/runs/$RUN_ID/pending_deployments" --jq '[.[] | select(.environment.name == "prod")] | length')"
+            if [ "${wachtend:-0}" -eq 0 ]; then
+              echo "PROD-poort wacht niet meer (goedgekeurd of afgewezen); niets te doen."
+              exit 0
+            fi
+
+            main_sha="$(gh api "repos/$REPO/commits/main" --jq '.sha')"
+            if [ "$main_sha" != "$RUN_SHA" ]; then
+              echo "::notice title=PROD overgeslagen::Main staat op $main_sha, deze release was $RUN_SHA -- er wacht dus een nieuwere release achter deze poort. Run afgebroken zodat TEST en de pipeline voor de nieuwere release door kunnen. PROD zelf is niet aangeraakt."
+              # force-cancel en niet cancel (15 sep, release 34961082434): het gewone
+              # cancel-endpoint werd geregistreerd maar pas uitgevoerd nadat de
+              # wachtende goedkeuring handmatig was afgehandeld -- prod-gate en de
+              # PROD-jobs hebben always() in hun if, en cancel respecteert dat.
+              # force-cancel omzeilt zulke voorwaarden.
+              gh api -X POST "repos/$REPO/actions/runs/$RUN_ID/force-cancel"
+              # Lukt het, dan wordt deze job zelf mee afgebroken en komen we hier niet
+              # meer. Komen we hier wél nog, dan werkt het niet: zichtbaar falen in
+              # plaats van stil "success", zodat Gio of een sessie de poort afhandelt.
+              for _ in $(seq 1 12); do
+                sleep 10
+                status="$(gh api "repos/$REPO/actions/runs/$RUN_ID" --jq '.status')"
+                [ "$status" = "completed" ] && exit 0
+              done
+              echo "::error title=PROD-poort niet afgebroken::force-cancel gaf geen fout, maar de run staat na 2 minuten nog op '${status}'. Wijs de PROD-poort handmatig af."
+              exit 1
+            fi
+
+            if [ "$(date +%s)" -ge "$EINDE" ]; then
+              echo "Geen nieuwere release binnen het tijdbudget van deze job. De goedkeuring blijft gewoon open voor Gio; deze wekker stopt met controleren."
+              exit 0
+            fi
+            echo "Geen nieuwere release, goedkeuring blijft open. Volgende controle over ${HERHAAL_SECONDEN}s."
+            sleep "$HERHAAL_SECONDEN"
+          done
 
   prod:
     name: Promote Prod

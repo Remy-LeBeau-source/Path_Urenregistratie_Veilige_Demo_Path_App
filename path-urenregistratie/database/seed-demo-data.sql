@@ -300,7 +300,11 @@ INSERT INTO notifications (
   (33, 1, 3, NULL, 11, 'announcement', 'Kantoor sluit vandaag om 16:00', 'Vanwege een geplande brandoefening sluit het kantoor vandaag om 16:00 uur.', 'employee-announcements', '2026-08-19 09:10:00', '2026-08-19 07:50:00'),
   (34, 1, 4, NULL, 11, 'announcement', 'Kantoor sluit vandaag om 16:00', 'Vanwege een geplande brandoefening sluit het kantoor vandaag om 16:00 uur.', 'employee-announcements', '2026-08-19 09:10:00', '2026-08-19 07:50:00'),
   (35, 1, 5, NULL, 11, 'announcement', 'Kantoor sluit vandaag om 16:00', 'Vanwege een geplande brandoefening sluit het kantoor vandaag om 16:00 uur.', 'employee-announcements', '2026-08-19 09:10:00', '2026-08-19 07:50:00'),
-  (36, 1, 6, NULL, 11, 'announcement', 'Kantoor sluit vandaag om 16:00', 'Vanwege een geplande brandoefening sluit het kantoor vandaag om 16:00 uur.', 'employee-announcements', '2026-08-19 09:10:00', '2026-08-19 07:50:00');
+  (36, 1, 6, NULL, 11, 'announcement', 'Kantoor sluit vandaag om 16:00', 'Vanwege een geplande brandoefening sluit het kantoor vandaag om 16:00 uur.', 'employee-announcements', '2026-08-19 09:10:00', '2026-08-19 07:50:00'),
+  (37, 1, 4, 4, NULL, 'correction_required', 'Correctie gevraagd', 'Controleer 14 augustus, dit moet worden aangepast.', 'timesheet', NULL, '2026-08-28 10:00:00'),
+  (38, 1, 4, 4, NULL, 'timesheet_reminder', 'Vergeet je uren niet', 'Je hebt deze maand nog uren open staan.', 'timesheet', NULL, '2026-08-29 08:00:00'),
+  (39, 1, 4, 3, NULL, 'timesheet_approved', 'Uren goedgekeurd', 'Je uren van vorige maand zijn goedgekeurd.', 'historie', NULL, '2026-08-27 15:30:00'),
+  (40, 1, 4, 3, NULL, 'customer_timesheet_reminder', 'Klanturenstaat nog aanleveren', 'De klanturenstaat van vorige maand is nog niet aangeleverd.', 'historie', NULL, '2026-08-27 16:00:00');
 
 INSERT INTO audit_log (company_id, actor_user_id, event_type, entity_type, entity_id, event_data) VALUES
   (1, 1, 'demo_seed_loaded', 'database', 'path_urenregistratie', JSON_OBJECT('version', '0.9.71', 'note', 'Demo-data sluit aan op de browser-GUI basisstand.'));
