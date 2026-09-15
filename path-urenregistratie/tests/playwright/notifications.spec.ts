@@ -506,9 +506,9 @@ test.describe('notifications api', () => {
     await test.step('Then staan alleen ingetrokken berichten er, ingeklapt met label, en geen ervan als ongelezen', async () => {
       const kaarten = page.locator('#employee-announcement-list .employee-announcement-card');
       const aantalIngetrokken = await page.evaluate(() => ((0, eval)('employeeAnnouncementItemsFromNotifications') as () => Array<{ status: string }>)().filter(item => item.status === 'withdrawn').length);
-      // TEST-seed (opdracht Gio 15 sep): 10 mededelingen, waarvan 6 ingetrokken en 4 ongelezen.
+      // TEST-seed (opdracht Gio 15 sep, uitgebreid): 15 mededelingen per medewerker, waarvan 6 ingetrokken en 5 ongelezen.
       expect(aantalIngetrokken, 'de TEST-basis heeft zes ingetrokken voorbeelden').toBe(6);
-      expect(await page.evaluate(() => ((0, eval)('employeeAnnouncementItemsFromNotifications') as () => unknown[])().length), 'tien mededelingen in de TEST-basis').toBe(10);
+      expect(await page.evaluate(() => ((0, eval)('employeeAnnouncementItemsFromNotifications') as () => unknown[])().length), 'vijftien mededelingen in de TEST-basis').toBe(15);
       await expect(kaarten).toHaveCount(aantalIngetrokken);
       await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-withdrawn')).toHaveCount(aantalIngetrokken);
       await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-unread')).toHaveCount(0);
@@ -718,7 +718,7 @@ test.describe('notifications api', () => {
   test('[NOT-H-017] Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar', async ({ page }) => {
     // Gio 15 sep: "ingetrokken en niet ingetrokken vallen onder Alles, maar als je alleen
     // niet ingetrokken wilt zien?" en "de kleur van ingetrokken, wat past daar beter". Seed
-    // (main, 15 sep): 10 mededelingen, 6 ingetrokken. Het totaal verandert niet door lezen.
+    // (main, 15 sep): 15 mededelingen per medewerker, 6 ingetrokken. Het totaal verandert niet door lezen.
     const loginPage = new LoginPage(page);
     await loginPage.open();
     await loginPage.loginAsEmployee();
@@ -727,9 +727,9 @@ test.describe('notifications api', () => {
 
     await test.step('Then staat Actueel aan, met alleen berichten die nog gelden', async () => {
       await expect(page.locator('[data-announcement-archive-filter="actueel"]')).toHaveClass(/is-active/);
-      await expect(page.locator('#announcement-actueel-filter')).toHaveText('Actueel · 4');
+      await expect(page.locator('#announcement-actueel-filter')).toHaveText('Actueel · 9');
       await expect(page.locator('#announcement-withdrawn-filter')).toHaveText('Ingetrokken · 6');
-      await expect(lijst.locator('.employee-announcement-card')).toHaveCount(4);
+      await expect(lijst.locator('.employee-announcement-card')).toHaveCount(9);
       await expect(lijst.locator('.employee-announcement-card.is-withdrawn')).toHaveCount(0);
     });
 
@@ -739,14 +739,17 @@ test.describe('notifications api', () => {
       [actueel, ongelezen, gelezen, ingetrokken, alles].forEach(n => expect(Number.isInteger(n), 'elk filter toont een aantal').toBe(true));
       expect(ongelezen + gelezen, 'Ongelezen + Gelezen = Actueel').toBe(actueel);
       expect(actueel + ingetrokken, 'Actueel + Ingetrokken = Alles').toBe(alles);
-      expect(alles).toBe(10);
+      expect(alles).toBe(15);
       await page.locator('[data-announcement-archive-filter="gelezen"]').click();
       await expect(lijst.locator('.employee-announcement-card')).toHaveCount(gelezen);
       await expect(lijst.locator('.employee-announcement-card.is-unread, .employee-announcement-card.is-withdrawn')).toHaveCount(0);
       await page.locator('[data-announcement-archive-filter="withdrawn"]').click();
       await expect(lijst.locator('.employee-announcement-card')).toHaveCount(6);
       await page.locator('[data-announcement-archive-filter="all"]').click();
-      await expect(lijst.locator('.employee-announcement-card')).toHaveCount(10);
+      await expect(lijst.locator('.employee-announcement-card')).toHaveCount(15);
+      // 15 berichten: onder Alles een tweede pagina (10 per pagina), zoals Gio wilde kunnen testen.
+      await expect(lijst.locator('.employee-announcement-card:visible')).toHaveCount(10);
+      await expect(page.locator('#berichten-paginering [data-pagina-stand]')).toHaveText('1–10 van 15');
     });
 
     for (const thema of ['dark', 'light'] as const) {
