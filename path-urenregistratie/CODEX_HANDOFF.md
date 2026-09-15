@@ -38,7 +38,7 @@ Er werken twee Claude Code-sessies aan dit project, elk met een eigen hoofdstuk 
 ## Stokje: wie is aan zet (verplicht lezen vóór je iets wijzigt)
 
 **AAN ZET op `herontwerp`: herontwerp-sessie (Claude Code), sinds 16 sep (teruggegeven door Gio na de ronde van Codex, 2.0.115).**
-**AAN ZET op `main`: main-sessie (Claude Code).**
+**AAN ZET op `main`: Codex, sinds 16 sep (overdracht door de main-sessie op verzoek van Gio, na fast-forward naar 00e7050e). De main-sessie wijzigt niets meer op `main` tot Gio het stokje teruggeeft. Opdracht: zie "Codex-opdracht (main)" onder Hoofdstuk B.**
 
 Waarom deze regel: op 14 sep werkten Codex en Claude Code tegelijk op dezelfde branch. Gevolg: versienummer 2.0.69 werd twee keer gebruikt, een CI-run (2.0.73) moest worden afgebroken en een lokale, niet gepushte commit (2.0.70) raakte achter terwijl de ander doorwerkte. Dat mag niet opnieuw gebeuren.
 
@@ -215,7 +215,7 @@ dit soort statische pagina's al serveert.
 **Wanneer klaar:** meld het bij Gio en/of de herontwerp-sessie met de TEST-URL, zodat main-sessiegeheugen
 en GIO-WENSEN.md bijgewerkt kunnen worden (main doet dat desgevraagd).
 
-**Stokje:** deze opdracht hoort bij branch `main`. Codex begint pas als de main-sessie het stokje bovenaan dit bestand op `main` aan Codex heeft overgedragen (zie de stokjesregel). Herontwerp blijft ongemoeid.
+**Stokje:** deze opdracht hoort bij branch `main`. Het stokje op `main` staat sinds 16 sep bij Codex (zie de stokjesregel bovenaan) — je kunt beginnen. Herontwerp blijft ongemoeid.
 
 # Eerdere overdrachten (herontwerp, chronologisch aflopend)
 
