@@ -5084,101 +5084,47 @@ html:not([data-skin="new"]) body[data-role="employee"] .klantkaart-meer { displa
 }
 
 /* ===========================================================================
-   Testpil op de telefoon (Gio 15 sep). Tot 820px staat bij de medewerker in
-   Klassiek niet langer een rij losse testknoppen boven de topbalk, maar één pil
-   met de omgeving ("LOKAAL ▾" / "TEST ▾"). Die opent een paneel met Herstel demo,
-   Licht/Donker en Klassiek/Nieuw, voluit en goed leesbaar in licht én donker.
-   Het versienummer staat op de telefoon onderaan het profielmenu. Zo lijkt de balk
-   op productie, waar pil en paneel vanzelf wegvallen. Desktop blijft ongewijzigd:
-   daar is het paneel display:contents en is de pil verborgen.
+   Testfuncties (Gio 15 sep): op TEST zoveel mogelijk PROD. In de balk alleen
+   Herstel, goed leesbaar (was een donker pictogram); thema, vormgeving, omgeving en
+   versie in het profielmenu. Sectie en knop bestaan alleen op LOKAAL/TEST.
    ======================================================================== */
-.testbalk-open { display: none; }
-.testbalk-paneel { display: contents; }
-.profile-menu-versie { display: none; }
-
+.profile-menu-testfuncties { margin: 6px 0 0; border-top: 1px solid var(--line); padding: 8px 4px 2px; }
+.profile-menu-testfuncties[hidden] { display: none; }
+.profile-menu-kop { margin: 0 8px 6px; color: var(--muted); font-size: 9.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.profile-menu-testknoppen .appearance-switches { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; border: 0; background: transparent; padding: 0; }
+.profile-menu-testknoppen .appearance-switch { display: inline-flex; width: 100%; min-height: 40px; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--ink); cursor: pointer; font: inherit; font-size: 11px; font-weight: 700; opacity: 1; padding: 0 10px; }
+.profile-menu-testknoppen .appearance-switch strong { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+.profile-menu-testknoppen .appearance-switch:hover { border-color: var(--mint); }
+.profile-menu-versie { margin: 6px 0 0; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; padding: 8px 12px 2px; }
+.profile-menu-versie:empty { display: none; }
 @media (max-width: 820px) {
-  html:not([data-skin="new"]) body[data-role="employee"] .testbalk:not([hidden]) { position: relative; z-index: 60; }
-  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-open {
-    display: inline-flex;
-    min-height: 44px;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid color-mix(in srgb, var(--warning) 55%, transparent);
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--warning) 12%, transparent);
-    color: #7a4a09;
-    cursor: pointer;
-    font: inherit;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: .08em;
-    padding: 0 14px;
-    text-transform: uppercase;
-  }
-  html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] .testbalk-open { color: #ffd59b; border-color: #8a6433; background: rgba(239,183,111,.12); }
-  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-open:focus-visible { outline: 0; box-shadow: 0 0 0 3px var(--mint); }
+  .profile-menu-testknoppen .appearance-switch { min-height: 44px; }
+}
 
-  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel { display: none; }
-  html:not([data-skin="new"]) body[data-role="employee"] .testbalk[data-open="true"] .testbalk-paneel {
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    display: grid;
-    width: min(280px, calc(100vw - 32px));
-    gap: 10px;
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    background: var(--vlak, var(--surface));
-    box-shadow: 0 18px 42px rgba(13,27,56,.22);
-    color: var(--ink);
-    padding: 12px;
-  }
-  html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] .testbalk[data-open="true"] .testbalk-paneel { background: #101d2d; }
-  /* In het paneel alleen de omgeving als kopje; de versie staat in het profielmenu. */
-  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .testbalk-label { font-size: 10px; opacity: .8; }
-  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .testbalk-omgeving + .testbalk-versie { display: none; }
-  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .testbalk-knoppen { display: grid; gap: 8px; }
-  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .appearance-switches { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border: 0; background: transparent; padding: 0; }
-  /* Knoppen voluit: tekst weer zichtbaar, 44px hoog, leesbaar in beide thema's. */
-  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .testknop-tekst,
-  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .appearance-switch strong {
-    position: static;
-    width: auto;
-    height: auto;
-    overflow: visible;
-    clip: auto;
-  }
-  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .topbar-quick-reset,
-  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .appearance-switch {
-    display: inline-flex;
-    width: 100%;
-    min-height: 44px;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 8px;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: transparent;
-    color: var(--ink);
-    font-size: 12px;
-    font-weight: 700;
-    opacity: 1;
-    padding: 0 12px;
-  }
-  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .topbar-quick-reset {
-    border-color: color-mix(in srgb, var(--warning) 60%, var(--line));
-    color: #7a4a09;
-  }
-  html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .topbar-quick-reset { border-color: #8a6433; color: #ffd59b; }
-
-  html:not([data-skin="new"]) body[data-role="employee"] .profile-menu-versie:not(:empty) {
-    display: block;
-    margin: 6px 0 0;
-    border-top: 1px solid var(--line);
-    color: var(--muted);
-    font-size: 11px;
-    padding: 8px 12px 2px;
-  }
+/* Herstel in de balk van de medewerker (Klassiek): voluit en leesbaar in licht en
+   donker, in plaats van een half doorzichtig pictogram van 30px. */
+html:not([data-skin="new"]) body[data-role="employee"] .testbalk .topbar-quick-reset {
+  display: inline-flex;
+  width: auto;
+  min-height: 32px;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid color-mix(in srgb, var(--warning) 55%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--warning) 10%, transparent);
+  color: #7a4a09;
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 1;
+  padding: 0 11px;
+  white-space: nowrap;
+}
+html:not([data-skin="new"]) body[data-role="employee"] .testbalk .topbar-quick-reset .testknop-tekst { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] .testbalk .topbar-quick-reset { border-color: #8a6433; background: rgba(239,183,111,.12); color: #ffd59b; }
+html:not([data-skin="new"]) body[data-role="employee"] .testbalk .topbar-quick-reset:hover { border-color: var(--warning); opacity: 1; }
+@media (max-width: 820px) {
+  html:not([data-skin="new"]) body[data-role="employee"] .testbalk:not([hidden]) { margin: 0; align-self: center; }
+  html:not([data-skin="new"]) body[data-role="employee"] .testbalk .topbar-quick-reset { width: auto; min-height: 44px; }
 }
 
 /* "Hulp & contact" op telefoon (15 sep, besluit Gio): onder 821px geen zwevende
@@ -5210,3 +5156,9 @@ html:not([data-skin="new"]) body[data-role="employee"] .klantkaart-meer { displa
    die animatie uit, en dan schoof de gloed 58px over de rechterrand ([MOB-H-031], 15 sep).
    De centrering hoort in de basisregel; de animatie bevat hem al, dus die verandert niet. */
 #vd-tel .vd-tel-halo { transform: translateX(-50%); }
+
+/* Herstel bij beheer op telefoon en tablet: 42px was net geen touchdoel ([KLV-H-010]).
+   Nu Herstel de enige testknop in beeld is, hoort hij volwaardig te tikken. */
+@media (max-width: 820px) {
+  .topbar-actions > .topbar-quick-reset:not([hidden]) { min-height: 44px; }
+}

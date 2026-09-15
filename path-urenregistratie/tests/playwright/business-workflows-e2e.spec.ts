@@ -5,7 +5,7 @@ import { appConfig, requirePassword } from './fixtures/appConfig';
 import { useFixedDemoClock } from './fixtures/fixedDemoClock';
 import { LoginPage } from './pages/LoginPage';
 import { openUrenactieVanMaand } from './fixtures/klassiekDashboard';
-import { klikTestknop, openTestknoppen, sluitTestknoppen } from './fixtures/testknoppen';
+import { klikTestknop, sluitTestknoppen } from './fixtures/testknoppen';
 
 type JsonBody = Record<string, unknown>;
 
@@ -111,8 +111,6 @@ test('[E2E-H-002] rolwissel werkt zonder F5 en herstel blijft beschikbaar voor i
     await expect(page.locator('#auth-login-password')).toHaveValue(employeePassword);
     await page.locator('#auth-login-submit').click();
     await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
-    await openTestknoppen(page);
-
     await expect(page.locator('#quick-reset-demo')).toBeVisible();
     await expect(page.locator('button[data-view="settings"]')).toBeHidden();
     await sluitTestknoppen(page);
@@ -129,8 +127,6 @@ test('[E2E-H-002] rolwissel werkt zonder F5 en herstel blijft beschikbaar voor i
     await expect(page.locator('#auth-login-password')).toHaveValue(adminPassword);
     await page.locator('#auth-login-submit').click();
     await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
-    await openTestknoppen(page);
-
     await expect(page.locator('#quick-reset-demo')).toBeVisible();
   });
 });

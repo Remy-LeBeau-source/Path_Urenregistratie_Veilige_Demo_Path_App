@@ -18,7 +18,7 @@ import { readFileSync } from 'node:fs';
 import { staleServerStateWith132OpenActions, verwachtAlleenSchermActief } from './fixtures/dashboardGedeeld';
 import { suppressInstallBanner } from './fixtures/suppressInstallBanner';
 import { useFixedDemoClock } from './fixtures/fixedDemoClock';
-import { klikTestknop, openTestknoppen } from './fixtures/testknoppen';
+import { klikTestknop } from './fixtures/testknoppen';
 
 // Scrolt het element eerst in beeld en klikt daarna pas.
 //
@@ -397,8 +397,6 @@ test('[DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus', as
   await test.step('Given Backoffice de voorbeeldomgeving herstelt en daarna naar Stasjo wisselt', async () => {
     await loginPage.open();
     await loginPage.loginAsAdmin();
-    await openTestknoppen(page);
-
     await expect(page.locator('#quick-reset-demo')).toBeVisible();
     await klikTestknop(page, '#quick-reset-demo');
     await page.locator('#modal-confirm').click();
@@ -409,8 +407,6 @@ test('[DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus', as
   });
 
   await test.step('When Stasjo daarna een open urenactie indient', async () => {
-    await openTestknoppen(page);
-
     await expect(page.locator('#quick-reset-demo')).toBeVisible();
     await expect(page.locator('#employee-open-task-total')).toHaveText('3 open acties');
     await expect(page.locator('#period-label')).toHaveText('Augustus 2026');

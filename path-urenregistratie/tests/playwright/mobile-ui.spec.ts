@@ -7,7 +7,7 @@ import { LoginPage } from './pages/LoginPage';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
 import { openProfielmenu } from './pages/TopbarMenu';
 import { openHulp } from './fixtures/hulp';
-import { klikTestknop, openTestknoppen } from './fixtures/testknoppen';
+import { klikTestknop } from './fixtures/testknoppen';
 
 // Gedeeld door [MOB-H-030] (beheerschermen) en [MOB-H-031] (medewerkerschermen).
 //
@@ -461,8 +461,6 @@ test('[MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikba
     await expect(page.locator('#mobile-switch-role')).toBeVisible();
     await expect(page.locator('.mobile-version-badge')).toBeVisible();
     await expect(page.locator('.mobile-version-badge')).toHaveText(/Versie \d+\.\d+\.\d+/);
-    await openTestknoppen(page);
-
     await expect(page.locator('#quick-reset-demo')).toBeVisible();
     const resetBox = await page.locator('#quick-reset-demo').boundingBox();
     expect(resetBox?.height || 0).toBeGreaterThanOrEqual(42);

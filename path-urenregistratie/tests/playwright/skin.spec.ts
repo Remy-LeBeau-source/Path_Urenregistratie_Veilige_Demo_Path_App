@@ -2698,7 +2698,6 @@ test('[SKIN-H-040] het zijbalklogo volgt zijn eigen (donkere) ondergrond, niet e
   // (applyTheme) roept ook applyOrganizationBranding() aan, wat het logo
   // herberekent. Direct het attribuut zetten laat het logo ongewijzigd staan
   // en zou deze case dus niets laten bewijzen.
-  const themeKnop = page.locator('#quick-theme-toggle');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 
   await test.step('In donker thema (de standaard) toont de zijbalk het witte logo', async () => {
@@ -2706,7 +2705,7 @@ test('[SKIN-H-040] het zijbalklogo volgt zijn eigen (donkere) ondergrond, niet e
   });
 
   await test.step('Na wisselen naar licht thema blijft de zijbalk het witte logo tonen: de zijbalk zelf is altijd donker', async () => {
-    await themeKnop.click();
+    await klikTestknop(page, '#quick-theme-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
     expect(await zijbalkLogo.getAttribute('src')).toBe(donkerLogoUrl);
   });

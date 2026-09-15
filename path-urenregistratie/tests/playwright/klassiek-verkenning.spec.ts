@@ -1,5 +1,6 @@
 import { expect, test, type Page, type Request } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
+import { openProfielmenu } from './pages/TopbarMenu';
 import { bewaarUrenstaat } from './fixtures/urenstaatHerstel';
 
 // Vaste regressiecases uit de seeded monkey-verkenning op de medewerker in
@@ -367,73 +368,40 @@ test('[KLV-N-009] in Klassiek staat het klanturenstaatlabel niet op Mijn uren ma
   });
 });
 
-test('[KLV-H-010] op de telefoon zitten de testknoppen van de medewerker achter één testpil, zonder functie te verliezen', async ({ page }) => {
-  // Gio 15 sep: de rij testknoppen boven de topbalk was druk, Herstel demo slecht
-  // leesbaar in donker, en je zag niet hoe de balk op productie wordt. Nu één pil met
-  // de omgeving; het paneel heeft dezelfde knoppen (zelfde id's), voluit en 44px.
-  // Het versienummer staat op de telefoon onderaan het profielmenu. Desktop blijft gelijk.
-  test.setTimeout(90_000);
+test('[KLV-H-010] op TEST staat alleen Herstel bovenin; thema, vormgeving en versie staan in het profielmenu', async ({ page }) => {
+  // Gio 15 sep: "op TEST moet het scherm zoveel mogelijk op PROD lijken", Herstel moet
+  // wel zichtbaar blijven. Bewaakt voor medewerker en beheer, op telefoon en desktop:
+  // geen thema- of vormgevingsknop in de balken, wel Herstel; in het profielmenu een
+  // sectie "Testfuncties" met de schakelaars en daaronder de versie. Op PROD bestaat
+  // die sectie niet (plaatsTestknoppen: alleen met omgevingsbadge of Herstel).
+  test.setTimeout(120_000);
   const loginPage = new LoginPage(page);
-  const pil = page.locator('#testbalk-open');
-  const paneelKnoppen = ['#quick-reset-demo', '#quick-theme-toggle', '#quick-skin-toggle'];
-
-  await test.step('Given een medewerker in Klassiek op een telefoon van 390px', async () => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await loginPage.open();
-    await loginPage.loginAsEmployee();
-    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
-  });
-
-  await test.step('Then staat er één testpil in plaats van losse knoppen', async () => {
-    await expect(pil).toBeVisible();
-    await expect(pil).toHaveAttribute('aria-expanded', 'false');
-    expect((await pil.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-    for (const knop of paneelKnoppen) await expect(page.locator(`#testbalk ${knop}`)).toBeHidden();
-    await expect(page.locator('#testbalk-label')).toBeHidden();
-  });
-
-  await test.step('When de medewerker de pil opent, then staan alle testknoppen voluit, 44px hoog en binnen beeld', async () => {
-    await pil.click();
-    await expect(pil).toHaveAttribute('aria-expanded', 'true');
-    for (const knop of paneelKnoppen) {
-      const el = page.locator(`#testbalk-paneel ${knop}`);
-      await expect(el).toBeVisible();
-      const vak = (await el.boundingBox())!;
-      expect(vak.height, `${knop} hoogte`).toBeGreaterThanOrEqual(44);
-      expect(vak.x, `${knop} links binnen beeld`).toBeGreaterThanOrEqual(0);
-      expect(vak.x + vak.width, `${knop} rechts binnen beeld`).toBeLessThanOrEqual(390);
-    }
-    await expect(page.locator('#testbalk-paneel #quick-reset-demo')).toContainText('Herstel demo');
-  });
-
-  await test.step('And werkt een keuze in het paneel en gaat het paneel daarna dicht', async () => {
-    const themaVooraf = await page.locator('html').getAttribute('data-theme');
-    await page.locator('#testbalk-paneel #quick-theme-toggle').click();
-    await expect(page.locator('html')).not.toHaveAttribute('data-theme', themaVooraf || '');
-    await expect(pil).toHaveAttribute('aria-expanded', 'false');
-    await expect(page.locator('#testbalk-paneel #quick-theme-toggle')).toBeHidden();
-  });
-
-  await test.step('And sluit Escape het paneel', async () => {
-    await pil.click();
-    await expect(page.locator('#testbalk-paneel #quick-reset-demo')).toBeVisible();
-    await page.keyboard.press('Escape');
-    await expect(page.locator('#testbalk-paneel #quick-reset-demo')).toBeHidden();
-  });
-
-  await test.step('And staat het versienummer onderaan het profielmenu', async () => {
-    await page.locator('#profile-menu-button').click();
-    await expect(page.locator('#profile-menu-versie')).toBeVisible();
-    await expect(page.locator('#profile-menu-versie')).toHaveText(/^Versie \d+\.\d+\.\d+$/);
-    await page.keyboard.press('Escape');
-  });
-
-  await test.step('And blijft desktop ongewijzigd: geen pil, knoppen direct in de menubalk', async () => {
-    await page.setViewportSize({ width: 1280, height: 900 });
-    await expect(pil).toBeHidden();
-    for (const knop of paneelKnoppen) await expect(page.locator(`#testbalk ${knop}`)).toBeVisible();
-    await expect(page.locator('#testbalk-label')).toBeVisible();
-  });
+  for (const rol of ['medewerker', 'beheer'] as const) for (const breedte of [390, 1280]) {
+    await test.step(`Then staat bij ${rol} op ${breedte}px alleen Herstel bovenin en de rest in het profielmenu`, async () => {
+      await page.setViewportSize({ width: breedte, height: 844 });
+      await loginPage.open();
+      if (rol === 'beheer') await loginPage.loginAsAdmin(); else await loginPage.loginAsEmployee();
+      await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+      // Geen testpil meer, en buiten het profielmenu geen thema- of vormgevingsknop.
+      await expect(page.locator('#testbalk-open')).toHaveCount(0);
+      for (const knop of ['#quick-theme-toggle', '#quick-skin-toggle']) {
+        await expect(page.locator(knop)).toHaveCount(1);
+        expect(await page.locator(knop).evaluate(el => Boolean(el.closest('#profile-menu'))), `${knop} hoort in het profielmenu`).toBe(true);
+        await expect(page.locator(knop)).toBeHidden();
+      }
+      const herstel = page.locator('#quick-reset-demo');
+      await expect(herstel).toBeVisible();
+      await expect(herstel).toContainText('Herstel');
+      if (breedte < 821) expect((await herstel.boundingBox())!.height, 'Herstel is op de telefoon een touchdoel').toBeGreaterThanOrEqual(44);
+      await openProfielmenu(page);
+      await expect(page.locator('#profile-menu-testfuncties')).toBeVisible();
+      await expect(page.locator('#profile-menu-testknoppen #quick-theme-toggle')).toBeVisible();
+      await expect(page.locator('#profile-menu-testknoppen #quick-skin-toggle')).toBeVisible();
+      await expect(page.locator('#profile-menu-versie')).toHaveText(/^Versie \d+\.\d+\.\d+$/);
+      await page.keyboard.press('Escape');
+      await loginPage.logout();
+    });
+  }
 });
 
 test('[KLV-N-011] de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop', async ({ page }) => {

@@ -5361,83 +5361,55 @@ if (typeof window.matchMedia === "function") {
 // "TESTOMGEVING · VERSIE x". Voor beheer en in Modern gaan ze terug naar hun
 // eigen plek in de topbalk. Zelfde verhuispatroon als plaatsVandaagKlantKaart.
 let testknoppenThuis = null;
+// Gio 15 sep: op TEST moet het scherm zoveel mogelijk op PROD lijken. In de balk
+// blijft alleen Herstel, goed leesbaar naast het profiel; thema, vormgeving,
+// omgeving en versie staan in het profielmenu onder "Testfuncties". Die sectie
+// bestaat alleen waar de testhulpmiddelen al gelden (LOKAAL/TEST), nooit op PROD.
 function plaatsTestknoppen() {
   const balk = document.querySelector("#testbalk");
   const vak = document.querySelector("#testbalk-knoppen");
   const reset = document.querySelector("#quick-reset-demo");
   const schakelaars = document.querySelector(".appearance-switches");
-  if (!balk || !vak || !reset || !schakelaars) return;
+  const menuSectie = document.querySelector("#profile-menu-testfuncties");
+  const menuKnoppen = document.querySelector("#profile-menu-testknoppen");
+  if (!balk || !vak || !reset || !schakelaars || !menuSectie || !menuKnoppen) return;
   if (!testknoppenThuis) testknoppenThuis = { ouder: reset.parentElement, volgende: schakelaars.nextElementSibling };
+  // Thema en vormgeving: altijd in het profielmenu.
+  if (schakelaars.parentElement !== menuKnoppen) menuKnoppen.append(schakelaars);
+  // Herstel: bij de medewerker in Klassiek in de eigen balk, anders op zijn plek in de topbalk.
   const inBalk = state.currentRole === "employee" && document.documentElement.dataset.skin !== "new";
   if (inBalk) {
-    if (reset.parentElement !== vak) vak.append(reset, schakelaars);
-  } else if (reset.parentElement === vak) {
+    if (reset.parentElement !== vak) vak.append(reset);
+  } else if (reset.parentElement !== testknoppenThuis.ouder) {
     const anker = testknoppenThuis.volgende?.parentElement === testknoppenThuis.ouder ? testknoppenThuis.volgende : null;
     testknoppenThuis.ouder.insertBefore(reset, anker);
-    testknoppenThuis.ouder.insertBefore(schakelaars, anker);
   }
   const omgeving = document.querySelector("#environment-badge");
   const versie = (document.querySelector(".sidebar-footer .demo-badge")?.textContent || "").trim();
-  const omgevingZichtbaar = Boolean(omgeving && !omgeving.hidden && omgeving.textContent.trim());
-  // Twee delen, zodat de smalle desktopmenubalk (821-1079px) alleen de omgeving
-  // kan tonen: het hele label paste daar niet en liep over de tabs (KLV-N-003).
-  // De tekst als geheel blijft "OMGEVING · Versie x".
-  const label = document.querySelector("#testbalk-label");
-  const omgevingTekst = omgevingZichtbaar ? omgeving.textContent.trim() : "";
-  const omgevingDeel = document.createElement("span");
-  omgevingDeel.className = "testbalk-omgeving";
-  omgevingDeel.textContent = omgevingTekst;
-  const versieDeel = document.createElement("span");
-  versieDeel.className = "testbalk-versie";
-  versieDeel.textContent = omgevingTekst && versie ? " · " + versie : versie;
-  label.replaceChildren(...[omgevingTekst ? omgevingDeel : null, versie ? versieDeel : null].filter(Boolean));
-  // Telefoon: de pil noemt de omgeving, het versienummer staat onderaan het
-  // profielmenu (Gio 15 sep: "versienummer testomgeving ... op het profielmenu").
-  const pilOmgeving = document.querySelector("#testbalk-open-omgeving");
-  if (pilOmgeving) pilOmgeving.textContent = omgevingTekst || "Test";
+  const omgevingTekst = omgeving && !omgeving.hidden ? omgeving.textContent.trim() : "";
+  const testOmgeving = Boolean(omgevingTekst) || !reset.hidden;
+  menuSectie.hidden = !testOmgeving;
+  const kop = document.querySelector("#profile-menu-testfuncties-kop");
+  if (kop) kop.textContent = omgevingTekst ? "Testfuncties · " + omgevingTekst : "Testfuncties";
   const profielVersie = document.querySelector("#profile-menu-versie");
   if (profielVersie) profielVersie.textContent = versie;
-  const knoppenZichtbaar = !reset.hidden || !schakelaars.hidden;
-  balk.hidden = !(inBalk && (omgevingZichtbaar || knoppenZichtbaar));
-  // Gio 14 sep: niet als band door de app, maar rechtsboven. Op desktop staat de
-  // balk in de menubalk, vóór de avatar; op telefoon (daar is de menubalk de
-  // tabbalk onderin) blijft hij boven de topbalk, als compacte regel.
+  balk.hidden = !(inBalk && !reset.hidden);
+  // Desktop: in de menubalk, vóór de rolwissel en het profiel. Telefoon: in de
+  // topbalk direct vóór het profiel, niet meer als eigen regel erboven.
   const zijbalk = document.querySelector(".sidebar");
   const voet = document.querySelector(".sidebar-footer");
-  const topbalk = document.querySelector(".topbar");
+  const acties = document.querySelector(".topbar-actions");
+  const profiel = document.querySelector("#profile-menu-button")?.closest(".topbar-popover");
   const breed = typeof window.matchMedia === "function" && window.matchMedia("(min-width: 821px)").matches;
   if (inBalk && breed && zijbalk && voet) {
     if (balk.parentElement !== zijbalk) zijbalk.insertBefore(balk, voet);
-  } else if (topbalk && balk.nextElementSibling !== topbalk) {
-    topbalk.parentElement.insertBefore(balk, topbalk);
+  } else if (acties && profiel && profiel.parentElement === acties) {
+    if (balk.nextElementSibling !== profiel) acties.insertBefore(balk, profiel);
   }
 }
 if (typeof window.matchMedia === "function") {
-  window.matchMedia("(min-width: 821px)").addEventListener?.("change", () => { zetTestpil(false); plaatsTestknoppen(); });
+  window.matchMedia("(min-width: 821px)").addEventListener?.("change", () => plaatsTestknoppen());
 }
-
-// De testpil op de telefoon (medewerker in Klassiek): één knop die het paneel met
-// Herstel demo en de schakelaars opent. Dicht na een keuze in het paneel, bij een
-// tik ernaast en met Escape, zodat hij nooit over het scherm blijft hangen.
-function zetTestpil(open) {
-  const balk = document.querySelector("#testbalk");
-  const knop = document.querySelector("#testbalk-open");
-  if (!balk || !knop) return;
-  balk.dataset.open = open ? "true" : "false";
-  knop.setAttribute("aria-expanded", String(open));
-}
-document.addEventListener("click", event => {
-  const balk = document.querySelector("#testbalk");
-  if (!balk) return;
-  if (event.target.closest("#testbalk-open")) {
-    zetTestpil(balk.dataset.open !== "true");
-    return;
-  }
-  if (balk.dataset.open !== "true") return;
-  // Een keuze in het paneel eerst laten uitvoeren, dan pas dichtdoen.
-  if (event.target.closest("#testbalk-paneel button")) window.setTimeout(() => zetTestpil(false), 0);
-  else if (!event.target.closest("#testbalk-paneel")) zetTestpil(false);
-});
 
 function syncAppearanceSwitches(hostname = window.location.hostname) {
   const themeButton = document.querySelector("#quick-theme-toggle");
@@ -16417,7 +16389,6 @@ document.addEventListener("keydown", event => {
       return;
     }
     closeTopbarPopovers();
-    zetTestpil(false);
     closeMonthChoicePanels();
     closeReminderChoicePanels();
     closeStandardChoicePanels();

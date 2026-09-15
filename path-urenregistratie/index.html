@@ -202,14 +202,11 @@
            niet tussen paginatitel en hero. app.js (plaatsTestknoppen) verhuist ze
            hierheen en zet ze voor andere rollen en Modern terug. -->
       <div class="testbalk" id="testbalk" hidden>
-        <!-- Telefoon (tot 820px, medewerker in Klassiek): de testknoppen zitten achter
-             één pil, zodat de balk eruitziet als productie (Gio 15 sep). Op desktop is
-             .testbalk-paneel display:contents en blijft de balk zoals hij was. -->
-        <button class="testbalk-open" id="testbalk-open" type="button" aria-expanded="false" aria-controls="testbalk-paneel"><span id="testbalk-open-omgeving">Test</span><span aria-hidden="true">▾</span></button>
-        <div class="testbalk-paneel" id="testbalk-paneel">
-          <span class="testbalk-label" id="testbalk-label"></span>
-          <span class="testbalk-knoppen" id="testbalk-knoppen"></span>
-        </div>
+        <!-- Gio 15 sep: op TEST moet het scherm zoveel mogelijk op PROD lijken. In de
+             balk blijft alleen Herstel (plaatsTestknoppen zet hem hier bij de medewerker
+             in Klassiek); thema, vormgeving, omgeving en versie staan in het profielmenu
+             onder "Testfuncties". -->
+        <span class="testbalk-knoppen" id="testbalk-knoppen"></span>
       </div>
       <header class="topbar">
         <div class="mobile-topbar-home" aria-label="Mobiele snelkeuzes">
@@ -284,6 +281,11 @@
               <button data-profile-action="help">Hulp &amp; contact</button>
               <button data-profile-action="switch">Ander account of rol</button>
               <button class="danger-menu-item" data-profile-action="logout">Uitloggen</button>
+              <!-- Alleen op LOKAAL/TEST (plaatsTestknoppen): nooit op PROD. -->
+              <div class="profile-menu-testfuncties" id="profile-menu-testfuncties" hidden>
+                <p class="profile-menu-kop" id="profile-menu-testfuncties-kop">Testfuncties</p>
+                <div class="profile-menu-testknoppen" id="profile-menu-testknoppen"></div>
+              </div>
               <p class="profile-menu-versie" id="profile-menu-versie"></p>
             </section>
           </div>

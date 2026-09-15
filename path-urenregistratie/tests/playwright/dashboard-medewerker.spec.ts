@@ -16,7 +16,7 @@ import { expect, test } from '@playwright/test';
 import { openPaneel, openProfielmenu } from './pages/TopbarMenu';
 import { suppressInstallBanner } from './fixtures/suppressInstallBanner';
 import { useFixedDemoClock } from './fixtures/fixedDemoClock';
-import { klikTestknop, openTestknoppen } from './fixtures/testknoppen';
+import { klikTestknop, openTestknoppen, sluitTestknoppen } from './fixtures/testknoppen';
 // Scope rechtgezet 14 sep: Vandaag (#vandaag) vervangt in Klassiek de oude
 // dashboardblokken ("Open acties per maand", de volgende-actieknop, de
 // kerncijfers en de stappenlijst), op desktop volgens handoff/medewerker-gui.html
@@ -2730,10 +2730,11 @@ test('[DASH-H-046] op telefoon zweeft "Andere rol kiezen" niet over de inhoud; d
   });
 });
 
-test('[DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbalk, en Vandaag begint met de begroeting', async ({ page }) => {
-  // TEST 2.0.59, punt 8, gecorrigeerd 14 sep: "Herstel demo" en Licht/Klassiek
-  // blijven tot productie, maar in de testomgevingsbalk. De paginatitel boven
-  // Vandaag verdwijnt. Beheer en Modern houden hun eigen topbalk.
+test('[DASH-H-047] bij de medewerker staat alleen Herstel in de balk, de overige testfuncties in het profielmenu, en Vandaag begint met de begroeting', async ({ page }) => {
+  // TEST 2.0.59 punt 8, bijgesteld 15 sep (Gio: "op TEST zoveel mogelijk PROD"):
+  // Herstel demo blijft zichtbaar bovenin; Licht/Donker, Klassiek/Modern, omgeving en
+  // versie staan in het profielmenu onder "Testfuncties". De paginatitel boven Vandaag
+  // verdwijnt. Beheer houdt Herstel in zijn eigen topbalk.
   test.setTimeout(120_000);
   const loginPage = new LoginPage(page);
   await loginPage.open();
@@ -2741,50 +2742,41 @@ test('[DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbal
   await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
   const balk = page.locator('#testbalk');
 
-  // Op de telefoon (tot 820px) zitten de knoppen sinds 15 sep achter de testpil
-  // (KLV-H-010). Eerst openen, dan geldt dezelfde controle.
-  const opTelefoon = (page.viewportSize()?.width ?? 0) < 821;
-  const openTestpil = async () => {
-    if (opTelefoon && (await page.locator('#testbalk-open').getAttribute('aria-expanded')) !== 'true') await page.locator('#testbalk-open').click();
-  };
-
-  await test.step('Then staan omgeving, versie en beide testknoppen in de balk', async () => {
+  await test.step('Then staat alleen Herstel in de balk en staan de schakelaars met omgeving en versie in het profielmenu', async () => {
     await expect(balk).toBeVisible();
-    await openTestpil();
-    await expect(page.locator('#testbalk-label')).toHaveText(/(TESTOMGEVING|LOKAAL) · Versie \d+\.\d+\.\d+/);
-    await openTestknoppen(page);
     await expect(page.locator('#testbalk-knoppen #quick-reset-demo')).toBeVisible();
-    await openTestknoppen(page);
-    await expect(page.locator('#testbalk-knoppen #quick-skin-toggle')).toBeVisible();
-    await openTestknoppen(page);
-    await expect(page.locator('#testbalk-knoppen #quick-theme-toggle')).toBeVisible();
-    await expect(page.locator('.topbar-actions #quick-skin-toggle')).toHaveCount(0);
-    // Gio 14 sep: rechtsboven en geen band door de app. Op desktop in de
-    // menubalk vóór de avatar, op telefoon rechts uitgelijnd boven de topbalk.
+    await expect(page.locator('#testbalk #quick-skin-toggle, #testbalk #quick-theme-toggle')).toHaveCount(0);
+    // Het profielmenu verhuist op desktop mee naar de menubalk; daarom niet zoeken waar
+    // de schakelaars niet staan, maar vaststellen dat ze in het profielmenu zitten.
+    for (const knop of ['#quick-skin-toggle', '#quick-theme-toggle']) {
+      expect(await page.locator(knop).evaluate(el => Boolean(el.closest('#profile-menu'))), `${knop} in het profielmenu`).toBe(true);
+    }
     const vorm = await balk.evaluate(el => {
       const r = el.getBoundingClientRect();
-      return { inMenubalk: el.parentElement?.classList.contains('sidebar'), links: r.left, rechts: r.right, breedte: r.width, hoogte: r.height, vlak: getComputedStyle(el).backgroundColor, venster: innerWidth };
+      return { inMenubalk: el.parentElement?.classList.contains('sidebar'), inTopbalk: Boolean(el.closest('.topbar-actions')), links: r.left, rechts: r.right, hoogte: r.height, vlak: getComputedStyle(el).backgroundColor, venster: innerWidth };
     });
     expect(vorm.vlak, 'geen gekleurde band').toBe('rgba(0, 0, 0, 0)');
     if (vorm.venster >= 821) {
-      expect(vorm.inMenubalk, 'op desktop hoort de balk in de menubalk te staan').toBe(true);
+      expect(vorm.inMenubalk, 'op desktop hoort Herstel in de menubalk te staan').toBe(true);
       expect(vorm.hoogte).toBeLessThanOrEqual(44);
-      expect(vorm.links, 'rechts in de menubalk, niet over de breedte').toBeGreaterThan(vorm.venster / 2);
+      expect(vorm.links, 'rechts in de menubalk').toBeGreaterThan(vorm.venster / 2);
     } else {
-      expect(vorm.venster - vorm.rechts, 'rechts uitgelijnd').toBeLessThanOrEqual(24);
+      expect(vorm.inTopbalk, 'op telefoon hoort Herstel in de topbalk naast het profiel te staan').toBe(true);
     }
-    if (opTelefoon) await page.keyboard.press('Escape');
+    await openTestknoppen(page);
+    await expect(page.locator('#profile-menu-testfuncties')).toBeVisible();
+    await expect(page.locator('#profile-menu-testfuncties-kop')).toHaveText(/^Testfuncties · (TESTOMGEVING|LOKAAL)$/);
+    await expect(page.locator('#profile-menu-testknoppen #quick-theme-toggle')).toBeVisible();
+    await expect(page.locator('#profile-menu-testknoppen #quick-skin-toggle')).toBeVisible();
+    await expect(page.locator('#profile-menu-versie')).toHaveText(/^Versie \d+\.\d+\.\d+$/);
+    await sluitTestknoppen(page);
   });
 
   await test.step('And begint Vandaag met de begroeting, zonder paginatitel; Mijn uren houdt zijn titel', async () => {
     await expect(page.locator('#page-title')).toBeHidden();
     const groet = page.locator('#vd-kop-label:visible, #vdt-groet:visible').first();
     await expect(groet).toHaveText(/^Goede(morgen|middag|navond)/);
-    const balkOnder = (await balk.boundingBox())!.y + (await balk.boundingBox())!.height;
-    expect((await groet.boundingBox())!.y, 'de begroeting hoort onder de testbalk te staan').toBeGreaterThan(balkOnder);
     await page.locator('button[data-view="timesheet"]:visible').first().click();
-    // Geen dubbele titel: de topbalktitel blijft verborgen, het scherm heeft zijn
-    // eigen kop (Gio 14 sep).
     await expect(page.locator('#page-title')).toBeHidden();
     await expect(page.locator('#view-timesheet .view-heading h2')).toBeVisible();
     const avatars = await page.locator('.avatar:visible, .topbar-avatar:visible').count();
@@ -2792,22 +2784,23 @@ test('[DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbal
     await page.locator('button[data-view="employee-dashboard"]:visible').first().click();
   });
 
-  await test.step('When de medewerker naar Modern wisselt, then staan de knoppen weer in de topbalk en is de balk weg', async () => {
-    await openTestpil();
+  await test.step('When de medewerker via het profielmenu naar Modern en terug wisselt, then blijven de schakelaars in het menu', async () => {
     await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await expect(balk).toBeHidden();
-    await expect(page.locator('.topbar-actions #quick-skin-toggle')).toHaveCount(1);
+    await expect(page.locator('#profile-menu-testknoppen #quick-skin-toggle')).toHaveCount(1);
     await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
-    await expect(page.locator('#testbalk-knoppen #quick-skin-toggle')).toHaveCount(1);
+    await expect(page.locator('#profile-menu-testknoppen #quick-skin-toggle')).toHaveCount(1);
+    await sluitTestknoppen(page);
   });
 
-  await test.step('And houdt beheer de knoppen in zijn eigen topbalk', async () => {
+  await test.step('And houdt beheer Herstel in zijn eigen topbalk', async () => {
     await loginPage.logout();
     await loginPage.loginAsAdmin();
     await expect(balk).toBeHidden();
     await expect(page.locator('.topbar-actions #quick-reset-demo')).toHaveCount(1);
+    expect(await page.locator('#quick-theme-toggle').evaluate(el => Boolean(el.closest('#profile-menu'))), 'thema-schakelaar in het profielmenu').toBe(true);
   });
 });
 
