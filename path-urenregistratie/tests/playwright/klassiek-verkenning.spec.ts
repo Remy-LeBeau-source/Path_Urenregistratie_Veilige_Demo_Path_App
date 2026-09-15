@@ -443,6 +443,282 @@ test('[KLV-N-011] de mailgeschiedenis in Instellingen blijft binnen beeld, ook m
   }
 });
 
+// Indienlogica (Gio 15 sep): de maand is pas indienbaar als elke werkdag bewust is
+// ingevuld, in welke week je ook staat.
+//
+// Opzet voor KLV-N-012/H-013/H-014: elke case krijgt per project een eigen maand ruim
+// vooruit, die geen andere case gebruikt. De server verwijdert nooit dagregels, dus een
+// herstel achteraf kan een gedeelde maand niet schoon terugzetten; gemeten 15 sep: met
+// de huidige maand zag SKIN-H-006 daarna een volle september. De database gaat per run
+// opnieuw op, dus binnen een run is dit genoeg. Bij een herhaalpoging schuift de open
+// week één op, zodat de eerste poging die week niet al op de server heeft gezet.
+//
+// De maand is overal gevuld en bevestigd, behalve de open week (nooit de laatste week
+// van de maand), en die stand staat ook op de server.
+type IndienRt = { currentEmployee: () => { id: number }; currentPeriod: () => { key: string; weekRows: Array<{ days: unknown[] }> }; recordFor: (id: number, key?: string) => { entries: number[][]; confirmedEntries: boolean[][] }; persistState: () => void; renderAll: () => void; scheduleDraftTimesheetWrite: () => void; setPeriod: (key: string) => boolean };
+
+const INDIEN_PROJECTEN = ['desktop-chromium', 'mobile-chrome', 'mobile-safari', 'tablet-chromium'];
+
+async function kiesMaand(page: Page, maand: string): Promise<void> {
+  await page.evaluate(key => { (window as unknown as IndienRt).setPeriod(key); }, maand);
+  await expect.poll(() => page.evaluate(() => (window as unknown as IndienRt).currentPeriod().key)).toBe(maand);
+}
+
+async function eigenMaandMetOpenWeek(page: Page, caseNummer: 0 | 1 | 2 | 3): Promise<{ maand: string; openWeek: number; werkdagenOpen: number }> {
+  const info = test.info();
+  const project = Math.max(0, INDIEN_PROJECTEN.indexOf(info.project.name));
+  // 8 t/m 23 maanden vooruit: ver van de maanden die andere cases gebruiken en binnen
+  // de grens van 2 jaar (setPeriod, timesheets.php).
+  const maandenVooruit = 8 + caseNummer * 4 + project;
+  const { maand, openWeek } = await page.evaluate(({ vooruit, poging }) => {
+    const periodFromKey = (0, eval)('periodFromKey') as (k: string) => { weekRows: Array<{ days: unknown[] }> };
+    const nu = new Date();
+    const d = new Date(nu.getFullYear(), nu.getMonth() + vooruit, 1);
+    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    const weken = periodFromKey(key).weekRows;
+    const kandidaten = weken.map((week, index) => ({ index, dagen: week.days.filter(Boolean).length }))
+      // Een volle week: dan blijven er ook met een vrije dag van Beheer (werkpatroon)
+      // genoeg werkdagen over om er één in te vullen en de rest open te zien.
+      .filter(week => week.index < weken.length - 1 && week.dagen >= 5)
+      .map(week => week.index);
+    return { maand: key, openWeek: kandidaten[Math.min(poging, kandidaten.length - 1)] ?? -1 };
+  }, { vooruit: maandenVooruit, poging: info.retry });
+  expect(openWeek, `een volle week in ${maand}, niet de laatste`).toBeGreaterThanOrEqual(0);
+  await kiesMaand(page, maand);
+  const opgeslagen = page.waitForResponse(r => r.url().includes('/server/api/timesheets.php') && r.request().method() === 'POST' && r.status() === 200, { timeout: 20_000 });
+  const werkdagenOpen = await page.evaluate(open => {
+    const rt = window as unknown as IndienRt;
+    const period = rt.currentPeriod();
+    const record = rt.recordFor(rt.currentEmployee().id, period.key);
+    period.weekRows.forEach((week, weekIndex) => week.days.forEach((dag, dagIndex) => {
+      if (!dag) return;
+      const leeg = weekIndex === open;
+      record.entries[weekIndex][dagIndex] = leeg ? 0 : 8;
+      record.confirmedEntries[weekIndex][dagIndex] = !leeg;
+    }));
+    const staat = (0, eval)('state') as { hoursWeekScope: string; hoursWeekScopeTouched: boolean };
+    staat.hoursWeekScope = 'week-' + open;
+    staat.hoursWeekScopeTouched = true;
+    rt.persistState();
+    rt.renderAll();
+    rt.scheduleDraftTimesheetWrite();
+    // De app bepaalt wat een werkdag is (een vrije dag volgens Beheer telt niet mee),
+    // dus de verwachting komt uit dezelfde regel, niet uit een eigen telling.
+    return ((0, eval)('ontbrekendeWerkdagen') as (r: unknown, p: unknown) => unknown[])(record, period).length;
+  }, openWeek);
+  await opgeslagen;
+  return { maand, openWeek, werkdagenOpen };
+}
+
+async function naarMijnUren(page: Page): Promise<void> {
+  await page.locator('.nav-item[data-view="timesheet"]:visible').first().click();
+  await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+}
+
+const nogOpen = (aantal: number) => aantal === 1 ? 'Nog 1 werkdag niet ingevuld' : `Nog ${aantal} werkdagen niet ingevuld`;
+
+test('[KLV-N-012] typen in één dag van de laatste open week maakt de rest van die week niet ingevuld', async ({ page }) => {
+  // Gio 15 sep: bij een lege week stond "Alle werkdagen zijn ingevuld" en Maand
+  // indienen. Oorzaak: elke conceptopslag bevestigde alle dagen van de bekeken week.
+  test.setTimeout(90_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await naarMijnUren(page);
+  const { maand, openWeek, werkdagenOpen } = await eigenMaandMetOpenWeek(page, 0);
+  const hulp = page.locator('#hours-target-help');
+  const indienen = page.locator('#submit-timesheet');
+  await test.step('Given alleen één week van de maand is nog leeg', async () => {
+    await expect(hulp).toContainText(nogOpen(werkdagenOpen));
+    await expect(indienen).toBeHidden();
+  });
+  await test.step('When de medewerker in één dag van die week uren typt', async () => {
+    const opgeslagen = page.waitForResponse(r => r.url().includes('/server/api/timesheets.php') && r.request().method() === 'POST', { timeout: 20_000 });
+    await page.locator('#hours-grid .hours-input:not([disabled]):visible').first().fill('8');
+    await opgeslagen;
+  });
+  await test.step('Then telt alleen die dag mee: nog steeds geen Maand indienen, ook niet na herladen', async () => {
+    await expect(hulp).toContainText(nogOpen(werkdagenOpen - 1));
+    await expect(indienen).toBeHidden();
+    await page.reload();
+    await naarMijnUren(page);
+    await kiesMaand(page, maand);
+    // Weer dezelfde week kiezen: onder Hele maand staat Maand indienen bewust altijd,
+    // met het aantal lege dagen erachter (besluit 14 sep).
+    await page.locator(`#hours-week-filter [data-hours-week-scope="week-${openWeek}"]`).click();
+    await expect(page.locator('#hours-target-help')).toContainText(nogOpen(werkdagenOpen - 1));
+    await expect(page.locator('#submit-timesheet')).toBeHidden();
+  });
+});
+
+test('[KLV-H-013] Week opslaan telt lege dagen als bewust 0: daarna Maand indienen, ook buiten de laatste week', async ({ page }) => {
+  // Gio 15 sep: "bij opslaan drukken terwijl alles leeg is verwacht ik Maand indienen
+  // weer terug". Opslaan is een bewuste keuze voor deze week, ook met 0 uur.
+  test.setTimeout(90_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await naarMijnUren(page);
+  await eigenMaandMetOpenWeek(page, 1);
+  await test.step('Given alleen één week is nog leeg en Maand indienen is er niet', async () => {
+    await expect(page.locator('#submit-timesheet')).toBeHidden();
+  });
+  await test.step('When de medewerker die lege week opslaat', async () => {
+    await page.locator('#save-timesheet').click();
+  });
+  await test.step('Then staat Maand indienen er in de weekweergave, zonder de tekst dat hij onder Hele maand staat', async () => {
+    await expect(page.locator('#hours-target-help')).toContainText('Alle werkdagen zijn ingevuld');
+    await expect(page.locator('#submit-timesheet')).toBeVisible();
+    await expect(page.locator('#submit-timesheet-note')).not.toContainText('Hele maand');
+  });
+});
+
+test('[KLV-H-014] Standaardweek vullen in de laatste open week maakt indienen mogelijk, op Mijn uren en op Vandaag', async ({ page }) => {
+  // Gio 15 sep: "als ik standaardweek vullen druk verwacht ik ook dat ik weer de maand
+  // kan indienen ... het hoeft niet de laatste week te zijn".
+  test.setTimeout(90_000);
+  // Telefoonbreedte: daar volgt Vandaag de gekozen maand (op desktop staat Vandaag
+  // altijd op de lopende maand).
+  await page.setViewportSize({ width: 390, height: 844 });
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await naarMijnUren(page);
+  const { maand } = await eigenMaandMetOpenWeek(page, 2);
+  await test.step('When de medewerker in de laatste open week op Standaardweek vullen drukt', async () => {
+    await expect(page.locator('#submit-timesheet')).toBeHidden();
+    await page.locator('#fill-standard-hours').click();
+  });
+  await test.step('Then kan de maand worden ingediend op Mijn uren', async () => {
+    await expect(page.locator('#hours-target-help')).toContainText('Alle werkdagen zijn ingevuld');
+    await expect(page.locator('#submit-timesheet')).toBeVisible();
+  });
+  await test.step('And wijst de hoofdknop op Vandaag naar Maand indienen', async () => {
+    await page.locator('.nav-item[data-view="employee-dashboard"]:visible').first().click();
+    await kiesMaand(page, maand);
+    await expect(page.locator('#vdt-hoofdknop')).toHaveText('Maand indienen');
+  });
+});
+
+test('[KLV-H-015] het label onder het weeknummer telt de open dagen van die week af tot Compleet', async ({ page }) => {
+  // Gio 15 sep: "38Open. Zo dicht op elkaar en als je week 38 invult waarom staat er
+  // nog steeds 38 open". Het label was altijd "Open" tot de maand werd ingediend, en
+  // stond zonder spatie tegen het weeknummer.
+  test.setTimeout(90_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await naarMijnUren(page);
+  const { openWeek, werkdagenOpen } = await eigenMaandMetOpenWeek(page, 3);
+  const rij = page.locator(`#hours-grid tr[data-week-index="${openWeek}"]`);
+  const label = rij.locator('.hours-weekcel small');
+  await test.step('Given een week met nog open werkdagen', async () => {
+    await expect(label).toHaveText(`${werkdagenOpen} open`);
+    await expect(label).toHaveClass('is-open');
+    // Weeknummer en label los van elkaar, ook waar ze naast elkaar staan.
+    await expect(rij.locator('.hours-weekcel')).toHaveText(/^\d+ \d+ open$/);
+  });
+  const velden = rij.locator('.hours-input:not([disabled])');
+  await test.step('When de medewerker één dag invult, dan telt het label één af', async () => {
+    await velden.first().fill('8');
+    await expect(label).toHaveText(werkdagenOpen - 1 > 0 ? `${werkdagenOpen - 1} open` : 'Compleet');
+  });
+  await test.step('Then staat er Compleet zodra elke werkdag van de week is ingevuld', async () => {
+    const aantal = await velden.count();
+    for (let i = 1; i < aantal; i += 1) await velden.nth(i).fill('8');
+    await expect(label).toHaveText('Compleet');
+    await expect(label).toHaveClass('is-compleet');
+  });
+});
+
+test('[KLV-H-016] op de telefoon brengt een klein knopje bij de weekkeuze je terug naar Vandaag', async ({ page }) => {
+  // Gio 15 sep: "een kleine button in het Mijn uren menu vlakbij weken om weer terug te
+  // kunnen naar dashboard, niet storend knopje".
+  test.setTimeout(60_000);
+  const loginPage = new LoginPage(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await naarMijnUren(page);
+  const terug = page.locator('#hours-terug-vandaag');
+  await test.step('Given Mijn uren op telefoonbreedte: het knopje staat vlak boven de weekkeuze', async () => {
+    await expect(terug).toBeVisible();
+    const knop = (await terug.boundingBox())!;
+    const weken = (await page.locator('#hours-week-filter').boundingBox())!;
+    expect(knop.height, 'tikvlak').toBeGreaterThanOrEqual(44);
+    expect(knop.y + knop.height, 'boven de weekkeuze').toBeLessThanOrEqual(weken.y + 1);
+    expect(weken.y - (knop.y + knop.height), 'vlak bij de weekkeuze').toBeLessThanOrEqual(16);
+    // Niet storend: geen gekleurde knop, gewoon tekst.
+    expect(await terug.evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgba(0, 0, 0, 0)');
+  });
+  await test.step('When de medewerker erop tikt, dan staat Vandaag open', async () => {
+    await terug.click();
+    await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
+  });
+  await test.step('And op desktopbreedte, waar de menubalk Vandaag al toont, staat het knopje er niet', async () => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await naarMijnUren(page);
+    await expect(terug).toBeHidden();
+  });
+});
+
+test('[KLV-H-017] de standaardweek gebruikt hele dagen van 9 of 8 uur en de vrije dag die Beheer instelt', async ({ page }) => {
+  // Gio 15 sep: "waarom maakt hij hier 7,2 ... 40 uur dan 5 × 8 of 36 uur 4 × 9, waarbij
+  // Beheer instelt op welke dag iemand vrij is" en "als Beheer geen vrije dag heeft
+  // ingesteld: zoveel mogelijk maandag t/m vrijdag, in dit geval ma t/m do 4 × 9".
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  // Beslistabel: weekuren × wat Beheer per dag heeft ingesteld (ISO 1 = maandag).
+  const regels: Array<{ naam: string; medewerker: { weeklyHours: number; dayHours?: Record<number, number> }; verwacht: number[] }> = [
+    { naam: '36 uur, niets ingesteld', medewerker: { weeklyHours: 36 }, verwacht: [9, 9, 9, 9, 0] },
+    { naam: '40 uur, niets ingesteld', medewerker: { weeklyHours: 40 }, verwacht: [8, 8, 8, 8, 8] },
+    { naam: '32 uur, niets ingesteld', medewerker: { weeklyHours: 32 }, verwacht: [8, 8, 8, 8, 0] },
+    { naam: '45 uur, niets ingesteld', medewerker: { weeklyHours: 45 }, verwacht: [9, 9, 9, 9, 9] },
+    { naam: '36 uur, vrijdag vrij', medewerker: { weeklyHours: 36, dayHours: { 5: 0 } }, verwacht: [9, 9, 9, 9, 0] },
+    { naam: '36 uur, maandag vrij', medewerker: { weeklyHours: 36, dayHours: { 1: 0 } }, verwacht: [0, 9, 9, 9, 9] },
+    { naam: '36 uur, woensdag vrij', medewerker: { weeklyHours: 36, dayHours: { 3: 0 } }, verwacht: [9, 9, 0, 9, 9] },
+    { naam: '36 uur, volledig patroon van Beheer', medewerker: { weeklyHours: 36, dayHours: { 1: 9, 2: 9, 3: 9, 4: 9, 5: 0 } }, verwacht: [9, 9, 9, 9, 0] },
+    { naam: '40 uur met een vrije dag past niet in 8 of 9: gelijk over de rest', medewerker: { weeklyHours: 40, dayHours: { 3: 0 } }, verwacht: [10, 10, 0, 10, 10] },
+    { naam: '38 uur past niet in 8 of 9: gelijk verdeeld zoals voorheen', medewerker: { weeklyHours: 38 }, verwacht: [7.6, 7.6, 7.6, 7.6, 7.6] },
+  ];
+  const uitkomst = await page.evaluate(lijst => {
+    const perDag = (0, eval)('standardHoursForDay') as (medewerker: unknown, dag: number) => number;
+    return lijst.map(regel => ({ naam: regel.naam, dagen: [0, 1, 2, 3, 4].map(dag => perDag(regel.medewerker, dag)) }));
+  }, regels);
+  for (const [index, regel] of regels.entries()) {
+    expect(uitkomst[index].dagen, regel.naam).toEqual(regel.verwacht);
+  }
+});
+
+test('[KLV-H-018] Berichten toont "Nieuw in de app" met de laatste 5 versies, alleen buiten PROD', async ({ page }) => {
+  // Gio 15 sep: "elke keer de laatste versie-updates daarin, alleen als het betrekking
+  // heeft op de medewerkers ... zo niet, dan alleen in test".
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await page.locator('.nav-item[data-view="employee-announcements"]:visible').first().click();
+  const blok = page.locator('#nieuw-in-de-app');
+  await test.step('Then staat het blok er lokaal/op TEST met 5 versies, nieuwste eerst', async () => {
+    await expect(blok).toBeVisible();
+    const versies = await blok.locator('li strong').allTextContents();
+    expect(versies).toHaveLength(5);
+    versies.forEach(versie => expect(versie).toMatch(/^\d+\.\d+\.\d+$/));
+    const alsGetal = (v: string) => v.split('.').reduce((som, deel) => som * 1000 + Number(deel), 0);
+    expect([...versies].sort((a, b) => alsGetal(b) - alsGetal(a)), 'nieuwste bovenaan').toEqual(versies);
+    // Nooit een versie die nog niet bestaat.
+    const appVersie = (await page.locator('#profile-menu-versie').textContent() || '').match(/\d+\.\d+\.\d+/)?.[0] ?? '';
+    expect(appVersie, 'versie van de app').not.toBe('');
+    expect(alsGetal(versies[0]), `nieuwste notitie ${versies[0]} ≤ app ${appVersie}`).toBeLessThanOrEqual(alsGetal(appVersie));
+    for (const zin of await blok.locator('li span').allTextContents()) expect(zin.trim().length).toBeGreaterThan(20);
+  });
+  await test.step('And op de PROD-host is het blok weg', async () => {
+    await page.evaluate(() => ((0, eval)('syncEnvironmentChrome') as (host: string) => void)('uren.pathconsultancy.nl'));
+    await expect(blok).toBeHidden();
+    await page.evaluate(() => ((0, eval)('syncEnvironmentChrome') as () => void)());
+    await expect(blok).toBeVisible();
+  });
+});
+
 test('[KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie', async ({ page }) => {
   // Vondst seed 5 (5 handelingen): 9 aanklikken en meteen doortypen gaf een 409
   // stale-version, "door iemand anders gewijzigd", terwijl er maar één

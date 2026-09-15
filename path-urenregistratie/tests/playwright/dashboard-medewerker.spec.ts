@@ -2959,6 +2959,12 @@ test('[DASH-H-050] zodra de laatste lege week gevuld is, staat Maand indienen oo
   await loginPage.open();
   await loginPage.loginAsEmployee();
   await expect(page.locator('#period-label')).toHaveText('September 2026');
+  // Een eigen maand die geen andere case gebruikt. Het invullen hieronder gaat naar de
+  // server, en die verwijdert nooit dagregels: in september bleven er 8 uur per dag
+  // staan en vielen [SKIN-H-006] en [SKIN-H-011] daarna om (gemeten 15 sep, ook met
+  // de oude app.js). bewaarUrenstaat zet alleen de lokale stand terug.
+  await page.evaluate(() => (window as unknown as { setPeriod: (key: string) => boolean }).setPeriod('2027-11'));
+  await expect(page.locator('#period-label')).toHaveText('November 2027');
   const herstelUrenstaat = await bewaarUrenstaat(page);
   try {
     const laatste = await page.evaluate(() => {

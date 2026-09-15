@@ -412,7 +412,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-050] zodra de laatste lege week gevuld is, staat Maand indienen ook in de weekweergave
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 7
+    # Aantoonbare Playwright-assertions in deze case: 8
     Given de laatste week is nog leeg en open in de weekweergave
     When de medewerker die week invult, then verschijnt Maand indienen zonder restaantal
     Then wordt met Playwright-assertions bevestigd dat zodra de laatste lege week gevuld is, staat Maand indienen ook in de weekweergave

@@ -141,6 +141,13 @@ function techniqueFor(definition, testCase) {
       'KLV-N-009': 'Beslissingstabel vormgeving en scherm + regressiebewaking',
       'KLV-H-010': 'Responsive viewport + toegankelijkheidsinspectie (44px, toetsenbord) + end-to-end use-case',
       'KLV-N-011': 'Monkey testing (seeded) + grenswaardenanalyse + responsive viewport',
+      'KLV-N-012': 'Toestandsovergangtest (onaangeraakt → deels ingevuld) + beslistabel indienbaarheid + herladen (persistentie)',
+      'KLV-H-013': 'Toestandsovergangtest (Opslaan = bewust 0) + beslistabel indienbaarheid',
+      'KLV-H-014': 'Toestandsovergangtest (Standaardweek vullen) + consistentie tussen schermen (Mijn uren en Vandaag)',
+      'KLV-H-015': 'Toestandsovergangtest (N open → Compleet) + grenswaarde (laatste open dag)',
+      'KLV-H-016': 'Responsive viewport (390/1280) + toegankelijkheidsinspectie (44px tikvlak) + navigatietest',
+      'KLV-H-018': 'Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie)',
+      'KLV-H-017':'Beslistabeltest (weekuren × vrije dag van Beheer) + equivalentieklassen (past in 9, in 8, past niet)',
     };
     return perCase[testCase.id] || 'Monkey testing (seeded) + negatieve equivalentieklasse + error guessing';
   }

@@ -5162,3 +5162,23 @@ html:not([data-skin="new"]) body[data-role="employee"] .testbalk .topbar-quick-r
 @media (max-width: 820px) {
   .topbar-actions > .topbar-quick-reset:not([hidden]) { min-height: 44px; }
 }
+
+/* Nieuw in de app (Berichten, alleen TEST en lokaal): versienummer links, één zin rechts. */
+.nieuw-in-de-app { margin-top: 16px; }
+.nieuw-in-de-app-lijst { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.nieuw-in-de-app-lijst li { display: grid; grid-template-columns: 4.5em minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.nieuw-in-de-app-lijst strong { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.nieuw-in-de-app-lijst span { color: var(--ink); font-size: 13px; line-height: 1.45; }
+
+/* Terug naar Vandaag op Mijn uren (Gio 15 sep): klein en rustig, als tekstlink boven de
+   weekkeuze. Alleen voor de medewerker in Klassiek op telefoonbreedte; elders is de
+   menubalk met Vandaag altijd in beeld. Het tikvlak blijft 44px hoog. */
+.hours-terug-vandaag { display: none; }
+@media (max-width: 820px) {
+  html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-terug-vandaag {
+    display: flex; width: fit-content; align-items: center; min-height: 44px; margin: -10px 0 0 -6px;
+    border: 0; background: transparent; color: var(--muted); font-size: 13px; font-weight: 700; padding: 0 6px; box-shadow: none;
+  }
+  html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-terug-vandaag:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; border-radius: 8px; }
+  html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-weekcel small { margin-inline-start: 4px; }
+}

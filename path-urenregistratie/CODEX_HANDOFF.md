@@ -62,6 +62,14 @@ Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
   (#profile-menu-testfuncties, alleen met omgevingsbadge of Herstel, dus nooit op PROD). Testpil verwijderd.
   plaatsTestknoppen herschreven. KLV-H-010 bewaakt medewerker en beheer op 390/1280; DASH-H-047 bijgewerkt;
   fixtures/testknoppen.ts opent nu het profielmenu en sluit het na de klik. Impact desktop 59/59, mobile-chrome 53/53.
+- **2.0.94** (Gio 15 sep, zie GIO-WENSEN.md):
+  - Indienlogica: een autosave bevestigde de hele bekeken week, zodat typen in één dag de week "ingevuld" maakte. Nu bevestigen alleen bewuste acties: een dag zelf invullen of leegmaken, Week opslaan (Klassiek en Modern `[data-new-bento-save]`), Standaardweek vullen en Terugzetten. `bevestigDagen()`; `buildTimesheetWritePayload` stuurt alleen uren > 0 of bevestigde dagen. Cases KLV-N-012/H-013/H-014.
+  - Weeklabel Klassiek toont "N open"/"Compleet" en telt mee bij typen (`klassiekWeekStand`, KLV-H-015).
+  - Knop "‹ Vandaag" op Mijn uren, alleen telefoon Klassiek (KLV-H-016).
+  - `standardHoursForDay`: dagen van Beheer gelden, de rest in hele dagen van 9 of 8 vanaf maandag (36 = ma t/m do 9), anders gelijk verdeeld (beslistabel KLV-H-017).
+  - "Nieuw in de app" in Berichten, alleen TEST/lokaal (`syncEnvironmentChrome`, KLV-H-018). Bij elke versie met iets voor medewerkers bijwerken in index.html.
+  - Testisolatie: de server verwijdert nooit dagregels, dus een lokaal herstel (bewaarUrenstaat) ruimt geen serverregels op. De KLV-indiencases draaien daarom in een eigen maand ver vooruit, en DASH-H-050 in november 2027. DASH-H-050 liet in september 8 uur per dag staan, waardoor SKIN-H-006/H-011 daarna omvielen (ook met de oude app.js; ontdekt 15 sep).
+  - Besluit R44: oude 0-regels niet migreren; PROD krijgt bij livegang een verse migratie.
 - Open vondst (15 sep): dialoog met open toetsenbord onder reducedMotion "reduce" (SKIN-H-036). Chromium hield
   de max-height van .modal op 824px (100dvh-20) terwijl --zichtbaar-hoogte 300px was en de juiste regel matchte;
   dialoog 534px boven het scherm, kruisje onbereikbaar. Geprobeerd en teruggedraaid (niet betrouwbaar, wisselend

@@ -87,10 +87,69 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
   @negative
   Scenario: [KLV-N-011] de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop
     # Testtechniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport
-    # Aantoonbare Playwright-assertions in deze case: 3
+    # Aantoonbare Playwright-assertions in deze case: 5
     Given een beheerder op Instellingen met drie mailregels in de geschiedenis
     When de flow voor KLV-N-011 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop
+
+  @negative
+  Scenario: [KLV-N-012] typen in één dag van de laatste open week maakt de rest van die week niet ingevuld
+    # Testtechniek: Toestandsovergangtest (onaangeraakt → deels ingevuld) + beslistabel indienbaarheid + herladen (persistentie)
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given alleen één week van de maand is nog leeg
+    When de medewerker in één dag van die week uren typt
+    Then telt alleen die dag mee: nog steeds geen Maand indienen, ook niet na herladen
+
+  @happy
+  Scenario: [KLV-H-013] Week opslaan telt lege dagen als bewust 0: daarna Maand indienen, ook buiten de laatste week
+    # Testtechniek: Toestandsovergangtest (Opslaan = bewust 0) + beslistabel indienbaarheid
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given alleen één week is nog leeg en Maand indienen is er niet
+    When de medewerker die lege week opslaat
+    Then staat Maand indienen er in de weekweergave, zonder de tekst dat hij onder Hele maand staat
+
+  @happy
+  Scenario: [KLV-H-014] Standaardweek vullen in de laatste open week maakt indienen mogelijk, op Mijn uren en op Vandaag
+    # Testtechniek: Toestandsovergangtest (Standaardweek vullen) + consistentie tussen schermen (Mijn uren en Vandaag)
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given vondsten uit de monkey-verkenning op Klassiek is voorbereid
+    When de medewerker in de laatste open week op Standaardweek vullen drukt
+    Then kan de maand worden ingediend op Mijn uren
+    And wijst de hoofdknop op Vandaag naar Maand indienen
+
+  @happy
+  Scenario: [KLV-H-015] het label onder het weeknummer telt de open dagen van die week af tot Compleet
+    # Testtechniek: Toestandsovergangtest (N open → Compleet) + grenswaarde (laatste open dag)
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given een week met nog open werkdagen
+    When de medewerker één dag invult, dan telt het label één af
+    Then staat er Compleet zodra elke werkdag van de week is ingevuld
+
+  @happy
+  Scenario: [KLV-H-016] op de telefoon brengt een klein knopje bij de weekkeuze je terug naar Vandaag
+    # Testtechniek: Responsive viewport (390/1280) + toegankelijkheidsinspectie (44px tikvlak) + navigatietest
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given Mijn uren op telefoonbreedte: het knopje staat vlak boven de weekkeuze
+    When de medewerker erop tikt, dan staat Vandaag open
+    And op desktopbreedte, waar de menubalk Vandaag al toont, staat het knopje er niet
+    Then wordt met Playwright-assertions bevestigd dat op de telefoon brengt een klein knopje bij de weekkeuze je terug naar Vandaag
+
+  @happy
+  Scenario: [KLV-H-017] de standaardweek gebruikt hele dagen van 9 of 8 uur en de vrije dag die Beheer instelt
+    # Testtechniek: Beslistabeltest (weekuren × vrije dag van Beheer) + equivalentieklassen (past in 9, in 8, past niet)
+    # Aantoonbare Playwright-assertions in deze case: 1
+    Given vondsten uit de monkey-verkenning op Klassiek is voorbereid
+    When de flow voor KLV-H-017 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat de standaardweek gebruikt hele dagen van 9 of 8 uur en de vrije dag die Beheer instelt
+
+  @happy
+  Scenario: [KLV-H-018] Berichten toont "Nieuw in de app" met de laatste 5 versies, alleen buiten PROD
+    # Testtechniek: Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie)
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given vondsten uit de monkey-verkenning op Klassiek is voorbereid
+    When de flow voor KLV-H-018 wordt uitgevoerd
+    Then staat het blok er lokaal/op TEST met 5 versies, nieuwste eerst
+    And op de PROD-host is het blok weg
 
   @negative
   Scenario: [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie

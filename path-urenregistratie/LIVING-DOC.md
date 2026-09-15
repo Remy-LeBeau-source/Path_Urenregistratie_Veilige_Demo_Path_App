@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 564 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 571 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 564 unieke case-ID's
+- Playwright executable cases: 571 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 565 unieke case-ID's
+- Totaal executable cases: 572 unieke case-ID's
 - Playwright features: 31
 - Database features: 1
 - Playwright steps mappings: 31
 - Database steps mappings: 1
-- Uitvoeringen: 606
-- Niet-mobile projectuitvoeringen: 522
+- Uitvoeringen: 613
+- Niet-mobile projectuitvoeringen: 529
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 564 Playwright-functionele cases in totaal 606 resultaten op: 522 + (42 x 2) = 606.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 571 Playwright-functionele cases in totaal 613 resultaten op: 529 + (42 x 2) = 613.
 
 ## Documentatieketen
 
@@ -247,7 +247,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 564 Playwri
 - [DASH-H-047] bij de medewerker staat alleen Herstel in de balk, de overige testfuncties in het profielmenu, en Vandaag begint met de begroeting — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 28
 - [DASH-H-048] de kop toont de maand als vakjes per week, en een dagvakje opent Mijn uren op die dag — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 19
 - [DASH-H-049] licht Klassiek heeft bij de medewerker één vast veld over de pagina en een doorschijnende menubalk — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
-- [DASH-H-050] zodra de laatste lege week gevuld is, staat Maand indienen ook in de weekweergave — Techniek: Toestandsovergang · Assertions: 7
+- [DASH-H-050] zodra de laatste lege week gevuld is, staat Maand indienen ook in de weekweergave — Techniek: Toestandsovergang · Assertions: 8
 - [DASH-H-051] Mijn uren: dagen buiten de maand zijn gedempt met datum, en van week naar week gaat met pijltjes en Tab op vrijdag — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 15
 - [DASH-H-001] admin dashboard opent zonder console errors — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een handmatige maand blijft alleen op andere schermen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 29
@@ -644,7 +644,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 564 Playwri
 
 - Feature: `tests/playwright/features/klassiek-verkenning.feature`
 - Source: `tests/playwright/klassiek-verkenning.spec.ts`
-- Cases: 11
+- Cases: 18
 
 - [KLV-N-002] het maandkeuzepaneel valt op geen enkele breedte buiten het scherm — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 8
 - [KLV-N-003] in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 3
@@ -655,7 +655,14 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 564 Playwri
 - [KLV-N-008] meer dan 24 uur op een dag wordt direct in het vak gemeld en niet naar de server gestuurd — Techniek: Monkey testing (seeded) + grenswaardenanalyse + negatieve equivalentieklasse · Assertions: 9
 - [KLV-N-009] in Klassiek staat het klanturenstaatlabel niet op Mijn uren maar op het eigen Klanturenstaat-scherm — Techniek: Beslissingstabel vormgeving en scherm + regressiebewaking · Assertions: 6
 - [KLV-H-010] op TEST staat alleen Herstel bovenin; thema, vormgeving en versie staan in het profielmenu — Techniek: Responsive viewport + toegankelijkheidsinspectie (44px, toetsenbord) + end-to-end use-case · Assertions: 12
-- [KLV-N-011] de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 3
+- [KLV-N-011] de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 5
+- [KLV-N-012] typen in één dag van de laatste open week maakt de rest van die week niet ingevuld — Techniek: Toestandsovergangtest (onaangeraakt → deels ingevuld) + beslistabel indienbaarheid + herladen (persistentie) · Assertions: 6
+- [KLV-H-013] Week opslaan telt lege dagen als bewust 0: daarna Maand indienen, ook buiten de laatste week — Techniek: Toestandsovergangtest (Opslaan = bewust 0) + beslistabel indienbaarheid · Assertions: 4
+- [KLV-H-014] Standaardweek vullen in de laatste open week maakt indienen mogelijk, op Mijn uren en op Vandaag — Techniek: Toestandsovergangtest (Standaardweek vullen) + consistentie tussen schermen (Mijn uren en Vandaag) · Assertions: 4
+- [KLV-H-015] het label onder het weeknummer telt de open dagen van die week af tot Compleet — Techniek: Toestandsovergangtest (N open → Compleet) + grenswaarde (laatste open dag) · Assertions: 6
+- [KLV-H-016] op de telefoon brengt een klein knopje bij de weekkeuze je terug naar Vandaag — Techniek: Responsive viewport (390/1280) + toegankelijkheidsinspectie (44px tikvlak) + navigatietest · Assertions: 7
+- [KLV-H-017] de standaardweek gebruikt hele dagen van 9 of 8 uur en de vrije dag die Beheer instelt — Techniek: Beslistabeltest (weekuren × vrije dag van Beheer) + equivalentieklassen (past in 9, in 8, past niet) · Assertions: 1
+- [KLV-H-018] Berichten toont "Nieuw in de app" met de laatste 5 versies, alleen buiten PROD — Techniek: Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie) · Assertions: 9
 - [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie — Techniek: Monkey testing (seeded) + concurrency + toestandsovergang · Assertions: 11
 
 ### Vormgevingsschakelaar (klassiek / nieuw)

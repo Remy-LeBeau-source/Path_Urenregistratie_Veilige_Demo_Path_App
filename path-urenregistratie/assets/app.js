@@ -1984,26 +1984,22 @@ function buildTimesheetWritePayload(action) {
   const period = currentPeriod();
   const dayEntries = [];
 
-  // De week die de medewerker nu daadwerkelijk bekijkt/opslaat stuurt al haar
-  // werkdagen mee, ook een lege dag als expliciete 0 uur — dat maakt "bewust
-  // 0 uur ingevuld" onderscheidbaar van "nog nooit bekeken" voor de
-  // weekvoortgang. Andere weken sturen zoals voorheen alleen uren > 0 mee.
-  const activeWeekMatch = /^week-(\d+)$/.exec(String(state.hoursWeekScope || ""));
-  const activeWeekIndex = activeWeekMatch ? Number(activeWeekMatch[1]) : -1;
-
   period.weekRows.forEach((week, weekIndex) => {
-    const isActiveWeek = weekIndex === activeWeekIndex;
     week.days.forEach((day, dayIndex) => {
       if (!day) return;
       const raw = Number(record.entries?.[weekIndex]?.[dayIndex] || 0);
       const hours = Math.round(Math.max(0, raw) * 100) / 100;
-      if (hours <= 0 && !isActiveWeek) return;
+      // Alleen dagen met uren, of dagen die de medewerker bewust heeft ingevuld (zelf
+      // getypt, Week opslaan, Terugzetten, Standaardweek vullen); een bewuste 0 gaat
+      // als expliciete 0 mee. Tot 15 sep ging elke dag van de bekeken week mee en
+      // werd die bevestigd: typen in één dag maakte de rest van de week "ingevuld",
+      // met Maand indienen bij een lege week als gevolg (Gio 15 sep, KLV-N-012).
+      if (hours <= 0 && !record.confirmedEntries?.[weekIndex]?.[dayIndex]) return;
       dayEntries.push({
         work_date: String(period.year).padStart(4, "0") + "-" + String(period.monthIndex + 1).padStart(2, "0") + "-" + String(day.day).padStart(2, "0"),
         hours,
         description: "Webapp daginvoer"
       });
-      if (isActiveWeek && record.confirmedEntries?.[weekIndex]) record.confirmedEntries[weekIndex][dayIndex] = true;
     });
   });
 
@@ -4451,12 +4447,27 @@ function weeklyHoursFor(employee) {
   return match ? Number(match[1].replace(",", ".")) : 40;
 }
 
+// Urenregel standaardweek (Gio 15 sep): geen gelijke verdeling meer (36 / 5 = 7,2).
+// 1. Een dag die Beheer per persoon heeft ingesteld (werkpatroon) geldt altijd; een
+//    ingestelde 0 is de vrije dag.
+// 2. De rest van de weekuren gaat in hele werkdagen van 9 of 8 uur, vanaf maandag, over
+//    de dagen zonder instelling: 36 = 4 × 9 (ma t/m do, vrijdag leeg), 40 = 5 × 8.
+// 3. Past dat niet (bv. 38 uur, of 40 uur met een vrije dag), dan blijft het de gelijke
+//    verdeling over die dagen, zoals voorheen.
 function standardHoursForDay(employee, dayIndex) {
-  const iso = dayIndex + 1;
-  const override = employee && employee.dayHours ? employee.dayHours[iso] : undefined;
-  const source = override !== undefined && override !== null && override !== "" ? override : weeklyHoursFor(employee) / 5;
-  const value = Number(String(source).replace(",", "."));
-  return Number.isFinite(value) && value >= 0 ? Math.min(24, Math.round(value * 10) / 10) : 0;
+  const afronden = waarde => Number.isFinite(waarde) && waarde >= 0 ? Math.min(24, Math.round(waarde * 10) / 10) : 0;
+  const ingesteld = index => {
+    const waarde = employee && employee.dayHours ? employee.dayHours[index + 1] : undefined;
+    return waarde !== undefined && waarde !== null && waarde !== "" ? Number(String(waarde).replace(",", ".")) : null;
+  };
+  const eigen = ingesteld(dayIndex);
+  if (eigen !== null) return afronden(eigen);
+  const vrijeIndexen = [0, 1, 2, 3, 4].filter(index => ingesteld(index) === null);
+  const vastGezet = [0, 1, 2, 3, 4].reduce((som, index) => som + (ingesteld(index) ?? 0), 0);
+  const over = Math.max(0, weeklyHoursFor(employee) - vastGezet);
+  const dagLengte = [9, 8].find(lengte => over > 0 && over % lengte === 0 && over / lengte <= vrijeIndexen.length);
+  if (!dagLengte) return afronden(over / Math.max(1, vrijeIndexen.length));
+  return vrijeIndexen.indexOf(dayIndex) < over / dagLengte ? dagLengte : 0;
 }
 
 function standardHoursPattern(employee) {
@@ -4718,6 +4729,15 @@ function maandIsOnaangeroerd(record) {
   return !heeftBevestiging;
 }
 
+// Bewuste acties bevestigen dagen: daarna tellen ze als ingevuld, ook met 0 uur.
+function bevestigDagen(record, period, weekIndexes) {
+  weekIndexes.forEach(weekIndex => {
+    const week = period.weekRows[weekIndex];
+    if (!week || !record.confirmedEntries?.[weekIndex]) return;
+    week.days.forEach((day, dayIndex) => { if (day) record.confirmedEntries[weekIndex][dayIndex] = true; });
+  });
+}
+
 function fillStandardHoursInRecord(record, employee, period, weekIndexes, options = {}) {
   if (!record || !isTimesheetEditableForEmployee(record)) return 0;
   let changed = 0;
@@ -4760,8 +4780,15 @@ function fillStandardHoursForCurrentScope() {
     updateHoursTotal(false);
   }
   const changed = fillStandardHoursInRecord(record, employee, period, standardHoursWeekIndexes(period));
+  // Wie op Standaardweek vullen drukt, kiest bewust voor deze week, ook voor een dag
+  // die op 0 blijft (bv. de vrijdag bij 4 x 9). Daarna telt de week als ingevuld en
+  // kan de maand worden ingediend, in welke week je ook staat (Gio 15 sep).
+  bevestigDagen(record, period, standardHoursWeekIndexes(period));
   rerenderActiveTimesheetView();
   if (!changed) {
+    persistState();
+    scheduleDraftTimesheetWrite();
+    renderDashboard();
     toast("Alles stond al volgens je standaard" + standardHoursScopeLabel() + ".");
     return;
   }
@@ -9879,15 +9906,26 @@ function renderHoursGrid() {
     }).join("");
     const yearNote = week.year === period.year ? "" : " · " + week.year;
     if (document.documentElement.dataset.skin !== "new") {
-      // Klassiek, gui r345-348: weeknummer met de stand eronder. In de app wordt per
-      // maand ingediend, dus elke week heeft de stand van de maand.
-      const stand = record.timesheetStatus === "approved" ? "Goedgekeurd" : record.timesheetStatus === "submitted" ? "Ingediend" : "Open";
-      return '<tr data-week-index="' + weekIndex + '"><td class="hours-weekcel"><strong>' + week.number + yearNote + '</strong><small class="is-' + stand.toLowerCase() + '">' + stand + '</small></td>' + cells + '<td class="week-total">0,0</td></tr>';
+      // Klassiek, gui r345-348: weeknummer met de stand eronder. De spatie ertussen
+      // houdt "38 3 open" leesbaar waar de twee naast elkaar staan (telefoon).
+      const stand = klassiekWeekStand(record, period, weekIndex);
+      return '<tr data-week-index="' + weekIndex + '"><td class="hours-weekcel"><strong>' + week.number + yearNote + '</strong> <small class="is-' + stand.soort + '">' + stand.tekst + '</small></td>' + cells + '<td class="week-total">0,0</td></tr>';
     }
     return '<tr data-week-index="' + weekIndex + '"><td>Week ' + week.number + yearNote + "</td>" + cells + '<td class="week-total">0,0</td></tr>';
   }).join("");
   if (actiefVak) document.querySelector('#hours-grid .hours-input[data-week-index="' + actiefVak.week + '"][data-day-index="' + actiefVak.dag + '"]')?.focus({ preventScroll: true });
   updateHoursTotal(false);
+}
+
+// Stand onder het weeknummer in Klassiek. Ingediend en goedgekeurd gelden per maand,
+// dus voor elke week gelijk. Daarvóór toont het label wat er in díe week nog open
+// staat, met dezelfde regel als Hele maand en het indienlabel (werkdagTeltAlsIngevuld).
+// Gio 15 sep: "als je week 38 invult waarom staat er nog steeds 38 open".
+function klassiekWeekStand(record, period, weekIndex) {
+  if (record.timesheetStatus === "approved") return { soort: "goedgekeurd", tekst: "Goedgekeurd" };
+  if (record.timesheetStatus === "submitted") return { soort: "ingediend", tekst: "Ingediend" };
+  const open = ontbrekendeWerkdagen(record, period).filter(dag => dag.weekIndex === weekIndex).length;
+  return open > 0 ? { soort: "open", tekst: open + " open" } : { soort: "compleet", tekst: "Compleet" };
 }
 
 function isTimesheetEditableForEmployee(record) {
@@ -9979,6 +10017,8 @@ function updateTimesheetSubmitUi(record) {
         : canSubmit && !hasAnyInput
           ? "Je kunt ook met 0 uren indienen als dat klopt voor deze maand."
         : "";
+    // Niet "de knop staat onder Hele maand" zeggen terwijl hij hier al staat.
+    if (showSubmit && weekOnlyMessage) submitNote.textContent = "";
     submitNote.hidden = !submitNote.textContent;
   }
   const statusEl = document.querySelector("#timesheet-status");
@@ -10048,6 +10088,12 @@ function updateHoursTotal(markDraft) {
   // Gio 14 sep, "simpel zoals het ontwerp" (gui r952): één regel onderin in plaats
   // van het oranje blok met dagchips.
   const openDagen = ontbrekendeWerkdagen(record, currentPeriod()).length;
+  // Het weeklabel meteen bijwerken bij typen, zonder het raster opnieuw te tekenen.
+  document.querySelectorAll("#hours-grid tr[data-week-index] .hours-weekcel small").forEach(label => {
+    const stand = klassiekWeekStand(record, currentPeriod(), Number(label.closest("tr").dataset.weekIndex));
+    label.className = "is-" + stand.soort;
+    label.textContent = stand.tekst;
+  });
   document.querySelector("#hours-target-help").textContent = teVeelUren > 0
     ? "Niet opgeslagen: een dag kan maximaal 24 uur hebben. Pas het rood omlijnde vak aan."
     : isTimesheetEditableForEmployee(record)
@@ -12455,6 +12501,9 @@ function syncEnvironmentChrome(hostname = window.location.hostname) {
   const isTest = normalized === "uren-test.pathconsultancy.nl";
   const isLocal = localAccountToolsAllowed(normalized);
   badge.hidden = !(isTest || isLocal);
+  // "Nieuw in de app" in Berichten: alleen waar de omgevingsbadge staat, nooit op PROD.
+  const nieuw = document.querySelector("#nieuw-in-de-app");
+  if (nieuw) nieuw.hidden = !(isTest || isLocal);
   badge.textContent = isTest ? "TESTOMGEVING" : (isLocal ? "LOKAAL" : "");
   badge.classList.toggle("is-local", isLocal && !isTest);
 
@@ -13105,13 +13154,13 @@ function showEmployeeEditor(employeeId, prefill) {
     '<label>Startdatum<input id="edit-start-date" type="date" value="' + escapeHtml(employee.startDate || (currentCalendarPeriodKey() + "-01")) + '"></label>' +
     '<label>Contract<input id="edit-contract" value="' + escapeHtml(employee.contract) + '"></label>' +
     '<label>Uren per week<input id="edit-weekly-hours" type="number" min="0" step="0.5" value="' + weeklyHoursFor(employee) + '"></label>' +
-    '<p class="full form-help">Eigen werkpatroon per weekdag (optioneel). Leeg = gelijk verdeeld over alle werkdagen, zoals nu. Ingevuld (bv. vrijdag 0) telt voortaan zo mee in de contracturen en staat als beginwaarde klaar in Mijn uren.</p>' +
+    '<p class="full form-help">Eigen werkpatroon per weekdag (optioneel). Leeg = hele dagen van 9 of 8 uur vanaf maandag (36 uur = ma t/m do 9 uur, 40 uur = 5 × 8), past dat niet dan gelijk verdeeld. Zet 0 op de vrije dag. Ingevuld (bv. vrijdag 0) telt voortaan zo mee in de contracturen en staat als beginwaarde klaar in Mijn uren.</p>' +
     // De vijf weekdagen stonden los in het tweekoloms formulierraster, waardoor
     // vrijdag in zijn eentje op een vierde regel belandde. Het is een week, geen
     // lijst: naast elkaar leest hij als een week en sluit hij aan op hoe het
     // urenraster in Mijn uren er ook uitziet. Eigen rij, zelfde velden en id's.
     '<div class="full modal-dagenrij">' +
-    WEEKDAY_HOURS_FIELDS.map(field => '<label>' + field.label + '<input id="edit-hours-' + field.key + '" type="number" min="0" max="24" step="0.5" placeholder="gelijk verdeeld" value="' + (employee.dayHours && employee.dayHours[field.iso] !== undefined && employee.dayHours[field.iso] !== null ? employee.dayHours[field.iso] : "") + '"></label>').join("") +
+    WEEKDAY_HOURS_FIELDS.map(field => '<label>' + field.label + '<input id="edit-hours-' + field.key + '" type="number" min="0" max="24" step="0.5" placeholder="standaard" value="' + (employee.dayHours && employee.dayHours[field.iso] !== undefined && employee.dayHours[field.iso] !== null ? employee.dayHours[field.iso] : "") + '"></label>').join("") +
     '</div>' +
     '<p class="full modal-form-sectie">Opdracht en factuurroute</p>' +
     '<label>Klant<input id="edit-client" value="' + escapeHtml(employee.client) + '"></label>' +
@@ -14648,6 +14697,14 @@ function toonInstallatieAanbod() {
 
   const newBentoSave = event.target.closest("[data-new-bento-save]");
   if (newBentoSave) {
+    // Zelfde afspraak als Opslaan in Klassiek: opslaan is een bewuste keuze voor de
+    // getoonde week, lege dagen tellen daarna als 0 uur.
+    const bentoPeriod = currentPeriod();
+    const bentoRecord = recordFor(currentEmployee().id, bentoPeriod.key);
+    if (isTimesheetEditableForEmployee(bentoRecord)) {
+      bevestigDagen(bentoRecord, bentoPeriod, [newEmployeeBentoWeekIndex(bentoPeriod)]);
+      renderAll();
+    }
     persistState();
     scheduleDraftTimesheetWrite();
     toast("Concepturen voor " + currentPeriod().label + " zijn opgeslagen.");
@@ -14919,7 +14976,20 @@ function toonInstallatieAanbod() {
 
 });
 
-document.querySelector("#hours-grid").addEventListener("input", () => updateHoursTotal(true));
+document.querySelector("#hours-grid").addEventListener("input", event => {
+  // Zelf iets doen in een dag (typen, ook 0, de knoppen 0/8/9, of leegmaken) bevestigt
+  // precies die dag. Leegmaken telt ook als bewust: de server verwijdert geen dagregels,
+  // dus een leeggemaakte dag gaat als 0 mee, anders kwam de oude waarde terug. De rest van
+  // de week blijft zoals hij was (KLV-N-012).
+  const veld = event.target.closest?.(".hours-input");
+  if (veld) {
+    const invoerRecord = recordFor(currentEmployee().id);
+    const weekIndex = Number(veld.dataset.weekIndex);
+    const dayIndex = Number(veld.dataset.dayIndex);
+    if (invoerRecord.confirmedEntries?.[weekIndex]) invoerRecord.confirmedEntries[weekIndex][dayIndex] = true;
+  }
+  updateHoursTotal(true);
+});
 
 // De bento-kaartjes-dagcellen komen op twee plekken voor: het Dashboard
 // (#new-employee-bento) en, sinds de Nieuw-skin Mijn uren dezelfde
@@ -14948,6 +15018,7 @@ function handleBentoDayCardChange(event) {
   const dayIndex = Number(input.dataset.dayIndex);
   const value = Math.min(24, Math.max(0, Number(String(input.value).replace(",", ".")) || 0));
   record.entries[weekIndex][dayIndex] = value;
+  if (record.confirmedEntries?.[weekIndex]) record.confirmedEntries[weekIndex][dayIndex] = true;
   if (record.timesheetStatus !== "correction") record.timesheetStatus = "draft";
   record.invoiceStatus = "concept";
   record.payrollStatus = "concept";
@@ -15210,6 +15281,10 @@ document.querySelector("#submit-timesheet").addEventListener("click", showTimesh
 document.querySelector("#fill-standard-hours").addEventListener("click", fillStandardHoursForCurrentScope);
 document.querySelector("#reset-standard-hours").addEventListener("click", resetStandardHoursForCurrentScope);
 document.querySelector("#save-timesheet").addEventListener("click", () => {
+  // Opslaan is een bewuste actie: ook lege dagen van deze week (of maand) tellen
+  // daarna als bewust 0 (Gio 15 sep). Alleen als de maand nog bewerkbaar is.
+  const opslaanRecord = recordFor(currentEmployee().id);
+  if (isTimesheetEditableForEmployee(opslaanRecord)) bevestigDagen(opslaanRecord, currentPeriod(), standardHoursWeekIndexes(currentPeriod()));
   updateHoursTotal(true);
   const weekMatch = /^week-(\d+)$/.exec(String(state.hoursWeekScope || ""));
   const week = weekMatch ? currentPeriod().weekRows[Number(weekMatch[1])] : null;
