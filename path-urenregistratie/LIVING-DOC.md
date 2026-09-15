@@ -662,7 +662,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 571 Playwri
 - [KLV-H-015] het label onder het weeknummer telt de open dagen van die week af tot Compleet — Techniek: Toestandsovergangtest (N open → Compleet) + grenswaarde (laatste open dag) · Assertions: 6
 - [KLV-H-016] op de telefoon brengt een klein knopje bij de weekkeuze je terug naar Vandaag — Techniek: Responsive viewport (390/1280) + toegankelijkheidsinspectie (44px tikvlak) + navigatietest · Assertions: 7
 - [KLV-H-017] de standaardweek gebruikt hele dagen van 9 of 8 uur en de vrije dag die Beheer instelt — Techniek: Beslistabeltest (weekuren × vrije dag van Beheer) + equivalentieklassen (past in 9, in 8, past niet) · Assertions: 1
-- [KLV-H-018] Berichten toont "Nieuw in de app" met de laatste 5 versies, alleen buiten PROD — Techniek: Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie) · Assertions: 9
+- [KLV-H-018] Berichten toont "Nieuw in de app" met de laatste 10 updates, netjes binnen het paneel, zonder namen, alleen buiten PROD — Techniek: Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie) + inhoudscontrole (geen namen of gevoelige gegevens) + responsive viewport · Assertions: 16
 - [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie — Techniek: Monkey testing (seeded) + concurrency + toestandsovergang · Assertions: 11
 
 ### Vormgevingsschakelaar (klassiek / nieuw)

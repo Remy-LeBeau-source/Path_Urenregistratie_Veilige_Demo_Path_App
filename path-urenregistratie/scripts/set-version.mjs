@@ -53,6 +53,10 @@ function verwerk(inhoud, oud, nieuw, maxRegel) {
   let treffers = 0;
   const regels = inhoud.split(/\r?\n/).map((regel, index) => {
     if (maxRegel && index + 1 > maxRegel) return regel;
+    // "Nieuw in de app" (index.html) noemt oude versies bewust bij naam: die notitie
+    // hoort bij de versie waarin de wijziging kwam en schuift niet mee (gemeten 15 sep:
+    // de notitie van 2.0.94 werd bij het ophogen 2.0.95).
+    if (regel.includes('class="nieuw-versie"')) return regel;
     return regel.replace(patroon, () => {
       treffers += 1;
       return nieuw;

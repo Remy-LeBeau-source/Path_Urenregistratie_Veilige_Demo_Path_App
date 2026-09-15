@@ -66,7 +66,8 @@ Then("wordt met Playwright-assertions bevestigd dat op de telefoon brengt een kl
 When("de flow voor KLV-H-017 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat de standaardweek gebruikt hele dagen van 9 of 8 uur en de vrije dag die Beheer instelt");
 When("de flow voor KLV-H-018 wordt uitgevoerd");
-Then("staat het blok er lokaal/op TEST met 5 versies, nieuwste eerst");
+Then("staat het blok er lokaal/op TEST met 10 updates, nieuwste eerst");
+And("staat geen naam of gevoelig gegeven in de teksten");
 And("op de PROD-host is het blok weg");
 And("de urenstaat staat al met een versie op de server");
 When("de eerste invoer onderweg is en er intussen twee nieuwe invoeren volgen");

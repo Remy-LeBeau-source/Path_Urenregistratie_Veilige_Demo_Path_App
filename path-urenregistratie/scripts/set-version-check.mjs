@@ -16,17 +16,21 @@ try {
   write("package.json", '{"version":"0.0.1"}\r\n');
   write("package-lock.json", '{"version":"0.0.1"}\n' + "\n".repeat(15) + 'dependency: "0.0.1"\n');
   for (const file of files.slice(2)) write(file, 'v0.0.1 ?v=0.0.1 "0.0.1" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n');
+  // Een notitie in "Nieuw in de app" noemt een oude versie bewust en schuift niet mee.
+  const notitie = '<li><span class="nieuw-versie">0.0.1</span></li>\r\n';
+  write("index.html", 'v0.0.1 ?v=0.0.1 "0.0.1" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n' + notitie);
   copyFileSync(new URL("set-version.mjs", import.meta.url), join(fixture, "scripts/set-version.mjs"));
   const changed = run("0.0.2");
   assert.equal(changed.status, 0, changed.stderr);
-  for (const file of files.slice(2)) assert.equal(readFileSync(join(fixture, file), "utf8"), 'v0.0.2 ?v=0.0.2 "0.0.2" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n');
+  for (const file of files.slice(3)) assert.equal(readFileSync(join(fixture, file), "utf8"), 'v0.0.2 ?v=0.0.2 "0.0.2" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n');
+  assert.equal(readFileSync(join(fixture, "index.html"), "utf8"), 'v0.0.2 ?v=0.0.2 "0.0.2" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n' + notitie);
   assert.match(readFileSync(join(fixture, "package-lock.json"), "utf8"), /dependency: "0\.0\.1"/);
   assert.equal(run("--check").status, 0);
   write("tests/playwright/auth.spec.ts", "version missing\n");
   const before = files.map(file => readFileSync(join(fixture, file), "utf8"));
   assert.equal(run("0.0.3").status, 1);
   assert.deepEqual(files.map(file => readFileSync(join(fixture, file), "utf8")), before);
-  console.log("Versiescript: IP-adressen, langere getallen, dependencies, CRLF en validatie vóór schrijven groen.");
+  console.log("Versiescript: IP-adressen, langere getallen, dependencies, CRLF, vaste versienotities en validatie vóór schrijven groen.");
 } finally {
   const target = resolve(fixture);
   assert.equal(dirname(target), resolve(tmpdir()));

@@ -690,27 +690,52 @@ test('[KLV-H-017] de standaardweek gebruikt hele dagen van 9 of 8 uur en de vrij
   }
 });
 
-test('[KLV-H-018] Berichten toont "Nieuw in de app" met de laatste 5 versies, alleen buiten PROD', async ({ page }) => {
+test('[KLV-H-018] Berichten toont "Nieuw in de app" met de laatste 10 updates, netjes binnen het paneel, zonder namen, alleen buiten PROD', async ({ page }) => {
   // Gio 15 sep: "elke keer de laatste versie-updates daarin, alleen als het betrekking
-  // heeft op de medewerkers ... zo niet, dan alleen in test".
+  // heeft op de medewerkers ... zo niet, dan alleen in test". Ronde 2: "de laatste 10",
+  // "gaat tegen de lijn aan", "namen hoef je niet te benoemen en ook geen gevoelige info".
   const loginPage = new LoginPage(page);
   await loginPage.open();
   await loginPage.loginAsEmployee();
   await page.locator('.nav-item[data-view="employee-announcements"]:visible').first().click();
   const blok = page.locator('#nieuw-in-de-app');
-  await test.step('Then staat het blok er lokaal/op TEST met 5 versies, nieuwste eerst', async () => {
+  const alsGetal = (v: string) => v.split('.').reduce((som, deel) => som * 1000 + Number(deel), 0);
+  await test.step('Then staat het blok er lokaal/op TEST met 10 updates, nieuwste eerst', async () => {
     await expect(blok).toBeVisible();
-    const versies = await blok.locator('li strong').allTextContents();
-    expect(versies).toHaveLength(5);
+    const versies = await blok.locator('li .nieuw-versie').allTextContents();
+    expect(versies).toHaveLength(10);
     versies.forEach(versie => expect(versie).toMatch(/^\d+\.\d+\.\d+$/));
-    const alsGetal = (v: string) => v.split('.').reduce((som, deel) => som * 1000 + Number(deel), 0);
+    expect(new Set(versies).size, 'elke versie één keer').toBe(10);
     expect([...versies].sort((a, b) => alsGetal(b) - alsGetal(a)), 'nieuwste bovenaan').toEqual(versies);
     // Nooit een versie die nog niet bestaat.
     const appVersie = (await page.locator('#profile-menu-versie').textContent() || '').match(/\d+\.\d+\.\d+/)?.[0] ?? '';
     expect(appVersie, 'versie van de app').not.toBe('');
     expect(alsGetal(versies[0]), `nieuwste notitie ${versies[0]} ≤ app ${appVersie}`).toBeLessThanOrEqual(alsGetal(appVersie));
-    for (const zin of await blok.locator('li span').allTextContents()) expect(zin.trim().length).toBeGreaterThan(20);
+    for (const regel of await blok.locator('li').all()) {
+      await expect(regel.locator('.nieuw-tekst strong')).not.toHaveText('');
+      expect((await regel.locator('.nieuw-tekst p').textContent() || '').trim().length).toBeGreaterThan(20);
+      await expect(regel.locator('time')).toHaveAttribute('datetime', /^\d{4}-\d{2}-\d{2}$/);
+    }
   });
+  await test.step('And staat geen naam of gevoelig gegeven in de teksten', async () => {
+    const tekst = (await blok.textContent()) || '';
+    // Namen uit de demo- en testdata, e-mailadressen, telefoonnummers, bedragen en tarieven.
+    for (const verboden of [/Stasjo|Shawn|Marc|Brian|Gio\b|Giovanno/i, /@/, /\b0[0-9]{9}\b|\+31/, /€|\beuro\b|tarief/i, /wachtwoord|password|token/i]) {
+      expect(tekst, `geen ${verboden}`).not.toMatch(verboden);
+    }
+  });
+  for (const breedte of [390, 1280]) {
+    await test.step(`And ligt de lijst bij ${breedte}px binnen de rand van het paneel, met ruimte`, async () => {
+      await page.setViewportSize({ width: breedte, height: 900 });
+      await expect(blok).toBeVisible();
+      const paneel = (await blok.boundingBox())!;
+      for (const regel of await blok.locator('li').all()) {
+        const vak = (await regel.boundingBox())!;
+        expect(vak.x - paneel.x, `linkermarge @ ${breedte}px`).toBeGreaterThanOrEqual(12);
+        expect(paneel.x + paneel.width - (vak.x + vak.width), `rechtermarge @ ${breedte}px`).toBeGreaterThanOrEqual(12);
+      }
+    });
+  }
   await test.step('And op de PROD-host is het blok weg', async () => {
     await page.evaluate(() => ((0, eval)('syncEnvironmentChrome') as (host: string) => void)('uren.pathconsultancy.nl'));
     await expect(blok).toBeHidden();

@@ -5163,12 +5163,26 @@ html:not([data-skin="new"]) body[data-role="employee"] .testbalk .topbar-quick-r
   .topbar-actions > .topbar-quick-reset:not([hidden]) { min-height: 44px; }
 }
 
-/* Nieuw in de app (Berichten, alleen TEST en lokaal): versienummer links, één zin rechts. */
+/* Nieuw in de app (Berichten, alleen TEST en lokaal). Gio 15 sep: de lijst liep tegen de
+   rand van het paneel. Nu binnen dezelfde marge als de kop (24px), per update een regel
+   met versielabel, korte kop en één zin, de datum rechts, en een dunne lijn ertussen.
+   De nieuwste krijgt het accent; de rest blijft rustig. Op de telefoon staan versie en
+   datum boven de tekst. */
 .nieuw-in-de-app { margin-top: 16px; }
-.nieuw-in-de-app-lijst { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.nieuw-in-de-app-lijst li { display: grid; grid-template-columns: 4.5em minmax(0, 1fr); gap: 10px; align-items: baseline; }
-.nieuw-in-de-app-lijst strong { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
-.nieuw-in-de-app-lijst span { color: var(--ink); font-size: 13px; line-height: 1.45; }
+.nieuw-in-de-app-lijst { margin: 0; padding: 0 24px 10px; list-style: none; }
+.nieuw-in-de-app-lijst li { display: grid; grid-template-columns: 5.2em minmax(0, 1fr) auto; gap: 6px 16px; align-items: start; border-top: 1px solid var(--line-zacht); padding: 14px 0; }
+.nieuw-versie { justify-self: start; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; padding: 5px 8px; }
+.nieuw-in-de-app-lijst li:first-child .nieuw-versie { border-color: var(--mint-dark-tekst); color: var(--mint-dark-tekst); }
+.nieuw-tekst { max-width: 68ch; }
+.nieuw-tekst strong { display: block; color: var(--ink); font-size: 14px; font-weight: 700; line-height: 1.35; }
+.nieuw-tekst p { margin: 3px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.nieuw-in-de-app-lijst time { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; padding-top: 3px; }
+@media (max-width: 720px) {
+  .nieuw-in-de-app-lijst { padding-inline: 16px; }
+  .nieuw-in-de-app-lijst li { grid-template-columns: auto 1fr; }
+  .nieuw-in-de-app-lijst time { grid-column: 2; grid-row: 1; justify-self: end; padding-top: 4px; }
+  .nieuw-tekst { grid-column: 1 / -1; }
+}
 
 /* Terug naar Vandaag op Mijn uren (Gio 15 sep): klein en rustig, als tekstlink boven de
    weekkeuze. Alleen voor de medewerker in Klassiek op telefoonbreedte; elders is de

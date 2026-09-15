@@ -19,13 +19,13 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" href="assets/styles.css?v=2.0.94">
+  <link rel="stylesheet" href="assets/styles.css?v=2.0.95">
   <!-- Met versieparameter, net als styles.css hierboven. Zonder die parameter
        houdt de browser (en een geïnstalleerde app helemaal) de oude New-skin
        vast na een release: de versiebadge springt vooruit en Klassiek
        vernieuwt, terwijl de hele Nieuw-vormgeving op de vorige versie blijft
        staan. Gemeld als "ik zie geen verschil in de nieuwe versie". -->
-  <link rel="stylesheet" href="assets/styles-new.css?v=2.0.94">
+  <link rel="stylesheet" href="assets/styles-new.css?v=2.0.95">
 </head>
 <body class="auth-booting">
   <section class="login-screen" id="login-screen" aria-labelledby="login-title">
@@ -103,7 +103,7 @@
       </form>
       <p class="login-note" id="auth-mode-indicator">Controle van auth-sessie wordt uitgevoerd.</p>
       <p class="login-note" id="local-login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze lokale versie bewaart ze alleen in deze browser en e-mailverzending is uitgeschakeld.</p>
-      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 2.0.94</span></footer>
+      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 2.0.95</span></footer>
     </div>
   </section>
 
@@ -192,7 +192,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 2.0.94</span>
+      <span class="demo-badge">Versie 2.0.95</span>
       </div>
     </aside>
 
@@ -219,7 +219,7 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
-          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 2.0.94</span><span class="environment-badge" id="environment-badge" hidden></span></span>
+          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 2.0.95</span><span class="environment-badge" id="environment-badge" hidden></span></span>
         </div>
         <div class="topbar-actions">
           <!-- Zelfde knip als de Klassieke zijbalk (Werkvoorraad/Organisatie, zie de
@@ -734,7 +734,7 @@
           <button class="text-button" data-go="customer-timesheet-admin">Bekijk klanturenstaten &rarr;</button>
         </section>
 
-        <!-- Ingang naar de procesmeter, die sinds v2.0.94 op een eigen scherm
+        <!-- Ingang naar de procesmeter, die sinds v2.0.95 op een eigen scherm
              staat. Het percentage blijft hier zichtbaar, zodat je de stand nog
              steeds in één blik hebt zonder het hele paneel op het Dashboard. -->
         <section class="panel workflow-teaser" id="workflow-teaser">
@@ -1051,16 +1051,22 @@
           <div class="employee-announcement-list" id="employee-announcement-list"></div>
         </section>
         <!-- Gio 15 sep: "Nieuw in de app", alleen op TEST en lokaal (syncEnvironmentChrome),
-             nooit op PROD. De laatste 5 versies met iets voor medewerkers, één zin per versie.
-             Bijwerken bij elke versie met een wijziging voor medewerkers; de oudste valt af. -->
+             nooit op PROD. De laatste 10 versies met iets voor medewerkers: een korte kop en
+             één zin. Nooit namen, nooit gevoelige info (Gio 15 sep). Bijwerken bij elke versie
+             met een wijziging voor medewerkers; de oudste valt af. -->
         <section class="panel nieuw-in-de-app" id="nieuw-in-de-app" aria-labelledby="nieuw-in-de-app-kop" hidden>
-          <div class="panel-heading"><div><span class="section-label">Alleen in de testomgeving</span><h3 id="nieuw-in-de-app-kop">Nieuw in de app</h3></div><small>Laatste 5 versies</small></div>
+          <div class="panel-heading"><div><span class="section-label">Alleen in de testomgeving</span><h3 id="nieuw-in-de-app-kop">Nieuw in de app</h3></div><small>Laatste 10 updates</small></div>
           <ol class="nieuw-in-de-app-lijst">
-            <li><strong>2.0.94</strong><span>Maand indienen verschijnt pas als elke werkdag is ingevuld of met Week opslaan bewust op 0 staat, en onder elk weeknummer staat hoeveel dagen nog open zijn. Standaardweek vullen gebruikt hele dagen (36 uur = ma t/m do 9 uur) en op de telefoon brengt ‹ Vandaag je terug.</span></li>
-            <li><strong>2.0.84</strong><span>Hulp en contact vind je op de telefoon in het profielmenu; de zwevende knop over je scherm is weg.</span></li>
-            <li><strong>2.0.83</strong><span>Meer dan 24 uur op een dag wordt direct in het vak gemeld en niet opgeslagen.</span></li>
-            <li><strong>2.0.79</strong><span>Snel achter elkaar uren invullen, ook bij een trage verbinding, gaat niet meer mis.</span></li>
-            <li><strong>2.0.78</strong><span>De menubalk loopt op een smal scherm niet meer over elkaar heen en Maanden is weer overal aan te klikken.</span></li>
+            <li><span class="nieuw-versie">2.0.94</span><div class="nieuw-tekst"><strong>Indienen, weekstand en standaardweek</strong><p>Maand indienen verschijnt pas als elke werkdag is ingevuld of bewust op 0 staat, en onder elk weeknummer zie je hoeveel dagen nog open zijn. Standaardweek vullen gebruikt hele dagen en op de telefoon brengt ‹ Vandaag je terug.</p></div><time datetime="2026-09-15">15 sep</time></li>
+            <li><span class="nieuw-versie">2.0.84</span><div class="nieuw-tekst"><strong>Hulp in het profielmenu</strong><p>Hulp en contact vind je op de telefoon in het profielmenu; de zwevende knop over je scherm is weg.</p></div><time datetime="2026-09-15">15 sep</time></li>
+            <li><span class="nieuw-versie">2.0.83</span><div class="nieuw-tekst"><strong>Maximaal 24 uur per dag</strong><p>Meer dan 24 uur op een dag wordt direct in het vak gemeld en niet opgeslagen.</p></div><time datetime="2026-09-15">15 sep</time></li>
+            <li><span class="nieuw-versie">2.0.79</span><div class="nieuw-tekst"><strong>Opslaan bij een trage verbinding</strong><p>Een opslag die laat binnenkomt, blokkeert je volgende invoer niet meer.</p></div><time datetime="2026-09-15">15 sep</time></li>
+            <li><span class="nieuw-versie">2.0.78</span><div class="nieuw-tekst"><strong>Menubalk op smallere schermen</strong><p>De knoppen in de menubalk lopen niet meer over elkaar heen en Maanden is overal aan te klikken.</p></div><time datetime="2026-09-15">15 sep</time></li>
+            <li><span class="nieuw-versie">2.0.77</span><div class="nieuw-tekst"><strong>Snel achter elkaar invullen</strong><p>Snel uren typen geeft geen melding meer dat iemand anders iets heeft gewijzigd, en de maandkeuze past altijd in beeld.</p></div><time datetime="2026-09-15">15 sep</time></li>
+            <li><span class="nieuw-versie">2.0.76</span><div class="nieuw-tekst"><strong>Mijn maanden noemt de echte stap</strong><p>Bij elke maand staat de stap waar hij werkelijk op wacht, in plaats van een vaste tekst.</p></div><time datetime="2026-09-14">14 sep</time></li>
+            <li><span class="nieuw-versie">2.0.70</span><div class="nieuw-tekst"><strong>Mijn maanden als uitklapkaarten</strong><p>Elke maand is een kaart die je openklapt voor het verloop en de acties.</p></div><time datetime="2026-09-14">14 sep</time></li>
+            <li><span class="nieuw-versie">2.0.69</span><div class="nieuw-tekst"><strong>Van week naar week</strong><p>Op Mijn uren ga je met de pijltjes of Tab naar de volgende week, en dagen buiten de maand zijn gedempt.</p></div><time datetime="2026-09-14">14 sep</time></li>
+            <li><span class="nieuw-versie">2.0.68</span><div class="nieuw-tekst"><strong>Klanturenstaat op een eigen scherm</strong><p>Het uploaden en versturen van je klanturenstaat heeft een eigen plek in het menu.</p></div><time datetime="2026-09-14">14 sep</time></li>
           </ol>
         </section>
       </section>
@@ -1287,7 +1293,7 @@
       <footer class="app-footer" aria-label="Applicatie-informatie">
         <span>© 2026 Path Consultancy IT</span>
         <span>Ontwikkeld en beheerd door Team Path.</span>
-        <span class="app-footer-version">Versie 2.0.94</span>
+        <span class="app-footer-version">Versie 2.0.95</span>
       </footer>
     </main>
   </div>
@@ -1347,7 +1353,7 @@
   </div>
   <script vite-ignore defer src="assets/jspdf.umd.min.js"></script>
   <script vite-ignore defer src="assets/invoice-fonts.js"></script>
-  <script vite-ignore defer src="assets/app.js?v=2.0.94"></script>
-  <script vite-ignore defer src="assets/pwa-install.js?v=2.0.94"></script>
+  <script vite-ignore defer src="assets/app.js?v=2.0.95"></script>
+  <script vite-ignore defer src="assets/pwa-install.js?v=2.0.95"></script>
 </body>
 </html>

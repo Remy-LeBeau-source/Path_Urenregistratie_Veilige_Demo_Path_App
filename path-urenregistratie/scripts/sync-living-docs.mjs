@@ -146,7 +146,7 @@ function techniqueFor(definition, testCase) {
       'KLV-H-014': 'Toestandsovergangtest (Standaardweek vullen) + consistentie tussen schermen (Mijn uren en Vandaag)',
       'KLV-H-015': 'Toestandsovergangtest (N open → Compleet) + grenswaarde (laatste open dag)',
       'KLV-H-016': 'Responsive viewport (390/1280) + toegankelijkheidsinspectie (44px tikvlak) + navigatietest',
-      'KLV-H-018': 'Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie)',
+      'KLV-H-018': 'Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie) + inhoudscontrole (geen namen of gevoelige gegevens) + responsive viewport',
       'KLV-H-017':'Beslistabeltest (weekuren × vrije dag van Beheer) + equivalentieklassen (past in 9, in 8, past niet)',
     };
     return perCase[testCase.id] || 'Monkey testing (seeded) + negatieve equivalentieklasse + error guessing';
