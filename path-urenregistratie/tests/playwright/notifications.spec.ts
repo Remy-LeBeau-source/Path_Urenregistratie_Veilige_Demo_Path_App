@@ -346,66 +346,91 @@ test.describe('notifications api', () => {
         cards: document.querySelectorAll('#employee-announcement-list .employee-announcement-card.is-unread').length,
       };
     });
-    expect(employeeProjection).toEqual({ badge: '3', filter: 'Ongelezen mededelingen · 3', cards: 3 });
+    // Sinds 15 sep (besluit Gio) staan mededelingen niet meer in de bel van de
+    // medewerker maar alleen in Berichten, met een eigen teller op het tabblad.
+    expect(employeeProjection).toEqual({ badge: '0', filter: 'Ongelezen mededelingen · 3', cards: 3 });
 
-    await page.locator('#employee-announcement-list [data-read-announcement]').first().evaluate(element => {
+    // Een tik op de kop van een ongelezen bericht telt als gelezen (geen aparte knop).
+    await page.locator('#employee-announcement-list .employee-announcement-card.is-unread [data-bericht-toggle]').first().evaluate(element => {
       (element as HTMLButtonElement).click();
     });
-    await expect(page.locator('#notification-count')).toHaveText('2');
     await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen mededelingen · 2');
+    await expect(page.locator('#employee-berichten-count')).toHaveText('2');
     await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-unread')).toHaveCount(2);
 
     await loginPage.logout();
   });
 
-  test('[NOT-H-011] medewerker ziet drie echte mededelingen en tellers lopen gelijk terug naar nul', async ({ page }) => {
+  // Besluit Gio 15 sep ("slim voorstel"): mededelingen staan alleen in Berichten, niet
+  // in de bel. Ongelezen berichten staan open en bovenaan; gelezen en ingetrokken
+  // berichten zijn ingeklapt. Gelezen gaat vanzelf: een tik op de kop, of 2 seconden in
+  // beeld. Er is geen knop "Markeer als gelezen" meer, wel "Alles gelezen".
+  test('[NOT-H-011] medewerker leest mededelingen door ze te zien: tellers lopen vanzelf naar nul, zonder markeerknop', async ({ page }) => {
     const loginPage = new LoginPage(page);
+    const lijst = page.locator('#employee-announcement-list');
+    const ongelezen = lijst.locator('.employee-announcement-card.is-unread');
+    let aantal = 0;
 
-    await test.step('Given Stasjo drie ongelezen mededelingen uit de serverbaseline heeft', async () => {
+    await test.step('Given Stasjo ongelezen mededelingen uit de serverbaseline heeft', async () => {
       await loginPage.open();
       await loginPage.loginAsEmployee();
-      await expect(page.locator('#notification-count')).toHaveText('3');
-      await page.locator('button[data-view="employee-announcements"]').click();
-      await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen mededelingen · 3');
-      await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-unread')).toHaveCount(3);
+      await expect(page.locator('#employee-berichten-count')).toBeVisible();
+      aantal = Number(await page.locator('#employee-berichten-count').textContent());
+      expect(aantal, 'de TEST-basis heeft ongelezen mededelingen').toBeGreaterThan(0);
     });
 
-    await test.step('When hij de mededelingen een voor een als gelezen markeert', async () => {
-      for (const remaining of [2, 1, 0]) {
-        await page.locator('#employee-announcement-list [data-read-announcement]').first().click();
-        await expect(page.locator('#announcement-unread-filter')).toHaveText(`Ongelezen mededelingen · ${remaining}`);
-        await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-unread')).toHaveCount(remaining);
-        if (remaining > 0) {
-          await expect(page.locator('#notification-count')).toHaveText(String(remaining));
-        } else {
-          await expect(page.locator('#notification-count')).toBeHidden();
-        }
+    await test.step('Then staan die niet in de bel, maar in Berichten: open en bovenaan, zonder markeerknop', async () => {
+      await page.locator('#notification-button').click();
+      for (const titel of await page.evaluate(() => ((0, eval)('employeeAnnouncementItemsFromNotifications') as () => Array<{ title: string }>)().map(item => item.title))) {
+        await expect(page.locator('#notification-list'), `mededeling "${titel}" hoort niet in de bel`).not.toContainText(titel);
       }
+      await page.keyboard.press('Escape');
+      // Nog niet naar Berichten via de klik: eerst de stand van de lijst vastleggen zonder
+      // dat de 2 seconden al lopen.
+      await page.evaluate(() => { (0, eval)('state').announcementArchiveFilter = 'all'; });
+      await page.locator('button[data-view="employee-announcements"]').click();
+      await expect(page.locator('#announcement-unread-filter')).toHaveText(`Ongelezen mededelingen · ${aantal}`);
+      await expect(ongelezen).toHaveCount(aantal);
+      const kaarten = await lijst.locator('.employee-announcement-card').evaluateAll(els => els.map(el => ({
+        ongelezen: el.classList.contains('is-unread'),
+        open: el.querySelector('[data-bericht-toggle]')?.getAttribute('aria-expanded') === 'true',
+        inhoudVerborgen: (el.querySelector('.bericht-inhoud') as HTMLElement | null)?.hidden ?? null,
+      })));
+      const eersteGelezen = kaarten.findIndex(kaart => !kaart.ongelezen);
+      expect(kaarten.slice(0, aantal).every(kaart => kaart.ongelezen), 'ongelezen bovenaan').toBe(true);
+      expect(kaarten.filter(kaart => kaart.ongelezen).every(kaart => kaart.open && kaart.inhoudVerborgen === false), 'ongelezen staan open').toBe(true);
+      if (eersteGelezen >= 0) expect(kaarten.slice(eersteGelezen).every(kaart => !kaart.open && kaart.inhoudVerborgen === true), 'gelezen staan ingeklapt').toBe(true);
+      await expect(page.getByRole('button', { name: /Markeer als gelezen/i })).toHaveCount(0);
+      await expect(page.locator('#berichten-alles-gelezen')).toBeVisible();
     });
 
-    await test.step('Then blijven bel, filter en persoonlijke historie op dezelfde serverwaarheid', async () => {
-      // Sinds 15 sep (besluit Gio) bevat de TEST-basis ook drie ingetrokken
-      // voorbeeldmededelingen, al gelezen. "Alles" toont dus de drie echte plus de
-      // drie ingetrokken, en geen daarvan telt als ongelezen. Wat de medewerker
-      // bij een ingetrokken bericht ziet, bewaakt [NOT-H-012].
-      await page.locator('[data-announcement-archive-filter="all"]').click();
-      await expect(page.locator('#employee-announcement-list .employee-announcement-card')).toHaveCount(6);
-      await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-unread')).toHaveCount(0);
-      await expect(page.locator('#notification-title')).toHaveText('Geen ongelezen meldingen');
+    await test.step('When de medewerker elk ongelezen bericht in beeld heeft, then telt het na 2 seconden vanzelf als gelezen', async () => {
+      await expect(async () => {
+        const nog = ongelezen.first();
+        if (await nog.count()) await nog.scrollIntoViewIfNeeded();
+        await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen mededelingen · 0', { timeout: 3_000 });
+      }).toPass({ timeout: 30_000 });
+      await expect(ongelezen).toHaveCount(0);
+      await expect(page.locator('#employee-berichten-count')).toBeHidden();
+      await expect(page.locator('#berichten-alles-gelezen')).toBeHidden();
+    });
+
+    await test.step('And blijven de net gelezen berichten open staan tot je wegnavigeert; daarna zijn ze ingeklapt', async () => {
+      await expect(lijst.locator('.employee-announcement-card.is-open')).toHaveCount(aantal);
+      await page.reload();
+      if (await page.locator('#login-screen').isVisible()) await loginPage.loginAsEmployee();
+      await page.locator('button[data-view="employee-announcements"]').click();
+      await expect(lijst.locator('.employee-announcement-card')).not.toHaveCount(0);
+      await expect(lijst.locator('.employee-announcement-card.is-open')).toHaveCount(0);
     });
 
     await loginPage.logout();
   });
 
-  // Besluit Gio (15 sep, punt 2 "Mededeling intrekken"): een ingetrokken
-  // mededeling blijft voor de medewerker zichtbaar, maar als ingetrokken en met de
-  // reden, en het filter "Ingetrokken" toont precies die berichten. Tot deze
-  // datum zette de app dat filter in servermodus hard leeg, en stond een
-  // ingetrokken bericht onder "Alles" als gewone, nog geldige mededeling.
-  test('[NOT-H-012] medewerker ziet ingetrokken mededelingen als ingetrokken met reden, en het filter toont precies die', async ({ page }) => {
+  test('[NOT-H-012] medewerker ziet ingetrokken mededelingen ingeklapt met label, de reden bij openen, en het filter toont precies die', async ({ page }) => {
     const loginPage = new LoginPage(page);
 
-    await test.step('Given Stasjo opent Berichten met drie ingetrokken voorbeeldmededelingen in de TEST-basis', async () => {
+    await test.step('Given Stasjo opent Berichten met ingetrokken voorbeeldmededelingen in de TEST-basis', async () => {
       await loginPage.open();
       await loginPage.loginAsEmployee();
       await page.locator('button[data-view="employee-announcements"]').click();
@@ -415,13 +440,24 @@ test.describe('notifications api', () => {
       await page.locator('[data-announcement-archive-filter="withdrawn"]').click();
     });
 
-    await test.step('Then staan precies de drie ingetrokken berichten er, elk met label en reden, en geen ervan als ongelezen', async () => {
+    await test.step('Then staan alleen ingetrokken berichten er, ingeklapt met label, en geen ervan als ongelezen', async () => {
       const kaarten = page.locator('#employee-announcement-list .employee-announcement-card');
-      await expect(kaarten).toHaveCount(3);
-      await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-withdrawn')).toHaveCount(3);
+      const aantalIngetrokken = await page.evaluate(() => ((0, eval)('employeeAnnouncementItemsFromNotifications') as () => Array<{ status: string }>)().filter(item => item.status === 'withdrawn').length);
+      expect(aantalIngetrokken, 'de TEST-basis heeft ingetrokken voorbeelden').toBeGreaterThanOrEqual(3);
+      await expect(kaarten).toHaveCount(aantalIngetrokken);
+      await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-withdrawn')).toHaveCount(aantalIngetrokken);
       await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-unread')).toHaveCount(0);
       const borrel = kaarten.filter({ hasText: 'Vrijdagborrel gaat niet door' });
       await expect(borrel.locator('.status-pill')).toHaveText('Ingetrokken');
+      await expect(borrel.locator('[data-bericht-toggle]')).toHaveAttribute('aria-expanded', 'false');
+      await expect(borrel.locator('[data-employee-withdrawal-note]')).toBeHidden();
+    });
+
+    await test.step('And zie je de reden zodra je het bericht openklapt', async () => {
+      const borrel = page.locator('#employee-announcement-list .employee-announcement-card').filter({ hasText: 'Vrijdagborrel gaat niet door' });
+      await borrel.locator('[data-bericht-toggle]').click();
+      await expect(borrel.locator('[data-bericht-toggle]')).toHaveAttribute('aria-expanded', 'true');
+      await expect(borrel.locator('[data-employee-withdrawal-note]')).toBeVisible();
       await expect(borrel.locator('[data-employee-withdrawal-note]')).toContainText('Hij gaat toch door: er is nieuwe taart.');
     });
 
@@ -434,5 +470,105 @@ test.describe('notifications api', () => {
     });
 
     await loginPage.logout();
+  });
+
+  test('[NOT-H-013] een melding in de bel brengt de medewerker direct naar de plek waar iets te doen is', async ({ page }) => {
+    // Gio 15 sep: "als je hier drukt kom je gelijk uit waar je moet zijn". Beslistabel
+    // soort melding -> bestemming, met een nagebootste meldingenlijst zodat de case
+    // niet afhangt van wat er toevallig in de gedeelde database staat.
+    const meldingen = [
+      { id: 9101, notification_type: 'correction_required', title: 'Correctie gevraagd juli', period_key: '2026-07', target_route: 'employee-dashboard' },
+      { id: 9102, notification_type: 'timesheet_approved', title: 'Uren juni goedgekeurd', period_key: '2026-06', target_route: 'employee-dashboard' },
+      { id: 9103, notification_type: 'timesheet_reminder', title: 'Dien augustus in', period_key: '2026-08', target_route: 'employee-dashboard' },
+      { id: 9104, notification_type: 'announcement', title: 'Mededeling hoort niet in de bel', period_key: null, target_route: 'employee-announcements', announcement_id: 1 },
+    ];
+    const gelezen = new Set<number>();
+    await page.route('**/server/api/notifications.php*', async route => {
+      if (route.request().method() === 'POST') {
+        const body = route.request().postDataJSON() as { notification_id?: number };
+        if (body.notification_id) gelezen.add(Number(body.notification_id));
+        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, updated: 1 }) });
+        return;
+      }
+      const items = meldingen.map(melding => ({ period_id: null, announcement_id: null, message: '', read_at: null, created_at: '2026-08-05 10:00:00', ...melding, read: gelezen.has(melding.id) }));
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, count: items.length, unread_count: items.filter(item => !item.read).length, items }) });
+    });
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.evaluate(() => { void (window as unknown as { refreshNotificationsReadApi: (force: boolean) => Promise<unknown> }).refreshNotificationsReadApi(true); });
+
+    await test.step('Then toont de bel alleen de drie meldingen over de medewerker zelf', async () => {
+      await expect(page.locator('#notification-count')).toHaveText('3');
+      await page.locator('#notification-button').click();
+      await expect(page.locator('#notification-list .notification-item')).toHaveCount(3);
+      await expect(page.locator('#notification-list')).not.toContainText('Mededeling hoort niet in de bel');
+    });
+
+    const bestemmingen: Array<{ titel: string; scherm: string; maand: string; extra?: string }> = [
+      { titel: 'Correctie gevraagd juli', scherm: 'timesheet', maand: '2026-07' },
+      { titel: 'Uren juni goedgekeurd', scherm: 'historie', maand: '2026-06', extra: 'maand opengeklapt' },
+      { titel: 'Dien augustus in', scherm: 'timesheet', maand: '2026-08' },
+    ];
+    for (const doel of bestemmingen) {
+      await test.step(`When "${doel.titel}" wordt aangeklikt, then staat ${doel.scherm} van ${doel.maand} open${doel.extra ? ' (' + doel.extra + ')' : ''}`, async () => {
+        if (await page.locator('#notification-panel').isHidden()) await page.locator('#notification-button').click();
+        await page.locator('#notification-list .notification-item', { hasText: doel.titel }).click();
+        await expect(page.locator(`#view-${doel.scherm}`)).toHaveClass(/is-active/);
+        await expect.poll(() => page.evaluate(() => (window as unknown as { currentPeriod: () => { key: string } }).currentPeriod().key)).toBe(doel.maand);
+        if (doel.scherm === 'historie') {
+          await expect(page.locator(`#employee-history-verloop-${doel.maand}`)).toBeVisible();
+        }
+      });
+    }
+    expect([...gelezen].sort(), 'elke aangeklikte melding telt als gelezen').toEqual([9101, 9102, 9103]);
+  });
+
+  test('[NOT-H-014] Alles gelezen in Berichten leest alleen de mededelingen en laat de bel met rust', async ({ page }) => {
+    // Nagebootste meldingenlijst: twee ongelezen mededelingen en één ongelezen
+    // statusmelding, zodat de case niet afhangt van wat NOT-H-011 al heeft gelezen.
+    const meldingen = [
+      { id: 9201, notification_type: 'correction_required', title: 'Correctie gevraagd juli', period_key: '2026-07', target_route: 'employee-dashboard', announcement_id: null, read: false },
+      { id: 9202, notification_type: 'announcement', title: 'Testmededeling een', period_key: null, target_route: 'employee-announcements', announcement_id: 701, read: false },
+      { id: 9203, notification_type: 'announcement', title: 'Testmededeling twee', period_key: null, target_route: 'employee-announcements', announcement_id: 702, read: false },
+    ];
+    const verzonden: Array<Record<string, unknown>> = [];
+    await page.route('**/server/api/notifications.php*', async route => {
+      if (route.request().method() === 'POST') {
+        const body = route.request().postDataJSON() as Record<string, unknown>;
+        verzonden.push(body);
+        meldingen.forEach(melding => {
+          if (body.action === 'mark_all_read') melding.read = true;
+          if (body.action === 'mark_announcement_read' && melding.announcement_id === Number(body.announcement_id)) melding.read = true;
+        });
+        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, updated: 1 }) });
+        return;
+      }
+      const items = meldingen.map(melding => ({ period_id: null, message: 'Tekst van de melding.', read_at: null, created_at: '2026-08-05 10:00:00', ...melding }));
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, count: items.length, unread_count: items.filter(item => !item.read).length, items }) });
+    });
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.evaluate(() => { void (window as unknown as { refreshNotificationsReadApi: (force: boolean) => Promise<unknown> }).refreshNotificationsReadApi(true); });
+
+    await test.step('Given twee ongelezen mededelingen in Berichten en één statusmelding in de bel', async () => {
+      await expect(page.locator('#employee-berichten-count')).toHaveText('2');
+      await expect(page.locator('#notification-count')).toHaveText('1');
+    });
+
+    await test.step('When de medewerker in Berichten op Alles gelezen tikt', async () => {
+      await page.locator('button[data-view="employee-announcements"]').click();
+      await page.locator('#berichten-alles-gelezen').click();
+    });
+
+    await test.step('Then zijn de mededelingen gelezen en blijft de statusmelding in de bel ongelezen', async () => {
+      await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen mededelingen · 0');
+      await expect(page.locator('#employee-berichten-count')).toBeHidden();
+      await expect(page.locator('#berichten-alles-gelezen')).toBeHidden();
+      await expect(page.locator('#notification-count')).toHaveText('1');
+      expect(verzonden.some(body => body.action === 'mark_all_read'), 'geen mark_all_read vanuit Berichten').toBe(false);
+      expect([...new Set(verzonden.map(body => Number(body.announcement_id)))].sort()).toEqual([701, 702]);
+    });
   });
 });

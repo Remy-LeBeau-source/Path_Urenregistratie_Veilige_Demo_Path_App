@@ -1162,6 +1162,11 @@ let adminTaskWorkflow = null;
 let newAdminStoryEmployeeId = null;
 let newAdminStorylineHasRendered = false;
 let newAdminStoryExportRows = [];
+// Berichten die de medewerker deze sessie heeft opengeklapt of net heeft gelezen. Die
+// blijven open staan, ook als ze na het lezen niet meer ongelezen zijn.
+const openBerichten = new Set();
+const berichtLeesTimers = new Map();
+let berichtLeesObserver = null;
 
 function newAdminStageLabel(state) {
   return state === "done" ? "Gereed" : state === "current" ? "Actie vereist" : "Nog niet gestart";
@@ -9127,6 +9132,114 @@ function isAnnouncementUnread(employeeId, announcementId) {
   return announcementNotificationsFor(employeeId, announcementId).some(item => !item.read);
 }
 
+// Eén kaart in Berichten (besluit Gio 15 sep, "slim voorstel"). Ongelezen berichten staan
+// open; gelezen en ingetrokken berichten zijn ingeklapt tot één regel (titel · datum ›)
+// en gaan open met een tik. Gelezen gaat vanzelf: bij open- of dichtklappen, of als het
+// bericht 2 seconden in beeld is geweest. Geen knop "Markeer als gelezen" meer.
+function berichtKaartHtml(bericht) {
+  const open = bericht.unread || openBerichten.has(bericht.id);
+  const inhoudId = "bericht-inhoud-" + bericht.id;
+  const label = bericht.ingetrokken
+    ? '<span class="status-pill status-warning">Ingetrokken</span>'
+    : bericht.unread ? '<span class="status-pill status-submitted">Nieuw</span>' : "";
+  const intrekking = bericht.ingetrokken
+    ? '<div class="announcement-withdrawal-note" data-employee-withdrawal-note><strong>Deze mededeling is ingetrokken en geldt niet meer</strong>' + escapeHtml(bericht.reden || "Er is geen reden vastgelegd.") + '</div>'
+    : "";
+  return '<article class="employee-announcement-card' + (bericht.unread ? " is-unread" : "") + (bericht.ingetrokken ? " is-withdrawn" : "") + (open ? " is-open" : " is-dicht") + '" data-bericht-id="' + bericht.id + '">'
+    + '<button class="bericht-kop" type="button" data-bericht-toggle="' + bericht.id + '" aria-expanded="' + (open ? "true" : "false") + '" aria-controls="' + inhoudId + '">'
+      + '<span class="bericht-kop-tekst">' + label + '<h3>' + escapeHtml(bericht.title) + '</h3></span>'
+      + '<small>' + escapeHtml(bericht.createdAt) + '</small>'
+      + '<span class="bericht-chevron" aria-hidden="true"></span>'
+    + '</button>'
+    + '<div class="bericht-inhoud" id="' + inhoudId + '"' + (open ? "" : " hidden") + '>'
+      + intrekking
+      + '<p>' + escapeHtml(bericht.message) + '</p>'
+      + '<footer><span>Van ' + escapeHtml(bericht.createdBy) + ' · ' + (bericht.unread ? "Nieuw" : "Gelezen") + '</span></footer>'
+    + '</div>'
+    + '</article>';
+}
+
+function toonBerichtenLijst(list, berichten, unreadCount) {
+  document.querySelector("#announcement-unread-filter").textContent = "Ongelezen mededelingen · " + unreadCount;
+  zetBerichtenTeller(unreadCount);
+  const allesGelezen = document.querySelector("#berichten-alles-gelezen");
+  if (allesGelezen) allesGelezen.hidden = unreadCount === 0;
+  document.querySelectorAll("[data-announcement-archive-filter]").forEach(button => button.classList.toggle("is-active", button.dataset.announcementArchiveFilter === state.announcementArchiveFilter));
+  if (!berichten.length) {
+    list.innerHTML = '<div class="dashboard-action-empty"><strong>Geen mededelingen binnen dit filter.</strong><br>Nieuwe mededelingen van Beheer verschijnen hier, met een teller op Berichten.</div>';
+    return;
+  }
+  // Ongelezen bovenaan, verder de volgorde van de bron (nieuwste eerst).
+  const geordend = berichten.filter(bericht => bericht.unread).concat(berichten.filter(bericht => !bericht.unread));
+  list.innerHTML = geordend.map(berichtKaartHtml).join("");
+  volgBerichtenInBeeld(list);
+}
+
+const BERICHT_LEESTIJD_MS = 2000;
+
+// Een ongelezen bericht dat 2 seconden grotendeels in beeld is, telt als gelezen.
+function volgBerichtenInBeeld(list) {
+  berichtLeesTimers.forEach(timer => clearTimeout(timer));
+  berichtLeesTimers.clear();
+  if (berichtLeesObserver) berichtLeesObserver.disconnect();
+  if (typeof IntersectionObserver !== "function") return;
+  berichtLeesObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      const id = Number(entry.target.dataset.berichtId || 0);
+      const zichtbaar = entry.isIntersecting && entry.intersectionRatio >= 0.6
+        && Boolean(document.querySelector("#view-employee-announcements.is-active"))
+        && document.visibilityState !== "hidden";
+      if (zichtbaar && !berichtLeesTimers.has(id)) {
+        berichtLeesTimers.set(id, setTimeout(() => { berichtLeesTimers.delete(id); markeerBerichtGelezen(id); }, BERICHT_LEESTIJD_MS));
+      } else if (!zichtbaar && berichtLeesTimers.has(id)) {
+        clearTimeout(berichtLeesTimers.get(id));
+        berichtLeesTimers.delete(id);
+      }
+    });
+  }, { threshold: [0, 0.6, 1] });
+  list.querySelectorAll(".employee-announcement-card.is-unread").forEach(kaart => berichtLeesObserver.observe(kaart));
+}
+
+function markeerBerichtGelezen(announcementId) {
+  const id = Number(announcementId || 0);
+  if (!id || state.currentRole !== "employee") return Promise.resolve();
+  openBerichten.add(id);
+  if (API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative()) {
+    const melding = employeeAnnouncementItemsFromNotifications().find(item => item.id === id);
+    if (!melding || melding.read) return Promise.resolve();
+    return markAnnouncementReadApi(id)
+      .then(() => refreshNotificationsReadApi(true))
+      .catch(() => null)
+      .then(() => { renderNotifications(); renderEmployeeAnnouncementArchive(); });
+  }
+  const meldingen = announcementNotificationsFor(currentEmployee().id, id);
+  if (!meldingen.some(item => !item.read)) return Promise.resolve();
+  meldingen.forEach(item => { item.read = true; });
+  persistState();
+  renderNotifications();
+  renderEmployeeAnnouncementArchive();
+  return Promise.resolve();
+}
+
+function markeerAlleBerichtenGelezen() {
+  if (state.currentRole !== "employee") return;
+  if (API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative()) {
+    const ongelezen = employeeAnnouncementItemsFromNotifications().filter(item => !item.read);
+    ongelezen.forEach(item => openBerichten.add(item.id));
+    Promise.all(ongelezen.map(item => markAnnouncementReadApi(item.id).catch(() => null)))
+      .then(() => refreshNotificationsReadApi(true))
+      .catch(() => null)
+      .then(() => { renderNotifications(); renderEmployeeAnnouncementArchive(); });
+    return;
+  }
+  const employee = currentEmployee();
+  state.notifications.filter(item => item.audience === "employee" && Number(item.employeeId) === employee.id && isMededelingMelding(item) && !item.read)
+    .forEach(item => { openBerichten.add(Number(item.announcementId || item.id)); item.read = true; });
+  persistState();
+  renderNotifications();
+  renderEmployeeAnnouncementArchive();
+}
+
 function renderEmployeeAnnouncementArchive() {
   const list = document.querySelector("#employee-announcement-list");
   if (!list) return;
@@ -9134,69 +9247,35 @@ function renderEmployeeAnnouncementArchive() {
     list.innerHTML = "";
     return;
   }
+  // Onder het filter Ongelezen blijft een bericht dat je net las staan tot je
+  // wegnavigeert, anders verdwijnt het onder je handen.
+  const houdVast = item => !item.read || openBerichten.has(item.id);
 
   if (API_ENABLED && authRuntime.mode === "auth") {
     let announcements = employeeAnnouncementItemsFromNotifications();
     const unreadAnnouncementCount = announcements.filter(item => !item.read).length;
-    document.querySelector("#announcement-unread-filter").textContent = "Ongelezen mededelingen · " + unreadAnnouncementCount;
-    zetBerichtenTeller(unreadAnnouncementCount);
-    if (state.announcementArchiveFilter === "unread") announcements = announcements.filter(item => !item.read);
+    if (state.announcementArchiveFilter === "unread") announcements = announcements.filter(houdVast);
     if (state.announcementArchiveFilter === "withdrawn") announcements = announcements.filter(item => item.status === "withdrawn");
-    document.querySelectorAll("[data-announcement-archive-filter]").forEach(button => button.classList.toggle("is-active", button.dataset.announcementArchiveFilter === state.announcementArchiveFilter));
-    if (!announcements.length) {
-      list.innerHTML = '<div class="dashboard-action-empty"><strong>Geen mededelingen binnen dit filter.</strong><br>Nieuwe berichten verschijnen ook via de bel.</div>';
-      return;
-    }
-
-    list.innerHTML = announcements.map(item => {
-      const unread = !item.read;
-      const ingetrokken = item.status === "withdrawn";
-      const pill = ingetrokken
-        ? '<span class="status-pill status-warning">Ingetrokken</span>'
-        : '<span class="status-pill ' + (unread ? 'status-warning' : 'status-approved') + '">' + (unread ? 'Ongelezen' : 'Gelezen') + '</span>';
-      const intrekking = ingetrokken
-        ? '<div class="announcement-withdrawal-note" data-employee-withdrawal-note><strong>Deze mededeling is ingetrokken en geldt niet meer</strong>' + escapeHtml(item.withdrawalReason || "Er is geen reden vastgelegd.") + '</div>'
-        : "";
-      return '<article class="employee-announcement-card' + (unread ? " is-unread" : "") + (ingetrokken ? " is-withdrawn" : "") + '">' +
-        '<header><div>' + pill + '<h3>' + escapeHtml(item.title) + '</h3></div><small>' + escapeHtml(item.createdAt) + '</small></header>' +
-        intrekking +
-        '<p>' + escapeHtml(item.message) + '</p>' +
-        '<footer><span>Van ' + escapeHtml(item.createdBy) + ' · ' + (unread ? 'Ongelezen' : 'Gelezen') + '</span>' + (unread ? '<button class="small-button" data-read-announcement="' + item.id + '">Markeer als gelezen</button>' : '') + '</footer>' +
-      '</article>';
-    }).join("");
+    toonBerichtenLijst(list, announcements.map(item => ({
+      id: item.id, title: item.title, message: item.message, createdAt: item.createdAt, createdBy: item.createdBy,
+      unread: !item.read, ingetrokken: item.status === "withdrawn", reden: item.withdrawalReason
+    })), unreadAnnouncementCount);
     return;
   }
 
   const employee = currentEmployee();
   let announcements = state.announcements
-    .filter(item => item.status !== "draft" && item.status !== "withdrawn" && !item.hiddenFromEmployees && !item.supersededById && item.recipientIds.includes(employee.id))
+    .filter(item => item.status !== "draft" && item.status !== "withdrawn" && !item.hiddenFromEmployees && !item.supersededById && item.recipientIds.includes(employee.id));
   announcements = sortAnnouncementsByActivity(announcements);
-  const unreadAnnouncementCount = announcements.filter(item => isAnnouncementUnread(employee.id, item.id)).length;
-  document.querySelector("#announcement-unread-filter").textContent = "Ongelezen mededelingen · " + unreadAnnouncementCount;
-  zetBerichtenTeller(unreadAnnouncementCount);
-  if (state.announcementArchiveFilter === "unread") announcements = announcements.filter(item => isAnnouncementUnread(employee.id, item.id));
-  if (state.announcementArchiveFilter === "withdrawn") announcements = announcements.filter(item => item.status === "withdrawn" || announcementKind(item) === "withdrawal");
-  document.querySelectorAll("[data-announcement-archive-filter]").forEach(button => button.classList.toggle("is-active", button.dataset.announcementArchiveFilter === state.announcementArchiveFilter));
-  if (!announcements.length) {
-    list.innerHTML = '<div class="dashboard-action-empty"><strong>Geen mededelingen binnen dit filter.</strong><br>Nieuwe berichten verschijnen ook via de bel.</div>';
-    return;
-  }
-  list.innerHTML = announcements.map(item => {
-    const unread = isAnnouncementUnread(employee.id, item.id);
-    const kind = announcementKind(item);
-    const withdrawn = item.status === "withdrawn" || kind === "withdrawal";
-    const withdrawalNote = item.status === "withdrawn"
-      ? '<div class="announcement-withdrawal-note"><strong>Dit bericht is ingetrokken</strong>' + escapeHtml(item.withdrawalReason || "Geen reden vastgelegd.") + '</div>'
-      : "";
-    const employeeStatus = withdrawn
-      ? '<span class="status-pill status-warning">' + (kind === "withdrawal" ? "Mededeling ingetrokken" : "Ingetrokken") + '</span>'
-      : '<span class="status-pill status-submitted">Mededeling</span>';
-    return '<article class="employee-announcement-card' + (unread ? " is-unread" : "") + (withdrawn ? " is-withdrawn" : "") + '">' +
-      '<header><div>' + employeeStatus + '<h3>' + escapeHtml(item.title) + '</h3></div><small>' + escapeHtml(item.createdAt) + '</small></header>' +
-      '<p>' + escapeHtml(item.message) + '</p>' + withdrawalNote +
-      '<footer><span>Van ' + escapeHtml(item.createdBy) + ' · ' + (unread ? "Ongelezen" : "Gelezen") + '</span>' + (unread ? '<button class="small-button" data-read-announcement="' + item.id + '">Markeer als gelezen</button>' : '') + '</footer>' +
-      '</article>';
-  }).join("");
+  const metStand = announcements.map(item => ({ item, id: item.id, read: !isAnnouncementUnread(employee.id, item.id) }));
+  const unreadAnnouncementCount = metStand.filter(entry => !entry.read).length;
+  let zichtbaar = metStand;
+  if (state.announcementArchiveFilter === "unread") zichtbaar = zichtbaar.filter(houdVast);
+  if (state.announcementArchiveFilter === "withdrawn") zichtbaar = zichtbaar.filter(entry => entry.item.status === "withdrawn" || announcementKind(entry.item) === "withdrawal");
+  toonBerichtenLijst(list, zichtbaar.map(({ item, read }) => ({
+    id: item.id, title: item.title, message: item.message, createdAt: item.createdAt, createdBy: item.createdBy,
+    unread: !read, ingetrokken: item.status === "withdrawn" || announcementKind(item) === "withdrawal", reden: item.withdrawalReason
+  })), unreadAnnouncementCount);
 }
 
 // Zet employees.id om naar de users.id die de server als ontvanger verwacht.
@@ -11458,19 +11537,51 @@ function notificationsForCurrentProfile() {
     .sort((left, right) => Number(right.id) - Number(left.id));
 }
 
+// Een melding die bij een mededeling van Beheer hoort (en dus in Berichten thuishoort).
+function isMededelingMelding(item) {
+  return Boolean(item) && (item.type === "announcement" || String(item.notificationType || "").toLowerCase() === "announcement" || Number(item.announcementId || 0) > 0);
+}
+
+// Bel en Berichten (besluit Gio 15 sep, "slim voorstel"): de bel van de medewerker gaat
+// alleen over de medewerker zelf -- correcties, herinneringen, ingediend en goedgekeurd, de
+// klanturenstaat. Mededelingen van Beheer staan in Berichten, met hun eigen teller op
+// het tabblad, en niet nog eens in de bel. Beheer houdt de bel zoals hij was.
+function belMeldingenVoorProfiel() {
+  const alle = notificationsForCurrentProfile();
+  return state.currentRole === "employee" ? alle.filter(item => !isMededelingMelding(item)) : alle;
+}
+
 function renderNotifications() {
   const list = document.querySelector("#notification-list");
   if (!list) return;
-  const notifications = notificationsForCurrentProfile();
+  const medewerker = state.currentRole === "employee";
+  const notifications = belMeldingenVoorProfiel();
   const visible = notifications.filter(item => !item.read);
   const unread = visible.length;
   const count = document.querySelector("#notification-count");
   count.textContent = unread > 99 ? "99+" : String(unread);
   count.hidden = unread === 0;
+  const kop = document.querySelector("#notification-kop");
+  if (kop) kop.textContent = medewerker ? "Over jouw uren" : "Alle urenstatussen en mededelingen";
   document.querySelector("#notification-title").textContent = unread
     ? unread + " ongelezen melding" + (unread === 1 ? "" : "en")
     : "Geen ongelezen meldingen";
-  list.innerHTML = visible.length ? visible.map(item => '<button class="notification-item is-unread" data-notification-id="' + item.id + '"><span class="notification-item-dot"></span><span><strong>' + escapeHtml(item.title) + '</strong><span>' + escapeHtml(item.message) + '</span><small>' + escapeHtml(item.createdAt) + '</small></span></button>').join("") : '<div class="notification-empty"><strong>Je hebt geen ongelezen meldingen.</strong><br>Urenstatussen en algemene mededelingen verschijnen hier samen.</div>';
+  const leeg = medewerker
+    ? '<div class="notification-empty"><strong>Je hebt geen ongelezen meldingen.</strong><br>Hier verschijnt wat over jouw uren gaat: correcties, herinneringen en goedkeuringen. Mededelingen staan in Berichten.</div>'
+    : '<div class="notification-empty"><strong>Je hebt geen ongelezen meldingen.</strong><br>Urenstatussen en algemene mededelingen verschijnen hier samen.</div>';
+  list.innerHTML = visible.length ? visible.map(item => '<button class="notification-item is-unread" data-notification-id="' + item.id + '"><span class="notification-item-dot"></span><span><strong>' + escapeHtml(item.title) + '</strong><span>' + escapeHtml(item.message) + '</span><small>' + escapeHtml(item.createdAt) + '</small></span></button>').join("") : leeg;
+}
+
+// Waar een melding in de bel naartoe brengt: meteen de plek waar je iets moet doen
+// (Gio 15 sep: "als je hier drukt kom je gelijk uit waar je moet zijn").
+function meldingBestemming(item) {
+  if (state.currentRole !== "employee") return { view: item.view || profileForRole(state.currentRole).home };
+  if (isMededelingMelding(item)) return { view: "employee-announcements", bericht: Number(item.announcementId || 0) || null };
+  const soort = String(item.type || "");
+  if (["correction", "reminder", "submitted"].includes(soort)) return { view: "timesheet" };
+  if (["approved", "invoice"].includes(soort)) return { view: "historie", maandOpen: item.periodKey || null };
+  if (soort.startsWith("customer-timesheet")) return { view: item.view && item.view !== "employee-dashboard" ? item.view : "historie", maandOpen: item.periodKey || null };
+  return { view: item.view || "employee-dashboard" };
 }
 
 function employeeAnnouncementItemsFromNotifications() {
@@ -11489,7 +11600,7 @@ function employeeAnnouncementItemsFromNotifications() {
         id,
         title: String(item.title || "Mededeling"),
         message: String(item.message || ""),
-        createdBy: "Beheerder",
+        createdBy: "Beheer",
         createdAt: String(item.createdAt || ""),
         updatedAt: String(item.createdAt || ""),
         status: ingetrokken ? "withdrawn" : "sent",
@@ -14265,8 +14376,11 @@ function toonInstallatieAanbod() {
     if (item) {
       const continueNavigation = () => {
         if (item.periodKey) setPeriod(item.periodKey);
-        const targetView = state.currentRole === "employee" && item.announcementId ? "employee-announcements" : item.view;
-        showView(targetView || profileForRole(state.currentRole).home);
+        const bestemming = meldingBestemming(item);
+        if (bestemming.maandOpen) state.historyVerloopOpen = bestemming.maandOpen;
+        if (bestemming.bericht) openBerichten.add(bestemming.bericht);
+        if (bestemming.maandOpen || bestemming.bericht) renderAll();
+        showView(bestemming.view || profileForRole(state.currentRole).home);
         closeTopbarPopovers();
       };
 
@@ -14958,22 +15072,24 @@ function toonInstallatieAanbod() {
   const withdrawAnnouncement = event.target.closest("[data-withdraw-announcement]");
   if (withdrawAnnouncement) showAnnouncementWithdrawal(Number(withdrawAnnouncement.dataset.withdrawAnnouncement));
 
-  const readAnnouncement = event.target.closest("[data-read-announcement]");
-  if (readAnnouncement && state.currentRole === "employee") {
-    const announcementId = Number(readAnnouncement.dataset.readAnnouncement || 0);
-    if (API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative()) {
-      markAnnouncementReadApi(announcementId)
-        .then(() => refreshNotificationsReadApi(true))
-        .then(() => toast("Mededeling als gelezen gemarkeerd."))
-        .catch(() => toast("Markeren als gelezen op server mislukt."));
-    } else {
-      announcementNotificationsFor(currentEmployee().id, announcementId).forEach(item => { item.read = true; });
-      persistState();
-      renderNotifications();
-      renderEmployeeAnnouncementArchive();
-      toast("Mededeling als gelezen gemarkeerd.");
+  // Berichten: een tik op de kop klapt open of dicht. Open- of dichtklappen van een
+  // ongelezen bericht telt als gelezen (besluit Gio 15 sep); er is geen aparte knop meer.
+  const berichtToggle = event.target.closest("[data-bericht-toggle]");
+  if (berichtToggle && state.currentRole === "employee") {
+    const id = Number(berichtToggle.dataset.berichtToggle || 0);
+    const kaart = berichtToggle.closest(".employee-announcement-card");
+    const wordtOpen = berichtToggle.getAttribute("aria-expanded") !== "true";
+    if (wordtOpen) openBerichten.add(id); else openBerichten.delete(id);
+    berichtToggle.setAttribute("aria-expanded", String(wordtOpen));
+    kaart?.classList.toggle("is-open", wordtOpen);
+    kaart?.classList.toggle("is-dicht", !wordtOpen);
+    const inhoud = kaart?.querySelector(".bericht-inhoud");
+    if (inhoud) inhoud.hidden = !wordtOpen;
+    if (kaart?.classList.contains("is-unread")) {
+      markeerBerichtGelezen(id).then(() => { if (!wordtOpen) { openBerichten.delete(id); renderEmployeeAnnouncementArchive(); } });
     }
   }
+  if (event.target.closest("#berichten-alles-gelezen")) markeerAlleBerichtenGelezen();
 
   const review = event.target.closest("[data-review]");
   if (review) showHoursReview(Number(review.dataset.review), review.dataset.periodKey || currentPeriod().key);

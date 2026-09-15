@@ -266,7 +266,7 @@
           <div class="topbar-popover">
             <button class="notification-button" id="notification-button" aria-label="Meldingen" aria-expanded="false" aria-controls="notification-panel"><span class="bell-shape"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 2.4v1.4"></path><path d="M12 3.8a5.6 5.6 0 0 0-5.6 5.6c0 3.3-.7 5-1.7 6.2a.85.85 0 0 0 .65 1.4h13.3a.85.85 0 0 0 .65-1.4c-1-1.2-1.7-2.9-1.7-6.2A5.6 5.6 0 0 0 12 3.8z"></path><path d="M9.9 19.6a2.2 2.2 0 0 0 4.2 0"></path></svg></span><b id="notification-count" hidden>0</b></button>
             <section class="popover-panel notification-panel" id="notification-panel" aria-label="Meldingen" hidden>
-              <div class="popover-heading"><div><small>Alle urenstatussen en mededelingen</small><strong id="notification-title">Geen ongelezen meldingen</strong></div><button class="icon-button" id="mark-notifications-read" aria-label="Alles als gelezen markeren">✓</button></div>
+              <div class="popover-heading"><div><small id="notification-kop">Alle urenstatussen en mededelingen</small><strong id="notification-title">Geen ongelezen meldingen</strong></div><button class="icon-button" id="mark-notifications-read" aria-label="Alles als gelezen markeren">✓</button></div>
               <div class="notification-list" id="notification-list"></div>
             </section>
           </div>
@@ -1047,7 +1047,7 @@
           <button data-announcement-archive-filter="withdrawn">Ingetrokken</button>
         </div>
         <section class="panel">
-          <div class="panel-heading"><div><span class="section-label">Persoonlijke historie</span><h3>Ontvangen mededelingen</h3></div><small>Alleen zichtbaar voor jouw account</small></div>
+          <div class="panel-heading"><div><span class="section-label">Van Beheer</span><h3>Ontvangen mededelingen</h3></div><div class="berichten-kop-acties"><small>Nieuwe berichten staan open; gelezen berichten klappen in.</small><button class="button button-ghost berichten-alles-gelezen" id="berichten-alles-gelezen" type="button" hidden>Alles gelezen</button></div></div>
           <div class="employee-announcement-list" id="employee-announcement-list"></div>
         </section>
         <!-- Gio 15 sep: "Nieuw in de app", alleen op TEST en lokaal (syncEnvironmentChrome),

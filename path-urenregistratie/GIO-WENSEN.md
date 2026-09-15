@@ -9,7 +9,7 @@ Nieuwste bovenaan per status. Statussen: **open**, **bezig**, **klaar (versie)**
 | Datum | Wens / besluit van Gio | Wie | Status |
 |---|---|---|---|
 | 15 sep | **Voorbeeldberichten TEST:** 10 mededelingen, waarvan 6 ingetrokken en 4 ongelezen. | main | bij main |
-| 15 sep | **Bel en Berichten slimmer:** klik op een melding brengt je direct naar de juiste plek; onderscheid bel vs. Berichten; ingeklapt tonen?; wanneer telt iets als gelezen (geen Markeer als gelezen-knop). Voorstel aan Gio gedaan. | herontwerp | wacht op keuze Gio |
+| 15 sep | **Bel en Berichten slimmer:** klik op een melding brengt je direct naar de juiste plek; onderscheid bel vs. Berichten; ingeklapt tonen?; wanneer telt iets als gelezen (geen Markeer als gelezen-knop). Voorstel aan Gio gedaan. | herontwerp | bezig: Gio koos het slimme voorstel. Bel alleen over jou met directe navigatie; Berichten alleen mededelingen, ongelezen open, gelezen en ingetrokken ingeklapt; gelezen vanzelf (opengeklapt of 2 s in beeld), geen Markeer-knop, wel "Alles gelezen". |
 | 15 sep | **Drie ingetrokken voorbeeldmededelingen** in de TEST-basis ("Kantoor gesloten", "Vrijdagborrel gaat niet door", "Parkeergarage dicht"), zoals de echte flow, meldingen al gelezen. | main | bij main |
 | 15 sep | Oude 0-regels uit de indienbug: geen opschoonscript. PROD is nog niet live (alleen gebruikers gemigreerd) en krijgt bij de livegang een verse migratie/reset met de gerepareerde code (R44 in BESLISTABEL.md; de reset hoort bij de livegangchecklist van Gio). | besluit | vastgelegd |
 | 15 sep | Bel en Berichten blijven allebei: bel = eigen urenstatus, correcties, herinneringen; Berichten = algemene mededelingen. | besluit | vastgelegd |

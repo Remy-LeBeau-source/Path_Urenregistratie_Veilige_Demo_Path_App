@@ -2224,6 +2224,33 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .employee-announcement-card header > small { color: var(--muted); font-size: 9px; white-space: nowrap; }
 .employee-announcement-card > p { color: var(--ink); font-size: 12px; line-height: 1.65; margin: 13px 0; white-space: pre-line; }
 .employee-announcement-card footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 9px; }
+/* Berichten in- en uitklapbaar (besluit Gio 15 sep). De kop is één knop over de hele
+   breedte: label, titel, datum en een chevron. Ingeklapt is een bericht één rustige
+   regel; open staat de tekst eronder. Nieuwe berichten staan open met het mintstreepje. */
+.employee-announcement-list .employee-announcement-card { padding: 0; }
+.bericht-kop { display: grid; grid-template-columns: minmax(0, 1fr) auto 12px; align-items: center; gap: 14px; width: 100%; min-height: 56px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; padding: 14px 24px; }
+.bericht-kop:hover { background: color-mix(in srgb, var(--mint) 6%, transparent); }
+.bericht-kop:focus-visible { outline: 2px solid var(--mint-dark); outline-offset: -2px; }
+.bericht-kop-tekst { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; min-width: 0; }
+.bericht-kop-tekst .status-pill { flex: 0 0 auto; }
+.employee-announcement-card .bericht-kop h3 { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.employee-announcement-card.is-dicht .bericht-kop h3 { font-size: 15px; font-weight: 600; }
+.bericht-kop > small { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bericht-chevron { width: 8px; height: 8px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(-45deg); transition: transform .16s ease; justify-self: end; }
+.bericht-kop[aria-expanded="true"] .bericht-chevron { transform: rotate(45deg); }
+.bericht-inhoud { padding: 0 24px 18px; }
+.bericht-inhoud > p { color: var(--ink); font-size: 13px; line-height: 1.65; margin: 4px 0 12px; max-width: 70ch; white-space: pre-line; }
+.bericht-inhoud .announcement-withdrawal-note { margin-top: 0; }
+.berichten-kop-acties { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px 14px; text-align: right; }
+.berichten-kop-acties small { color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .bericht-chevron { transition: none; } }
+@media (max-width: 720px) {
+  .bericht-kop { grid-template-columns: minmax(0, 1fr) 12px; padding: 14px 16px; }
+  .bericht-kop > small { grid-column: 1; grid-row: 2; }
+  .bericht-chevron { grid-column: 2; grid-row: 1 / span 2; }
+  .bericht-inhoud { padding: 0 16px 16px; }
+  .berichten-kop-acties { justify-content: flex-start; text-align: left; }
+}
 .recipient-choice-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
 .recipient-choice { display: flex !important; align-items: center; gap: 9px; border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
 .recipient-choice input { width: 17px !important; height: 17px !important; margin: 0 !important; accent-color: var(--mint-dark); }
