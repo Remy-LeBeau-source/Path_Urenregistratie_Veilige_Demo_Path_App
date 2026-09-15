@@ -5391,6 +5391,12 @@ function plaatsTestknoppen() {
   versieDeel.className = "testbalk-versie";
   versieDeel.textContent = omgevingTekst && versie ? " · " + versie : versie;
   label.replaceChildren(...[omgevingTekst ? omgevingDeel : null, versie ? versieDeel : null].filter(Boolean));
+  // Telefoon: de pil noemt de omgeving, het versienummer staat onderaan het
+  // profielmenu (Gio 15 sep: "versienummer testomgeving ... op het profielmenu").
+  const pilOmgeving = document.querySelector("#testbalk-open-omgeving");
+  if (pilOmgeving) pilOmgeving.textContent = omgevingTekst || "Test";
+  const profielVersie = document.querySelector("#profile-menu-versie");
+  if (profielVersie) profielVersie.textContent = versie;
   const knoppenZichtbaar = !reset.hidden || !schakelaars.hidden;
   balk.hidden = !(inBalk && (omgevingZichtbaar || knoppenZichtbaar));
   // Gio 14 sep: niet als band door de app, maar rechtsboven. Op desktop staat de
@@ -5407,8 +5413,31 @@ function plaatsTestknoppen() {
   }
 }
 if (typeof window.matchMedia === "function") {
-  window.matchMedia("(min-width: 821px)").addEventListener?.("change", () => plaatsTestknoppen());
+  window.matchMedia("(min-width: 821px)").addEventListener?.("change", () => { zetTestpil(false); plaatsTestknoppen(); });
 }
+
+// De testpil op de telefoon (medewerker in Klassiek): één knop die het paneel met
+// Herstel demo en de schakelaars opent. Dicht na een keuze in het paneel, bij een
+// tik ernaast en met Escape, zodat hij nooit over het scherm blijft hangen.
+function zetTestpil(open) {
+  const balk = document.querySelector("#testbalk");
+  const knop = document.querySelector("#testbalk-open");
+  if (!balk || !knop) return;
+  balk.dataset.open = open ? "true" : "false";
+  knop.setAttribute("aria-expanded", String(open));
+}
+document.addEventListener("click", event => {
+  const balk = document.querySelector("#testbalk");
+  if (!balk) return;
+  if (event.target.closest("#testbalk-open")) {
+    zetTestpil(balk.dataset.open !== "true");
+    return;
+  }
+  if (balk.dataset.open !== "true") return;
+  // Een keuze in het paneel eerst laten uitvoeren, dan pas dichtdoen.
+  if (event.target.closest("#testbalk-paneel button")) window.setTimeout(() => zetTestpil(false), 0);
+  else if (!event.target.closest("#testbalk-paneel")) zetTestpil(false);
+});
 
 function syncAppearanceSwitches(hostname = window.location.hostname) {
   const themeButton = document.querySelector("#quick-theme-toggle");
@@ -16388,6 +16417,7 @@ document.addEventListener("keydown", event => {
       return;
     }
     closeTopbarPopovers();
+    zetTestpil(false);
     closeMonthChoicePanels();
     closeReminderChoicePanels();
     closeStandardChoicePanels();

@@ -5082,3 +5082,101 @@ html:not([data-skin="new"]) body[data-role="employee"] .klantkaart-meer { displa
   border-color: var(--danger);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--danger) 35%, transparent);
 }
+
+/* ===========================================================================
+   Testpil op de telefoon (Gio 15 sep). Tot 820px staat bij de medewerker in
+   Klassiek niet langer een rij losse testknoppen boven de topbalk, maar één pil
+   met de omgeving ("LOKAAL ▾" / "TEST ▾"). Die opent een paneel met Herstel demo,
+   Licht/Donker en Klassiek/Nieuw, voluit en goed leesbaar in licht én donker.
+   Het versienummer staat op de telefoon onderaan het profielmenu. Zo lijkt de balk
+   op productie, waar pil en paneel vanzelf wegvallen. Desktop blijft ongewijzigd:
+   daar is het paneel display:contents en is de pil verborgen.
+   ======================================================================== */
+.testbalk-open { display: none; }
+.testbalk-paneel { display: contents; }
+.profile-menu-versie { display: none; }
+
+@media (max-width: 820px) {
+  html:not([data-skin="new"]) body[data-role="employee"] .testbalk:not([hidden]) { position: relative; z-index: 60; }
+  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-open {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid color-mix(in srgb, var(--warning) 55%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--warning) 12%, transparent);
+    color: #7a4a09;
+    cursor: pointer;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    padding: 0 14px;
+    text-transform: uppercase;
+  }
+  html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] .testbalk-open { color: #ffd59b; border-color: #8a6433; background: rgba(239,183,111,.12); }
+  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-open:focus-visible { outline: 0; box-shadow: 0 0 0 3px var(--mint); }
+
+  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel { display: none; }
+  html:not([data-skin="new"]) body[data-role="employee"] .testbalk[data-open="true"] .testbalk-paneel {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    display: grid;
+    width: min(280px, calc(100vw - 32px));
+    gap: 10px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--vlak, var(--surface));
+    box-shadow: 0 18px 42px rgba(13,27,56,.22);
+    color: var(--ink);
+    padding: 12px;
+  }
+  html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] .testbalk[data-open="true"] .testbalk-paneel { background: #101d2d; }
+  /* In het paneel alleen de omgeving als kopje; de versie staat in het profielmenu. */
+  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .testbalk-label { font-size: 10px; opacity: .8; }
+  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .testbalk-omgeving + .testbalk-versie { display: none; }
+  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .testbalk-knoppen { display: grid; gap: 8px; }
+  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .appearance-switches { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border: 0; background: transparent; padding: 0; }
+  /* Knoppen voluit: tekst weer zichtbaar, 44px hoog, leesbaar in beide thema's. */
+  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .testknop-tekst,
+  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .appearance-switch strong {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+  }
+  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .topbar-quick-reset,
+  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .appearance-switch {
+    display: inline-flex;
+    width: 100%;
+    min-height: 44px;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 1;
+    padding: 0 12px;
+  }
+  html:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .topbar-quick-reset {
+    border-color: color-mix(in srgb, var(--warning) 60%, var(--line));
+    color: #7a4a09;
+  }
+  html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] .testbalk-paneel .topbar-quick-reset { border-color: #8a6433; color: #ffd59b; }
+
+  html:not([data-skin="new"]) body[data-role="employee"] .profile-menu-versie:not(:empty) {
+    display: block;
+    margin: 6px 0 0;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 11px;
+    padding: 8px 12px 2px;
+  }
+}

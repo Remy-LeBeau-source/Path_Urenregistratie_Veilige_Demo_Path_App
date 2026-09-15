@@ -202,8 +202,14 @@
            niet tussen paginatitel en hero. app.js (plaatsTestknoppen) verhuist ze
            hierheen en zet ze voor andere rollen en Modern terug. -->
       <div class="testbalk" id="testbalk" hidden>
-        <span class="testbalk-label" id="testbalk-label"></span>
-        <span class="testbalk-knoppen" id="testbalk-knoppen"></span>
+        <!-- Telefoon (tot 820px, medewerker in Klassiek): de testknoppen zitten achter
+             één pil, zodat de balk eruitziet als productie (Gio 15 sep). Op desktop is
+             .testbalk-paneel display:contents en blijft de balk zoals hij was. -->
+        <button class="testbalk-open" id="testbalk-open" type="button" aria-expanded="false" aria-controls="testbalk-paneel"><span id="testbalk-open-omgeving">Test</span><span aria-hidden="true">▾</span></button>
+        <div class="testbalk-paneel" id="testbalk-paneel">
+          <span class="testbalk-label" id="testbalk-label"></span>
+          <span class="testbalk-knoppen" id="testbalk-knoppen"></span>
+        </div>
       </div>
       <header class="topbar">
         <div class="mobile-topbar-home" aria-label="Mobiele snelkeuzes">
@@ -278,6 +284,7 @@
               <button data-profile-action="help">Hulp &amp; contact</button>
               <button data-profile-action="switch">Ander account of rol</button>
               <button class="danger-menu-item" data-profile-action="logout">Uitloggen</button>
+              <p class="profile-menu-versie" id="profile-menu-versie"></p>
             </section>
           </div>
         </div>

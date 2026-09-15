@@ -334,6 +334,101 @@ test('[KLV-N-008] meer dan 24 uur op een dag wordt direct in het vak gemeld en n
   }
 });
 
+test('[KLV-N-009] in Klassiek staat het klanturenstaatlabel niet op Mijn uren maar op het eigen Klanturenstaat-scherm', async ({ page }) => {
+  // DESIGN-BESLUITEN "Klanturenstaatpaneel hoort niet op Mijn uren" (14 sep): Mijn uren
+  // gaat over uren invullen. Het paneel met zijn statuslabel verhuist in Klassiek naar
+  // het eigen scherm. Bewaakt, zodat een verhuizing die ergens misloopt het label niet
+  // stilletjes terugzet op Mijn uren (open punt 15 sep, besloten: niet weghalen, wel bewaken).
+  const loginPage = new LoginPage(page);
+  await test.step('Given een medewerker in Klassiek', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  });
+  await test.step('When de medewerker Mijn uren opent', async () => {
+    await page.locator('.nav-item[data-view="timesheet"]:visible').first().click();
+    await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
+  });
+  await test.step('Then staat er op Mijn uren geen klanturenstaatlabel of -paneel', async () => {
+    await expect(page.locator('#view-timesheet #customer-timesheet-status')).toHaveCount(0);
+    await expect(page.locator('#view-timesheet #customer-timesheet-upload-panel')).toHaveCount(0);
+  });
+  await test.step('And staat het label wel op het Klanturenstaat-scherm', async () => {
+    await page.evaluate(() => ((0, eval)('showView') as (v: string) => void)('customer-timesheet'));
+    await expect(page.locator('#view-customer-timesheet')).toHaveClass(/is-active/);
+    await expect(page.locator('#view-customer-timesheet #customer-timesheet-status')).toBeVisible();
+  });
+});
+
+test('[KLV-H-010] op de telefoon zitten de testknoppen van de medewerker achter één testpil, zonder functie te verliezen', async ({ page }) => {
+  // Gio 15 sep: de rij testknoppen boven de topbalk was druk, Herstel demo slecht
+  // leesbaar in donker, en je zag niet hoe de balk op productie wordt. Nu één pil met
+  // de omgeving; het paneel heeft dezelfde knoppen (zelfde id's), voluit en 44px.
+  // Het versienummer staat op de telefoon onderaan het profielmenu. Desktop blijft gelijk.
+  test.setTimeout(90_000);
+  const loginPage = new LoginPage(page);
+  const pil = page.locator('#testbalk-open');
+  const paneelKnoppen = ['#quick-reset-demo', '#quick-theme-toggle', '#quick-skin-toggle'];
+
+  await test.step('Given een medewerker in Klassiek op een telefoon van 390px', async () => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  });
+
+  await test.step('Then staat er één testpil in plaats van losse knoppen', async () => {
+    await expect(pil).toBeVisible();
+    await expect(pil).toHaveAttribute('aria-expanded', 'false');
+    expect((await pil.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    for (const knop of paneelKnoppen) await expect(page.locator(`#testbalk ${knop}`)).toBeHidden();
+    await expect(page.locator('#testbalk-label')).toBeHidden();
+  });
+
+  await test.step('When de medewerker de pil opent, then staan alle testknoppen voluit, 44px hoog en binnen beeld', async () => {
+    await pil.click();
+    await expect(pil).toHaveAttribute('aria-expanded', 'true');
+    for (const knop of paneelKnoppen) {
+      const el = page.locator(`#testbalk-paneel ${knop}`);
+      await expect(el).toBeVisible();
+      const vak = (await el.boundingBox())!;
+      expect(vak.height, `${knop} hoogte`).toBeGreaterThanOrEqual(44);
+      expect(vak.x, `${knop} links binnen beeld`).toBeGreaterThanOrEqual(0);
+      expect(vak.x + vak.width, `${knop} rechts binnen beeld`).toBeLessThanOrEqual(390);
+    }
+    await expect(page.locator('#testbalk-paneel #quick-reset-demo')).toContainText('Herstel demo');
+  });
+
+  await test.step('And werkt een keuze in het paneel en gaat het paneel daarna dicht', async () => {
+    const themaVooraf = await page.locator('html').getAttribute('data-theme');
+    await page.locator('#testbalk-paneel #quick-theme-toggle').click();
+    await expect(page.locator('html')).not.toHaveAttribute('data-theme', themaVooraf || '');
+    await expect(pil).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.locator('#testbalk-paneel #quick-theme-toggle')).toBeHidden();
+  });
+
+  await test.step('And sluit Escape het paneel', async () => {
+    await pil.click();
+    await expect(page.locator('#testbalk-paneel #quick-reset-demo')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#testbalk-paneel #quick-reset-demo')).toBeHidden();
+  });
+
+  await test.step('And staat het versienummer onderaan het profielmenu', async () => {
+    await page.locator('#profile-menu-button').click();
+    await expect(page.locator('#profile-menu-versie')).toBeVisible();
+    await expect(page.locator('#profile-menu-versie')).toHaveText(/^Versie \d+\.\d+\.\d+$/);
+    await page.keyboard.press('Escape');
+  });
+
+  await test.step('And blijft desktop ongewijzigd: geen pil, knoppen direct in de menubalk', async () => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await expect(pil).toBeHidden();
+    for (const knop of paneelKnoppen) await expect(page.locator(`#testbalk ${knop}`)).toBeVisible();
+    await expect(page.locator('#testbalk-label')).toBeVisible();
+  });
+});
+
 test('[KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie', async ({ page }) => {
   // Vondst seed 5 (5 handelingen): 9 aanklikken en meteen doortypen gaf een 409
   // stale-version, "door iemand anders gewijzigd", terwijl er maar één

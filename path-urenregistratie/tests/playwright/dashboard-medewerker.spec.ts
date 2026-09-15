@@ -2740,8 +2740,16 @@ test('[DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbal
   await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
   const balk = page.locator('#testbalk');
 
+  // Op de telefoon (tot 820px) zitten de knoppen sinds 15 sep achter de testpil
+  // (KLV-H-010). Eerst openen, dan geldt dezelfde controle.
+  const opTelefoon = (page.viewportSize()?.width ?? 0) < 821;
+  const openTestpil = async () => {
+    if (opTelefoon && (await page.locator('#testbalk-open').getAttribute('aria-expanded')) !== 'true') await page.locator('#testbalk-open').click();
+  };
+
   await test.step('Then staan omgeving, versie en beide testknoppen in de balk', async () => {
     await expect(balk).toBeVisible();
+    await openTestpil();
     await expect(page.locator('#testbalk-label')).toHaveText(/(TESTOMGEVING|LOKAAL) · Versie \d+\.\d+\.\d+/);
     await expect(page.locator('#testbalk-knoppen #quick-reset-demo')).toBeVisible();
     await expect(page.locator('#testbalk-knoppen #quick-skin-toggle')).toBeVisible();
@@ -2761,6 +2769,7 @@ test('[DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbal
     } else {
       expect(vorm.venster - vorm.rechts, 'rechts uitgelijnd').toBeLessThanOrEqual(24);
     }
+    if (opTelefoon) await page.keyboard.press('Escape');
   });
 
   await test.step('And begint Vandaag met de begroeting, zonder paginatitel; Mijn uren houdt zijn titel', async () => {
@@ -2780,6 +2789,7 @@ test('[DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbal
   });
 
   await test.step('When de medewerker naar Modern wisselt, then staan de knoppen weer in de topbalk en is de balk weg', async () => {
+    await openTestpil();
     await page.locator('#quick-skin-toggle').click();
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await expect(balk).toBeHidden();
