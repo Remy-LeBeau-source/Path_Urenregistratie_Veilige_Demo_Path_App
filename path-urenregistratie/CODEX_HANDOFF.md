@@ -45,6 +45,9 @@ Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
   "door iemand anders gewijzigd": de app stuurde expected=7 terwijl de server op 8 stond, en herladen haalde de
   maand niet opnieuw op. Niet deterministisch te reproduceren (gewoon herladen, andere maand, lokaal demoherstel
   gaan allemaal goed). Reproduceren: `MONKEY_SEEDS=15 MONKEY_STAPPEN=150 ... --project=verkenning-desktop`.
+- Open (zacht, alleen met echte maildata): in Instellingen steekt een mailgeschiedenisregel 14px uit bij 1024px
+  (grid minmax(180px) + auto-kolom), en een statuspil naast een sjabloonkop 8px bij 360px. Niet met een rode
+  deterministische case vastgelegd, dus nog niet gefixt.
 - Open: urenvelden accepteren >24 lokaal (server weigert terecht met 400, UX kan beter).
 
 ## Update Claude Code 14 sep, later op de avond — CI-shardtimeout (exit 124) opgelost
