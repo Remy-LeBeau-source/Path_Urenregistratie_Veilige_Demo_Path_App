@@ -768,32 +768,55 @@ test('[KLV-H-017] de standaardweek gebruikt hele dagen van 9 of 8 uur en de vrij
   }
 });
 
-test('[KLV-H-018] Berichten toont "Nieuw in de app" met de laatste 10 updates, netjes binnen het paneel, zonder namen, alleen buiten PROD', async ({ page }) => {
+test('[KLV-H-018] Berichten toont "Nieuw in de app" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD', async ({ page }) => {
   // Gio 15 sep: "elke keer de laatste versie-updates daarin, alleen als het betrekking
-  // heeft op de medewerkers ... zo niet, dan alleen in test". Ronde 2: "de laatste 10",
-  // "gaat tegen de lijn aan", "namen hoef je niet te benoemen en ook geen gevoelige info".
+  // heeft op de medewerkers ... zo niet, dan alleen in test". Ronde 2: "gaat tegen de lijn
+  // aan", "namen hoef je niet te benoemen en ook geen gevoelige info". Ronde 3: "tijdstip van
+  // de release", "meer updates bekijken, wel met een volgende, zodat niet alles onder elkaar".
   const loginPage = new LoginPage(page);
   await loginPage.open();
   await loginPage.loginAsEmployee();
   await page.locator('.nav-item[data-view="employee-announcements"]:visible').first().click();
   const blok = page.locator('#nieuw-in-de-app');
+  const regels = blok.locator('#nieuw-in-de-app-lijst > li');
+  const nav = page.locator('#nieuw-in-de-app-paginering');
   const alsGetal = (v: string) => v.split('.').reduce((som, deel) => som * 1000 + Number(deel), 0);
-  await test.step('Then staat het blok er lokaal/op TEST met 10 updates, nieuwste eerst', async () => {
+  await test.step('Then staan er lokaal/op TEST 20 updates met datum en tijdstip, nieuwste eerst', async () => {
     await expect(blok).toBeVisible();
-    const versies = await blok.locator('li .nieuw-versie').allTextContents();
-    expect(versies).toHaveLength(10);
+    await expect(regels).toHaveCount(20);
+    const versies = await regels.locator('.nieuw-versie').allTextContents();
     versies.forEach(versie => expect(versie).toMatch(/^\d+\.\d+\.\d+$/));
-    expect(new Set(versies).size, 'elke versie één keer').toBe(10);
+    expect(new Set(versies).size, 'elke versie één keer').toBe(20);
     expect([...versies].sort((a, b) => alsGetal(b) - alsGetal(a)), 'nieuwste bovenaan').toEqual(versies);
-    // Nooit een versie die nog niet bestaat.
     const appVersie = (await page.locator('#profile-menu-versie').textContent() || '').match(/\d+\.\d+\.\d+/)?.[0] ?? '';
     expect(appVersie, 'versie van de app').not.toBe('');
     expect(alsGetal(versies[0]), `nieuwste notitie ${versies[0]} ≤ app ${appVersie}`).toBeLessThanOrEqual(alsGetal(appVersie));
-    for (const regel of await blok.locator('li').all()) {
-      await expect(regel.locator('.nieuw-tekst strong')).not.toHaveText('');
-      expect((await regel.locator('.nieuw-tekst p').textContent() || '').trim().length).toBeGreaterThan(20);
-      await expect(regel.locator('time')).toHaveAttribute('datetime', /^\d{4}-\d{2}-\d{2}$/);
+    const tijden = await regels.locator('time').evaluateAll(els => els.map(el => ({ datetime: el.getAttribute('datetime') || '', tekst: (el.textContent || '').trim() })));
+    for (const tijd of tijden) {
+      expect(tijd.datetime).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+      // Zichtbaar: "15 sep · 21:11", en dat klopt met het datetime-attribuut.
+      const [, dag, uur] = /^\d{4}-\d{2}-(\d{2})T(\d{2}:\d{2})$/.exec(tijd.datetime)!;
+      expect(tijd.tekst).toMatch(new RegExp(`^${Number(dag)} [a-z]{3} · ${uur}$`));
     }
+    expect([...tijden.map(t => t.datetime)].sort().reverse(), 'nieuwste tijdstip bovenaan').toEqual(tijden.map(t => t.datetime));
+    for (const tekst of await regels.locator('.nieuw-tekst p').allTextContents()) expect(tekst.trim().length).toBeGreaterThan(20);
+  });
+  await test.step('And staan er 5 per pagina met Vorige en Volgende, tot en met de laatste pagina', async () => {
+    await expect(regels.locator('visible=true')).toHaveCount(5);
+    await expect(nav).toBeVisible();
+    await expect(nav.locator('[data-pagina-stand]')).toHaveText('1–5 van 20');
+    await expect(nav.locator('[data-pagina-vorige]')).toBeDisabled();
+    const eersteOpPagina1 = await regels.locator('visible=true').first().locator('.nieuw-versie').textContent();
+    for (const stand of ['6–10 van 20', '11–15 van 20', '16–20 van 20']) {
+      await nav.locator('[data-pagina-volgende]').click();
+      await expect(nav.locator('[data-pagina-stand]')).toHaveText(stand);
+      await expect(regels.locator('visible=true')).toHaveCount(5);
+    }
+    await expect(nav.locator('[data-pagina-volgende]')).toBeDisabled();
+    await nav.locator('[data-pagina-vorige]').click();
+    await expect(nav.locator('[data-pagina-stand]')).toHaveText('11–15 van 20');
+    for (let i = 0; i < 2; i += 1) await nav.locator('[data-pagina-vorige]').click();
+    await expect(regels.locator('visible=true').first().locator('.nieuw-versie')).toHaveText(eersteOpPagina1 || '');
   });
   await test.step('And staat geen naam of gevoelig gegeven in de teksten', async () => {
     const tekst = (await blok.textContent()) || '';
@@ -803,14 +826,19 @@ test('[KLV-H-018] Berichten toont "Nieuw in de app" met de laatste 10 updates, n
     }
   });
   for (const breedte of [390, 1280]) {
-    await test.step(`And ligt de lijst bij ${breedte}px binnen de rand van het paneel, met ruimte`, async () => {
+    await test.step(`And liggen de zichtbare regels en de paginabalk bij ${breedte}px binnen de rand van het paneel`, async () => {
       await page.setViewportSize({ width: breedte, height: 900 });
       await expect(blok).toBeVisible();
       const paneel = (await blok.boundingBox())!;
-      for (const regel of await blok.locator('li').all()) {
+      for (const regel of [...await regels.locator('visible=true').all(), nav]) {
         const vak = (await regel.boundingBox())!;
-        expect(vak.x - paneel.x, `linkermarge @ ${breedte}px`).toBeGreaterThanOrEqual(12);
-        expect(paneel.x + paneel.width - (vak.x + vak.width), `rechtermarge @ ${breedte}px`).toBeGreaterThanOrEqual(12);
+        expect(vak.x - paneel.x, `linkermarge @ ${breedte}px`).toBeGreaterThanOrEqual(0);
+        expect(paneel.x + paneel.width - (vak.x + vak.width), `rechtermarge @ ${breedte}px`).toBeGreaterThanOrEqual(0);
+      }
+      for (const regel of await regels.locator('visible=true').all()) {
+        const vak = (await regel.boundingBox())!;
+        expect(vak.x - paneel.x, `ruimte links @ ${breedte}px`).toBeGreaterThanOrEqual(12);
+        expect(paneel.x + paneel.width - (vak.x + vak.width), `ruimte rechts @ ${breedte}px`).toBeGreaterThanOrEqual(12);
       }
     });
   }

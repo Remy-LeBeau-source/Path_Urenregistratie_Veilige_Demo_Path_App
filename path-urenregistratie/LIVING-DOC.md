@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 579 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 581 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 579 unieke case-ID's
+- Playwright executable cases: 581 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 580 unieke case-ID's
+- Totaal executable cases: 582 unieke case-ID's
 - Playwright features: 31
 - Database features: 1
 - Playwright steps mappings: 31
 - Database steps mappings: 1
-- Uitvoeringen: 621
-- Niet-mobile projectuitvoeringen: 537
+- Uitvoeringen: 623
+- Niet-mobile projectuitvoeringen: 539
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 579 Playwright-functionele cases in totaal 621 resultaten op: 537 + (42 x 2) = 621.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 581 Playwright-functionele cases in totaal 623 resultaten op: 539 + (42 x 2) = 623.
 
 ## Documentatieketen
 
@@ -463,7 +463,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 579 Playwri
 
 - Feature: `tests/playwright/features/notifications.feature`
 - Source: `tests/playwright/notifications.spec.ts`
-- Cases: 15
+- Cases: 17
 
 - [NOT-H-001] ingelogde gebruiker kan notificaties ophalen — Techniek: API-contract + equivalentieklasse · Assertions: 5
 - [NOT-H-002] mark_all_read werkt zonder fouten — Techniek: Toestandsovergang · Assertions: 8
@@ -480,6 +480,8 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 579 Playwri
 - [NOT-H-012] medewerker ziet ingetrokken mededelingen ingeklapt met label, de reden bij openen, en het filter toont precies die — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 16
 - [NOT-H-013] een melding in de bel brengt de medewerker direct naar de plek waar iets te doen is — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [NOT-H-014] Alles gelezen in Berichten leest alleen de mededelingen en laat de bel met rust — Techniek: API-contract + equivalentieklasse · Assertions: 8
+- [NOT-H-016] bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 10, de bel hooguit 10 — Techniek: Grenswaardenanalyse · Assertions: 18
+- [NOT-H-017] Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
 
 ### Mededelingen versturen, intrekken en verbergen
 
@@ -668,7 +670,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 579 Playwri
 - [KLV-H-015] het label onder het weeknummer telt de open dagen van die week af tot Compleet — Techniek: Toestandsovergangtest (N open → Compleet) + grenswaarde (laatste open dag) · Assertions: 6
 - [KLV-H-016] op de telefoon brengt een klein knopje bij de weekkeuze je terug naar Vandaag — Techniek: Responsive viewport (390/1280) + toegankelijkheidsinspectie (44px tikvlak) + navigatietest · Assertions: 7
 - [KLV-H-017] de standaardweek gebruikt hele dagen van 9 of 8 uur en de vrije dag die Beheer instelt — Techniek: Beslistabeltest (weekuren × vrije dag van Beheer) + equivalentieklassen (past in 9, in 8, past niet) · Assertions: 1
-- [KLV-H-018] Berichten toont "Nieuw in de app" met de laatste 10 updates, netjes binnen het paneel, zonder namen, alleen buiten PROD — Techniek: Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie) + inhoudscontrole (geen namen of gevoelige gegevens) + responsive viewport · Assertions: 16
+- [KLV-H-018] Berichten toont "Nieuw in de app" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD — Techniek: Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie) + inhoudscontrole (geen namen of gevoelige gegevens) + responsive viewport · Assertions: 28
 - [KLV-H-019] ingevulde uren op Mijn uren zijn leesbaar in licht en donker, op telefoon en desktop — Techniek: Contrastmeting (WCAG 4,5:1) + themacombinaties (licht/donker) × responsive viewport (390/1280) · Assertions: 2
 - [KLV-H-020] de actieknop in Mijn maanden heeft de huisstijl en zegt wat er nu te doen is — Techniek: Beslistabel (stap → knoptekst) + visuele consistentie met de huisstijlknop in licht en donker · Assertions: 5
 - [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie — Techniek: Monkey testing (seeded) + concurrency + toestandsovergang · Assertions: 11

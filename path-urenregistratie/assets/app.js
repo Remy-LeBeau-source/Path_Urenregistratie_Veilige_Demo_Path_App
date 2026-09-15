@@ -460,7 +460,8 @@ function freshState() {
     hoursWeekScope: "all",
     hoursWeekScopeTouched: false,
     employeeScope: "active",
-    announcementArchiveFilter: "all",
+    // Startfilter Actueel: alleen berichten die nog gelden (Gio 15 sep).
+    announcementArchiveFilter: "actueel",
     preferences: {
       theme: "dark",
       themeDefaultVersion: 2,
@@ -1030,7 +1031,7 @@ function loadState() {
     if (!["all", "month"].includes(saved.approvalScope)) saved.approvalScope = "all";
     if (!["actionable", "waiting", "all"].includes(saved.adminTaskFilter)) saved.adminTaskFilter = "all";
     if (!["active", "inactive", "all"].includes(saved.employeeScope)) saved.employeeScope = "active";
-    if (!["all", "unread", "withdrawn"].includes(saved.announcementArchiveFilter)) saved.announcementArchiveFilter = "all";
+    if (!["actueel", "all", "unread", "withdrawn"].includes(saved.announcementArchiveFilter)) saved.announcementArchiveFilter = "actueel";
     return ensureSeedDataIntegrity(saved, fallback, "local-state");
   } catch {
     return fallback;
@@ -1117,7 +1118,7 @@ function ensureSeedDataIntegrity(candidateState, fallbackState, sourceLabel) {
   restored.approvalScope = ["all", "month"].includes(candidate.approvalScope) ? candidate.approvalScope : restored.approvalScope;
   restored.adminTaskFilter = ["actionable", "waiting", "all"].includes(candidate.adminTaskFilter) ? candidate.adminTaskFilter : restored.adminTaskFilter;
   restored.employeeScope = ["active", "inactive", "all"].includes(candidate.employeeScope) ? candidate.employeeScope : restored.employeeScope;
-  restored.announcementArchiveFilter = ["all", "unread", "withdrawn"].includes(candidate.announcementArchiveFilter) ? candidate.announcementArchiveFilter : restored.announcementArchiveFilter;
+  restored.announcementArchiveFilter = ["actueel", "all", "unread", "withdrawn"].includes(candidate.announcementArchiveFilter) ? candidate.announcementArchiveFilter : restored.announcementArchiveFilter;
   restored.hoursWeekScope = typeof candidate.hoursWeekScope === "string" ? candidate.hoursWeekScope : restored.hoursWeekScope;
   restored.hoursWeekScopeTouched = candidate.hoursWeekScopeTouched === true;
   restored.invoiceDetailCollapsed = candidate.invoiceDetailCollapsed === true;
@@ -9130,6 +9131,36 @@ function isAnnouncementUnread(employeeId, announcementId) {
   return announcementNotificationsFor(employeeId, announcementId).some(item => !item.read);
 }
 
+// Lange lijsten per pagina (Gio 15 sep: "meer kunnen zien en niet alles zo onder elkaar").
+// Eén helper voor Nieuw in de app en Berichten: toont items van de gekozen pagina, zet de
+// stand ("6–10 van 20") en schakelt Vorige/Volgende. Zonder tweede pagina verdwijnt de balk.
+const lijstPaginas = {};
+function pagineerLijst(sleutel, items, nav, perPagina) {
+  const lijst = [...items];
+  const aantalPaginas = Math.max(1, Math.ceil(lijst.length / perPagina));
+  const pagina = Math.min(Math.max(0, lijstPaginas[sleutel] || 0), aantalPaginas - 1);
+  lijstPaginas[sleutel] = pagina;
+  lijst.forEach((item, index) => { item.hidden = Math.floor(index / perPagina) !== pagina; });
+  if (!nav) return;
+  nav.hidden = aantalPaginas <= 1;
+  const van = lijst.length ? pagina * perPagina + 1 : 0;
+  const tot = Math.min(lijst.length, (pagina + 1) * perPagina);
+  const stand = nav.querySelector("[data-pagina-stand]");
+  if (stand) stand.textContent = van + "–" + tot + " van " + lijst.length;
+  const vorige = nav.querySelector("[data-pagina-vorige]");
+  const volgende = nav.querySelector("[data-pagina-volgende]");
+  if (vorige) vorige.disabled = pagina === 0;
+  if (volgende) volgende.disabled = pagina >= aantalPaginas - 1;
+  nav.dataset.paginaSleutel = sleutel;
+}
+
+const NIEUW_PER_PAGINA = 5;
+function renderNieuwInDeApp() {
+  const lijst = document.querySelector("#nieuw-in-de-app-lijst");
+  if (!lijst) return;
+  pagineerLijst("nieuw", lijst.children, document.querySelector("#nieuw-in-de-app-paginering"), NIEUW_PER_PAGINA);
+}
+
 // Eén kaart in Berichten (besluit Gio 15 sep, ronde 2). Elk bericht is ingeklapt tot één
 // regel (label, titel, datum ›) en gaat open met een tik. Een ongelezen bericht draagt het
 // label Nieuw en telt pas als gelezen als je het openklapt of op het kleine knopje
@@ -9139,7 +9170,7 @@ function berichtKaartHtml(bericht) {
   const open = openBerichten.has(bericht.id);
   const inhoudId = "bericht-inhoud-" + bericht.id;
   const label = bericht.ingetrokken
-    ? '<span class="status-pill status-warning">Ingetrokken</span>'
+    ? '<span class="status-pill bericht-label-ingetrokken">Ingetrokken</span>'
     : bericht.unread ? '<span class="status-pill status-submitted">Nieuw</span>' : "";
   const intrekking = bericht.ingetrokken
     ? '<div class="announcement-withdrawal-note" data-employee-withdrawal-note><strong>Deze mededeling is ingetrokken en geldt niet meer</strong>' + escapeHtml(bericht.reden || "Er is geen reden vastgelegd.") + '</div>'
@@ -9164,20 +9195,33 @@ function berichtKaartHtml(bericht) {
     + '</article>';
 }
 
-function toonBerichtenLijst(list, berichten, unreadCount) {
+function toonBerichtenLijst(list, berichten, unreadCount, tellingen = {}) {
   document.querySelector("#announcement-unread-filter").textContent = "Ongelezen mededelingen · " + unreadCount;
+  const actueelKnop = document.querySelector("#announcement-actueel-filter");
+  if (actueelKnop) actueelKnop.textContent = "Actueel · " + (tellingen.actueel ?? 0);
+  const ingetrokkenKnop = document.querySelector("#announcement-withdrawn-filter");
+  if (ingetrokkenKnop) ingetrokkenKnop.textContent = "Ingetrokken · " + (tellingen.ingetrokken ?? 0);
   zetBerichtenTeller(unreadCount);
   const allesGelezen = document.querySelector("#berichten-alles-gelezen");
   if (allesGelezen) allesGelezen.hidden = unreadCount === 0;
   document.querySelectorAll("[data-announcement-archive-filter]").forEach(button => button.classList.toggle("is-active", button.dataset.announcementArchiveFilter === state.announcementArchiveFilter));
   if (!berichten.length) {
+    const nav = document.querySelector("#berichten-paginering");
+    if (nav) nav.hidden = true;
     list.innerHTML = '<div class="dashboard-action-empty"><strong>Geen mededelingen binnen dit filter.</strong><br>Nieuwe mededelingen van Beheer verschijnen hier, met een teller op Berichten.</div>';
     return;
   }
-  // Ongelezen bovenaan, verder de volgorde van de bron (nieuwste eerst).
+  // Ongelezen bovenaan, verder de volgorde van de bron (nieuwste eerst). Overzichtelijk bij
+  // veel berichten (Gio 15 sep: "alleen de laatste 30"): hooguit 30, 10 per pagina.
   const geordend = berichten.filter(bericht => bericht.unread).concat(berichten.filter(bericht => !bericht.unread));
-  list.innerHTML = geordend.map(berichtKaartHtml).join("");
+  const zichtbaar = geordend.slice(0, BERICHTEN_MAXIMUM);
+  list.innerHTML = zichtbaar.map(berichtKaartHtml).join("")
+    + (geordend.length > BERICHTEN_MAXIMUM ? '<p class="berichten-afgekapt">Alleen de laatste ' + BERICHTEN_MAXIMUM + ' berichten staan hier.</p>' : "");
+  pagineerLijst("berichten", list.querySelectorAll(".employee-announcement-card"), document.querySelector("#berichten-paginering"), BERICHTEN_PER_PAGINA);
 }
+
+const BERICHTEN_MAXIMUM = 30;
+const BERICHTEN_PER_PAGINA = 10;
 
 function markeerBerichtGelezen(announcementId) {
   const id = Number(announcementId || 0);
@@ -9231,12 +9275,14 @@ function renderEmployeeAnnouncementArchive() {
   if (API_ENABLED && authRuntime.mode === "auth") {
     let announcements = employeeAnnouncementItemsFromNotifications();
     const unreadAnnouncementCount = announcements.filter(item => !item.read).length;
+    const tellingen = { actueel: announcements.filter(item => item.status !== "withdrawn").length, ingetrokken: announcements.filter(item => item.status === "withdrawn").length };
+    if (state.announcementArchiveFilter === "actueel") announcements = announcements.filter(item => item.status !== "withdrawn");
     if (state.announcementArchiveFilter === "unread") announcements = announcements.filter(houdVast);
     if (state.announcementArchiveFilter === "withdrawn") announcements = announcements.filter(item => item.status === "withdrawn");
     toonBerichtenLijst(list, announcements.map(item => ({
       id: item.id, title: item.title, message: item.message, createdAt: item.createdAt, createdBy: item.createdBy,
       unread: !item.read, ingetrokken: item.status === "withdrawn", reden: item.withdrawalReason
-    })), unreadAnnouncementCount);
+    })), unreadAnnouncementCount, tellingen);
     return;
   }
 
@@ -9246,13 +9292,16 @@ function renderEmployeeAnnouncementArchive() {
   announcements = sortAnnouncementsByActivity(announcements);
   const metStand = announcements.map(item => ({ item, id: item.id, read: !isAnnouncementUnread(employee.id, item.id) }));
   const unreadAnnouncementCount = metStand.filter(entry => !entry.read).length;
+  const isIngetrokken = entry => entry.item.status === "withdrawn" || announcementKind(entry.item) === "withdrawal";
+  const tellingen = { actueel: metStand.filter(entry => !isIngetrokken(entry)).length, ingetrokken: metStand.filter(isIngetrokken).length };
   let zichtbaar = metStand;
+  if (state.announcementArchiveFilter === "actueel") zichtbaar = zichtbaar.filter(entry => !isIngetrokken(entry));
   if (state.announcementArchiveFilter === "unread") zichtbaar = zichtbaar.filter(houdVast);
   if (state.announcementArchiveFilter === "withdrawn") zichtbaar = zichtbaar.filter(entry => entry.item.status === "withdrawn" || announcementKind(entry.item) === "withdrawal");
   toonBerichtenLijst(list, zichtbaar.map(({ item, read }) => ({
     id: item.id, title: item.title, message: item.message, createdAt: item.createdAt, createdBy: item.createdBy,
     unread: !read, ingetrokken: item.status === "withdrawn" || announcementKind(item) === "withdrawal", reden: item.withdrawalReason
-  })), unreadAnnouncementCount);
+  })), unreadAnnouncementCount, tellingen);
 }
 
 // Zet employees.id om naar de users.id die de server als ontvanger verwacht.
@@ -11546,7 +11595,9 @@ function renderNotifications() {
   const leeg = medewerker
     ? '<div class="notification-empty"><strong>Je hebt geen ongelezen meldingen.</strong><br>Hier verschijnt wat over jouw uren gaat: correcties, herinneringen en goedkeuringen. Mededelingen staan in Berichten.</div>'
     : '<div class="notification-empty"><strong>Je hebt geen ongelezen meldingen.</strong><br>Urenstatussen en algemene mededelingen verschijnen hier samen.</div>';
-  list.innerHTML = visible.length ? visible.map(item => '<button class="notification-item is-unread" data-notification-id="' + item.id + '"><span class="notification-item-dot"></span><span><strong>' + escapeHtml(item.title) + '</strong><span>' + escapeHtml(item.message) + '</span><small>' + escapeHtml(item.createdAt) + '</small></span></button>').join("") : leeg;
+  const BEL_MAXIMUM = 10;
+  const rest = Math.max(0, visible.length - BEL_MAXIMUM);
+  list.innerHTML = visible.length ? visible.slice(0, BEL_MAXIMUM).map(item => '<button class="notification-item is-unread" data-notification-id="' + item.id + '"><span class="notification-item-dot"></span><span><strong>' + escapeHtml(item.title) + '</strong><span>' + escapeHtml(item.message) + '</span><small>' + escapeHtml(item.createdAt) + '</small></span></button>').join("") + (rest ? '<p class="notification-rest">En nog ' + rest + ' oudere ' + (rest === 1 ? 'melding' : 'meldingen') + '. Met het vinkje bovenaan zet je ze allemaal op gelezen.</p>' : '') : leeg;
 }
 
 // Waar een melding in de bel naartoe brengt: meteen de plek waar je iets moet doen
@@ -11991,9 +12042,11 @@ function springNaarOngelezenBericht() {
   const lijst = document.querySelector("#employee-announcement-list");
   if (!lijst) return false;
   if (state.announcementArchiveFilter === "unread" && !lijst.querySelector(".employee-announcement-card.is-unread")) {
-    state.announcementArchiveFilter = "all";
+    state.announcementArchiveFilter = "actueel";
     renderEmployeeAnnouncementArchive();
   }
+  lijstPaginas.berichten = 0;
+  renderEmployeeAnnouncementArchive();
   const eerste = lijst.querySelector(".employee-announcement-card.is-unread");
   if (!eerste) return false;
   if (typeof eerste.scrollIntoView === "function") eerste.scrollIntoView({ block: "center", behavior: smoothScrollBehavior() });
@@ -12645,6 +12698,7 @@ function syncEnvironmentChrome(hostname = window.location.hostname) {
   // "Nieuw in de app" in Berichten: alleen waar de omgevingsbadge staat, nooit op PROD.
   const nieuw = document.querySelector("#nieuw-in-de-app");
   if (nieuw) nieuw.hidden = !(isTest || isLocal);
+  renderNieuwInDeApp();
   badge.textContent = isTest ? "TESTOMGEVING" : (isLocal ? "LOKAAL" : "");
   badge.classList.toggle("is-local", isLocal && !isTest);
 
@@ -14962,6 +15016,7 @@ function toonInstallatieAanbod() {
   const announcementArchiveFilter = event.target.closest("[data-announcement-archive-filter]");
   if (announcementArchiveFilter) {
     state.announcementArchiveFilter = announcementArchiveFilter.dataset.announcementArchiveFilter;
+    lijstPaginas.berichten = 0;
     persistState();
     renderEmployeeAnnouncementArchive();
   }
@@ -15071,6 +15126,17 @@ function toonInstallatieAanbod() {
 
   // Berichten: een tik op de kop klapt open of dicht. Openklappen van een ongelezen
   // bericht telt als gelezen; dichtklappen niet (besluit Gio 15 sep, ronde 2).
+  const paginaKnop = event.target.closest("[data-pagina-vorige], [data-pagina-volgende]");
+  if (paginaKnop) {
+    const nav = paginaKnop.closest("[data-pagina-sleutel]");
+    const sleutel = nav?.dataset.paginaSleutel;
+    if (sleutel) {
+      lijstPaginas[sleutel] = (lijstPaginas[sleutel] || 0) + (paginaKnop.matches("[data-pagina-volgende]") ? 1 : -1);
+      if (sleutel === "nieuw") renderNieuwInDeApp(); else renderEmployeeAnnouncementArchive();
+      nav.closest(".panel")?.querySelector("h3")?.scrollIntoView?.({ block: "start", behavior: smoothScrollBehavior() });
+    }
+  }
+
   const berichtToggle = event.target.closest("[data-bericht-toggle]");
   if (berichtToggle && state.currentRole === "employee") {
     const id = Number(berichtToggle.dataset.berichtToggle || 0);

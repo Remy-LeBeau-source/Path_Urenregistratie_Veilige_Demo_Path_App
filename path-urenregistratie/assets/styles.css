@@ -2251,6 +2251,25 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
    hoeken en stak over de ronde hoeken van het paneel heen (Gio 15 sep, "die hoekjes").
    Het paneel knipt nu zijn inhoud af; focusranden liggen binnen de kop (outline-offset -2px). */
 #view-employee-announcements .panel:has(> .employee-announcement-list) { overflow: hidden; }
+/* Vorige/Volgende onder lange lijsten (Nieuw in de app, Berichten). De stand staat in het
+   midden in tabelcijfers, zodat "6–10 van 20" niet verspringt. */
+.lijst-paginering { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line-zacht); padding: 12px 24px 16px; }
+.lijst-paginering [data-pagina-stand] { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; text-align: center; }
+.lijst-paginering .button { min-height: 44px; padding-inline: 16px; }
+.lijst-paginering .button:disabled { opacity: .45; cursor: default; }
+.berichten-afgekapt { margin: 0; border-top: 1px solid var(--line-zacht); color: var(--muted); font-size: 12px; padding: 12px 24px; }
+.notification-rest { margin: 0; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; line-height: 1.5; padding: 12px 16px; }
+@media (max-width: 720px) { .lijst-paginering { padding-inline: 16px; } }
+/* Ingetrokken = afgedaan, geen waarschuwing (Gio 15 sep: "de kleur van ingetrokken, wat
+   past daar beter"). Het warme oranje met bruine vlakken las als alarm en werd in donker
+   modderig. Nu rustig en neutraal: geen eigen achtergrond, een omlijnd grijs label, een
+   gedempte titel, en de reden als citaat met een dun streepje in de lijnkleur. */
+.employee-announcement-list .employee-announcement-card.is-withdrawn { background: transparent; }
+.status-pill.bericht-label-ingetrokken { border: 1px solid var(--line); background: transparent; color: var(--muted); }
+.employee-announcement-card.is-withdrawn .bericht-kop h3 { color: var(--muted); font-weight: 500; }
+.employee-announcement-card.is-withdrawn .announcement-withdrawal-note { border: 0; border-left: 3px solid var(--line); border-radius: 0 8px 8px 0; background: var(--surface-muted); color: var(--ink); }
+.employee-announcement-card.is-withdrawn .announcement-withdrawal-note strong { color: var(--muted); }
+.employee-announcement-card.is-withdrawn .bericht-inhoud > p { color: var(--muted); }
 .bericht-kop-rij { display: flex; align-items: center; }
 .bericht-kop-rij > .bericht-kop { flex: 1 1 auto; min-width: 0; }
 .bericht-markeer { flex: 0 0 auto; min-height: 44px; margin-right: 16px; color: var(--muted); font-size: 12px; font-weight: 600; white-space: nowrap; }

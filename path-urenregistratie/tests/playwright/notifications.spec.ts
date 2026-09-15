@@ -452,11 +452,11 @@ test.describe('notifications api', () => {
       expect([...new Set(verzonden.map(body => `${body.action}:${body.announcement_id}`))].sort()).toEqual(['mark_announcement_read:801', 'mark_announcement_read:802']);
     });
 
-    await test.step('And valt een leeg filter Ongelezen bij terugkomen terug op Alles', async () => {
+    await test.step('And valt een leeg filter Ongelezen bij terugkomen terug op Actueel', async () => {
       await page.locator('[data-announcement-archive-filter="unread"]').click();
       await page.locator('button[data-view="timesheet"]:visible').first().click();
       await page.locator('button[data-view="employee-announcements"]:visible').first().click();
-      await expect(page.locator('[data-announcement-archive-filter="all"]')).toHaveClass(/is-active/);
+      await expect(page.locator('[data-announcement-archive-filter="actueel"]')).toHaveClass(/is-active/);
       await expect(lijst.locator('.employee-announcement-card')).toHaveCount(3);
       await expect(lijst.locator('.employee-announcement-card.is-open'), 'na wegnavigeren is alles weer ingeklapt').toHaveCount(0);
     });
@@ -646,5 +646,124 @@ test.describe('notifications api', () => {
       expect(verzonden.some(body => body.action === 'mark_all_read'), 'geen mark_all_read vanuit Berichten').toBe(false);
       expect([...new Set(verzonden.map(body => Number(body.announcement_id)))].sort()).toEqual([701, 702]);
     });
+  });
+
+  test('[NOT-H-016] bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 10, de bel hooguit 10', async ({ page }) => {
+    // Gio 15 sep: "op een gegeven moment raken de meldingen tot 100, alleen de laatste 30
+    // doen ofzo?" Grenswaarden: 35 mededelingen (boven de 30) en 15 statusmeldingen (boven
+    // de 10 in de bel). Ongelezen blijven vooraan, dus nooit voorbij de grens verstopt.
+    const mededelingen = Array.from({ length: 35 }, (_, i) => ({
+      id: 9600 + i, notification_type: 'announcement', announcement_id: 1600 + i,
+      title: `Mededeling ${String(35 - i).padStart(2, '0')}`, read: i >= 3,
+    }));
+    const status = Array.from({ length: 15 }, (_, i) => ({
+      id: 9700 + i, notification_type: 'timesheet_reminder', announcement_id: null,
+      title: `Herinnering ${i + 1}`, read: false, period_key: '2026-09',
+    }));
+    await nagebootsteBerichten(page, [...status, ...mededelingen]);
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.evaluate(() => { void (window as unknown as { refreshNotificationsReadApi: (force: boolean) => Promise<unknown> }).refreshNotificationsReadApi(true); });
+
+    await test.step('Then toont de bel 10 van de 15 ongelezen meldingen, met een regel voor de rest', async () => {
+      await expect(page.locator('#notification-count')).toHaveText('15');
+      await page.locator('#notification-button').click();
+      await expect(page.locator('#notification-list .notification-item')).toHaveCount(10);
+      await expect(page.locator('#notification-list .notification-rest')).toContainText('En nog 5 oudere meldingen');
+      await page.keyboard.press('Escape');
+    });
+
+    const lijst = page.locator('#employee-announcement-list');
+    const nav = page.locator('#berichten-paginering');
+    await test.step('And toont Berichten hooguit 30 berichten, 10 per pagina, de ongelezen vooraan', async () => {
+      await page.locator('button[data-view="employee-announcements"]').click();
+      await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen mededelingen · 3');
+      await expect(lijst.locator('.employee-announcement-card')).toHaveCount(30);
+      await expect(lijst.locator('.employee-announcement-card:visible')).toHaveCount(10);
+      await expect(lijst.locator('.berichten-afgekapt')).toHaveText('Alleen de laatste 30 berichten staan hier.');
+      await expect(nav).toBeVisible();
+      await expect(nav.locator('[data-pagina-stand]')).toHaveText('1–10 van 30');
+      await expect(nav.locator('[data-pagina-vorige]')).toBeDisabled();
+      const eerste = await lijst.locator('.employee-announcement-card:visible').evaluateAll(els => els.slice(0, 3).map(el => el.classList.contains('is-unread')));
+      expect(eerste, 'de drie ongelezen staan bovenaan op pagina 1').toEqual([true, true, true]);
+    });
+
+    await test.step('When de medewerker naar de laatste pagina bladert, then staan daar 21–30 en is Volgende uit', async () => {
+      await nav.locator('[data-pagina-volgende]').click();
+      await expect(nav.locator('[data-pagina-stand]')).toHaveText('11–20 van 30');
+      await nav.locator('[data-pagina-volgende]').click();
+      await expect(nav.locator('[data-pagina-stand]')).toHaveText('21–30 van 30');
+      await expect(lijst.locator('.employee-announcement-card:visible')).toHaveCount(10);
+      await expect(nav.locator('[data-pagina-volgende]')).toBeDisabled();
+    });
+
+    await test.step('And zet een filterwissel de lijst terug op pagina 1', async () => {
+      await page.locator('[data-announcement-archive-filter="unread"]').click();
+      await expect(lijst.locator('.employee-announcement-card:visible')).toHaveCount(3);
+      await expect(nav, 'met 3 berichten is er geen tweede pagina').toBeHidden();
+      await page.locator('[data-announcement-archive-filter="all"]').click();
+      await expect(nav.locator('[data-pagina-stand]')).toHaveText('1–10 van 30');
+    });
+  });
+
+  test('[NOT-H-017] Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar', async ({ page }) => {
+    // Gio 15 sep: "ingetrokken en niet ingetrokken vallen onder Alles, maar als je alleen
+    // niet ingetrokken wilt zien?" en "de kleur van ingetrokken, wat past daar beter". Seed
+    // (main, 15 sep): 10 mededelingen, 6 ingetrokken. Het totaal verandert niet door lezen.
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('button[data-view="employee-announcements"]').click();
+    const lijst = page.locator('#employee-announcement-list');
+
+    await test.step('Then staat Actueel aan, met alleen berichten die nog gelden', async () => {
+      await expect(page.locator('[data-announcement-archive-filter="actueel"]')).toHaveClass(/is-active/);
+      await expect(page.locator('#announcement-actueel-filter')).toHaveText('Actueel · 4');
+      await expect(page.locator('#announcement-withdrawn-filter')).toHaveText('Ingetrokken · 6');
+      await expect(lijst.locator('.employee-announcement-card')).toHaveCount(4);
+      await expect(lijst.locator('.employee-announcement-card.is-withdrawn')).toHaveCount(0);
+    });
+
+    await test.step('And tellen de filters op: Actueel + Ingetrokken = Alles', async () => {
+      await page.locator('[data-announcement-archive-filter="withdrawn"]').click();
+      await expect(lijst.locator('.employee-announcement-card')).toHaveCount(6);
+      await page.locator('[data-announcement-archive-filter="all"]').click();
+      await expect(lijst.locator('.employee-announcement-card')).toHaveCount(10);
+    });
+
+    for (const thema of ['dark', 'light'] as const) {
+      await test.step(`And is een ingetrokken bericht in ${thema} neutraal (geen oranje vlak) en leesbaar (≥ 4,5:1)`, async () => {
+        await page.evaluate(t => {
+          const s = (0, eval)('state') as { preferences: Record<string, unknown> };
+          s.preferences.theme = t;
+          ((0, eval)('applyTheme') as () => void)();
+        }, thema);
+        await expect(page.locator('html')).toHaveAttribute('data-theme', thema);
+        const kaart = lijst.locator('.employee-announcement-card.is-withdrawn').first();
+        await expect.poll(() => kaart.evaluate(el => {
+          const rgb = (t: string) => (t.match(/[\d.]+/g) || []).map(Number);
+          const lum = ([r, g, b]: number[]) => { const k = (c: number) => { const v = c / 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * k(r) + 0.7152 * k(g) + 0.0722 * k(b); };
+          const achtergrond = (n: Element) => {
+            const lagen: number[][] = [];
+            for (let o: Element | null = n; o; o = o.parentElement) { const [r, g, b, a = 1] = rgb(getComputedStyle(o).backgroundColor); if (a > 0) lagen.push([r, g, b, a]); if (a >= 1) break; }
+            let kleur = [255, 255, 255];
+            for (const [r, g, b, a] of lagen.reverse()) kleur = [r * a + kleur[0] * (1 - a), g * a + kleur[1] * (1 - a), b * a + kleur[2] * (1 - a)];
+            return kleur;
+          };
+          const contrast = (n: Element) => { const [h, l] = [lum(rgb(getComputedStyle(n).color)), lum(achtergrond(n))].sort((x, y) => y - x); return (h + 0.05) / (l + 0.05); };
+          const titel = el.querySelector('h3')!;
+          const label = el.querySelector('.status-pill')!;
+          const [, , , kaartAlpha = 1] = rgb(getComputedStyle(el).backgroundColor);
+          const labelAchtergrond = rgb(getComputedStyle(label).backgroundColor);
+          return {
+            titel: contrast(titel) >= 4.5,
+            label: contrast(label) >= 4.5,
+            geenEigenVlak: getComputedStyle(el).backgroundColor === 'rgba(0, 0, 0, 0)' || kaartAlpha === 0,
+            labelZonderVlak: (labelAchtergrond[3] ?? 1) === 0,
+          };
+        }), { timeout: 3_000, message: `ingetrokken in ${thema}` }).toEqual({ titel: true, label: true, geenEigenVlak: true, labelZonderVlak: true });
+      });
+    }
   });
 });

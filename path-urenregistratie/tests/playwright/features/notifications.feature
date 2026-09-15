@@ -95,7 +95,7 @@ Feature: Meldingen beheren
     And blijven ze ongelezen, ook als ze langer in beeld staan
     When de medewerker het eerste bericht openklapt, then is dat bericht gelezen en blijft het open
     When de medewerker bij het tweede op Markeer als gelezen tikt, then is het gelezen zonder open te gaan
-    And valt een leeg filter Ongelezen bij terugkomen terug op Alles
+    And valt een leeg filter Ongelezen bij terugkomen terug op Actueel
     Then wordt met Playwright-assertions bevestigd dat een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen
 
   @negative
@@ -132,3 +132,22 @@ Feature: Meldingen beheren
     Given twee ongelezen mededelingen in Berichten en één statusmelding in de bel
     When de medewerker in Berichten op Alles gelezen tikt
     Then zijn de mededelingen gelezen en blijft de statusmelding in de bel ongelezen
+
+  @happy
+  Scenario: [NOT-H-016] bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 10, de bel hooguit 10
+    # Testtechniek: Grenswaardenanalyse
+    # Aantoonbare Playwright-assertions in deze case: 18
+    Given meldingen beheren is voorbereid
+    Then toont de bel 10 van de 15 ongelezen meldingen, met een regel voor de rest
+    And toont Berichten hooguit 30 berichten, 10 per pagina, de ongelezen vooraan
+    When de medewerker naar de laatste pagina bladert, then staan daar 21–30 en is Volgende uit
+    And zet een filterwissel de lijst terug op pagina 1
+
+  @happy
+  Scenario: [NOT-H-017] Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given meldingen beheren is voorbereid
+    When de flow voor NOT-H-017 wordt uitgevoerd
+    Then staat Actueel aan, met alleen berichten die nog gelden
+    And tellen de filters op: Actueel + Ingetrokken = Alles

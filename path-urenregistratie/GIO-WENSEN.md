@@ -8,7 +8,7 @@ Nieuwste bovenaan per status. Statussen: **open**, **bezig**, **klaar (versie)**
 
 | Datum | Wens / besluit van Gio | Wie | Status |
 |---|---|---|---|
-| 15 sep | **Prod-wekker slimmer:** na 10 minuten alleen afbreken als er een nieuwere release achter staat te wachten. Staat er niets meer achter om te deployen, dan blijft de handmatige stap naar productie gewoon open staan tot Gio goedkeurt. | main | bij main |
+| 15 sep | **Voorbeeldmeldingen in de bel** voor de medewerker (ongeveer 4: correctie, herinnering, goedgekeurd, klanturenstaat), zodat een tik direct naar de juiste plek springt. | main | bij main |
 | 15 sep | Wisselvallig op mobile-safari: SKIN-H-040. 15 sep 5 van 5 keer groen herhaald, niet te reproduceren; opnieuw bekijken als hij in CI nog eens valt. | herontwerp | in de gaten houden |
 | 15 sep | Oude 0-regels uit de indienbug: geen opschoonscript. PROD is nog niet live (alleen gebruikers gemigreerd) en krijgt bij de livegang een verse migratie/reset met de gerepareerde code (R44 in BESLISTABEL.md; de reset hoort bij de livegangchecklist van Gio). | besluit | vastgelegd |
 | 15 sep | Bel en Berichten blijven allebei: bel = eigen urenstatus, correcties, herinneringen; Berichten = algemene mededelingen. | besluit | vastgelegd |
@@ -18,6 +18,11 @@ Nieuwste bovenaan per status. Statussen: **open**, **bezig**, **klaar (versie)**
 
 | Datum | Wens / besluit | Versie |
 |---|---|---|
+| 15 sep | Prod-wekker slimmer: na 10 minuten alleen afbreken als main een nieuwere commit heeft dan de wachtende release; zo niet, dan blijft de stap naar productie open. Elke 5 minuten opnieuw gekeken (tot 360 min). Contractcheck met tegenproef, R45. Nog te bevestigen in de eerstvolgende echte release. | main 2.0.106 |
+| 15 sep | Berichten: filter Actueel (alleen berichten die nog gelden) als startfilter, met aantallen in de filters (Actueel · N, Ingetrokken · N). Ingetrokken rustig en neutraal in plaats van oranje/bruin: omlijnd grijs label, gedempte titel, reden met dun streepje. NOT-H-017 (contrast ≥ 4,5 licht en donker). | 2.0.105 |
+| 15 sep | Overzicht bij veel meldingen: Berichten toont hooguit de laatste 30, 10 per pagina met Vorige/Volgende (ongelezen altijd vooraan); de bel hooguit 10 ongelezen met "en nog N". NOT-H-016. | 2.0.105 |
+| 15 sep | Nieuw in de app: datum en tijdstip van elke release, 20 updates, 5 per pagina met Vorige/Volgende. KLV-H-018. | 2.0.105 |
+| 15 sep | Werkwijze: bij elke fix of wens een Playwright-case met assertions, benoemde TMap/ISTQB-techniek en een tegenproef (rood op oude code). | werkwijze |
 | 15 sep | Berichten: de onderste kaart stak met rechte hoeken over de ronde hoeken van het paneel ("die hoekjes"). Paneel knipt nu af; bewaakt in NOT-H-012. | 2.0.104 |
 | 15 sep | Berichten ronde 2 (Gio): gelezen alleen bij openklappen of het kleine knopje Markeer als gelezen, niets vanzelf; alle berichten ingeklapt, nieuwe met Nieuw en vet bovenaan; Berichten springt naar het eerste ongelezen bericht; leeg filter Ongelezen valt terug op Alles. NOT-H-011, NOT-N-015; smoke zonder fouten. | 2.0.103 |
 | 15 sep | Statuspil naast een kop in Instellingen stak op smalle telefoons uit (18px bij 360, 58px bij 320). Kop loopt nu om, pil mag over twee regels (KLV-N-022). Monkey seed 15 opnieuw gedraaid (150 stappen): de melding "door iemand anders gewijzigd" komt niet meer terug. CODEX_HANDOFF bijgewerkt t/m 2.0.101. | 2.0.102 |

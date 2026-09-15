@@ -73,7 +73,8 @@ Then("wordt met Playwright-assertions bevestigd dat op de telefoon brengt een kl
 When("de flow voor KLV-H-017 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat de standaardweek gebruikt hele dagen van 9 of 8 uur en de vrije dag die Beheer instelt");
 When("de flow voor KLV-H-018 wordt uitgevoerd");
-Then("staat het blok er lokaal/op TEST met 10 updates, nieuwste eerst");
+Then("staan er lokaal/op TEST 20 updates met datum en tijdstip, nieuwste eerst");
+And("staan er 5 per pagina met Vorige en Volgende, tot en met de laatste pagina");
 And("staat geen naam of gevoelig gegeven in de teksten");
 And("op de PROD-host is het blok weg");
 When("de flow voor KLV-H-019 wordt uitgevoerd");
