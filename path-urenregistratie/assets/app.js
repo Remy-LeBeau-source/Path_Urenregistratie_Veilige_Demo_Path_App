@@ -1051,6 +1051,7 @@ function resetReadApiCaches() {
   readApiRuntime.bootstrapInFlight = false;
   readApiRuntime.dashboardInFlight = false;
   readApiRuntime.invoicesInFlight = false;
+  readApiRuntime.invoicesCacheEpoch += 1;
   readApiRuntime.emailQueueInFlight = false;
   readApiRuntime.mailAcceptanceInFlight = false;
   readApiRuntime.notificationsInFlight = false;
@@ -1375,6 +1376,7 @@ const readApiRuntime = {
   bootstrapInFlight: false,
   dashboardInFlight: false,
   invoicesInFlight: false,
+  invoicesCacheEpoch: 0,
   emailQueueInFlight: false,
   mailAcceptanceInFlight: false,
   notificationsInFlight: false,
@@ -4072,11 +4074,20 @@ function refreshInvoicesReadApi(periodKey, force) {
     return Promise.resolve(null);
   }
   readApiRuntime.invoicesInFlight = true;
+  // Een antwoord dat vertrok vóór resetReadApiCaches() (bv. "Herstel demo") mag
+  // de gewiste cache bij aankomst niet alsnog vullen: de resetbewaking in
+  // fetchReadApi() kijkt alleen bij vertrek. Zonder dit tijdperk zette zo'n laat
+  // antwoord een serverfactuur met urenstaat "submitted" terug, en blokkeerde
+  // de verzendcontrole na een goedkeuring met "wachten nog op servergoedkeuring"
+  // ([DASH-N-012] in CI, afgedwongen door [DASH-N-040]). Meldingen hebben
+  // hiervoor notificationsRequestSerial.
+  const cacheEpoch = readApiRuntime.invoicesCacheEpoch;
   const endpoint = period
     ? READ_API_INVOICES_PATH + "?period=" + encodeURIComponent(period)
     : READ_API_INVOICES_PATH;
   return fetchReadApi(endpoint)
     .then(data => {
+      if (cacheEpoch !== readApiRuntime.invoicesCacheEpoch) return;
       const fetchedAt = Date.now();
       if (period) readApiRuntime.lastInvoicesByPeriod[period] = fetchedAt;
       else readApiRuntime.lastInvoicesAt = fetchedAt;
@@ -4098,6 +4109,7 @@ function refreshInvoicesReadApi(periodKey, force) {
       else if (invoicesViewActive && (!period || period === currentPeriod().key)) renderInvoices();
     })
     .finally(() => {
+      if (cacheEpoch !== readApiRuntime.invoicesCacheEpoch) return;
       readApiRuntime.invoicesInFlight = false;
       // Na de eerste poging (gelukt of niet) is de facturenweergave "gehydrateerd":
       // vanaf nu tonen we echte cijfers of de nette leegstand, geen laadtekst meer.

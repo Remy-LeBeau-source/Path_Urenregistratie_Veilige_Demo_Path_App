@@ -3067,6 +3067,23 @@ zinloos was geweest.
   muis. `#auth-forgot-password` staat direct onder de knop, dus het beeld past bij verschuiven met
   ongeveer één knophoogte. Scrollen of een layoutwijziging is nog niet onderscheiden; de reeks legt nu per
   event ook `scrollY`, de bovenkant van de knop en `clientY` vast. Geen fix voordat dat bekend is.
+- **Vervolg 14 sep middag.** De uitgebreide reeks (CI d13089a9, zes vangsten): tussen indrukken en loslaten
+  scrolt de pagina 29-39 px, muis stil, knop mee omhoog. Eerste fix (55d69a3a, knop naar het midden)
+  **hielp niet**: CI op herontwerp 3205146a (acht vangsten, mét centrering) toont een zachte
+  scrollanimatie die al loopt vóór het indrukken en steeds op dezelfde stand eindigt (sy422, knop tegen
+  de onderrand). De klik valt midden in die beweging. Tweede fix (dd6db2fd): zelf centreren, wachten tot
+  scrollY tien frames stilstaat, controleren dat de knop volledig in beeld is, dan `page.mouse.click` op
+  het midden -- een klik die zelf niet meer scrollt. Lokaal auth + help-widget mobile-safari/desktop
+  45/46 (AUTH-H-020 faalde lokaal al eerder). Moet in CI bevestigd worden.
+- **Onderliggend, gemeten: `reducedMotion: 'reduce'` in playwright.config.ts werkt in geen enkel project.**
+  Het staat direct onder `use`, maar dat is geen testoptie (in de typedefinities hoort het onder
+  `use.contextOptions`) en wordt stil genegeerd. Op desktop-chromium, mobile-chrome en mobile-safari:
+  `matchMedia('(prefers-reduced-motion: reduce)')` false, `scroll-behavior` smooth. Pas
+  `page.emulateMedia` zet het aan. Elke aanname "animaties staan uit in de tests" was dus onwaar.
+  **Nog niet aangepast:** het raakt de hele suite, en `[HELP-H-002]` ("Given geen voorkeur voor
+  verminderde beweging") slaagt nu juist dankzij de kapotte instelling en krijgt dan een expliciete
+  `no-preference`. Voorgelegd aan de andere lanes; als aparte commit na een landing, met een volledige
+  CI-run als toets.
 - **Apart, niet hetzelfde:** in `[DASH-H-008]` opent de accountkiezer na "Andere rol kiezen" niet
   (paneel blijft `hidden`, eerst drie keer "element is not stable"). Ook een klik op het inlogscherm
   zonder effect, maar daar in demo-modus en zonder formulier.
@@ -3122,6 +3139,39 @@ desktop. Bestaan door mij nagekeken; de tegenproeven zijn gemeld door de herontw
 herhaald. Daarom pas afvinken zodra ze groen op main in een release staan. De eigenaarregel bij
 DASH-H-005 blijft zonder desktopfunctie en dus zonder desktopcase -- dat is een productkeuze voor Gio.
 
+**Nieuwe cases van 13-14 sep die hier nog ontbraken (aangevuld door main, sessie -ad).**
+Nagekeken tegen `git log -S` per case-ID; alleen cases die nog nergens in deze checklist stonden.
+CI-stand: in herontwerp-CI d13089a9 (run 34824806534) is geen van deze cases rood of flaky; daar faalde
+alleen `[SKIN-H-028]`, en dat staat al hierboven. "Rood geweest tegen een kapotte variant" is gemeld
+door de lane die de case schreef en niet door mij herhaald.
+- [x] `[MOB-H-031]` op 360px valt ook op de medewerkerschermen niets buiten de rechterrand
+  (`mobile-ui.spec.ts`, e8f68b41, main). Meet per element de rechterrand, want `overflow-x: hidden`
+  maakt `scrollWidth` onbruikbaar; met zelfcontrole.
+- [x] `[DASH-H-031]` het verloop van een maand klapt open in Mijn maanden en overleeft een hertekening
+  (`dashboard-medewerker.spec.ts`, 2fc77dd3).
+- [x] `[DASH-H-032]` "Hele maand" noemt de ontbrekende werkdagen bij naam, inclusief dagen die nog moeten
+  komen (2c161960, herontwerp, ontwerpronde "elke lege werkdag telt als ontbrekend, ook toekomstige").
+- [x] `[DASH-H-033]` de verloopstappen in Klassiek tonen ✓ en • in de bol, leesbaar in licht en donker
+  (4c350d52, herontwerp).
+- [x] `[DASH-H-034]` de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het
+  gekozen bestand echt mee (541d862c, herontwerp). Was rood op mobile-safari in herontwerp-CI f8129093 en
+  ebe60553, groen in d13089a9. **Niet verklaard in deze checklist**; bij een nieuwe uitval eerst naar kijken.
+- [x] `[DASH-H-035]` Mijn uren op desktop toont alleen Ma–Vr, de datum boven elk veld, 0/8/9 eronder en het
+  weektotaal rechts (824797b7, herontwerp).
+- [x] `[DASH-N-031]` de volgende actie is één zin zonder aangeplakte maand, en de maand staat in de regel
+  eronder (5e7ac013, herontwerp).
+- [x] `[SKIN-H-033]` de medewerkerschermen rekken op een breed scherm niet verder uit dan 1060px en staan
+  gecentreerd (3ca3a291, herontwerp). Was rood op mobile-chrome en mobile-safari in ebe60553, groen in d13089a9.
+- [x] `[SKIN-H-034]` een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgloed (e26ce73d, herontwerp).
+- [x] `[SKIN-H-035]` op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle
+  breedte (306c8189, herontwerp) -- **dekt Gio's punt 1** (onder elkaar, 10px, ≥44px hoog).
+- [x] `[SKIN-H-036]` een dialoog met open toetsenbord houdt de knoppen, de sluitactie en het typveld in beeld
+  (306c8189, herontwerp) -- **dekt Gio's punt 3 in simulatie**: het zichtbare deel wordt teruggebracht tot
+  300px, met eerst een zelfcontrole dat de knoppen zonder aanpassing níét passen. Geen echt iOS-toetsenbord
+  of Safari-browserbalk; dat blijft een toesteltest (zie punt 4).
+- [x] `[SKIN-H-039]` de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect
+  toont (4c350d52, herontwerp).
+
 **OPGELOST: `[HELP-N-001]` op mobile-safari faalde bij het uitloggen, niet bij het inloggen (14 sep).**
 Het hulppaneel onderschepte 15 s lang de klik op `#switch-role`.
 - **Oorzaak, gemeten:** `openHelp()` haalt `hidden` meteen weg, maar zet `is-open` pas in de volgende
@@ -3146,7 +3196,7 @@ Een echt defect geeft steeds dezelfde fout op dezelfde plek. **Werkafspraak:** w
 meldt "machine bezet" en bij het eind "machine vrij" -- geen tijdsinschatting, alleen bezet of vrij.
 Voor het laatst gebroken doordat ik "vrij" meldde en daarna zelf opnieuw begon zonder het te zeggen.
 
-**NOG OPEN: in `[DASH-N-012]` opent de klik op de verzendcontrole soms geen modal; de oude
+**OPGELOST (14 sep, zie onderaan dit blok): in `[DASH-N-012]` opent de klik op de verzendcontrole soms geen modal; de oude
 knoptekst blijft staan.** (Oorspronkelijke titel: "wisselwerking tussen cases", zie bijstelling.) In de run
 waarin DASH-N-007 groen werd, viel `[DASH-N-012]` om op `#modal-confirm`: verwacht "Controle
 afronden", gekregen "Voorbeeldgegevens herstellen" -- dus een andere modal stond nog open. Los
@@ -3166,6 +3216,28 @@ bewezen. Verworpen: wachten tot de server de urenstaat op approved zet. De serve
 "submitted" terwijl de case gewoon slaagt, dus dat legde een eis op die de app niet stelt; niet
 opnieuw doen. In de hermeting na de herstart was de case groen. **Afspraak: niets bouwen tot er
 een rode run is mét de toast in de melding.** Pas dan is vast te stellen welke uitstap het was.
+
+*Opgelost en bewezen (14 sep, sessie -ad).* De rode run met de toast kwam er: herontwerp-CI
+1cd3e34c (run 34793143874, tablet-chromium, groen op retry) meldde "Deze uren wachten nog op
+servergoedkeuring" -- uitstap (2). E2E-H-018 was in geen van de 13 doorzochte CI-runs rood of flaky.
+- **Oorzaak, gemeten:** "Herstel demo" wist de leescaches (`resetReadApiCaches()`) en zet de
+  resetbewaking, maar die bewaking kijkt alleen bij *vertrek* van een leesverzoek. Een
+  `invoices.php`-verzoek dat vlak na het inloggen al onderweg was, schreef bij *aankomst* de
+  serverfactuur (urenstaat "submitted") alsnog in de gewiste cache. Na de lokale goedkeuring stapte
+  de verzendcontrole daarop uit. Meldingen hadden hier al een volgnummer voor; facturen niet.
+- **Eerste vermoeden verworpen:** twee elkaar inhalende factuurverzoeken rond de goedkeuring. Kan
+  na een reset niet: de bewaking laat dan geen verzoek vertrekken. De eerste opzet van de case bleef
+  daardoor al in de Given hangen, en dat bracht de echte volgorde aan het licht.
+- **Nieuwe case `[DASH-N-040]`:** houdt een facturenantwoord van vóór de reset vast tot na de
+  goedkeuring. Zonder fix rood op `serverInvoiceFor(...).timesheetStatus === "submitted"`, en met
+  die controle tijdelijk op `expect.soft` exact het CI-beeld: "verwacht Controle afronden, gekregen
+  Voorbeeldgegevens herstellen" (proef teruggedraaid).
+- **Fix (`assets/app.js`):** `readApiRuntime.invoicesCacheEpoch`, opgehoogd in `resetReadApiCaches()`;
+  `refreshInvoicesReadApi()` negeert een antwoord uit een eerder tijdperk. Bewust géén volgnummer per
+  verzoek: dat zou ook gelijktijdige verzoeken voor verschillende perioden weggooien, en die race is
+  niet bewezen.
+- **Checks:** DASH-N-040 en DASH-N-012 op desktop- en tablet-chromium 4/4 groen; `dashboard.spec.ts`
+  volledig op desktop-chromium 21/21.
 
 **Latent risico, los van bovenstaande: `customerTimesheetFor()` heet als een getter maar schrijft.**
 Regel ~4494: hij maakt `record.customerTimesheet` aan als die ontbreekt en vult standaardwaarden,

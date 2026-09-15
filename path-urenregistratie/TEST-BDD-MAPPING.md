@@ -192,6 +192,7 @@
 | DASH-N-011 | ui | dashboard.feature | afgeronde Backoffice-taak en teller blijven na F5 stabiel, ongeacht het beginaantal | Negatieve equivalentieklasse + error guessing | 9 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | afgeronde Backoffice-taak en teller blijven na F5 stabiel, ongeacht het beginaantal | Negative | 15 | Actueel |
 | DASH-H-008 | ui | dashboard.feature | GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice | Beslissingstabel rollen en autorisatie | 26 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker en Backoffice | Happy | 15 | Actueel |
 | DASH-N-012 | ui | dashboard.feature | afgeronde verzendcontrole blijft na F5 weg, ongeacht het beginaantal | Beslissingstabel rollen en autorisatie | 13 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | afgeronde verzendcontrole blijft na F5 weg, ongeacht het beginaantal | Negative | 15 | Actueel |
+| DASH-N-040 | ui | dashboard.feature | een facturenantwoord van vóór "Herstel demo" vult de cache niet alsnog, en blokkeert de verzendcontrole niet | Beslissingstabel rollen en autorisatie | 7 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | een facturenantwoord van vóór "Herstel demo" vult de cache niet alsnog, en blokkeert de verzendcontrole niet | Negative | 15 | Actueel |
 | DASH-H-012 | ui | dashboard.feature | GUI-smoke scheidt werkacties van medewerkers- en beheerdersaccounts | Beslissingstabel rollen en autorisatie | 35 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | GUI-smoke scheidt werkacties van medewerkers- en beheerdersaccounts | Happy | 15 | Actueel |
 | DASH-H-013 | ui | dashboard.feature | dashboardmodules tonen compacte documenten, procesfasen en teamacties | End-to-end use-case + visuele contractasserties | 16 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | dashboardmodules tonen compacte documenten, procesfasen en teamacties | Happy | 15 | Actueel |
 | DASH-N-017 | ui | dashboard.feature | beheerderdashboard toont een laadtoestand tot de eerste werkvoorraad-sync | Negatieve equivalentieklasse + error guessing | 7 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | beheerderdashboard toont een laadtoestand tot de eerste werkvoorraad-sync | Negative | 15 | Actueel |
@@ -465,6 +466,7 @@
 | KLV-N-005 | ui | klassiek-verkenning.feature | op geen enkel medewerkerscherm valt inhoud buiten de rechterrand rond de breekpunten | Monkey testing (seeded) + grenswaardenanalyse + toestandsovergang + responsive viewport | 2 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | op geen enkel medewerkerscherm valt inhoud buiten de rechterrand rond de breekpunten | Negative | 19 | Actueel |
 | KLV-N-006 | ui | klassiek-verkenning.feature | op geen enkel beheerscherm valt inhoud buiten de rechterrand rond de breekpunten | Monkey testing (seeded) + grenswaardenanalyse + toestandsovergang + responsive viewport | 2 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | op geen enkel beheerscherm valt inhoud buiten de rechterrand rond de breekpunten | Negative | 19 | Actueel |
 | KLV-N-007 | ui | klassiek-verkenning.feature | elk scherm heeft een paginatitel, ook Klanturenstaten bij de beheerder | Monkey testing (seeded) + negatieve equivalentieklasse + error guessing | 5 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | elk scherm heeft een paginatitel, ook Klanturenstaten bij de beheerder | Negative | 19 | Actueel |
+| KLV-N-008 | ui | klassiek-verkenning.feature | meer dan 24 uur op een dag wordt direct in het vak gemeld en niet naar de server gestuurd | Monkey testing (seeded) + negatieve equivalentieklasse + error guessing | 9 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | meer dan 24 uur op een dag wordt direct in het vak gemeld en niet naar de server gestuurd | Negative | 19 | Actueel |
 | KLV-N-001 | ui | klassiek-verkenning.feature | snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie | Monkey testing (seeded) + concurrency + toestandsovergang | 11 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie | Negative | 19 | Actueel |
 | SKIN-H-001 | ui | skin.feature | de app start standaard in de klassieke vormgeving | End-to-end use-case + visuele contractasserties | 3 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de app start standaard in de klassieke vormgeving | Happy | 19 | Actueel |
 | SKIN-H-002 | ui | skin.feature | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | End-to-end use-case + visuele contractasserties | 6 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | Happy | 19 | Actueel |
@@ -579,9 +581,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 557
+- Playwright executable cases: 559
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 558
+- Totaal unieke executable cases: 560
 - Playwright features: 31
 - Database features: 1
 - Playwright steps mappings: 31

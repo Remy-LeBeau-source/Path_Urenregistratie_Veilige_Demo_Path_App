@@ -59,6 +59,15 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
     And heeft ieder scherm in de app een eigen titel
 
   @negative
+  Scenario: [KLV-N-008] meer dan 24 uur op een dag wordt direct in het vak gemeld en niet naar de server gestuurd
+    # Testtechniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given een medewerker op Mijn uren van een open maand
+    When de medewerker 25 uur op een dag intypt
+    Then is het vak ongeldig, staat er een duidelijke melding en gaat er niets naar de server
+    And geldt 24,5 ook als te veel, maar 24 precies niet
+
+  @negative
   Scenario: [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie
     # Testtechniek: Monkey testing (seeded) + concurrency + toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 11

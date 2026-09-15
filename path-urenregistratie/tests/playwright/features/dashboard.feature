@@ -508,6 +508,14 @@ Feature: Dashboard en open werkvoorraad
     When de nieuwe verzendcontrole (invoice-delivery) wordt afgerond
     Then blijft de afgeronde verzendcontrole weg en de teller stabiel na F5
 
+  @negative
+  Scenario: [DASH-N-040] een facturenantwoord van vóór "Herstel demo" vult de cache niet alsnog, en blokkeert de verzendcontrole niet
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given een facturenverzoek dat vertrekt voordat de administrator de demo herstelt
+    When een ingediende urenstaat wordt goedgekeurd en daarna pas het oude antwoord binnenkomt
+    Then vult het oude antwoord de cache niet en opent de verzendcontrole gewoon
+
   @happy
   Scenario: [DASH-H-012] GUI-smoke scheidt werkacties van medewerkers- en beheerdersaccounts
     # Testtechniek: Beslissingstabel rollen en autorisatie
