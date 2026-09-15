@@ -5075,3 +5075,10 @@ html:not([data-skin="new"]) body[data-role="employee"] .klantkaart-meer { displa
   body:not([data-role="employee"]) .template-item { grid-template-columns: minmax(0, 1fr) auto; }
   body:not([data-role="employee"]) .template-subject { grid-column: 1/-1; grid-row: 2; }
 }
+
+/* Meer dan 24 uur op een dag (KLV-N-008): het vak rood omlijnd, zodat de regel
+   onderin ("Pas het rood omlijnde vak aan") naar iets zichtbaars wijst. */
+#hours-grid .hours-input[aria-invalid="true"] {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--danger) 35%, transparent);
+}

@@ -284,6 +284,56 @@ test('[KLV-N-007] elk scherm heeft een paginatitel, ook Klanturenstaten bij de b
   });
 });
 
+test('[KLV-N-008] meer dan 24 uur op een dag wordt direct in het vak gemeld en niet naar de server gestuurd', async ({ page }) => {
+  // Vondst monkey (zachte bevinding in bijna elke ronde): 24,01, 99999 of 1e9 in een
+  // dagvak ging gewoon mee in de totalen en naar de server, die terecht weigerde met
+  // 400 "tussen 0 en 24". De medewerker zag pas achteraf een melding. Grenswaarden:
+  // 24 mag, 24,5 en 25 niet.
+  test.setTimeout(60_000);
+  const loginPage = new LoginPage(page);
+  const geweigerd: number[] = [];
+  const verstuurdeUren: number[] = [];
+  page.on('request', r => {
+    if (!r.url().includes('/server/api/timesheets.php') || r.method() !== 'POST') return;
+    const body = r.postDataJSON() as { day_entries?: Array<{ hours: number }> };
+    for (const dag of body.day_entries || []) verstuurdeUren.push(Number(dag.hours));
+  });
+  page.on('response', r => { if (r.url().includes('/server/api/timesheets.php') && r.status() === 400) geweigerd.push(r.status()); });
+
+  await test.step('Given een medewerker op Mijn uren van een open maand', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('.nav-item[data-view="timesheet"]:visible').first().click();
+    await expect(page.locator('#hours-grid .hours-input:not([disabled]):visible').first()).toBeVisible();
+  });
+  const vak = page.locator('#hours-grid .hours-input:not([disabled]):visible').first();
+  const oorspronkelijk = await vak.inputValue();
+  const totaalVooraf = await page.locator('#hours-total').textContent();
+  try {
+    await test.step('When de medewerker 25 uur op een dag intypt', async () => {
+      await vak.fill('25');
+      await page.waitForTimeout(1_200);
+    });
+    await test.step('Then is het vak ongeldig, staat er een duidelijke melding en gaat er niets naar de server', async () => {
+      await expect(vak).toHaveAttribute('aria-invalid', 'true');
+      await expect(page.locator('#hours-target-help')).toContainText('maximaal 24 uur');
+      await expect(page.locator('#hours-total')).toHaveText(totaalVooraf || '');
+      expect(verstuurdeUren.filter(uren => uren > 24)).toEqual([]);
+      expect(geweigerd).toEqual([]);
+    });
+    await test.step('And geldt 24,5 ook als te veel, maar 24 precies niet', async () => {
+      await vak.fill('24.5');
+      await expect(vak).toHaveAttribute('aria-invalid', 'true');
+      await vak.fill('24');
+      await expect(vak).toHaveAttribute('aria-invalid', 'false');
+      await expect(page.locator('#hours-target-help')).not.toContainText('maximaal 24 uur');
+    });
+  } finally {
+    await vak.fill(oorspronkelijk).catch(() => undefined);
+    await page.waitForTimeout(1_500);
+  }
+});
+
 test('[KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie', async ({ page }) => {
   // Vondst seed 5 (5 handelingen): 9 aanklikken en meteen doortypen gaf een 409
   // stale-version, "door iemand anders gewijzigd", terwijl er maar één

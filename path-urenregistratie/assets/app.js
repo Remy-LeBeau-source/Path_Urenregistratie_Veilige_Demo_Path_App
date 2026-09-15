@@ -9987,11 +9987,22 @@ function updateHoursTotal(markDraft) {
     return;
   }
   let visibleTotal = 0;
+  // Meer dan 24 uur op een dag weigert de server ("tussen 0 en 24"), maar de
+  // medewerker zag dat pas achteraf, en tot die tijd telde 25 of 99999 gewoon mee in
+  // de totalen (monkey-vondst, KLV-N-008). Nu: het vak meteen als ongeldig markeren,
+  // de vorige geldige waarde aanhouden en niets versturen tot het klopt.
+  let teVeelUren = 0;
   document.querySelectorAll("#hours-grid tr").forEach(row => {
     const weekIndex = Number(row.dataset.weekIndex);
     const values = Array(5).fill(0);
     row.querySelectorAll(".hours-input").forEach(input => {
-      values[Number(input.dataset.dayIndex)] = Math.max(0, Number(input.value) || 0);
+      const dagIndex = Number(input.dataset.dayIndex);
+      const teVeel = input.value !== "" && Number(input.value) > 24;
+      input.setAttribute("aria-invalid", String(teVeel));
+      if (teVeel) teVeelUren += 1;
+      values[dagIndex] = teVeel
+        ? Math.max(0, Number(record.entries?.[weekIndex]?.[dagIndex]) || 0)
+        : Math.max(0, Number(input.value) || 0);
     });
     record.entries[weekIndex] = values;
     const weekTotal = values.reduce((sum, value) => sum + value, 0);
@@ -10001,13 +10012,15 @@ function updateHoursTotal(markDraft) {
   const total = totalEntries(record.entries);
   record.leave = Math.max(0, Number(document.querySelector("#summary-leave").value) || 0);
   record.sick = Math.max(0, Number(document.querySelector("#summary-sick").value) || 0);
-  if (markDraft) {
+  if (markDraft && teVeelUren === 0) {
     if (record.timesheetStatus !== "correction") record.timesheetStatus = "draft";
     record.invoiceStatus = "concept";
     record.payrollStatus = "concept";
     persistState();
     scheduleDraftTimesheetWrite();
     document.querySelector("#hours-autosave-status").textContent = "Automatisch opgeslagen om " + new Intl.DateTimeFormat("nl-NL", { hour: "2-digit", minute: "2-digit" }).format(new Date());
+  } else if (markDraft) {
+    document.querySelector("#hours-autosave-status").textContent = "Niet opgeslagen: een dag kan maximaal 24 uur hebben.";
   }
   const weekMatch = /^week-(\d+)$/.exec(state.hoursWeekScope || "");
   const selectedWeek = weekMatch ? currentPeriod().weekRows[Number(weekMatch[1])] : null;
@@ -10022,7 +10035,9 @@ function updateHoursTotal(markDraft) {
   // Gio 14 sep, "simpel zoals het ontwerp" (gui r952): één regel onderin in plaats
   // van het oranje blok met dagchips.
   const openDagen = ontbrekendeWerkdagen(record, currentPeriod()).length;
-  document.querySelector("#hours-target-help").textContent = isTimesheetEditableForEmployee(record)
+  document.querySelector("#hours-target-help").textContent = teVeelUren > 0
+    ? "Niet opgeslagen: een dag kan maximaal 24 uur hebben. Pas het rood omlijnde vak aan."
+    : isTimesheetEditableForEmployee(record)
     ? "Automatisch opgeslagen. " + (openDagen === 0 ? "Alle werkdagen zijn ingevuld." : openDagen === 1 ? "Nog 1 werkdag niet ingevuld." : "Nog " + openDagen + " werkdagen niet ingevuld.")
     : "Deze maand is vergrendeld (ingediend, goedgekeurd of gefactureerd) en kan niet meer worden aangepast.";
   updateTimesheetSubmitUi(record);
