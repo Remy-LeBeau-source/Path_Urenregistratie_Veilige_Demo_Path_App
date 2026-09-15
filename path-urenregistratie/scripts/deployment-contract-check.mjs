@@ -90,6 +90,12 @@ assert.match(wekkerJob, /pending_deployments[\s\S]*environment\.name == "prod"[\
 assert.doesNotMatch(wekkerJob, /actions\/runs\/\$RUN_ID\/cancel"/, 'PROD gate timer may not use plain cancel: it is only executed after the pending approval is handled');
 assert.match(wekkerJob, /::error title=PROD-poort niet afgebroken::[\s\S]*exit 1/, 'PROD gate timer must fail visibly when the run is still waiting after force-cancel');
 assert.match(wekkerJob, /WACHT_SECONDEN[^\n]*'600'/, 'PROD gate timer must default to 600 seconds');
+// Besluit Gio (16 sep): alleen afbreken als er een nieuwere release wacht, niet blind na de wachttijd.
+assert.match(wekkerJob, /main_sha="\$\(gh api "repos\/\$REPO\/commits\/main" --jq '\.sha'\)"/, 'PROD gate timer must compare the current tip of main against this run\'s commit to detect a newer release');
+assert.match(wekkerJob, /if \[ "\$main_sha" != "\$RUN_SHA" \][\s\S]{0,400}force-cancel/, 'PROD gate timer must force-cancel only when main has moved on since this run started (a newer release is waiting behind it)');
+assert.match(wekkerJob, /Geen nieuwere release, goedkeuring blijft open/, 'PROD gate timer must say explicitly that it is not cancelling when nothing newer is waiting');
+assert.match(wekkerJob, /Geen nieuwere release binnen het tijdbudget[\s\S]{0,220}exit 0/, 'PROD gate timer must exit successfully (not cancel, not fail) when its time budget runs out without ever seeing a newer commit');
+assert.match(wekkerJob, /sleep "\$HERHAAL_SECONDEN"/, 'PROD gate timer must keep re-checking periodically instead of a one-shot measurement, so the gate frees up once a later commit arrives');
 assert.match(pilotMergeQueue, /listJobsForWorkflowRun/,'Pilot merge queue must inspect active release jobs, not only workflow status');
 assert.match(pilotMergeQueue, /Deploy Test to TransIP[\s\S]*conclusion === 'success'/, 'Pilot merge queue may ignore a waiting production gate only after TEST deploy succeeded');
 assert.match(pilotMergeQueue, /openJobs\.every\(\(job\) => job\.name\.startsWith\('Promote Prod'\)\)/, 'Pilot merge queue must only ignore manual Promote Prod waits, not active validation or TEST deploy jobs');
