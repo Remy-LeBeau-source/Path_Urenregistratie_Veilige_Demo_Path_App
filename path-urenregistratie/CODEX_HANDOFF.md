@@ -14,7 +14,7 @@ Er werken twee Claude Code-sessies aan dit project, elk met een eigen hoofdstuk 
 ## Stokje: wie is aan zet (verplicht lezen vóór je iets wijzigt)
 
 **AAN ZET op `herontwerp`: Codex, sinds 16 sep (overdracht door de herontwerp-sessie op verzoek van Gio, bij de push van 2.0.113). De herontwerp-sessie wijzigt niets meer op `herontwerp` tot Gio het stokje teruggeeft.**
-**AAN ZET op `main`: Codex, sinds 16 sep (overdracht door de main-sessie op verzoek van Gio, na fast-forward naar 00e7050e). De main-sessie wijzigt niets meer op `main` tot Gio het stokje teruggeeft. Opdracht: zie "Codex-opdracht (main)" onder Hoofdstuk B.**
+**AAN ZET op `main`: main-sessie (Claude Code), sinds 16 sep 02:00 (Gio bevestigde dat Codex klaar is na ab660018; de main-sessie neemt het stokje terug en rondt de demo-pipeline af).**
 
 Waarom deze regel: op 14 sep werkten Codex en Claude Code tegelijk op dezelfde branch. Gevolg: versienummer 2.0.69 werd twee keer gebruikt, een CI-run (2.0.73) moest worden afgebroken en een lokale, niet gepushte commit (2.0.70) raakte achter terwijl de ander doorwerkte. Dat mag niet opnieuw gebeuren.
 
@@ -191,7 +191,13 @@ dit soort statische pagina's al serveert.
 **Wanneer klaar:** meld het bij Gio en/of de herontwerp-sessie met de TEST-URL, zodat main-sessiegeheugen
 en GIO-WENSEN.md bijgewerkt kunnen worden (main doet dat desgevraagd).
 
-**Stokje:** deze opdracht hoort bij branch `main`. Het stokje op `main` staat sinds 16 sep bij Codex (zie de stokjesregel bovenaan) — je kunt beginnen. Herontwerp blijft ongemoeid.
+**Stokje:** deze opdracht hoort bij branch `main`. Codex heeft hem uitgevoerd en het stokje is 16 sep terug bij de main-sessie (zie bovenaan).
+
+**Stand na Codex (16 sep, main-sessie):**
+- Gebouwd en gepusht door Codex in `ab660018`: `pilot/path-pipeline.html` + `.css` + `.js` (localStorage, geen Claude-db, Living Doc hard op 10 bewaard / 5 getoond), plus eigen Playwright-dekking `tests/playwright/pipeline-demo.spec.ts` met `features/pipeline-demo.feature` (PIPE-H-001, PIPE-H-002, PIPE-N-001) en steps.
+- Release 35035388985: alle tien Validate-shards groen, Promote Test loopt, daarna Deploy Test to TransIP.
+- TEST-URL (afgeleid van de bestaande omgeving, geen extra domein): https://uren-test.pathconsultancy.nl/pilot/path-pipeline.html — bereikbaar zodra Deploy Test to TransIP van die release klaar is. Nooit op PROD: `pilot/` is demo-inhoud.
+- **Leerpunt voor Codex (gevonden door herontwerp):** een nieuw specbestand moet óók in de `definitions`-lijst van `scripts/sync-living-docs.mjs` staan. Anders gooit `npm run docs:sync` het feature-bestand en de steps weg en valt `test:design` om met "Executable cases zonder feature: PIPE-H-001 …". Herontwerp heeft `pipeline-demo.spec.ts` daar aangemeld (met technieken) op `herontwerp`; dat landt op main bij de volgende fast-forward. Bij elk volgend nieuw specbestand: eerst aanmelden, dan `npm run test:design` draaien.
 
 # Eerdere overdrachten (herontwerp, chronologisch aflopend)
 
