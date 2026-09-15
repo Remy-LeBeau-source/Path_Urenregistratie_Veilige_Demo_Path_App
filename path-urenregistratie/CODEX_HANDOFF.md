@@ -37,7 +37,7 @@ Er werken twee Claude Code-sessies aan dit project, elk met een eigen hoofdstuk 
 
 ## Stokje: wie is aan zet (verplicht lezen vóór je iets wijzigt)
 
-**AAN ZET op `herontwerp`: Codex, sinds 16 sep (overdracht door de herontwerp-sessie op verzoek van Gio, bij de push van 2.0.113). De herontwerp-sessie wijzigt niets meer op `herontwerp` tot Gio het stokje teruggeeft.**
+**AAN ZET op `herontwerp`: herontwerp-sessie (Claude Code), sinds 16 sep (teruggegeven door Gio na de ronde van Codex, 2.0.115).**
 **AAN ZET op `main`: main-sessie (Claude Code).**
 
 Waarom deze regel: op 14 sep werkten Codex en Claude Code tegelijk op dezelfde branch. Gevolg: versienummer 2.0.69 werd twee keer gebruikt, een CI-run (2.0.73) moest worden afgebroken en een lokale, niet gepushte commit (2.0.70) raakte achter terwijl de ander doorwerkte. Dat mag niet opnieuw gebeuren.
