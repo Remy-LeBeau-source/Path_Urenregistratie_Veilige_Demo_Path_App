@@ -5191,3 +5191,18 @@ html:not([data-skin="new"]) body[data-role="employee"] .klantkaart-meer { displa
 @media (max-width: 820px) {
   .help-launcher { display: none !important; }
 }
+
+/* Mailgeschiedenis (Instellingen, beheer): met echte maildata stak een regel bij 1024px
+   38 tot 63px buiten beeld. De middenkolom had minimaal 180px en een lang onderwerp of
+   e-mailadres brak niet af (KLV-N-011, rood in release 34950426101). Beide tekstkolommen
+   mogen krimpen en lange adressen breken af; de kolom met status en herstelknop houdt
+   zijn eigen breedte. */
+.mail-delivery-history-item { grid-template-columns: minmax(0, 1.25fr) minmax(0, .8fr) auto; }
+.mail-delivery-history-main,
+.mail-delivery-history-meta { min-width: 0; overflow-wrap: anywhere; }
+
+/* De gloed onder de teller op Vandaag (telefoon) staat op left: 50% en werd alleen via
+   de ademanimatie met translateX(-50%) weer gecentreerd. Met "minder beweging" staat
+   die animatie uit, en dan schoof de gloed 58px over de rechterrand ([MOB-H-031], 15 sep).
+   De centrering hoort in de basisregel; de animatie bevat hem al, dus die verandert niet. */
+#vd-tel .vd-tel-halo { transform: translateX(-50%); }

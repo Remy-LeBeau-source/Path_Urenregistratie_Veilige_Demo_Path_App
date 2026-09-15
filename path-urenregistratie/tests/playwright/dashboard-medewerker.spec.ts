@@ -2923,6 +2923,11 @@ test('[DASH-H-049] licht Klassiek heeft bij de medewerker één vast veld over d
   const breed = (page.viewportSize()?.width ?? 0) >= 721;
 
   await test.step('Then hangt het veld aan het venster, met de waarden van de referentie voor deze breedte', async () => {
+    // Eerst wachten tot de themawissel is doorgerekend: met "minder beweging" (sinds
+    // 15 sep echt actief in de config) gaf de eerste meting soms nog de donkere
+    // achtergrond, rgb(9, 19, 31), terwijl data-theme al light was.
+    await expect.poll(() => page.evaluate(() => getComputedStyle(document.body).backgroundColor), { timeout: 3_000 })
+      .toBe(breed ? 'rgb(207, 225, 216)' : 'rgb(223, 233, 228)');
     const veld = await page.evaluate(() => {
       const s = getComputedStyle(document.body);
       const balk = getComputedStyle(document.querySelector('.topbar')!);

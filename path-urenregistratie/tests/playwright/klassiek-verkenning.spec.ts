@@ -67,6 +67,13 @@ test('[KLV-N-002] het maandkeuzepaneel valt op geen enkele breedte buiten het sc
       await knop.click();
       const paneel = page.locator('#period-month-panel');
       await expect(paneel).toBeVisible();
+      // Wachten tot het paneel staat: onder "minder beweging" meet de browser de
+      // translate-correctie pas later (gemeten 15 sep bij 821px: eerst 550-842, na
+      // 300ms 521-813). De gebruiker ziet het eindbeeld; dat wordt hier getoetst.
+      await expect.poll(async () => {
+        const b = await paneel.boundingBox();
+        return b ? b.x + b.width : Infinity;
+      }, { timeout: 1_500, message: `rechterrand op ${breedte}px` }).toBeLessThanOrEqual(breedte);
       const vak = await paneel.boundingBox();
       expect(vak, 'paneel heeft een positie').not.toBeNull();
       expect(vak!.x, `linkerrand op ${breedte}px`).toBeGreaterThanOrEqual(0);
@@ -427,6 +434,45 @@ test('[KLV-H-010] op de telefoon zitten de testknoppen van de medewerker achter 
     for (const knop of paneelKnoppen) await expect(page.locator(`#testbalk ${knop}`)).toBeVisible();
     await expect(page.locator('#testbalk-label')).toBeVisible();
   });
+});
+
+test('[KLV-N-011] de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop', async ({ page }) => {
+  // Zachte vondst monkey beheerkant (15 sep) en rood in release 34950426101: met echte
+  // maildata stak een regel van de mailgeschiedenis bij 1024px 38px buiten beeld (grid
+  // minmax(180px) plus een auto-kolom met statuspil en herstelknop). KLV-N-006 zag het
+  // lokaal niet, want zonder verstuurde mails is de lijst leeg. Hier worden drie regels
+  // neergezet via de echte renderfunctie, zodat de case altijd iets te meten heeft.
+  test.setTimeout(90_000);
+  const loginPage = new LoginPage(page);
+  await test.step('Given een beheerder op Instellingen met drie mailregels in de geschiedenis', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await page.locator('.nav-item[data-view="settings"]:visible').first().click();
+    await expect(page.locator('#view-settings')).toHaveClass(/is-active/);
+    await page.evaluate(() => {
+      const debug = (0, eval)('readApiDebug') as { emailQueue: unknown };
+      const nu = new Date().toISOString();
+      debug.emailQueue = {
+        total: 3, offset: 0, limit: 10,
+        items: [
+          { id: 1, status: 'sent', sent_at: nu, created_at: nu, subject_snapshot: 'Factuur en urenoverzicht september 2026 voor Path Consultancy', recipient_email: 'facturen-administratie-boekhouding@voorbeeldklant-met-lange-naam.example.invalid', invoice_number: 'PC-2026-0915', employee_name: 'Stasjo van Bakel', channel: 'invoice', attachment_policy: 'pdf', attempt_count: 1 },
+          { id: 2, status: 'failed', created_at: nu, subject_snapshot: 'Klanturenstaat september', recipient_email: 'broker@example.invalid', attempt_count: 3, last_error: 'SMTP-verbinding geweigerd', can_retry: true, channel: 'customer_timesheet', attachment_policy: 'none' },
+          { id: 3, status: 'queued', created_at: nu, subject_snapshot: 'Herinnering uren', recipient_email: 'marc@example.invalid', is_stalled: true, channel: 'reminder', attachment_policy: 'none', attempt_count: 1 },
+        ],
+      };
+      ((0, eval)('renderMailDeliveryHistory') as () => void)();
+    });
+    await expect(page.locator('#mail-delivery-history-list .mail-delivery-history-item')).toHaveCount(3);
+  });
+  for (const breedte of [821, 1024, 1280, 1440]) {
+    await test.step(`Then valt er bij ${breedte}px niets van de mailgeschiedenis buiten de rechterrand`, async () => {
+      await page.setViewportSize({ width: breedte, height: 900 });
+      await page.locator('#mail-delivery-history-list').scrollIntoViewIfNeeded();
+      await page.waitForTimeout(150);
+      const buiten = (await inhoudBuitenRechterrand(page)).filter(regel => /mail-delivery|status-pill|small-button/.test(regel));
+      expect(buiten, `mailgeschiedenis @ ${breedte}px`).toEqual([]);
+    });
+  }
 });
 
 test('[KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie', async ({ page }) => {
