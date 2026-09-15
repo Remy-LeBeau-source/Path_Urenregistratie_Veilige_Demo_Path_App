@@ -2521,7 +2521,9 @@ function writeTimesheetToApi(action, suppliedPayload = null, applyResponse = tru
             throw new Error("Deze maand is al goedgekeurd of gefactureerd en kan niet meer worden aangepast.");
           });
         }
-        throw new Error(String(raw || "Opslaan op server mislukt."));
+        const fout = new Error(String(raw || "Opslaan op server mislukt."));
+        fout.code = foutcode;
+        throw fout;
       }
       const employee = currentEmployee();
       const periodKey = String(payload.period || currentPeriod().key);
@@ -2633,6 +2635,30 @@ function writeCustomerTimesheetToApi(action, options = {}) {
     });
 }
 
+// Een eigen concept kan "achterhaald" zijn zonder dat iemand anders iets deed: een
+// opslag die al onderweg was, komt pas op de server aan nadat de herladen pagina
+// de urenstaat las (traag netwerk). De pagina staat dan een versie achter en elke
+// volgende invoer gaf "door iemand anders gewijzigd. Ververs de pagina"
+// (monkey-vondst, KLV-N-004). Een concept heeft maar één schrijver, de medewerker
+// zelf: haal alleen de actuele versie op en sla nog één keer op wat er op het
+// scherm staat. Is de urenstaat intussen ingediend of vergrendeld, dan blijft de
+// oorspronkelijke melding staan.
+function herstelAchterhaaldConcept(error, payload) {
+  if (!error || error.code !== "stale-version") throw error;
+  const endpoint = WRITE_TIMESHEET_PATH + "?period=" + encodeURIComponent(String(payload.period)) + "&employee_id=" + encodeURIComponent(String(payload.employee_id));
+  return fetchReadApi(endpoint).then(data => {
+    const timesheet = data && data.found === true ? data.timesheet : null;
+    const versie = Number(timesheet && timesheet.version || 0);
+    const status = String(timesheet && timesheet.status || "").toLowerCase();
+    if (versie <= 0 || !["draft", "correction"].includes(status)) throw error;
+    const record = recordFor(Number(payload.employee_id), String(payload.period));
+    record.serverVersion = versie;
+    // Eén keer: een mislukte herhaling gaat rechtstreeks naar de gewone foutmelding,
+    // want deze herstelstap hangt alleen achter de eerste poging.
+    return writeTimesheetToApi("save_draft", { ...payload, expected_version: versie }, false);
+  });
+}
+
 function scheduleDraftTimesheetWrite(suppliedPayload = null) {
   if (!API_ENABLED || authRuntime.mode !== "auth" || state.currentRole !== "employee") return;
   if (writeRuntime.submitInFlight) return;
@@ -2652,7 +2678,9 @@ function scheduleDraftTimesheetWrite(suppliedPayload = null) {
     writeRuntime.draftInFlight = true;
     writeRuntime.pendingDraftSignature = "";
     writeRuntime.pendingDraftPayload = null;
-    writeRuntime.draftPromise = writeTimesheetToApi("save_draft", payload, false).then(data => {
+    writeRuntime.draftPromise = writeTimesheetToApi("save_draft", payload, false)
+      .catch(error => herstelAchterhaaldConcept(error, payload))
+      .then(data => {
       writeRuntime.lastDraftSignature = signature;
       const queuedPayload = writeRuntime.pendingDraftPayload;
       const serverTimesheet = data && data.timesheet;

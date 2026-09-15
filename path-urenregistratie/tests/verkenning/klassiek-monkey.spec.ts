@@ -21,7 +21,7 @@ import { LoginPage } from '../playwright/pages/LoginPage';
 //   H5 de sessie blijft bestaan: geen onverwacht inlogscherm
 //   H6 het actieve menu-item hoort bij het actieve scherm
 //   H7 de paginatitel is niet leeg (Vandaag uitgezonderd: daar valt hij bewust weg)
-//   H8 geen stale-version (409) terwijl er maar één medewerker in één tabblad werkt
+//   H8 geen "door iemand anders gewijzigd" in beeld terwijl er maar één medewerker in één tabblad werkt
 // Een andere 4xx (terechte weigering, bv. >24 uur) is een zachte bevinding met de
 // foutcode van de server erbij.
 // Zachte bevindingen (gelogd, case faalt niet): inhoud buiten de rechterrand.
@@ -92,6 +92,9 @@ async function invarianten(page: Page): Promise<{ hard: string[]; zacht: string[
     if (actief.length === 1 && actiefMenu.some(n => n.dataset.view && n.dataset.view !== scherm)) {
       hard.push(`H6 menu wijst ${actiefMenu.map(n => n.dataset.view).join('/')} aan terwijl scherm ${scherm} actief is`);
     }
+    const opslagStatus = document.querySelector('#hours-autosave-status')?.textContent || '';
+    const meldingen = Array.from(document.querySelectorAll('.toast, [role="status"], [role="alert"]')).map(t => t.textContent || '').join(' ');
+    if (/door iemand anders gewijzigd/i.test(opslagStatus + ' ' + meldingen)) hard.push('H8 "door iemand anders gewijzigd" in beeld bij één medewerker');
     const titel = document.querySelector('#page-title');
     if (titel && scherm && !['employee-dashboard'].includes(scherm) && !(titel.textContent || '').trim()) hard.push(`H7 lege paginatitel op ${scherm}`);
     const breedte = window.innerWidth;
@@ -155,6 +158,16 @@ for (const seed of seedsUitOmgeving()) {
     const zachteBevindingen = new Map<string, number>();
 
     const getypt = new Set<string>();
+    // Netwerklogboek van de urenstaat: bij een vondst wil je weten welke versie de
+    // app meestuurde en wat de server teruggaf, niet alleen welke knop er viel.
+    const netlog: string[] = [];
+    let stapNu = 0;
+    const netNoteer = (regel: string) => { netlog.push(`${stapNu} ${regel}`); if (netlog.length > 30) netlog.shift(); };
+    page.on('request', r => {
+      if (!r.url().includes('/server/api/timesheets.php') && !r.url().includes('/server/api/test-reset.php')) return;
+      const body = r.method() === 'POST' ? (r.postDataJSON() as { action?: string; expected_version?: number } | null) : null;
+      netNoteer(`-> ${r.method()} ${new URL(r.url()).pathname.split('/').pop()} ${body ? `${body.action} expected=${body.expected_version}` : ''}`);
+    });
     page.on('pageerror', e => fouten.push(`H1 pageerror: ${String(e).slice(0, 300)}`));
     // "Failed to load resource" is de browser die een 4xx/5xx-response nog eens in
     // de console zet. Die beoordelen we via de response zelf (hieronder), met de
@@ -167,13 +180,21 @@ for (const seed of seedsUitOmgeving()) {
       if (!r.url().includes('/server/')) return;
       const pad = `${r.request().method()} ${new URL(r.url()).pathname}`;
       if (r.status() >= 500) { fouten.push(`H2 ${r.status()} op ${pad}`); return; }
-      if (r.status() < 400) return;
+      if (r.status() < 400) {
+        if (r.url().includes('/server/api/timesheets.php')) {
+          const ok = await r.json().catch(() => ({})) as { timesheet?: { version?: number } };
+          netNoteer(`<- ${r.status()} versie=${ok.timesheet?.version}`);
+        }
+        return;
+      }
       const body = await r.json().catch(() => ({})) as { error?: string; message?: string };
+      if (r.url().includes('/server/api/timesheets.php')) netNoteer(`<- ${r.status()} ${body.error || ''}`);
       const sleutel = `${r.status()} ${body.error || '?'} op ${pad}: ${String(body.message || '').slice(0, 90)}`;
       // H8: één medewerker in één tabblad kan niet "door iemand anders" achterhaald
       // zijn. Een stale-version hier is de app die met zichzelf botst.
-      if (body.error === 'stale-version') fouten.push(`H8 ${sleutel}`);
-      else zachteBevindingen.set(sleutel, (zachteBevindingen.get(sleutel) || 0) + 1);
+      // Een 409 in het netwerk is nog geen fout: de app herstelt een achterhaald eigen
+      // concept zelf (KLV-N-004). H8 kijkt daarom naar wat de medewerker ziet.
+      zachteBevindingen.set(sleutel, (zachteBevindingen.get(sleutel) || 0) + 1);
     });
     // "Pagina verlaten?" (beforeunload) altijd accepteren: de app vraagt dat bewust
     // bij een nog niet opgeslagen concept (E2E-H-028). Blijven laat page.reload()
@@ -198,13 +219,14 @@ for (const seed of seedsUitOmgeving()) {
       const dir = join(process.cwd(), 'verkenning-rapport');
       mkdirSync(dir, { recursive: true });
       writeFileSync(join(dir, `${testInfo.project.name}-seed-${seed}.json`), JSON.stringify({
-        seed, project: testInfo.project.name, thema, stappen: log.length, fouten,
+        seed, project: testInfo.project.name, thema, stappen: log.length, fouten, netlog,
         zachteBevindingen: Object.fromEntries(zachteBevindingen), log,
       }, null, 2));
     };
 
     try {
       for (let stap = 1; stap <= STAPPEN; stap++) {
+        stapNu = stap;
         const scherm = await page.evaluate(() => document.body.dataset.scherm || '');
         const worp = rnd();
         const h: Handeling = { stap, soort: '', scherm };

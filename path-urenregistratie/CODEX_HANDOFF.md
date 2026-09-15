@@ -24,6 +24,16 @@ Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
   compacte menubalk in dat bereik (styles.css, blok NA de menubalkregels i.v.m. gelijke specificiteit) en het
   label in twee spans (`.testbalk-omgeving` / `.testbalk-versie`), de versie verborgen in dat bereik. Speling
   gemeten ≥75px. Monkey: terug-uit-app (about:blank) is browser, geen app-bug; rapporten nu in `verkenning-rapport/`.
+- **2.0.79**: **KLV-N-004** een opslag die al onderweg was en pas NA de lezing van de herladen pagina op de
+  server aankwam (traag netwerk), liet elke volgende invoer falen met "door iemand anders gewijzigd. Ververs de
+  pagina". Fix: `herstelAchterhaaldConcept()` in app.js — bij `stale-version` op een eigen concept de actuele
+  versie ophalen (alleen status draft/correction) en één keer opnieuw opslaan wat op het scherm staat.
+  `writeTimesheetToApi` geeft nu `error.code` mee. Monkey: H8 kijkt nu naar wat de medewerker ziet (niet naar een
+  409 in het netwerk), en het rapport bevat een netwerklogboek van de urenstaat.
+- Open vondst: monkey seed 15 (desktop, licht) toont na "Herstel demo"-klik, herladen en snelle klikken nog
+  "door iemand anders gewijzigd": de app stuurde expected=7 terwijl de server op 8 stond, en herladen haalde de
+  maand niet opnieuw op. Niet deterministisch te reproduceren (gewoon herladen, andere maand, lokaal demoherstel
+  gaan allemaal goed). Reproduceren: `MONKEY_SEEDS=15 MONKEY_STAPPEN=150 ... --project=verkenning-desktop`.
 - Open: urenvelden accepteren >24 lokaal (server weigert terecht met 400, UX kan beter).
 
 ## Update Claude Code 14 sep, later op de avond — CI-shardtimeout (exit 124) opgelost

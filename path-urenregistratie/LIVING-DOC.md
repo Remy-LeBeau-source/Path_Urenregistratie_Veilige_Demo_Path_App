@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 553 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 554 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 553 unieke case-ID's
+- Playwright executable cases: 554 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 554 unieke case-ID's
+- Totaal executable cases: 555 unieke case-ID's
 - Playwright features: 31
 - Database features: 1
 - Playwright steps mappings: 31
 - Database steps mappings: 1
-- Uitvoeringen: 595
-- Niet-mobile projectuitvoeringen: 511
+- Uitvoeringen: 596
+- Niet-mobile projectuitvoeringen: 512
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 553 Playwright-functionele cases in totaal 595 resultaten op: 511 + (42 x 2) = 595.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 554 Playwright-functionele cases in totaal 596 resultaten op: 512 + (42 x 2) = 596.
 
 ## Documentatieketen
 
@@ -642,10 +642,11 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 553 Playwri
 
 - Feature: `tests/playwright/features/klassiek-verkenning.feature`
 - Source: `tests/playwright/klassiek-verkenning.spec.ts`
-- Cases: 3
+- Cases: 4
 
-- [KLV-N-002] het maandkeuzepaneel valt op geen enkele breedte buiten het scherm — Techniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing · Assertions: 8
-- [KLV-N-003] in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte — Techniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing · Assertions: 3
+- [KLV-N-002] het maandkeuzepaneel valt op geen enkele breedte buiten het scherm — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 8
+- [KLV-N-003] in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 3
+- [KLV-N-004] een trage opslag die pas na herladen aankomt, blokkeert de volgende invoer niet — Techniek: Monkey testing (seeded) + concurrency + herstelbaarheid · Assertions: 7
 - [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie — Techniek: Monkey testing (seeded) + concurrency + toestandsovergang · Assertions: 11
 
 ### Vormgevingsschakelaar (klassiek / nieuw)

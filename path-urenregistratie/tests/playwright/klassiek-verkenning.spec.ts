@@ -100,6 +100,77 @@ test('[KLV-N-003] in de menubalk van de medewerker overlapt niets elkaar, op gee
   }
 });
 
+test('[KLV-N-004] een trage opslag die pas na herladen aankomt, blokkeert de volgende invoer niet', async ({ page }) => {
+  // Vondst seeds 15 en 26: klikken, meteen herladen, weer klikken gaf "Niet
+  // gesynchroniseerd: … door iemand anders gewijzigd. Ververs de pagina" en de
+  // nieuwe invoer bleef onopgeslagen. Vastgepind (15 sep): een opslag die al
+  // onderweg is, komt pas op de server aan NA de lezing van de herladen pagina
+  // (traag mobiel netwerk). De server staat dan een versie verder dan de pagina.
+  // Verwacht: de app haalt de actuele versie op en slaat de invoer alsnog op wat
+  // er op het scherm staat. De medewerker hoeft niets te verversen.
+  test.setTimeout(90_000);
+  const loginPage = new LoginPage(page);
+  let houdVast = false;
+  let laatLos: () => void = () => undefined;
+  page.on('dialog', dialoog => { dialoog.accept().catch(() => undefined); });
+  await page.route('**/server/api/timesheets.php', async route => {
+    if (route.request().method() !== 'POST' || !houdVast) return route.continue();
+    houdVast = false;
+    // Vasthouden VÓÓR de server het ziet: zo komt hij pas aan na het herladen.
+    await new Promise<void>(resolve => { laatLos = resolve; });
+    const response = await route.fetch().catch(() => null);
+    if (response) await route.fulfill({ response }).catch(() => undefined);
+  });
+
+  await test.step('Given een medewerker op Mijn uren met een urenstaat die al een serverversie heeft', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('.nav-item[data-view="timesheet"]:visible').first().click();
+    await expect(page.locator('#hours-grid .hours-input:not([disabled]):visible').nth(2)).toBeVisible();
+  });
+  const velden = page.locator('#hours-grid .hours-input:not([disabled]):visible');
+  const oorspronkelijk = [await velden.nth(0).inputValue(), await velden.nth(1).inputValue(), await velden.nth(2).inputValue()];
+  try {
+    await velden.nth(0).fill('1.5');
+    await expect(page.locator('#hours-autosave-status')).toContainText('Gesynchroniseerd', { timeout: 20_000 });
+
+    await test.step('When een opslag onderweg is, de pagina herlaadt en die opslag pas daarna aankomt', async () => {
+      houdVast = true;
+      const verzonden = page.waitForRequest(r => r.url().includes('/server/api/timesheets.php') && r.method() === 'POST');
+      await velden.nth(1).fill('3.5');
+      await verzonden;
+      // Niet networkidle: de app blijft periodiek ophalen. Wel precies wachten op
+      // de lezing van deze urenstaat door de herladen pagina.
+      const lezing = page.waitForResponse(r => r.url().includes('/server/api/timesheets.php?') && r.request().method() === 'GET', { timeout: 30_000 });
+      await page.reload({ timeout: 20_000 });
+      await lezing;
+      await expect(page.locator('#hours-grid .hours-input:not([disabled]):visible').nth(2)).toBeVisible({ timeout: 20_000 });
+      laatLos();
+      // De vertraagde opslag landt nu op de server (een versie verder).
+      await page.waitForTimeout(1_000);
+    });
+
+    await test.step('And de medewerker daarna gewoon verder invult', async () => {
+      await page.locator('#hours-grid .hours-input:not([disabled]):visible').nth(2).fill('2.5');
+    });
+
+    await test.step('Then wordt die invoer zonder foutmelding opgeslagen en staat hij na nog een herlading op de server', async () => {
+      const status = page.locator('#hours-autosave-status');
+      await expect(status).toContainText('Gesynchroniseerd', { timeout: 20_000 });
+      await expect(status).not.toContainText('Niet gesynchroniseerd');
+      await page.unroute('**/server/api/timesheets.php');
+      await page.reload({ timeout: 20_000 });
+      const naHerladen = page.locator('#hours-grid .hours-input:not([disabled]):visible');
+      await expect(naHerladen.nth(2)).toHaveValue(/^2[.,]5$/, { timeout: 20_000 });
+    });
+  } finally {
+    await page.unroute('**/server/api/timesheets.php').catch(() => undefined);
+    const terug = page.locator('#hours-grid .hours-input:not([disabled]):visible');
+    for (let i = 0; i < 3; i++) await terug.nth(i).fill(oorspronkelijk[i]).catch(() => undefined);
+    await expect(page.locator('#hours-autosave-status')).toContainText('Gesynchroniseerd', { timeout: 20_000 }).catch(() => undefined);
+  }
+});
+
 test('[KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie', async ({ page }) => {
   // Vondst seed 5 (5 handelingen): 9 aanklikken en meteen doortypen gaf een 409
   // stale-version, "door iemand anders gewijzigd", terwijl er maar één

@@ -21,6 +21,10 @@ Then("wordt met Playwright-assertions bevestigd dat het maandkeuzepaneel valt op
 Given("een medewerker in Klassiek met de testbalk in de menubalk");
 When("de flow voor KLV-N-003 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte");
+Given("een medewerker op Mijn uren met een urenstaat die al een serverversie heeft");
+When("een opslag onderweg is, de pagina herlaadt en die opslag pas daarna aankomt");
+And("de medewerker daarna gewoon verder invult");
+Then("wordt die invoer zonder foutmelding opgeslagen en staat hij na nog een herlading op de server");
 Given("een medewerker op Mijn uren van een open maand");
 And("de urenstaat staat al met een versie op de server");
 When("de eerste invoer onderweg is en er intussen twee nieuwe invoeren volgen");

@@ -131,6 +131,9 @@ function techniqueFor(definition, testCase) {
   if (definition.spec === 'klassiek-verkenning.spec.ts') {
     const perCase = {
       'KLV-N-001': 'Monkey testing (seeded) + concurrency + toestandsovergang',
+      'KLV-N-002': 'Monkey testing (seeded) + grenswaardenanalyse + responsive viewport',
+      'KLV-N-003': 'Monkey testing (seeded) + grenswaardenanalyse + responsive viewport',
+      'KLV-N-004': 'Monkey testing (seeded) + concurrency + herstelbaarheid',
     };
     return perCase[testCase.id] || 'Monkey testing (seeded) + negatieve equivalentieklasse + error guessing';
   }
