@@ -89,12 +89,13 @@ Feature: Meldingen beheren
   @happy
   Scenario: [NOT-H-011] een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen
     # Testtechniek: API-contract + equivalentieklasse
-    # Aantoonbare Playwright-assertions in deze case: 22
+    # Aantoonbare Playwright-assertions in deze case: 25
     Given twee ongelezen mededelingen en een ongelezen statusmelding
     When de medewerker Berichten opent, then zijn alle berichten ingeklapt, staan de nieuwe bovenaan en is de eerste in beeld
     And blijven ze ongelezen, ook als ze langer in beeld staan
     When de medewerker het eerste bericht openklapt, then is dat bericht gelezen en blijft het open
     When de medewerker bij het tweede op Markeer als gelezen tikt, then is het gelezen zonder open te gaan
+    And toont het filter Gelezen precies de drie gelezen berichten, compact met aantal
     And valt een leeg filter Ongelezen bij terugkomen terug op Actueel
     Then wordt met Playwright-assertions bevestigd dat een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen
 
@@ -146,8 +147,8 @@ Feature: Meldingen beheren
   @happy
   Scenario: [NOT-H-017] Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 8
+    # Aantoonbare Playwright-assertions in deze case: 16
     Given meldingen beheren is voorbereid
     When de flow voor NOT-H-017 wordt uitgevoerd
     Then staat Actueel aan, met alleen berichten die nog gelden
-    And tellen de filters op: Actueel + Ingetrokken = Alles
+    And tellen de filters op: Ongelezen + Gelezen = Actueel, Actueel + Ingetrokken = Alles

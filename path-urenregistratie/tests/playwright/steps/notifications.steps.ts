@@ -42,6 +42,7 @@ When("de medewerker Berichten opent, then zijn alle berichten ingeklapt, staan d
 And("blijven ze ongelezen, ook als ze langer in beeld staan");
 When("de medewerker het eerste bericht openklapt, then is dat bericht gelezen en blijft het open");
 When("de medewerker bij het tweede op Markeer als gelezen tikt, then is het gelezen zonder open te gaan");
+And("toont het filter Gelezen precies de drie gelezen berichten, compact met aantal");
 And("valt een leeg filter Ongelezen bij terugkomen terug op Actueel");
 Then("wordt met Playwright-assertions bevestigd dat een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen");
 When("de flow voor NOT-N-015 wordt uitgevoerd");
@@ -63,4 +64,4 @@ When("de medewerker naar de laatste pagina bladert, then staan daar 21–30 en i
 And("zet een filterwissel de lijst terug op pagina 1");
 When("de flow voor NOT-H-017 wordt uitgevoerd");
 Then("staat Actueel aan, met alleen berichten die nog gelden");
-And("tellen de filters op: Actueel + Ingetrokken = Alles");
+And("tellen de filters op: Ongelezen + Gelezen = Actueel, Actueel + Ingetrokken = Alles");
