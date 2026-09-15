@@ -5336,7 +5336,18 @@ function plaatsTestknoppen() {
   const omgeving = document.querySelector("#environment-badge");
   const versie = (document.querySelector(".sidebar-footer .demo-badge")?.textContent || "").trim();
   const omgevingZichtbaar = Boolean(omgeving && !omgeving.hidden && omgeving.textContent.trim());
-  document.querySelector("#testbalk-label").textContent = [omgevingZichtbaar ? omgeving.textContent.trim() : "", versie].filter(Boolean).join(" · ");
+  // Twee delen, zodat de smalle desktopmenubalk (821-1079px) alleen de omgeving
+  // kan tonen: het hele label paste daar niet en liep over de tabs (KLV-N-003).
+  // De tekst als geheel blijft "OMGEVING · Versie x".
+  const label = document.querySelector("#testbalk-label");
+  const omgevingTekst = omgevingZichtbaar ? omgeving.textContent.trim() : "";
+  const omgevingDeel = document.createElement("span");
+  omgevingDeel.className = "testbalk-omgeving";
+  omgevingDeel.textContent = omgevingTekst;
+  const versieDeel = document.createElement("span");
+  versieDeel.className = "testbalk-versie";
+  versieDeel.textContent = omgevingTekst && versie ? " · " + versie : versie;
+  label.replaceChildren(...[omgevingTekst ? omgevingDeel : null, versie ? versieDeel : null].filter(Boolean));
   const knoppenZichtbaar = !reset.hidden || !schakelaars.hidden;
   balk.hidden = !(inBalk && (omgevingZichtbaar || knoppenZichtbaar));
   // Gio 14 sep: niet als band door de app, maar rechtsboven. Op desktop staat de

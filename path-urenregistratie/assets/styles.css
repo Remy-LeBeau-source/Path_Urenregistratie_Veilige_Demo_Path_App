@@ -4483,6 +4483,7 @@ html[data-theme="dark"]:not([data-skin="new"]) .testbalk .appearance-switch[aria
   html:not([data-skin="new"]) .testbalk .topbar-quick-reset,
   html:not([data-skin="new"]) .testbalk .appearance-switch { min-height: 44px; }
 }
+
 /* De omgeving en versie staan nu in de balk; niet nog eens onder de titel. En
    op Vandaag begint het scherm met de begroeting: geen paginatitel erboven. */
 html:not([data-skin="new"]) body[data-role="employee"] .topbar-context { display: none; }
@@ -4720,6 +4721,23 @@ html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] { --na
     white-space: nowrap;
   }
   html:not([data-skin="new"]) body[data-role="employee"] #switch-role:hover { border-color: var(--mint); color: var(--ink); background: transparent; }
+}
+
+/* Smalle desktop (821-1079px; de gewone balk past vanaf ~1000px, maar met maar 21px speling,
+   en Linux-lettertypes zijn breder: in CI lag het label al over Maanden), bewust NA de menubalkregels hierboven (gelijke
+   specificiteit, dus de latere regel wint): de menubalk had 955px nodig (tabs 360 + logo,
+   testbalk, rolknop, bel en profiel 595) en kreeg er bij 821px 793. Het label
+   "LOKAAL · VERSIE x" liep daardoor dwars over Maanden en Berichten
+   (monkey-vondst, KLV-N-003). Kleinere tussenruimtes, en het label toont hier
+   alleen de omgeving; het versienummer staat ook onderaan elke pagina. Staat er
+   geen omgeving (productie), dan blijft de versie gewoon zichtbaar. */
+@media (min-width: 821px) and (max-width: 1079px) {
+  html:not([data-skin="new"]) body[data-role="employee"] .sidebar { gap: 10px; padding-inline: 10px; }
+  html:not([data-skin="new"]) body[data-role="employee"] .nav-group:not([hidden]) { gap: 2px; }
+  html:not([data-skin="new"]) body[data-role="employee"] .nav-item { margin-right: 2px; padding-inline: 2px; font-size: 12.5px; }
+  html:not([data-skin="new"]) body[data-role="employee"] #switch-role { padding: 0 8px; }
+  html:not([data-skin="new"]) body[data-role="employee"] .sidebar > .testbalk:not([hidden]) { margin-right: 0; }
+  html:not([data-skin="new"]) body[data-role="employee"] .sidebar > .testbalk .testbalk-omgeving + .testbalk-versie { display: none; }
 }
 
 /* Klanturenstaatpaneel: dezelfde binnenmarge als de koppen (Gio 14 sep: tekst en

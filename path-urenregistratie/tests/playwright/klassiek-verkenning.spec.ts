@@ -9,8 +9,9 @@ import { bewaarUrenstaat } from './fixtures/urenstaatHerstel';
 // op timing of geluk leunt.
 
 test('[KLV-N-002] het maandkeuzepaneel valt op geen enkele breedte buiten het scherm', async ({ page }) => {
-  // Vondst seeds 1 en 12: op 768 en 1024 px stak #period-month-panel 38 tot 46 px
-  // voorbij de rechterrand. Een maand die buiten beeld valt, kun je niet kiezen.
+  // Vondst seeds 1 en 12 (paneel buiten de rechterrand). Vastgepind op Vandaag bij
+  // 821px: 21px buiten beeld, Maart/September/December afgekapt. Een maand die
+  // buiten beeld valt, kun je niet kiezen.
   // Grenswaarden rond de breekpunten (720/721, 820/821) plus gangbare breedtes.
   test.setTimeout(90_000);
   const loginPage = new LoginPage(page);
@@ -46,6 +47,57 @@ test('[KLV-N-002] het maandkeuzepaneel valt op geen enkele breedte buiten het sc
   await test.step('And is de maandkeuze op minstens de desktopbreedtes van Mijn uren echt gemeten', async () => {
     expect(gemeten, gemeten.join(', ')).toEqual(expect.arrayContaining(['timesheet@1024', 'timesheet@1280']));
   });
+});
+
+test('[KLV-N-003] in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte', async ({ page }) => {
+  // Vondst bij KLV-N-002 (screenshot 821px): het label "LOKAAL · Versie 2.0.77" van
+  // de testbalk liep dwars over de tab Berichten. Overlappende tekst is onleesbaar
+  // en een tab waar iets overheen ligt, is slecht te raken. Grenswaarden rond de
+  // breekpunten van de menubalk plus gangbare breedtes, in licht en donker.
+  test.setTimeout(90_000);
+  const loginPage = new LoginPage(page);
+  await test.step('Given een medewerker in Klassiek met de testbalk in de menubalk', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  });
+
+  for (const thema of ['light', 'dark'] as const) for (const breedte of [721, 768, 820, 821, 900, 999, 1000, 1079, 1080, 1180, 1280, 1440]) {
+    await test.step(`Then overlapt er in ${thema} bij ${breedte}px niets in de menubalk`, async () => {
+      await page.evaluate(t => {
+        const s = (0, eval)('state') as { preferences: Record<string, unknown> };
+        s.preferences.theme = t;
+        ((0, eval)('applyTheme') as () => void)();
+      }, thema);
+      await page.setViewportSize({ width: breedte, height: 900 });
+      await expect(page.locator('.nav-item[data-view="employee-announcements"]:visible')).toBeVisible();
+      const overlap = await page.evaluate(() => {
+        // De bladeren van de menubalk: tabs, logo, testbalklabel en -knoppen en de
+        // knoppen rechts. Een ouder bevat zijn kinderen altijd; alleen bladeren
+        // onderling vergelijken.
+        const balk = document.querySelector('.sidebar');
+        if (!balk) return ['geen menubalk'];
+        const bladeren = Array.from(balk.querySelectorAll<HTMLElement>('.nav-item, .brand, #sidebar-brand, .testbalk-label, .testbalk button, .appearance-switch, #switch-role, #notification-button, #profile-menu-button'))
+          .filter(el => {
+            const r = el.getBoundingClientRect();
+            const cs = getComputedStyle(el);
+            return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && !el.closest('[hidden]');
+          })
+          .filter((el, _, alle) => !alle.some(ander => ander !== el && el.contains(ander)));
+        const naam = (el: HTMLElement) => `${el.id ? '#' + el.id : el.className.toString().split(' ')[0]} "${(el.innerText || el.getAttribute('aria-label') || '').trim().slice(0, 20)}"`;
+        const gevonden: string[] = [];
+        for (let i = 0; i < bladeren.length; i++) for (let j = i + 1; j < bladeren.length; j++) {
+          const a = bladeren[i].getBoundingClientRect();
+          const b = bladeren[j].getBoundingClientRect();
+          const x = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+          const y = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+          if (x > 1 && y > 1) gevonden.push(`${naam(bladeren[i])} x ${naam(bladeren[j])} (${Math.round(x)}x${Math.round(y)}px)`);
+        }
+        return gevonden;
+      });
+      expect(overlap, `overlap bij ${breedte}px (${thema})`).toEqual([]);
+    });
+  }
 });
 
 test('[KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie', async ({ page }) => {

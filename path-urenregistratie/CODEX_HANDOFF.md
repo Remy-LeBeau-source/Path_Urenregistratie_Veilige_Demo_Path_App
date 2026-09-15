@@ -9,7 +9,7 @@ Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
   `MONKEY_SEEDS="1-12" MONKEY_STAPPEN=150 node scripts/run-playwright-e2e.mjs --config=playwright.verkenning.config.ts --project=verkenning-desktop`
   (of `verkenning-telefoon`). Harde invarianten H1–H8 (JS-fout, 5xx, één actief scherm, geen
   undefined/NaN/null in beeld, sessie blijft, menu = scherm, titel niet leeg, geen stale-version); logboek per
-  seed in `test-results-verkenning/rapport/`. Tegenproef gedaan (invariant omgedraaid → rood → hersteld).
+  seed in `verkenning-rapport/`. Tegenproef gedaan (invariant omgedraaid → rood → hersteld).
 - Vondsten omgezet naar vaste cases in `tests/playwright/klassiek-verkenning.spec.ts` (desktop-chromium in CI):
   - **KLV-N-001** snel achter elkaar uren invullen gaf "Niet gesynchroniseerd: … door iemand anders gewijzigd"
     (409 stale-version) bij één medewerker. Oorzaak: in `scheduleDraftTimesheetWrite` kreeg bij "A slaagt met B in
@@ -19,8 +19,12 @@ Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
     `houdPaneelBinnenBeeld()` schuift het paneel bij openen binnen beeld via `translate`. 27 combinaties scherm×breedte.
 - Impactregressie lokaal groen: 8 autosave-cases (desktop) + 10 maandpaneel-cases desktop + 8 mobile-chrome;
   smoke v2.0.77 geslaagd.
-- Open (nog niet opgepakt): versielabel "LOKAAL · Versie" overlapt de tab Berichten in de bovenbalk bij 821px;
-  urenvelden accepteren >24 lokaal (server weigert terecht met 400, UX kan beter).
+- **2.0.78**: **KLV-N-003** menubalk medewerker 821-1079px: testbalk-label lag over Maanden/Berichten; in CI
+  (Linux-fonts) onderschepte het zelfs de klik op Maanden (KLV-N-002 rood in run 34915147803, shard 3). Fix:
+  compacte menubalk in dat bereik (styles.css, blok NA de menubalkregels i.v.m. gelijke specificiteit) en het
+  label in twee spans (`.testbalk-omgeving` / `.testbalk-versie`), de versie verborgen in dat bereik. Speling
+  gemeten ≥75px. Monkey: terug-uit-app (about:blank) is browser, geen app-bug; rapporten nu in `verkenning-rapport/`.
+- Open: urenvelden accepteren >24 lokaal (server weigert terecht met 400, UX kan beter).
 
 ## Update Claude Code 14 sep, later op de avond — CI-shardtimeout (exit 124) opgelost
 

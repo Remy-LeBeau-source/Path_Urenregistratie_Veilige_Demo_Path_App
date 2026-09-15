@@ -25,3 +25,4 @@ debug.log
 server/scripts/migrate-test-masterdata-to-production.php
 isolate-*.log
 playwright-report-*/
+verkenning-rapport/

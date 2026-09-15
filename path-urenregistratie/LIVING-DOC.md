@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 552 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 553 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 552 unieke case-ID's
+- Playwright executable cases: 553 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 553 unieke case-ID's
+- Totaal executable cases: 554 unieke case-ID's
 - Playwright features: 31
 - Database features: 1
 - Playwright steps mappings: 31
 - Database steps mappings: 1
-- Uitvoeringen: 594
-- Niet-mobile projectuitvoeringen: 510
+- Uitvoeringen: 595
+- Niet-mobile projectuitvoeringen: 511
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 552 Playwright-functionele cases in totaal 594 resultaten op: 510 + (42 x 2) = 594.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 553 Playwright-functionele cases in totaal 595 resultaten op: 511 + (42 x 2) = 595.
 
 ## Documentatieketen
 
@@ -642,9 +642,10 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 552 Playwri
 
 - Feature: `tests/playwright/features/klassiek-verkenning.feature`
 - Source: `tests/playwright/klassiek-verkenning.spec.ts`
-- Cases: 2
+- Cases: 3
 
 - [KLV-N-002] het maandkeuzepaneel valt op geen enkele breedte buiten het scherm — Techniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing · Assertions: 8
+- [KLV-N-003] in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte — Techniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing · Assertions: 3
 - [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie — Techniek: Monkey testing (seeded) + concurrency + toestandsovergang · Assertions: 11
 
 ### Vormgevingsschakelaar (klassiek / nieuw)

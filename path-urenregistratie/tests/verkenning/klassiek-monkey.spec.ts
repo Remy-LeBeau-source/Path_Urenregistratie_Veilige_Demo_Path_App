@@ -11,7 +11,7 @@ import { LoginPage } from '../playwright/pages/LoginPage';
 // handeling worden invarianten gecontroleerd die in Klassiek ALTIJD moeten
 // gelden, ongeacht wat er aangeklikt is. De willekeur komt uit een vaste seed,
 // dus een vondst is met dezelfde seed te herhalen; het handelingenlogboek staat
-// in test-results-verkenning/rapport/.
+// in verkenning-rapport/.
 //
 // Harde invarianten (case faalt):
 //   H1 geen JavaScript-fout (pageerror) en geen console.error
@@ -194,7 +194,8 @@ for (const seed of seedsUitOmgeving()) {
     const telefoon = testInfo.project.name.includes('telefoon');
     const breedtes = [360, 390, 720, 721, 768, 820, 821, 1024, 1280, 1440];
     const rapport = () => {
-      const dir = join(testInfo.project.outputDir, 'rapport');
+      // Niet in outputDir: Playwright maakt die bij elke run leeg.
+      const dir = join(process.cwd(), 'verkenning-rapport');
       mkdirSync(dir, { recursive: true });
       writeFileSync(join(dir, `${testInfo.project.name}-seed-${seed}.json`), JSON.stringify({
         seed, project: testInfo.project.name, thema, stappen: log.length, fouten,
@@ -255,6 +256,13 @@ for (const seed of seedsUitOmgeving()) {
           } else if (worp < 0.91) {
             h.soort = 'terug';
             await page.goBack({ timeout: 5_000 }).catch(() => undefined);
+            // Terug vóór het eerste bezoek verlaat de app (about:blank). Dat is de
+            // browser, geen app-fout (onderzocht 15 sep): weer vooruit en doorgaan.
+            if (!page.url().startsWith(new URL(testInfo.project.use.baseURL || 'http://localhost:8000').origin)) {
+              h.soort = 'terug-uit-app-en-weer-vooruit';
+              await page.goForward({ timeout: 10_000 }).catch(() => undefined);
+              await page.waitForFunction(() => document.querySelectorAll('.view.is-active').length === 1, null, { timeout: 20_000 }).catch(() => undefined);
+            }
           } else if (worp < 0.94) {
             h.soort = 'herladen';
             await page.reload({ timeout: 20_000 });
@@ -289,6 +297,6 @@ for (const seed of seedsUitOmgeving()) {
       rapport();
     }
 
-    expect(fouten, `Seed ${seed} (${thema}) brak een invariant. Logboek: test-results-verkenning/.../rapport`).toEqual([]);
+    expect(fouten, `Seed ${seed} (${thema}) brak een invariant. Logboek: verkenning-rapport/`).toEqual([]);
   });
 }

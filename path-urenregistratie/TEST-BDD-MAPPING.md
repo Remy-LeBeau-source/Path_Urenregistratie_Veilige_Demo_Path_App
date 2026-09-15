@@ -460,6 +460,7 @@
 | SEC-H-011 | security | security.feature | medewerker die naar Klanturenstaten (beheer) navigeert komt terug op het eigen dashboard | Beslissingstabel rollen en autorisatie | 4 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
 | SEC-H-012 | security | security.feature | een in localStorage naar beheerder gezette rol geeft geen beheerscherm | Beslissingstabel rollen en autorisatie | 6 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
 | KLV-N-002 | ui | klassiek-verkenning.feature | het maandkeuzepaneel valt op geen enkele breedte buiten het scherm | Monkey testing (seeded) + negatieve equivalentieklasse + error guessing | 8 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | het maandkeuzepaneel valt op geen enkele breedte buiten het scherm | Negative | 19 | Actueel |
+| KLV-N-003 | ui | klassiek-verkenning.feature | in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte | Monkey testing (seeded) + negatieve equivalentieklasse + error guessing | 3 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte | Negative | 19 | Actueel |
 | KLV-N-001 | ui | klassiek-verkenning.feature | snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie | Monkey testing (seeded) + concurrency + toestandsovergang | 11 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie | Negative | 19 | Actueel |
 | SKIN-H-001 | ui | skin.feature | de app start standaard in de klassieke vormgeving | End-to-end use-case + visuele contractasserties | 3 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de app start standaard in de klassieke vormgeving | Happy | 19 | Actueel |
 | SKIN-H-002 | ui | skin.feature | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | End-to-end use-case + visuele contractasserties | 6 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | Happy | 19 | Actueel |
@@ -574,9 +575,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 552
+- Playwright executable cases: 553
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 553
+- Totaal unieke executable cases: 554
 - Playwright features: 31
 - Database features: 1
 - Playwright steps mappings: 31

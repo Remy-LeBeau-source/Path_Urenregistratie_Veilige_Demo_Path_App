@@ -17,6 +17,14 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
     Then wordt met Playwright-assertions bevestigd dat het maandkeuzepaneel valt op geen enkele breedte buiten het scherm
 
   @negative
+  Scenario: [KLV-N-003] in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte
+    # Testtechniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given een medewerker in Klassiek met de testbalk in de menubalk
+    When de flow voor KLV-N-003 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte
+
+  @negative
   Scenario: [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie
     # Testtechniek: Monkey testing (seeded) + concurrency + toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 11
