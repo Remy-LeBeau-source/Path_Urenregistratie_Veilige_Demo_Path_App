@@ -79,7 +79,7 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
   @happy
   Scenario: [KLV-H-010] op TEST staat alleen Herstel bovenin; thema, vormgeving en versie staan in het profielmenu
     # Testtechniek: Responsive viewport + toegankelijkheidsinspectie (44px, toetsenbord) + end-to-end use-case
-    # Aantoonbare Playwright-assertions in deze case: 12
+    # Aantoonbare Playwright-assertions in deze case: 15
     Given vondsten uit de monkey-verkenning op Klassiek is voorbereid
     When de flow voor KLV-H-010 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat op TEST staat alleen Herstel bovenin; thema, vormgeving en versie staan in het profielmenu
@@ -151,6 +151,14 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
     Then staat het blok er lokaal/op TEST met 10 updates, nieuwste eerst
     And staat geen naam of gevoelig gegeven in de teksten
     And op de PROD-host is het blok weg
+
+  @happy
+  Scenario: [KLV-H-019] ingevulde uren op Mijn uren zijn leesbaar in licht en donker, op telefoon en desktop
+    # Testtechniek: Contrastmeting (WCAG 4,5:1) + themacombinaties (licht/donker) × responsive viewport (390/1280)
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given vondsten uit de monkey-verkenning op Klassiek is voorbereid
+    When de flow voor KLV-H-019 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat ingevulde uren op Mijn uren zijn leesbaar in licht en donker, op telefoon en desktop
 
   @negative
   Scenario: [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie

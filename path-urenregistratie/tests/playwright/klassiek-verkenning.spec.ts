@@ -397,6 +397,11 @@ test('[KLV-H-010] op TEST staat alleen Herstel bovenin; thema, vormgeving en ver
       await expect(page.locator('#profile-menu-testfuncties')).toBeVisible();
       await expect(page.locator('#profile-menu-testknoppen #quick-theme-toggle')).toBeVisible();
       await expect(page.locator('#profile-menu-testknoppen #quick-skin-toggle')).toBeVisible();
+      // De vormgevingen heten Klassiek en Modern, ook in de hint (Gio 15 sep: "Naar nieuw"
+      // moest "Naar Modern" zijn).
+      await expect(page.locator('#quick-skin-toggle')).toHaveAttribute('title', 'Naar Modern');
+      await expect(page.locator('#quick-skin-toggle')).toHaveAttribute('aria-label', /Modern/);
+      expect(await page.locator('#quick-skin-toggle').evaluate(el => `${el.getAttribute('title')} ${el.getAttribute('aria-label')} ${el.textContent}`), 'geen "nieuw" als naam van een vormgeving').not.toMatch(/nieuw/i);
       await expect(page.locator('#profile-menu-versie')).toHaveText(/^Versie \d+\.\d+\.\d+$/);
       await page.keyboard.press('Escape');
       await loginPage.logout();
@@ -742,6 +747,57 @@ test('[KLV-H-018] Berichten toont "Nieuw in de app" met de laatste 10 updates, n
     await page.evaluate(() => ((0, eval)('syncEnvironmentChrome') as () => void)());
     await expect(blok).toBeVisible();
   });
+});
+
+test('[KLV-H-019] ingevulde uren op Mijn uren zijn leesbaar in licht en donker, op telefoon en desktop', async ({ page }) => {
+  // Gio 15 sep (screenshot, donker, 1280px): "je ziet de ingevulde uren niet". Het vak was
+  // bijna wit met bijna witte cijfers. De contrastgate keek niet naar invoervelden.
+  test.setTimeout(90_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await naarMijnUren(page);
+  // Een eigen maand, zodat het invullen hieronder geen andere case raakt.
+  await kiesMaand(page, await page.evaluate(() => {
+    const d = new Date(); const t = new Date(d.getFullYear(), d.getMonth() + 7, 1);
+    return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0');
+  }));
+  await page.locator('[data-hours-week-scope="all"]').click();
+  const veld = page.locator('#hours-grid .hours-input:not([disabled]):visible').nth(1);
+  await veld.fill('9');
+  for (const thema of ['light', 'dark'] as const) for (const breedte of [390, 1280]) {
+    await test.step(`Then is "9" leesbaar in ${thema} bij ${breedte}px (contrast ≥ 4,5:1)`, async () => {
+      await page.setViewportSize({ width: breedte, height: 900 });
+      await page.evaluate(t => {
+        const s = (0, eval)('state') as { preferences: Record<string, unknown> };
+        s.preferences.theme = t;
+        ((0, eval)('applyTheme') as () => void)();
+      }, thema);
+      await expect(page.locator('html')).toHaveAttribute('data-theme', thema);
+      const vak = page.locator('#hours-grid .hours-input:not([disabled]):visible').nth(1);
+      await expect(vak).toHaveValue('9');
+      // Onder "minder beweging" komt een themawissel pas later door (zie DASH-H-049): pollen.
+      await expect.poll(() => vak.evaluate(el => {
+        const rgba = (tekst: string) => (tekst.match(/[\d.]+/g) || []).map(Number);
+        const lum = ([r, g, b]: number[]) => {
+          const k = (c: number) => { const v = c / 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+          return 0.2126 * k(r) + 0.7152 * k(g) + 0.0722 * k(b);
+        };
+        // Achtergrond: doorschijnende lagen van binnen naar buiten mengen tot een dichte kleur.
+        const lagen: number[][] = [];
+        for (let n: Element | null = el; n; n = n.parentElement) {
+          const [r, g, b, a = 1] = rgba(getComputedStyle(n).backgroundColor);
+          if (a > 0) lagen.push([r, g, b, a]);
+          if (a >= 1) break;
+        }
+        let kleur = [255, 255, 255];
+        for (const [r, g, b, a] of lagen.reverse()) kleur = [r * a + kleur[0] * (1 - a), g * a + kleur[1] * (1 - a), b * a + kleur[2] * (1 - a)];
+        const tekst = rgba(getComputedStyle(el).color);
+        const [hoog, laag] = [lum(tekst), lum(kleur)].sort((x, y) => y - x);
+        return Math.round(((hoog + 0.05) / (laag + 0.05)) * 100) / 100;
+      }), { timeout: 3_000, message: `contrast ${thema} @ ${breedte}px` }).toBeGreaterThanOrEqual(4.5);
+    });
+  }
 });
 
 test('[KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie', async ({ page }) => {

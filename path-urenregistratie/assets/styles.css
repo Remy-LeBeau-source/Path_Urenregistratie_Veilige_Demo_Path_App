@@ -4869,7 +4869,9 @@ html:not([data-skin="new"]) body[data-role="employee"] .hours-table tfoot { disp
   }
   html[data-theme="dark"]:not([data-skin="new"]) body[data-role="employee"] #view-timesheet {
     --surface: rgba(17,29,43,.88); --surface-muted: rgba(30,45,61,.82); --line: #3b5064; --line-zacht: #2f4356; --muted: #b6c6d0; --ink: #f2f7f6;
-    --veld-vlak: #f7fbfa; --veld-rand: #d7e3df; --kaart-glans: rgba(255,255,255,.08);
+    /* Donker vak met lichte cijfers. Was #f7fbfa (bijna wit) terwijl --ink hier bijna wit
+       is: ingevulde uren waren onzichtbaar (Gio 15 sep, KLV-H-019). */
+    --veld-vlak: #0d1a26; --veld-rand: #5a7288; --kaart-glans: rgba(255,255,255,.08);
   }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .view-heading p,
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .assignment-bar,

@@ -5453,8 +5453,10 @@ function syncAppearanceSwitches(hostname = window.location.hostname) {
   if (skinButton) {
     skinButton.hidden = !redesignAllowed;
     skinButton.setAttribute("aria-pressed", String(vernieuwd));
-    skinButton.setAttribute("aria-label", vernieuwd ? "Schakel naar klassieke vormgeving" : "Schakel naar nieuwe vormgeving");
-    skinButton.title = vernieuwd ? "Naar klassiek" : "Naar nieuw";
+    // De vormgevingen heten Klassiek en Modern, ook in de hint (Gio 15 sep: "Naar nieuw"
+    // moest "Naar Modern" zijn).
+    skinButton.setAttribute("aria-label", vernieuwd ? "Schakel naar vormgeving Klassiek" : "Schakel naar vormgeving Modern");
+    skinButton.title = vernieuwd ? "Naar Klassiek" : "Naar Modern";
     // Testfeedback (Stasjo, medewerker, via screenshot): de knop toonde alleen de
     // huidige stand ("Nieuw") zonder enige hint dat een tik hem omschakelt -- op
     // mobiel is er geen hover-tooltip om dat te ontdekken, dus las de pil eerder

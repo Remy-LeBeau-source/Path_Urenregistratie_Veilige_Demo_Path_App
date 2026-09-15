@@ -69,6 +69,8 @@ When("de flow voor KLV-H-018 wordt uitgevoerd");
 Then("staat het blok er lokaal/op TEST met 10 updates, nieuwste eerst");
 And("staat geen naam of gevoelig gegeven in de teksten");
 And("op de PROD-host is het blok weg");
+When("de flow voor KLV-H-019 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat ingevulde uren op Mijn uren zijn leesbaar in licht en donker, op telefoon en desktop");
 And("de urenstaat staat al met een versie op de server");
 When("de eerste invoer onderweg is en er intussen twee nieuwe invoeren volgen");
 Then("slaagt elke opslag en staan alle drie de waarden daarna op de server");
