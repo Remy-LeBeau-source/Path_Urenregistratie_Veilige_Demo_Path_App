@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Path Pipeline — Jira, Confluence en Zephyr</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="path-pipeline.css">
+</head>
+<body data-pilot-design="path-pipeline">
+  <a class="skip-link" href="#workspace">Naar de werkomgeving</a>
+
+  <header class="product-bar">
+    <div class="product-mark" aria-label="Path Pipeline">
+      <span class="product-logo" aria-hidden="true">P</span>
+      <span><strong>Path</strong><small>Pipeline</small></span>
+    </div>
+    <label class="global-search">
+      <span aria-hidden="true">⌕</span>
+      <span class="sr-only">Zoeken in de demo</span>
+      <input type="search" placeholder="Zoeken" data-search>
+      <kbd>/</kbd>
+    </label>
+    <div class="product-actions">
+      <span class="test-badge">TEST-DEMO</span>
+      <div class="avatar-stack" aria-label="Betrokken teamleden">
+        <span title="Gio">GM</span><span title="Backoffice">BO</span><span title="Kwaliteit">QA</span>
+      </div>
+      <button class="icon-button" type="button" data-reset title="Herstel de demo" aria-label="Herstel de demo">↻</button>
+    </div>
+  </header>
+
+  <aside class="icon-rail" aria-label="Projectnavigatie">
+    <div class="rail-project-row">
+      <span class="rail-project">P</span>
+      <span><strong>Project PATH</strong><small>Kwaliteitsstraat</small></span>
+    </div>
+    <p class="rail-heading">Werkruimtes</p>
+    <button class="rail-button is-active" type="button" data-tab-target="backlog" aria-label="Jira Backlog">
+      <span class="rail-icon" aria-hidden="true">▦</span><span><strong>Jira</strong><small>Backlog &amp; bord</small></span>
+    </button>
+    <button class="rail-button" type="button" data-tab-target="knowledge" aria-label="Confluence Kennisbank">
+      <span class="rail-icon" aria-hidden="true">▤</span><span><strong>Confluence</strong><small>Kennisbank &amp; Living Doc</small></span>
+    </button>
+    <button class="rail-button" type="button" data-tab-target="tests" aria-label="Zephyr Testbeheer">
+      <span class="rail-icon" aria-hidden="true">✓</span><span><strong>Zephyr</strong><small>Testcases &amp; resultaten</small></span>
+    </button>
+    <span class="rail-spacer"></span>
+    <span class="rail-status" title="Demo beschikbaar" aria-label="Demo beschikbaar"></span>
+  </aside>
+
+  <main id="workspace" class="workspace">
+    <section class="intro-row" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">PATH / KWALITEITSSTRAAT</p>
+        <h1 id="page-title">Van vraag naar aantoonbare oplevering</h1>
+      </div>
+      <p>Volg een ticket van planning via testautomatisering naar feedback op TEST.</p>
+    </section>
+
+    <ol class="phase-strip" aria-label="Vier fasen van de pipeline" data-phase-strip>
+      <li data-phase="1">
+        <span class="phase-number">1</span>
+        <span><small>Vraag &amp; Planning</small><strong>Jira + Confluence</strong></span>
+      </li>
+      <li data-phase="2">
+        <span class="phase-number">2</span>
+        <span><small>Testproces</small><strong>Zephyr</strong></span>
+      </li>
+      <li data-phase="3">
+        <span class="phase-number">3</span>
+        <span><small>Automatisering</small><strong>Playwright · Cypress · API</strong><em>Lokaal, vóór het pushen</em></span>
+      </li>
+      <li data-phase="4">
+        <span class="phase-number">4</span>
+        <span><small>Automatische feedback</small><strong>CI/CD + rapportage</strong><em>Op TEST, ná een geslaagde CI-run</em></span>
+      </li>
+    </ol>
+
+    <section class="flow-monitor" aria-labelledby="flow-monitor-heading" data-flow-monitor>
+      <div class="flow-monitor-copy">
+        <span class="flow-pulse" aria-hidden="true"></span>
+        <div>
+          <p class="product-label jira">LIVE DEMO-FLOW</p>
+          <h2 id="flow-monitor-heading" data-flow-title>Klaar om een volledige flow te starten</h2>
+          <p data-flow-status>Vul rechts één vraag in. De demo maakt daarna automatisch het ticket, de testcase, het testresultaat en de Living Doc-regel.</p>
+        </div>
+      </div>
+      <ol class="flow-checkpoints" aria-label="Status van de automatische flow">
+        <li data-checkpoint="1"><span>1</span>Ticket &amp; scenario</li>
+        <li data-checkpoint="2"><span>2</span>Zephyr-testcase</li>
+        <li data-checkpoint="3"><span>3</span>Automatische test</li>
+        <li data-checkpoint="4"><span>4</span>TEST &amp; Living Doc</li>
+      </ol>
+    </section>
+
+    <nav class="workspace-tabs" role="tablist" aria-label="Onderdelen van Path Pipeline">
+      <button id="tab-backlog" role="tab" type="button" aria-selected="true" aria-controls="panel-backlog" data-tab="backlog">
+        <span aria-hidden="true">▦</span><span><small>Jira</small>Backlog</span><b data-backlog-count>5</b>
+      </button>
+      <button id="tab-knowledge" role="tab" type="button" aria-selected="false" aria-controls="panel-knowledge" tabindex="-1" data-tab="knowledge">
+        <span aria-hidden="true">▤</span><span><small>Confluence</small>Kennisbank</span>
+      </button>
+      <button id="tab-tests" role="tab" type="button" aria-selected="false" aria-controls="panel-tests" tabindex="-1" data-tab="tests">
+        <span aria-hidden="true">✓</span><span><small>Zephyr</small>Testbeheer</span><b data-test-count>5</b>
+      </button>
+    </nav>
+
+    <section id="panel-backlog" class="tab-panel" role="tabpanel" aria-labelledby="tab-backlog" data-panel="backlog">
+      <div class="backlog-layout">
+        <section class="board" aria-labelledby="backlog-heading">
+          <div class="section-head">
+            <div><p class="product-label jira">JIRA SOFTWARE</p><h2 id="backlog-heading">Path opleveringen</h2></div>
+            <span class="board-meta"><i></i> Actuele demo</span>
+          </div>
+          <div class="board-columns">
+            <section class="board-column" aria-labelledby="todo-heading">
+              <header><h3 id="todo-heading">Te doen</h3><span data-count="todo">0</span></header>
+              <div class="ticket-list" data-ticket-list="todo"></div>
+            </section>
+            <section class="board-column" aria-labelledby="doing-heading">
+              <header><h3 id="doing-heading">In uitvoering</h3><span data-count="doing">0</span></header>
+              <div class="ticket-list" data-ticket-list="doing"></div>
+            </section>
+            <section class="board-column" aria-labelledby="done-heading">
+              <header><h3 id="done-heading">Opgeleverd</h3><span data-count="done">5</span></header>
+              <div class="ticket-list" data-ticket-list="done"></div>
+            </section>
+          </div>
+        </section>
+
+        <aside class="create-card" aria-labelledby="create-heading">
+          <p class="product-label jira">JIRA · NIEUW TICKET</p>
+          <h2 id="create-heading">Start jouw volledige flow</h2>
+          <p>Vul één vraag in. Daarna loopt jouw ticket vanzelf van Jira via Zephyr en CI naar de Living Doc.</p>
+          <form data-ticket-form>
+            <label>Samenvatting<input name="title" required maxlength="90" placeholder="Wat moet er veranderen?"></label>
+            <label>Stakeholder
+              <select name="stakeholder">
+                <option>Product Owner</option>
+                <option>Backoffice</option>
+                <option>Medewerker</option>
+                <option>Beheerder</option>
+                <option>QA</option>
+                <option>Release manager</option>
+              </select>
+            </label>
+            <label>Type
+              <select name="type">
+                <option value="feature">Feature</option>
+                <option value="bug">Bug</option>
+                <option value="chore">Chore</option>
+                <option value="ci">CI/CD</option>
+              </select>
+            </label>
+            <label>Gewenste waarde<input name="goal" required maxlength="140" placeholder="Waarom is dit belangrijk?"></label>
+            <label>Acceptatiecriterium<textarea name="criterion" rows="3" required maxlength="220" placeholder="Wanneer is dit aantoonbaar goed?"></textarea></label>
+            <button class="primary-button" type="submit"><span>▶</span> Ticket maken &amp; hele flow starten</button>
+          </form>
+          <ol class="form-route" aria-label="Automatische route na toevoegen">
+            <li>Jira-ticket</li><li>Zephyr-test</li><li>CI op TEST</li><li>Living Doc</li>
+          </ol>
+          <p class="form-feedback" role="status" aria-live="polite" data-form-feedback></p>
+        </aside>
+      </div>
+    </section>
+
+    <section id="panel-knowledge" class="tab-panel" role="tabpanel" aria-labelledby="tab-knowledge" data-panel="knowledge" hidden>
+      <div class="knowledge-layout">
+        <aside class="page-tree" aria-label="Confluence paginaboom">
+          <p class="tree-space"><span>P</span> Path Kwaliteit</p>
+          <p class="tree-section-title">Analyse &amp; ontwerp · laatste 5</p>
+          <ul data-doc-tree></ul>
+          <p class="tree-fixed">▤ Teststrategie</p>
+          <p class="tree-fixed">▤ Releaseafspraken</p>
+        </aside>
+        <article class="knowledge-document" data-doc-page>
+          <p class="document-breadcrumb">Path Kwaliteit / Analyse &amp; ontwerp / <span data-doc-key>PATH-196</span></p>
+          <p class="product-label confluence">CONFLUENCE · ANALYSE &amp; ONTWERP</p>
+          <h2 data-doc-title></h2>
+          <p class="document-lede" data-doc-summary></p>
+          <div class="author-line"><span class="author-avatar">AN</span><span data-doc-author></span><span data-doc-updated>Zojuist bijgewerkt</span></div>
+          <div class="traceability-chain" data-doc-trace></div>
+          <section class="analysis-grid">
+            <div class="analysis-card stakeholder-card"><p class="product-label confluence">STAKEHOLDERVRAAG</p><h3 data-doc-stakeholder></h3><p data-doc-question></p></div>
+            <div class="analysis-card story-card"><p class="product-label jira">USER STORY</p><h3 data-doc-story-title></h3><p data-doc-story></p></div>
+          </section>
+          <section class="doc-section design-section">
+            <div class="design-heading"><span>FO</span><div><p class="product-label confluence">FUNCTIONEEL ONTWERP</p><h3>Wat moet de gebruiker kunnen?</h3></div></div>
+            <p data-doc-fo></p>
+          </section>
+          <section class="doc-section design-section">
+            <div class="design-heading technical"><span>TO</span><div><p class="product-label zephyr">TECHNISCH ONTWERP</p><h3>Hoe wordt dit aantoonbaar gebouwd?</h3></div></div>
+            <p data-doc-to></p>
+          </section>
+          <section class="doc-section acceptance-section">
+            <p class="product-label jira">ACCEPTATIECRITERIUM &amp; TESTBASIS</p>
+            <h3>Voorwaarde voor oplevering</h3>
+            <blockquote data-doc-criterion></blockquote>
+            <details class="gherkin" open><summary>Afgeleid Gherkin-scenario</summary><pre data-doc-gherkin></pre></details>
+          </section>
+          <section class="living-doc" aria-labelledby="living-doc-heading">
+            <div class="section-head compact"><div><p class="product-label confluence">LEVENDE DOCUMENTATIE</p><h3 id="living-doc-heading">Living Doc</h3></div><span>Laatste 5 opleveringen</span></div>
+            <ol data-living-doc></ol>
+          </section>
+        </article>
+      </div>
+    </section>
+
+    <section id="panel-tests" class="tab-panel" role="tabpanel" aria-labelledby="tab-tests" data-panel="tests" hidden>
+      <div class="test-surface">
+        <div class="section-head">
+          <div><p class="product-label zephyr">ZEPHYR SCALE</p><h2>Testbeheer</h2></div>
+          <span class="board-meta"><i></i> Project PATH</span>
+        </div>
+        <div class="test-metrics" data-test-metrics></div>
+        <div class="test-table-wrap">
+          <table class="test-table">
+            <thead><tr><th>Testcase</th><th>Samenvatting</th><th>Platform</th><th>Status</th><th>Scenario</th></tr></thead>
+            <tbody data-test-table></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="demo-footer">
+    <strong>Path Pipeline</strong>
+    <span>Gesimuleerd voorbeeld ter illustratie van de werkwijze — geen koppeling met een bestaand Jira-, Confluence- of Zephyr-account. Het testresultaat is een korte, willekeurige simulatie, geen echte testrun.</span>
+  </footer>
+
+  <script src="path-pipeline.js"></script>
+</body>
+</html>
