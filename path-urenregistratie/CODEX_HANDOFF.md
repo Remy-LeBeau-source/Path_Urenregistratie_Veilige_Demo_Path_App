@@ -2,6 +2,71 @@
 
 Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
 
+## Nieuwe overdracht Claude Code (main) — 16 sep, demo-pipeline op eigen Path-URL i.p.v. Claude-link
+
+Gio wil de interactieve Jira/Confluence/Zephyr-demo (zie [[jira-confluence-zephyr-demo-artifact]] in
+main-sessiegeheugen) niet alleen als losse Claude-artifact-link, maar ook als een echte URL op het eigen
+Path-domein. Dit is puur een demo/simulatie van de werkwijze uit zijn eigen procesplaatje
+(Jira+Confluence → Zephyr i.p.v. SpiraTest → Playwright/Cypress/API → CI/CD+rapportage), geen appfunctie.
+
+**Waarom via jou (Codex) en niet via mij (Claude Code):** Gio wil dat jij dit zelfstandig kan bouwen en
+inbouwen in de CI/CD-pipeline, niet dat ik het kant-en-klaar aanlever. Vandaar deze overdracht met de
+volledige inhoudelijke spec in plaats van een pasklaar bestand.
+
+**Harde eis: alleen TEST, nooit PROD.** Dit is een demo-pagina, geen productfunctie voor medewerkers of
+beheerders — hoort niet in de PROD-uitrol. Zorg dat de route/build dit uitsluit van de PROD-pipeline op
+dezelfde manier als andere TEST-only/demo-content in deze repo.
+
+**Referentiemateriaal:** de volledige, al werkende versie staat live op
+https://claude.ai/code/artifact/724f13a3-819e-4e55-8462-abf73b8236ec (Claude-artifact, privé, door Gio met
+je te delen indien nodig) — kijk daar naar het exacte gedrag en design voordat je begint. Kort samengevat:
+
+- **Vorm:** één pagina, drie tabbladen (Backlog = Jira-stijl, Kennisbank = Confluence-stijl, Testbeheer =
+  Zephyr-stijl), met bovenaan een fasestrip die exact Gio's procesplaatje volgt: 1 Vraag & Planning
+  (Jira + Confluence) → 2 Testproces (Zephyr, i.p.v. SpiraTest) → 3 Automatisering (Playwright · Cypress ·
+  API, badge "Lokaal, vóór het pushen") → 4 Automatische feedback (CI/CD + rapportage, badge "Op TEST, ná
+  een geslaagde CI-run"). Highlight de actieve fase tijdens het doorlopen van een ticket.
+- **Visuele echtheid** (expliciete wens van Gio, "laat alles er echt op lijken kwa design"): Jira-blauw
+  (#0c66e4), donkere navy topbalk, linker icoon-rail met projectbadge, zoekbalk, avatarstack, gekleurde
+  issue-type-iconen (bug/feature/chore/ci) op kaarten. Confluence: sans-serif lopende tekst, paginaboom-
+  sidebar, document met kop/subtitel/secties. Zephyr: samenvattingstegels (testcases/geslaagd/gefaald/
+  draait nu) + tabel met testcaseregels. Font: IBM Plex Sans + IBM Plex Mono via Google Fonts. Licht én
+  donker thema (volgt `prefers-color-scheme`).
+- **Werkend, geen mockup:** een formulier op Backlog voegt een ticket toe in kolom "Te doen"; een knop
+  "Voer pipeline uit" laat het ticket door de vier fases lopen (opgepakt → testcase aangemaakt in Zephyr →
+  lokaal draaien → CI/CD-uitslag), met een testcase-rij in Testbeheer en een regel in de "Living Doc" onder
+  aan Kennisbank. De Living Doc is hard begrensd op de laatste 10 regels (oudste valt er echt af, niet
+  alleen verborgen — zelfde patroon als "Nieuw in de app" in de echte applicatie).
+- **Vijf echte opleveringen als startpunt** (altijd zichtbaar, ook zonder zelf iets toe te voegen), elk met
+  het volledige Gherkin-scenario zichtbaar via een "▸ Gherkin"-toggle, zowel op de Jira-kaart als de Zephyr-
+  testcaserij:
+  1. PATH-196 — "Ingetrokken mededeling toont label en reden" (TC-NOT-H-012, desktop-chromium)
+  2. PATH-194 — "PROD-poort breekt release alleen af bij een nieuwere release" (TC-PROD-WEKKER-01, CI)
+  3. PATH-197 — "Hele maand blijft staan na een hertekening op de achtergrond" (TC-DASH-N-032, desktop-chromium)
+  4. PATH-188 — "Testfuncties uit de balken, alleen Herstel blijft bovenin" (TC-KLV-H-018, desktop-chromium)
+  5. PATH-191 — "Inlogklik wacht tot de scrollanimatie stopt" (TC-AUTH-H-025, mobile-safari)
+
+  (De exacte Gherkin-teksten staan op de live artifact-link hierboven — kopieer ze vandaar, niet opnieuw
+  verzinnen.)
+- **Footer-disclaimer verplicht:** iets in de trant van "Gesimuleerd voorbeeld ter illustratie van de
+  werkwijze — geen koppeling met een bestaand Jira-, Confluence- of Zephyr-account. Het testresultaat is
+  een korte, willekeurige simulatie, geen echte testrun."
+
+**Wat anders moet dan de Claude-versie:** de Claude-artifact deelt live state tussen alle kijkers via een
+Claude-specifieke db-capability (`window.claude.use('db')`) — die bestaat niet buiten claude.ai. Op de
+eigen Path-URL is dat sowieso niet nodig/gewenst; kies zelf een passende, simpele opslag (bijvoorbeeld
+alleen lokaal in de browser van de bezoeker, of helemaal niets bewaren en bij elke laad opnieuw de vijf
+opleveringen tonen) — geen gedeelde backend nodig voor een demo.
+
+**Voorstel voor plek in de repo:** een statisch, zelfstandig HTML-bestand, in lijn met de bestaande
+`pilot/`-map (zie `pilot/1919-medewerker.html`, `pilot/fase17-richtingpagina.html` als voorbeeld van hoe
+zulke losse demo-bestanden hier al staan), zodat het via de normale build/deploy naar TEST meegaat zonder
+de eigenlijke app-routes te raken. Kies zelf de exacte route/bestandsnaam die logisch aansluit bij hoe TEST
+dit soort statische pagina's al serveert.
+
+**Wanneer klaar:** meld het bij Gio en/of de herontwerp-sessie met de TEST-URL, zodat main-sessiegeheugen
+en GIO-WENSEN.md bijgewerkt kunnen worden (main doet dat desgevraagd).
+
 ## Update Claude Code nacht 14→15 sep — monkey-verkenning Klassiek (2.0.77)
 
 - Nieuw: seeded monkey-verkenner `tests/verkenning/klassiek-monkey.spec.ts` met eigen config
