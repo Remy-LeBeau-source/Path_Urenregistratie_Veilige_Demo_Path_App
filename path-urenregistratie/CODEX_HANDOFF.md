@@ -48,7 +48,9 @@ Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
 - Open (zacht, alleen met echte maildata): in Instellingen steekt een mailgeschiedenisregel 14px uit bij 1024px
   (grid minmax(180px) + auto-kolom), en een statuspil naast een sjabloonkop 8px bij 360px. Niet met een rode
   deterministische case vastgelegd, dus nog niet gefixt.
-- Open: urenvelden accepteren >24 lokaal (server weigert terecht met 400, UX kan beter).
+- **2.0.83**: **KLV-N-008** meer dan 24 uur op een dag: vak krijgt aria-invalid en rode rand, regel onderin
+  "Niet opgeslagen: een dag kan maximaal 24 uur hebben", vorige geldige waarde blijft in de totalen en er gaat
+  niets naar de server tot het klopt (`updateHoursTotal`). Grenswaarden 24 / 24,5 / 25. Main 2.0.82 gemerged.
 
 ## Update Claude Code 14 sep, later op de avond — CI-shardtimeout (exit 124) opgelost
 

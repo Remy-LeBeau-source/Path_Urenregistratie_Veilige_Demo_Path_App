@@ -651,7 +651,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 559 Playwri
 - [KLV-N-005] op geen enkel medewerkerscherm valt inhoud buiten de rechterrand rond de breekpunten — Techniek: Monkey testing (seeded) + grenswaardenanalyse + toestandsovergang + responsive viewport · Assertions: 2
 - [KLV-N-006] op geen enkel beheerscherm valt inhoud buiten de rechterrand rond de breekpunten — Techniek: Monkey testing (seeded) + grenswaardenanalyse + toestandsovergang + responsive viewport · Assertions: 2
 - [KLV-N-007] elk scherm heeft een paginatitel, ook Klanturenstaten bij de beheerder — Techniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing · Assertions: 5
-- [KLV-N-008] meer dan 24 uur op een dag wordt direct in het vak gemeld en niet naar de server gestuurd — Techniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing · Assertions: 9
+- [KLV-N-008] meer dan 24 uur op een dag wordt direct in het vak gemeld en niet naar de server gestuurd — Techniek: Monkey testing (seeded) + grenswaardenanalyse + negatieve equivalentieklasse · Assertions: 9
 - [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie — Techniek: Monkey testing (seeded) + concurrency + toestandsovergang · Assertions: 11
 
 ### Vormgevingsschakelaar (klassiek / nieuw)

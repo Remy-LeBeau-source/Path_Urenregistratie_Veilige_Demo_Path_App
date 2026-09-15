@@ -60,7 +60,7 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
 
   @negative
   Scenario: [KLV-N-008] meer dan 24 uur op een dag wordt direct in het vak gemeld en niet naar de server gestuurd
-    # Testtechniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing
+    # Testtechniek: Monkey testing (seeded) + grenswaardenanalyse + negatieve equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 9
     Given een medewerker op Mijn uren van een open maand
     When de medewerker 25 uur op een dag intypt
