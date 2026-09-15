@@ -223,18 +223,44 @@ INSERT INTO announcements (
   (6, 1, 2, 'standard', 'withdrawn', 'Vrijdagborrel gaat niet door', 'De vrijdagborrel van deze week vervalt.', 'Alle medewerkers', FALSE, 'Hij gaat toch door: er is nieuwe taart.', 2, '2026-08-21 11:05:00', '2026-08-21 09:30:00', '2026-08-21 11:05:00'),
   (7, 1, 1, 'standard', 'withdrawn', 'Parkeergarage dicht', 'De parkeergarage is vandaag niet bereikbaar, want de sleutelkast is zoek. Parkeer even in de straat.', 'Alle medewerkers', FALSE, 'De sleutel lag in de koffiekamer, de garage is weer open.', 1, '2026-08-26 08:50:00', '2026-08-26 08:10:00', '2026-08-26 08:50:00');
 
+-- Aanvulling (15 sep, opdracht Gio): de medewerker moet in de TEST-basis tien
+-- mededelingen zien, waarvan zes ingetrokken en vier ongelezen. De vier bestaande
+-- geldige berichten (1/3/4, id 2 is een concept) plus de drie ingetrokken
+-- hierboven (5/6/7) gaven Stasjo tot nu toe zes, deze twee blokken maken er
+-- tien van: één nieuw geldig bericht (8, ongelezen) en drie nieuwe ingetrokken
+-- (9/10/11, elk met een lichte reden zoals bij 5/6/7). Teksten blijven neutraal
+-- -- geen namen, geen e-mailadres, geen bedrag: de medewerkerweergave toont de
+-- afzender toch al als "Beheerder", nooit een naam.
+INSERT INTO announcements (
+  id, company_id, created_by, kind, status, title, message,
+  audience_label, email_requested, created_at, updated_at
+) VALUES
+  (8, 1, 2, 'standard', 'sent', 'Vergaderruimte boven weer beschikbaar', 'De vergaderruimte op de eerste verdieping is weer vrij te reserveren voor besprekingen.', 'Alle medewerkers', FALSE, '2026-08-28 09:00:00', '2026-08-28 09:00:00');
+
+INSERT INTO announcements (
+  id, company_id, created_by, kind, status, title, message,
+  audience_label, email_requested, withdrawal_reason, withdrawn_by, withdrawn_at, created_at, updated_at
+) VALUES
+  (9, 1, 1, 'standard', 'withdrawn', 'Printer op de tweede verdieping kapot', 'De printer op de tweede verdieping doet het niet. Gebruik voorlopig de printer beneden.', 'Alle medewerkers', FALSE, 'De printer bleek gewoon zonder papier te zitten, hij werkt weer.', 1, '2026-08-13 10:30:00', '2026-08-13 08:00:00', '2026-08-13 10:30:00'),
+  (10, 1, 2, 'standard', 'withdrawn', 'Lift buiten gebruik', 'De lift is vandaag buiten gebruik wegens onderhoud. Gebruik de trap.', 'Alle medewerkers', FALSE, 'Het onderhoud is sneller klaar dan gepland: de lift doet het weer.', 2, '2026-08-14 11:00:00', '2026-08-14 08:15:00', '2026-08-14 11:00:00'),
+  (11, 1, 1, 'standard', 'withdrawn', 'Kantoor sluit vandaag om 16:00', 'Vanwege een geplande brandoefening sluit het kantoor vandaag om 16:00 uur.', 'Alle medewerkers', FALSE, 'De brandoefening is verzet naar volgende week, het kantoor blijft gewoon open tot de normale tijd.', 1, '2026-08-19 09:10:00', '2026-08-19 07:50:00', '2026-08-19 09:10:00');
+
 INSERT INTO announcement_recipients (announcement_id, user_id, email_requested, email_status) VALUES
   (1, 3, TRUE, 'sent'), (1, 4, TRUE, 'sent'), (1, 5, TRUE, 'sent'), (1, 6, TRUE, 'sent'),
   (2, 3, FALSE, 'not_requested'), (2, 4, FALSE, 'not_requested'), (2, 5, FALSE, 'not_requested'), (2, 6, FALSE, 'not_requested'),
   (3, 3, FALSE, 'not_requested'), (3, 4, FALSE, 'not_requested'), (3, 5, FALSE, 'not_requested'), (3, 6, FALSE, 'not_requested'),
-  (4, 3, FALSE, 'not_requested'), (4, 4, FALSE, 'not_requested'), (4, 5, FALSE, 'not_requested'), (4, 6, FALSE, 'not_requested');
+  (4, 3, FALSE, 'not_requested'), (4, 4, FALSE, 'not_requested'), (4, 5, FALSE, 'not_requested'), (4, 6, FALSE, 'not_requested'),
+  (8, 3, FALSE, 'not_requested'), (8, 4, FALSE, 'not_requested'), (8, 5, FALSE, 'not_requested'), (8, 6, FALSE, 'not_requested');
 
 -- De ingetrokken voorbeelden staan voor elke ontvanger al op gelezen: de
 -- ongelezen-teller van Berichten telt op announcement_recipients.read_at.
 INSERT INTO announcement_recipients (announcement_id, user_id, email_requested, email_status, read_at) VALUES
   (5, 3, FALSE, 'not_requested', '2026-08-18 09:20:00'), (5, 4, FALSE, 'not_requested', '2026-08-18 09:20:00'), (5, 5, FALSE, 'not_requested', '2026-08-18 09:20:00'), (5, 6, FALSE, 'not_requested', '2026-08-18 09:20:00'),
   (6, 3, FALSE, 'not_requested', '2026-08-21 11:05:00'), (6, 4, FALSE, 'not_requested', '2026-08-21 11:05:00'), (6, 5, FALSE, 'not_requested', '2026-08-21 11:05:00'), (6, 6, FALSE, 'not_requested', '2026-08-21 11:05:00'),
-  (7, 3, FALSE, 'not_requested', '2026-08-26 08:50:00'), (7, 4, FALSE, 'not_requested', '2026-08-26 08:50:00'), (7, 5, FALSE, 'not_requested', '2026-08-26 08:50:00'), (7, 6, FALSE, 'not_requested', '2026-08-26 08:50:00');
+  (7, 3, FALSE, 'not_requested', '2026-08-26 08:50:00'), (7, 4, FALSE, 'not_requested', '2026-08-26 08:50:00'), (7, 5, FALSE, 'not_requested', '2026-08-26 08:50:00'), (7, 6, FALSE, 'not_requested', '2026-08-26 08:50:00'),
+  (9, 3, FALSE, 'not_requested', '2026-08-13 10:30:00'), (9, 4, FALSE, 'not_requested', '2026-08-13 10:30:00'), (9, 5, FALSE, 'not_requested', '2026-08-13 10:30:00'), (9, 6, FALSE, 'not_requested', '2026-08-13 10:30:00'),
+  (10, 3, FALSE, 'not_requested', '2026-08-14 11:00:00'), (10, 4, FALSE, 'not_requested', '2026-08-14 11:00:00'), (10, 5, FALSE, 'not_requested', '2026-08-14 11:00:00'), (10, 6, FALSE, 'not_requested', '2026-08-14 11:00:00'),
+  (11, 3, FALSE, 'not_requested', '2026-08-19 09:10:00'), (11, 4, FALSE, 'not_requested', '2026-08-19 09:10:00'), (11, 5, FALSE, 'not_requested', '2026-08-19 09:10:00'), (11, 6, FALSE, 'not_requested', '2026-08-19 09:10:00');
 
 INSERT INTO notifications (
   id, company_id, user_id, period_id, announcement_id, notification_type, title, message, target_route, read_at, created_at
@@ -258,7 +284,23 @@ INSERT INTO notifications (
   (17, 1, 3, NULL, 7, 'announcement', 'Parkeergarage dicht', 'De parkeergarage is vandaag niet bereikbaar, want de sleutelkast is zoek. Parkeer even in de straat.', 'employee-announcements', '2026-08-26 08:50:00', '2026-08-26 08:10:00'),
   (18, 1, 4, NULL, 7, 'announcement', 'Parkeergarage dicht', 'De parkeergarage is vandaag niet bereikbaar, want de sleutelkast is zoek. Parkeer even in de straat.', 'employee-announcements', '2026-08-26 08:50:00', '2026-08-26 08:10:00'),
   (19, 1, 5, NULL, 7, 'announcement', 'Parkeergarage dicht', 'De parkeergarage is vandaag niet bereikbaar, want de sleutelkast is zoek. Parkeer even in de straat.', 'employee-announcements', '2026-08-26 08:50:00', '2026-08-26 08:10:00'),
-  (20, 1, 6, NULL, 7, 'announcement', 'Parkeergarage dicht', 'De parkeergarage is vandaag niet bereikbaar, want de sleutelkast is zoek. Parkeer even in de straat.', 'employee-announcements', '2026-08-26 08:50:00', '2026-08-26 08:10:00');
+  (20, 1, 6, NULL, 7, 'announcement', 'Parkeergarage dicht', 'De parkeergarage is vandaag niet bereikbaar, want de sleutelkast is zoek. Parkeer even in de straat.', 'employee-announcements', '2026-08-26 08:50:00', '2026-08-26 08:10:00'),
+  (21, 1, 3, NULL, 8, 'announcement', 'Vergaderruimte boven weer beschikbaar', 'De vergaderruimte op de eerste verdieping is weer vrij te reserveren voor besprekingen.', 'employee-announcements', NULL, '2026-08-28 09:00:00'),
+  (22, 1, 4, NULL, 8, 'announcement', 'Vergaderruimte boven weer beschikbaar', 'De vergaderruimte op de eerste verdieping is weer vrij te reserveren voor besprekingen.', 'employee-announcements', NULL, '2026-08-28 09:00:00'),
+  (23, 1, 5, NULL, 8, 'announcement', 'Vergaderruimte boven weer beschikbaar', 'De vergaderruimte op de eerste verdieping is weer vrij te reserveren voor besprekingen.', 'employee-announcements', NULL, '2026-08-28 09:00:00'),
+  (24, 1, 6, NULL, 8, 'announcement', 'Vergaderruimte boven weer beschikbaar', 'De vergaderruimte op de eerste verdieping is weer vrij te reserveren voor besprekingen.', 'employee-announcements', NULL, '2026-08-28 09:00:00'),
+  (25, 1, 3, NULL, 9, 'announcement', 'Printer op de tweede verdieping kapot', 'De printer op de tweede verdieping doet het niet. Gebruik voorlopig de printer beneden.', 'employee-announcements', '2026-08-13 10:30:00', '2026-08-13 08:00:00'),
+  (26, 1, 4, NULL, 9, 'announcement', 'Printer op de tweede verdieping kapot', 'De printer op de tweede verdieping doet het niet. Gebruik voorlopig de printer beneden.', 'employee-announcements', '2026-08-13 10:30:00', '2026-08-13 08:00:00'),
+  (27, 1, 5, NULL, 9, 'announcement', 'Printer op de tweede verdieping kapot', 'De printer op de tweede verdieping doet het niet. Gebruik voorlopig de printer beneden.', 'employee-announcements', '2026-08-13 10:30:00', '2026-08-13 08:00:00'),
+  (28, 1, 6, NULL, 9, 'announcement', 'Printer op de tweede verdieping kapot', 'De printer op de tweede verdieping doet het niet. Gebruik voorlopig de printer beneden.', 'employee-announcements', '2026-08-13 10:30:00', '2026-08-13 08:00:00'),
+  (29, 1, 3, NULL, 10, 'announcement', 'Lift buiten gebruik', 'De lift is vandaag buiten gebruik wegens onderhoud. Gebruik de trap.', 'employee-announcements', '2026-08-14 11:00:00', '2026-08-14 08:15:00'),
+  (30, 1, 4, NULL, 10, 'announcement', 'Lift buiten gebruik', 'De lift is vandaag buiten gebruik wegens onderhoud. Gebruik de trap.', 'employee-announcements', '2026-08-14 11:00:00', '2026-08-14 08:15:00'),
+  (31, 1, 5, NULL, 10, 'announcement', 'Lift buiten gebruik', 'De lift is vandaag buiten gebruik wegens onderhoud. Gebruik de trap.', 'employee-announcements', '2026-08-14 11:00:00', '2026-08-14 08:15:00'),
+  (32, 1, 6, NULL, 10, 'announcement', 'Lift buiten gebruik', 'De lift is vandaag buiten gebruik wegens onderhoud. Gebruik de trap.', 'employee-announcements', '2026-08-14 11:00:00', '2026-08-14 08:15:00'),
+  (33, 1, 3, NULL, 11, 'announcement', 'Kantoor sluit vandaag om 16:00', 'Vanwege een geplande brandoefening sluit het kantoor vandaag om 16:00 uur.', 'employee-announcements', '2026-08-19 09:10:00', '2026-08-19 07:50:00'),
+  (34, 1, 4, NULL, 11, 'announcement', 'Kantoor sluit vandaag om 16:00', 'Vanwege een geplande brandoefening sluit het kantoor vandaag om 16:00 uur.', 'employee-announcements', '2026-08-19 09:10:00', '2026-08-19 07:50:00'),
+  (35, 1, 5, NULL, 11, 'announcement', 'Kantoor sluit vandaag om 16:00', 'Vanwege een geplande brandoefening sluit het kantoor vandaag om 16:00 uur.', 'employee-announcements', '2026-08-19 09:10:00', '2026-08-19 07:50:00'),
+  (36, 1, 6, NULL, 11, 'announcement', 'Kantoor sluit vandaag om 16:00', 'Vanwege een geplande brandoefening sluit het kantoor vandaag om 16:00 uur.', 'employee-announcements', '2026-08-19 09:10:00', '2026-08-19 07:50:00');
 
 INSERT INTO audit_log (company_id, actor_user_id, event_type, entity_type, entity_id, event_data) VALUES
   (1, 1, 'demo_seed_loaded', 'database', 'path_urenregistratie', JSON_OBJECT('version', '0.9.71', 'note', 'Demo-data sluit aan op de browser-GUI basisstand.'));
