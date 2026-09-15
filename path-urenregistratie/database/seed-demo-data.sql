@@ -245,12 +245,37 @@ INSERT INTO announcements (
   (10, 1, 2, 'standard', 'withdrawn', 'Lift buiten gebruik', 'De lift is vandaag buiten gebruik wegens onderhoud. Gebruik de trap.', 'Alle medewerkers', FALSE, 'Het onderhoud is sneller klaar dan gepland: de lift doet het weer.', 2, '2026-08-14 11:00:00', '2026-08-14 08:15:00', '2026-08-14 11:00:00'),
   (11, 1, 1, 'standard', 'withdrawn', 'Kantoor sluit vandaag om 16:00', 'Vanwege een geplande brandoefening sluit het kantoor vandaag om 16:00 uur.', 'Alle medewerkers', FALSE, 'De brandoefening is verzet naar volgende week, het kantoor blijft gewoon open tot de normale tijd.', 1, '2026-08-19 09:10:00', '2026-08-19 07:50:00', '2026-08-19 09:10:00');
 
+-- Aanvulling (16 sep, opdracht Gio, gekozen aantal): elke medewerker krijgt op
+-- TEST dezelfde vijftien mededelingen, zes ingetrokken en vijf ongelezen, zodat
+-- "Alles" een tweede pagina toont (10 per pagina). De zes ingetrokken (5/6/7/
+-- 9/10/11) golden al voor alle medewerkers. Deze vijf nieuwe geldige berichten
+-- (12 t/m 16) plus de drie bestaande (1/3/4, tot nu toe alleen voor Stasjo
+-- zichtbaar) brengen elke medewerker op negen geldige berichten, met 1/3/4, 8
+-- en 16 ongelezen, dat zijn er vijf. Neutrale teksten, geen namen.
+INSERT INTO announcements (
+  id, company_id, created_by, kind, status, title, message,
+  audience_label, email_requested, created_at, updated_at
+) VALUES
+  (12, 1, 2, 'standard', 'sent', 'Nieuwe koffieautomaat geplaatst', 'Er staat een nieuwe koffieautomaat in de kantine, de oude is weggehaald.', 'Alle medewerkers', FALSE, '2026-09-01 08:30:00', '2026-09-01 08:30:00'),
+  (13, 1, 1, 'standard', 'sent', 'Wifi-wachtwoord gewijzigd', 'Het wifi-wachtwoord op kantoor is vernieuwd, vraag het nieuwe wachtwoord na bij Beheer.', 'Alle medewerkers', FALSE, '2026-09-03 09:00:00', '2026-09-03 09:00:00'),
+  (14, 1, 2, 'standard', 'sent', 'Fietsenstalling uitgebreid', 'Er zijn extra plekken bijgekomen in de fietsenstalling achter het pand.', 'Alle medewerkers', FALSE, '2026-09-05 08:15:00', '2026-09-05 08:15:00'),
+  (15, 1, 1, 'standard', 'sent', 'Onderhoud aan de verwarming gepland', 'Volgende week wordt de verwarming een dagdeel getest, dit kan voor wat geluid zorgen.', 'Alle medewerkers', FALSE, '2026-09-08 10:00:00', '2026-09-08 10:00:00'),
+  (16, 1, 2, 'standard', 'sent', 'Nieuwe procedure voor onkostendeclaraties', 'Onkostendeclaraties lopen voortaan via het formulier in het portaal in plaats van per mail.', 'Alle medewerkers', FALSE, '2026-09-10 09:30:00', '2026-09-10 09:30:00');
+
 INSERT INTO announcement_recipients (announcement_id, user_id, email_requested, email_status) VALUES
   (1, 3, TRUE, 'sent'), (1, 4, TRUE, 'sent'), (1, 5, TRUE, 'sent'), (1, 6, TRUE, 'sent'),
   (2, 3, FALSE, 'not_requested'), (2, 4, FALSE, 'not_requested'), (2, 5, FALSE, 'not_requested'), (2, 6, FALSE, 'not_requested'),
   (3, 3, FALSE, 'not_requested'), (3, 4, FALSE, 'not_requested'), (3, 5, FALSE, 'not_requested'), (3, 6, FALSE, 'not_requested'),
   (4, 3, FALSE, 'not_requested'), (4, 4, FALSE, 'not_requested'), (4, 5, FALSE, 'not_requested'), (4, 6, FALSE, 'not_requested'),
-  (8, 3, FALSE, 'not_requested'), (8, 4, FALSE, 'not_requested'), (8, 5, FALSE, 'not_requested'), (8, 6, FALSE, 'not_requested');
+  (8, 3, FALSE, 'not_requested'), (8, 4, FALSE, 'not_requested'), (8, 5, FALSE, 'not_requested'), (8, 6, FALSE, 'not_requested'),
+  (16, 3, FALSE, 'not_requested'), (16, 4, FALSE, 'not_requested'), (16, 5, FALSE, 'not_requested'), (16, 6, FALSE, 'not_requested');
+
+-- 12 t/m 15 staan al op gelezen voor elke medewerker, alleen 16 (net als 1/3/4/8) is ongelezen.
+INSERT INTO announcement_recipients (announcement_id, user_id, email_requested, email_status, read_at) VALUES
+  (12, 3, FALSE, 'not_requested', '2026-09-01 08:30:00'), (12, 4, FALSE, 'not_requested', '2026-09-01 08:30:00'), (12, 5, FALSE, 'not_requested', '2026-09-01 08:30:00'), (12, 6, FALSE, 'not_requested', '2026-09-01 08:30:00'),
+  (13, 3, FALSE, 'not_requested', '2026-09-03 09:00:00'), (13, 4, FALSE, 'not_requested', '2026-09-03 09:00:00'), (13, 5, FALSE, 'not_requested', '2026-09-03 09:00:00'), (13, 6, FALSE, 'not_requested', '2026-09-03 09:00:00'),
+  (14, 3, FALSE, 'not_requested', '2026-09-05 08:15:00'), (14, 4, FALSE, 'not_requested', '2026-09-05 08:15:00'), (14, 5, FALSE, 'not_requested', '2026-09-05 08:15:00'), (14, 6, FALSE, 'not_requested', '2026-09-05 08:15:00'),
+  (15, 3, FALSE, 'not_requested', '2026-09-08 10:00:00'), (15, 4, FALSE, 'not_requested', '2026-09-08 10:00:00'), (15, 5, FALSE, 'not_requested', '2026-09-08 10:00:00'), (15, 6, FALSE, 'not_requested', '2026-09-08 10:00:00');
 
 -- De ingetrokken voorbeelden staan voor elke ontvanger al op gelezen: de
 -- ongelezen-teller van Berichten telt op announcement_recipients.read_at.
@@ -322,7 +347,40 @@ INSERT INTO notifications (
   (49, 1, 6, 4, NULL, 'correction_required', 'Correctie gevraagd', 'Controleer 14 augustus, dit moet worden aangepast.', 'timesheet', NULL, '2026-08-28 10:00:00'),
   (50, 1, 6, 4, NULL, 'timesheet_reminder', 'Vergeet je uren niet', 'Je hebt deze maand nog uren open staan.', 'timesheet', NULL, '2026-08-29 08:00:00'),
   (51, 1, 6, 3, NULL, 'timesheet_approved', 'Uren goedgekeurd', 'Je uren van vorige maand zijn goedgekeurd.', 'historie', NULL, '2026-08-27 15:30:00'),
-  (52, 1, 6, 3, NULL, 'customer_timesheet_reminder', 'Klanturenstaat nog aanleveren', 'De klanturenstaat van vorige maand is nog niet aangeleverd.', 'historie', NULL, '2026-08-27 16:00:00');
+  (52, 1, 6, 3, NULL, 'customer_timesheet_reminder', 'Klanturenstaat nog aanleveren', 'De klanturenstaat van vorige maand is nog niet aangeleverd.', 'historie', NULL, '2026-08-27 16:00:00'),
+  -- Aanvulling (16 sep, opdracht Gio): Marc, Brian en Shawn krijgen nu ook de
+  -- meldingen voor 1/3/4, net als Stasjo al had, plus de vijf nieuwe geldige
+  -- mededelingen (12 t/m 16) voor alle vier, zodat iedereen op negen geldige en
+  -- vijf ongelezen uitkomt.
+  (53, 1, 3, NULL, 1, 'announcement', 'Uren juli indienen', 'Dien je uren over juli uiterlijk maandag 3 augustus in. Controleer vóór het indienen of alle werkdagen zijn ingevuld.', 'employee-announcements', NULL, '2026-07-30 10:15:00'),
+  (54, 1, 3, NULL, 3, 'announcement', 'Planning augustus beschikbaar', 'De urenregistratie voor augustus staat klaar. Je kunt tussentijds opslaan en aan het einde van de maand indienen.', 'employee-announcements', NULL, '2026-08-03 08:45:00'),
+  (55, 1, 3, NULL, 4, 'announcement', 'Controleer je open acties', 'Controleer vóór het indienen of je uren en klanturenstaat volledig zijn.', 'employee-announcements', NULL, '2026-08-07 09:30:00'),
+  (56, 1, 5, NULL, 1, 'announcement', 'Uren juli indienen', 'Dien je uren over juli uiterlijk maandag 3 augustus in. Controleer vóór het indienen of alle werkdagen zijn ingevuld.', 'employee-announcements', NULL, '2026-07-30 10:15:00'),
+  (57, 1, 5, NULL, 3, 'announcement', 'Planning augustus beschikbaar', 'De urenregistratie voor augustus staat klaar. Je kunt tussentijds opslaan en aan het einde van de maand indienen.', 'employee-announcements', NULL, '2026-08-03 08:45:00'),
+  (58, 1, 5, NULL, 4, 'announcement', 'Controleer je open acties', 'Controleer vóór het indienen of je uren en klanturenstaat volledig zijn.', 'employee-announcements', NULL, '2026-08-07 09:30:00'),
+  (59, 1, 6, NULL, 1, 'announcement', 'Uren juli indienen', 'Dien je uren over juli uiterlijk maandag 3 augustus in. Controleer vóór het indienen of alle werkdagen zijn ingevuld.', 'employee-announcements', NULL, '2026-07-30 10:15:00'),
+  (60, 1, 6, NULL, 3, 'announcement', 'Planning augustus beschikbaar', 'De urenregistratie voor augustus staat klaar. Je kunt tussentijds opslaan en aan het einde van de maand indienen.', 'employee-announcements', NULL, '2026-08-03 08:45:00'),
+  (61, 1, 6, NULL, 4, 'announcement', 'Controleer je open acties', 'Controleer vóór het indienen of je uren en klanturenstaat volledig zijn.', 'employee-announcements', NULL, '2026-08-07 09:30:00'),
+  (62, 1, 3, NULL, 12, 'announcement', 'Nieuwe koffieautomaat geplaatst', 'Er staat een nieuwe koffieautomaat in de kantine, de oude is weggehaald.', 'employee-announcements', '2026-09-01 08:30:00', '2026-09-01 08:30:00'),
+  (63, 1, 4, NULL, 12, 'announcement', 'Nieuwe koffieautomaat geplaatst', 'Er staat een nieuwe koffieautomaat in de kantine, de oude is weggehaald.', 'employee-announcements', '2026-09-01 08:30:00', '2026-09-01 08:30:00'),
+  (64, 1, 5, NULL, 12, 'announcement', 'Nieuwe koffieautomaat geplaatst', 'Er staat een nieuwe koffieautomaat in de kantine, de oude is weggehaald.', 'employee-announcements', '2026-09-01 08:30:00', '2026-09-01 08:30:00'),
+  (65, 1, 6, NULL, 12, 'announcement', 'Nieuwe koffieautomaat geplaatst', 'Er staat een nieuwe koffieautomaat in de kantine, de oude is weggehaald.', 'employee-announcements', '2026-09-01 08:30:00', '2026-09-01 08:30:00'),
+  (66, 1, 3, NULL, 13, 'announcement', 'Wifi-wachtwoord gewijzigd', 'Het wifi-wachtwoord op kantoor is vernieuwd, vraag het nieuwe wachtwoord na bij Beheer.', 'employee-announcements', '2026-09-03 09:00:00', '2026-09-03 09:00:00'),
+  (67, 1, 4, NULL, 13, 'announcement', 'Wifi-wachtwoord gewijzigd', 'Het wifi-wachtwoord op kantoor is vernieuwd, vraag het nieuwe wachtwoord na bij Beheer.', 'employee-announcements', '2026-09-03 09:00:00', '2026-09-03 09:00:00'),
+  (68, 1, 5, NULL, 13, 'announcement', 'Wifi-wachtwoord gewijzigd', 'Het wifi-wachtwoord op kantoor is vernieuwd, vraag het nieuwe wachtwoord na bij Beheer.', 'employee-announcements', '2026-09-03 09:00:00', '2026-09-03 09:00:00'),
+  (69, 1, 6, NULL, 13, 'announcement', 'Wifi-wachtwoord gewijzigd', 'Het wifi-wachtwoord op kantoor is vernieuwd, vraag het nieuwe wachtwoord na bij Beheer.', 'employee-announcements', '2026-09-03 09:00:00', '2026-09-03 09:00:00'),
+  (70, 1, 3, NULL, 14, 'announcement', 'Fietsenstalling uitgebreid', 'Er zijn extra plekken bijgekomen in de fietsenstalling achter het pand.', 'employee-announcements', '2026-09-05 08:15:00', '2026-09-05 08:15:00'),
+  (71, 1, 4, NULL, 14, 'announcement', 'Fietsenstalling uitgebreid', 'Er zijn extra plekken bijgekomen in de fietsenstalling achter het pand.', 'employee-announcements', '2026-09-05 08:15:00', '2026-09-05 08:15:00'),
+  (72, 1, 5, NULL, 14, 'announcement', 'Fietsenstalling uitgebreid', 'Er zijn extra plekken bijgekomen in de fietsenstalling achter het pand.', 'employee-announcements', '2026-09-05 08:15:00', '2026-09-05 08:15:00'),
+  (73, 1, 6, NULL, 14, 'announcement', 'Fietsenstalling uitgebreid', 'Er zijn extra plekken bijgekomen in de fietsenstalling achter het pand.', 'employee-announcements', '2026-09-05 08:15:00', '2026-09-05 08:15:00'),
+  (74, 1, 3, NULL, 15, 'announcement', 'Onderhoud aan de verwarming gepland', 'Volgende week wordt de verwarming een dagdeel getest, dit kan voor wat geluid zorgen.', 'employee-announcements', '2026-09-08 10:00:00', '2026-09-08 10:00:00'),
+  (75, 1, 4, NULL, 15, 'announcement', 'Onderhoud aan de verwarming gepland', 'Volgende week wordt de verwarming een dagdeel getest, dit kan voor wat geluid zorgen.', 'employee-announcements', '2026-09-08 10:00:00', '2026-09-08 10:00:00'),
+  (76, 1, 5, NULL, 15, 'announcement', 'Onderhoud aan de verwarming gepland', 'Volgende week wordt de verwarming een dagdeel getest, dit kan voor wat geluid zorgen.', 'employee-announcements', '2026-09-08 10:00:00', '2026-09-08 10:00:00'),
+  (77, 1, 6, NULL, 15, 'announcement', 'Onderhoud aan de verwarming gepland', 'Volgende week wordt de verwarming een dagdeel getest, dit kan voor wat geluid zorgen.', 'employee-announcements', '2026-09-08 10:00:00', '2026-09-08 10:00:00'),
+  (78, 1, 3, NULL, 16, 'announcement', 'Nieuwe procedure voor onkostendeclaraties', 'Onkostendeclaraties lopen voortaan via het formulier in het portaal in plaats van per mail.', 'employee-announcements', NULL, '2026-09-10 09:30:00'),
+  (79, 1, 4, NULL, 16, 'announcement', 'Nieuwe procedure voor onkostendeclaraties', 'Onkostendeclaraties lopen voortaan via het formulier in het portaal in plaats van per mail.', 'employee-announcements', NULL, '2026-09-10 09:30:00'),
+  (80, 1, 5, NULL, 16, 'announcement', 'Nieuwe procedure voor onkostendeclaraties', 'Onkostendeclaraties lopen voortaan via het formulier in het portaal in plaats van per mail.', 'employee-announcements', NULL, '2026-09-10 09:30:00'),
+  (81, 1, 6, NULL, 16, 'announcement', 'Nieuwe procedure voor onkostendeclaraties', 'Onkostendeclaraties lopen voortaan via het formulier in het portaal in plaats van per mail.', 'employee-announcements', NULL, '2026-09-10 09:30:00');
 
 INSERT INTO audit_log (company_id, actor_user_id, event_type, entity_type, entity_id, event_data) VALUES
   (1, 1, 'demo_seed_loaded', 'database', 'path_urenregistratie', JSON_OBJECT('version', '0.9.71', 'note', 'Demo-data sluit aan op de browser-GUI basisstand.'));
