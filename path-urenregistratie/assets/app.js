@@ -5890,8 +5890,13 @@ function historyMainAction(record, period) {
   if (huidig.key === "customer") {
     return { type: "customer", label: "Klanturenstaat aanleveren" };
   }
-  if (huidig.key === "fill" || huidig.key === "submit") {
+  // De knop zegt wat er nu te doen is (Gio 15 sep): bij een complete maand die nog niet
+  // is ingediend is dat indienen, niet nog eens uren invullen.
+  if (huidig.key === "fill") {
     return { type: "hours", label: correction ? "Correctie doorvoeren" : "Uren invullen" };
+  }
+  if (huidig.key === "submit") {
+    return { type: "hours", label: correction ? "Opnieuw indienen" : "Maand indienen" };
   }
   return null;
 }
@@ -6898,7 +6903,9 @@ function renderEmployeeDashboard() {
     const mainAction = historyMainAction(historyRecord, historyPeriod);
     const completed = !verloopStappen.some(stap => stap.stand === "nu");
     const actionHtml = mainAction
-      ? '<button class="primary-button" type="button" data-history-' + (mainAction.type === "customer" ? "customer" : "period") + '="' + key + '">' + escapeHtml(mainAction.label) + '</button>'
+      // "primary-button" bestond niet in de stylesheet: de knop stond er als kale grijze
+      // browserknop (Gio 15 sep). De huisstijlknop is .button.button-primary.
+      ? '<button class="button button-primary employee-history-actie" type="button" data-history-' + (mainAction.type === "customer" ? "customer" : "period") + '="' + key + '">' + escapeHtml(mainAction.label) + '</button>'
       : '';
     const pdfHtml = completed
       ? '<div class="employee-history-pdf"><button class="small-button" type="button" data-history-receipt-period="' + key + '">PDF Urenoverzicht</button><small>Dezelfde PDF die je per mail kreeg — je uren per week.</small></div>'

@@ -160,6 +160,15 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
     When de flow voor KLV-H-019 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat ingevulde uren op Mijn uren zijn leesbaar in licht en donker, op telefoon en desktop
 
+  @happy
+  Scenario: [KLV-H-020] de actieknop in Mijn maanden heeft de huisstijl en zegt wat er nu te doen is
+    # Testtechniek: Beslistabel (stap → knoptekst) + visuele consistentie met de huisstijlknop in licht en donker
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given vondsten uit de monkey-verkenning op Klassiek is voorbereid
+    When de flow voor KLV-H-020 wordt uitgevoerd
+    Then noemt de knop per stap de juiste handeling (beslistabel)
+    And heeft de knop dezelfde vorm als de andere hoofdknoppen, in licht en donker
+
   @negative
   Scenario: [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie
     # Testtechniek: Monkey testing (seeded) + concurrency + toestandsovergang

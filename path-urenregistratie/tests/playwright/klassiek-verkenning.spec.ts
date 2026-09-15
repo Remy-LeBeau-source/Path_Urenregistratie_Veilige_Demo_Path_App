@@ -800,6 +800,59 @@ test('[KLV-H-019] ingevulde uren op Mijn uren zijn leesbaar in licht en donker, 
   }
 });
 
+test('[KLV-H-020] de actieknop in Mijn maanden heeft de huisstijl en zegt wat er nu te doen is', async ({ page }) => {
+  // Gio 15 sep (screenshot, Mijn maanden, donker): "Uren invullen" stond als kale grijze
+  // browserknop onder een maand die al compleet en klaar om in te dienen was. De class
+  // primary-button bestond niet; de tekst volgde de stap niet.
+  test.setTimeout(90_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await test.step('Then noemt de knop per stap de juiste handeling (beslistabel)', async () => {
+    const labels = await page.evaluate(() => {
+      type Rec = { entries: number[][]; confirmedEntries: boolean[][]; timesheetStatus: string };
+      const rt = window as unknown as { currentEmployee: () => { id: number }; recordFor: (id: number, key: string) => Rec };
+      const periodFromKey = (0, eval)('periodFromKey') as (k: string) => { key: string; weekRows: Array<{ days: unknown[] }> };
+      const actie = (0, eval)('historyMainAction') as (r: Rec, p: unknown) => { label: string } | null;
+      // Een losse kopie van een maand ver vooruit: alleen lokaal, niets naar de server.
+      const d = new Date(); const t = new Date(d.getFullYear(), d.getMonth() + 6, 1);
+      const period = periodFromKey(t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0'));
+      const basis = JSON.parse(JSON.stringify(rt.recordFor(rt.currentEmployee().id, period.key))) as Rec;
+      const leeg = { ...basis, timesheetStatus: 'draft', entries: period.weekRows.map(w => w.days.map(() => 0)), confirmedEntries: period.weekRows.map(w => w.days.map(() => false)) };
+      const vol = { ...leeg, entries: period.weekRows.map(w => w.days.map(dag => (dag ? 8 : 0))), confirmedEntries: period.weekRows.map(w => w.days.map(dag => Boolean(dag))) };
+      return { leeg: actie(leeg, period)?.label, vol: actie(vol, period)?.label };
+    });
+    expect(labels.leeg, 'maand met open dagen').toBe('Uren invullen');
+    expect(labels.vol, 'complete maand, nog niet ingediend').toBe('Maand indienen');
+  });
+  await test.step('And heeft de knop dezelfde vorm als de andere hoofdknoppen, in licht en donker', async () => {
+    await page.locator('.nav-item[data-view="historie"]:visible').first().click();
+    const huidige = page.locator('#employee-history .employee-history-row').first();
+    if (!(await huidige.evaluate(el => el.classList.contains('is-open')))) await huidige.locator('.employee-history-summary').click();
+    const knop = huidige.locator('.employee-history-actions .employee-history-actie');
+    await expect(knop).toBeVisible();
+    await expect(knop).toHaveClass(/\bbutton\b/);
+    await expect(knop).toHaveClass(/\bbutton-primary\b/);
+    for (const thema of ['light', 'dark'] as const) {
+      await page.evaluate(t => {
+        const s = (0, eval)('state') as { preferences: Record<string, unknown> };
+        s.preferences.theme = t;
+        ((0, eval)('applyTheme') as () => void)();
+      }, thema);
+      // Vergelijken met een proefknop van de huisstijl op dezelfde plek.
+      await expect.poll(() => knop.evaluate(el => {
+        const proef = document.createElement('button');
+        proef.className = 'button button-primary';
+        el.parentElement!.append(proef);
+        const [a, b] = [getComputedStyle(el), getComputedStyle(proef)];
+        const gelijk = ['backgroundColor', 'color', 'borderRadius', 'fontWeight'].every(k => a[k as never] === b[k as never]);
+        proef.remove();
+        return gelijk;
+      }), { timeout: 3_000, message: `huisstijl in ${thema}` }).toBe(true);
+    }
+  });
+});
+
 test('[KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie', async ({ page }) => {
   // Vondst seed 5 (5 handelingen): 9 aanklikken en meteen doortypen gaf een 409
   // stale-version, "door iemand anders gewijzigd", terwijl er maar één

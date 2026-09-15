@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 573 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 574 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 573 unieke case-ID's
+- Playwright executable cases: 574 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 574 unieke case-ID's
+- Totaal executable cases: 575 unieke case-ID's
 - Playwright features: 31
 - Database features: 1
 - Playwright steps mappings: 31
 - Database steps mappings: 1
-- Uitvoeringen: 615
-- Niet-mobile projectuitvoeringen: 531
+- Uitvoeringen: 616
+- Niet-mobile projectuitvoeringen: 532
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 573 Playwright-functionele cases in totaal 615 resultaten op: 531 + (42 x 2) = 615.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 574 Playwright-functionele cases in totaal 616 resultaten op: 532 + (42 x 2) = 616.
 
 ## Documentatieketen
 
@@ -645,7 +645,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 573 Playwri
 
 - Feature: `tests/playwright/features/klassiek-verkenning.feature`
 - Source: `tests/playwright/klassiek-verkenning.spec.ts`
-- Cases: 19
+- Cases: 20
 
 - [KLV-N-002] het maandkeuzepaneel valt op geen enkele breedte buiten het scherm — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 8
 - [KLV-N-003] in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 3
@@ -665,6 +665,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 573 Playwri
 - [KLV-H-017] de standaardweek gebruikt hele dagen van 9 of 8 uur en de vrije dag die Beheer instelt — Techniek: Beslistabeltest (weekuren × vrije dag van Beheer) + equivalentieklassen (past in 9, in 8, past niet) · Assertions: 1
 - [KLV-H-018] Berichten toont "Nieuw in de app" met de laatste 10 updates, netjes binnen het paneel, zonder namen, alleen buiten PROD — Techniek: Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie) + inhoudscontrole (geen namen of gevoelige gegevens) + responsive viewport · Assertions: 16
 - [KLV-H-019] ingevulde uren op Mijn uren zijn leesbaar in licht en donker, op telefoon en desktop — Techniek: Contrastmeting (WCAG 4,5:1) + themacombinaties (licht/donker) × responsive viewport (390/1280) · Assertions: 2
+- [KLV-H-020] de actieknop in Mijn maanden heeft de huisstijl en zegt wat er nu te doen is — Techniek: Beslistabel (stap → knoptekst) + visuele consistentie met de huisstijlknop in licht en donker · Assertions: 5
 - [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie — Techniek: Monkey testing (seeded) + concurrency + toestandsovergang · Assertions: 11
 
 ### Vormgevingsschakelaar (klassiek / nieuw)

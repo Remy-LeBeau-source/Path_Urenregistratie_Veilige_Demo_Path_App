@@ -480,6 +480,7 @@
 | KLV-H-017 | ui | klassiek-verkenning.feature | de standaardweek gebruikt hele dagen van 9 of 8 uur en de vrije dag die Beheer instelt | Beslistabeltest (weekuren × vrije dag van Beheer) + equivalentieklassen (past in 9, in 8, past niet) | 1 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | de standaardweek gebruikt hele dagen van 9 of 8 uur en de vrije dag die Beheer instelt | Happy | 19 | Actueel |
 | KLV-H-018 | ui | klassiek-verkenning.feature | Berichten toont "Nieuw in de app" met de laatste 10 updates, netjes binnen het paneel, zonder namen, alleen buiten PROD | Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie) + inhoudscontrole (geen namen of gevoelige gegevens) + responsive viewport | 16 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | Berichten toont "Nieuw in de app" met de laatste 10 updates, netjes binnen het paneel, zonder namen, alleen buiten PROD | Happy | 19 | Actueel |
 | KLV-H-019 | ui | klassiek-verkenning.feature | ingevulde uren op Mijn uren zijn leesbaar in licht en donker, op telefoon en desktop | Contrastmeting (WCAG 4,5:1) + themacombinaties (licht/donker) × responsive viewport (390/1280) | 2 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | ingevulde uren op Mijn uren zijn leesbaar in licht en donker, op telefoon en desktop | Happy | 19 | Actueel |
+| KLV-H-020 | ui | klassiek-verkenning.feature | de actieknop in Mijn maanden heeft de huisstijl en zegt wat er nu te doen is | Beslistabel (stap → knoptekst) + visuele consistentie met de huisstijlknop in licht en donker | 5 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | de actieknop in Mijn maanden heeft de huisstijl en zegt wat er nu te doen is | Happy | 19 | Actueel |
 | KLV-N-001 | ui | klassiek-verkenning.feature | snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie | Monkey testing (seeded) + concurrency + toestandsovergang | 11 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie | Negative | 19 | Actueel |
 | SKIN-H-001 | ui | skin.feature | de app start standaard in de klassieke vormgeving | End-to-end use-case + visuele contractasserties | 3 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de app start standaard in de klassieke vormgeving | Happy | 19 | Actueel |
 | SKIN-H-002 | ui | skin.feature | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | End-to-end use-case + visuele contractasserties | 6 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | Happy | 19 | Actueel |
@@ -595,9 +596,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 573
+- Playwright executable cases: 574
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 574
+- Totaal unieke executable cases: 575
 - Playwright features: 31
 - Database features: 1
 - Playwright steps mappings: 31
