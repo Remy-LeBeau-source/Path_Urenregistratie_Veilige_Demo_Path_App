@@ -3172,6 +3172,22 @@ door de lane die de case schreef en niet door mij herhaald.
 - [x] `[SKIN-H-039]` de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect
   toont (4c350d52, herontwerp).
 
+**GEBOUWD (15 sep, besluit Gio rechtstreeks): PROD-poort breekt de run af na 10 minuten zonder goedkeuring.**
+- Job `prod-gate-wekker` ("Promote Prod (wekker)") in `.github/workflows/release-pipeline.yml`. Zelfde
+  `needs` (`[test, deploy-test]`) en `if` als `prod-gate`, dus hij start pas na een geslaagde "Deploy Test to
+  TransIP": TEST loopt altijd door, alleen PROD wordt overgeslagen. Geen `environment`, alleen
+  `actions: write`; na 600 s kijkt hij in `pending_deployments` of `prod` nog wacht, en cancelt dan de run met
+  een notice. Goedkeuren blijft uitsluitend bij Gio.
+- `timeout-minutes` op `prod-gate` zelf werkt niet: wachten op een environment-goedkeuring telt niet als
+  looptijd.
+- Naam begint bewust met "Promote Prod": `pilot-merge-queue.yml` negeert runs waarin alleen Promote-Prod-jobs
+  openstaan. Een gecancelde run is `completed`, dus niet meer actief voor de wachtrij.
+- Bewaakt in `scripts/deployment-contract-check.mjs` (naam, needs, geen environment, cancel alleen bij
+  wachtende prod, standaard 600). Tegenproef: met de naam "Prod-poort wekker" is de check rood.
+- **Nog te bevestigen in CI:** de eerste release na deze push. Keurt Gio PROD niet binnen 10 min goed, dan
+  hoort die run `cancelled` te eindigen met de notice. Een tijdige goedkeuring (wekker doet dan niets) kan
+  alleen Gio zelf laten zien. Kortere proef kan via workflow_dispatch met `prod_wekker_seconden`.
+
 **OPGELOST: `[HELP-N-001]` op mobile-safari faalde bij het uitloggen, niet bij het inloggen (14 sep).**
 Het hulppaneel onderschepte 15 s lang de klik op `#switch-role`.
 - **Oorzaak, gemeten:** `openHelp()` haalt `hidden` meteen weg, maar zet `is-open` pas in de volgende

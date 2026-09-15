@@ -77,7 +77,18 @@ assert.match(workflow, /live-docs:\s*[\s\S]*?Download mergeable release reports[
 assert.doesNotMatch(workflow, /live-docs:\s*[\s\S]*?Run E2E tests for docs/, 'Living Docs may not repeat the complete Playwright suite');
 assert.doesNotMatch(liveDocsJob, /services:\s*\n|setup-php|playwright install|Start PHP server|config\.local\.php/, 'Living Docs must remain report-only and may not provision a database, PHP runtime or browsers');
 assert.match(workflow, /prod-gate:\s*[\s\S]*?needs:\s*\[test, deploy-test\][\s\S]*?always\(\)[\s\S]*?needs\.deploy-test\.result == 'success'/, 'Manual PROD promotion must remain available only after successful TEST deployment');
-assert.match(pilotMergeQueue, /listJobsForWorkflowRun/, 'Pilot merge queue must inspect active release jobs, not only workflow status');
+// PROD-poort wekker (besluit Gio 15 sep): niet binnen 10 min goedgekeurd = run afbreken.
+const wekkerStart = workflow.indexOf('\n  prod-gate-wekker:');
+assert.ok(wekkerStart > 0, 'PROD gate timer job prod-gate-wekker must exist');
+const wekkerJob = workflow.slice(wekkerStart, workflow.indexOf('\n  prod:', wekkerStart));
+assert.match(wekkerJob, /name:\s*Promote Prod \(wekker\)/, 'PROD gate timer name must start with "Promote Prod" so the pilot merge queue does not wait on it');
+assert.match(wekkerJob, /needs:\s*\[test, deploy-test\]/, 'PROD gate timer must start only after TEST deploy, like prod-gate, so cancelling never cuts a TEST rollout');
+assert.match(wekkerJob, /needs\.deploy-test\.result == 'success'/, 'PROD gate timer must require a successful TEST deploy');
+assert.doesNotMatch(wekkerJob, /\n    environment:/, 'PROD gate timer may not declare an environment (it must never request or grant approval itself)');
+assert.match(wekkerJob, /actions:\s*write/, 'PROD gate timer needs actions: write to cancel the run');
+assert.match(wekkerJob, /pending_deployments[\s\S]*environment\.name == "prod"[\s\S]*actions\/runs\/\$RUN_ID\/cancel/, 'PROD gate timer must cancel only while a prod deployment is still pending');
+assert.match(wekkerJob, /WACHT_SECONDEN[^\n]*'600'/, 'PROD gate timer must default to 600 seconds');
+assert.match(pilotMergeQueue, /listJobsForWorkflowRun/,'Pilot merge queue must inspect active release jobs, not only workflow status');
 assert.match(pilotMergeQueue, /Deploy Test to TransIP[\s\S]*conclusion === 'success'/, 'Pilot merge queue may ignore a waiting production gate only after TEST deploy succeeded');
 assert.match(pilotMergeQueue, /openJobs\.every\(\(job\) => job\.name\.startsWith\('Promote Prod'\)\)/, 'Pilot merge queue must only ignore manual Promote Prod waits, not active validation or TEST deploy jobs');
 for (const required of [
