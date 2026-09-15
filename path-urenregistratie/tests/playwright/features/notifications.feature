@@ -87,18 +87,45 @@ Feature: Meldingen beheren
     Then wordt met Playwright-assertions bevestigd dat herstel zet drie lokale basismeldingen terug en beschermt ze tegen serveroverschrijving
 
   @happy
-  Scenario: [NOT-H-011] medewerker ziet drie echte mededelingen en tellers lopen gelijk terug naar nul
+  Scenario: [NOT-H-011] medewerker leest mededelingen door ze te zien: tellers lopen vanzelf naar nul, zonder markeerknop
     # Testtechniek: Grenswaardenanalyse
-    # Aantoonbare Playwright-assertions in deze case: 10
-    Given Stasjo drie ongelezen mededelingen uit de serverbaseline heeft
-    When hij de mededelingen een voor een als gelezen markeert
-    Then blijven bel, filter en persoonlijke historie op dezelfde serverwaarheid
+    # Aantoonbare Playwright-assertions in deze case: 18
+    Given drie ongelezen mededelingen en een ongelezen statusmelding
+    Then staat alleen de statusmelding in de bel
+    And staan in Berichten de ongelezen open en bovenaan, de gelezen ingeklapt, zonder markeerknop
+    When elk ongelezen bericht 2 seconden in beeld is, then telt het vanzelf als gelezen
+    And blijven de net gelezen berichten open staan; na herladen zijn ze ingeklapt
+
+  @negative
+  Scenario: [NOT-N-015] een ongelezen bericht dat maar kort in beeld is, blijft ongelezen
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given meldingen beheren is voorbereid
+    When de flow voor NOT-N-015 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat een ongelezen bericht dat maar kort in beeld is, blijft ongelezen
 
   @happy
-  Scenario: [NOT-H-012] medewerker ziet ingetrokken mededelingen als ingetrokken met reden, en het filter toont precies die
+  Scenario: [NOT-H-012] medewerker ziet ingetrokken mededelingen ingeklapt met label, de reden bij openen, en het filter toont precies die
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 8
-    Given Stasjo opent Berichten met drie ingetrokken voorbeeldmededelingen in de TEST-basis
+    # Aantoonbare Playwright-assertions in deze case: 14
+    Given Stasjo opent Berichten met ingetrokken voorbeeldmededelingen in de TEST-basis
     When hij het filter Ingetrokken kiest
-    Then staan precies de drie ingetrokken berichten er, elk met label en reden, en geen ervan als ongelezen
+    Then staan alleen ingetrokken berichten er, ingeklapt met label, en geen ervan als ongelezen
+    And zie je de reden zodra je het bericht openklapt
     And staat onder Alles een geldige mededeling niet als ingetrokken
+
+  @happy
+  Scenario: [NOT-H-013] een melding in de bel brengt de medewerker direct naar de plek waar iets te doen is
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given meldingen beheren is voorbereid
+    When de flow voor NOT-H-013 wordt uitgevoerd
+    Then toont de bel alleen de drie meldingen over de medewerker zelf
+
+  @happy
+  Scenario: [NOT-H-014] Alles gelezen in Berichten leest alleen de mededelingen en laat de bel met rust
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given twee ongelezen mededelingen in Berichten en één statusmelding in de bel
+    When de medewerker in Berichten op Alles gelezen tikt
+    Then zijn de mededelingen gelezen en blijft de statusmelding in de bel ongelezen

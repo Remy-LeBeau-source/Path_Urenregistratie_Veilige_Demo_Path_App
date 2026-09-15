@@ -314,7 +314,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 document te controleren · 0 extern te bevestigen · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, externe bevestiging, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("2.0.99"), "Het zichtbare versienummer moet 2.0.99 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("2.0.101"), "Het zichtbare versienummer moet 2.0.101 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -573,7 +573,9 @@ assert(JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final")).e
 click("#notification-button");
 assert(!document.querySelector("#notification-panel").hidden, "De meldingknop moet altijd een venster openen");
 assert(!document.querySelector(".notification-test-actions"), "Kunstmatige voorbeeldmeldingen mogen niet in de medewerkersinterface staan");
-assert(document.querySelector("#notification-list").textContent.includes("Planning augustus beschikbaar"), "Een medewerker moet eigen vooraf klaargezette algemene mededelingen zien");
+// Besluit Gio 15 sep: mededelingen staan niet in de bel maar in Berichten, met een eigen teller.
+assert(!document.querySelector("#notification-list").textContent.includes("Planning augustus beschikbaar"), "Een algemene mededeling hoort niet in de bel van de medewerker");
+assert(!document.querySelector("#employee-berichten-count").hidden, "Ongelezen mededelingen moeten als teller op Berichten staan");
 dom.window.createTestNotification("reminder");
 assert(document.querySelector("#notification-list").textContent.includes("Urenherinnering"), "Een urenherinnering moet direct testbaar zijn");
 assert(JSON.parse(dom.window.localStorage.getItem("path-uren-demo-v07-final")).notifications.at(-1).emailRequested === false, "Een uitgeschakelde e-mailvoorkeur moet ook bij urenmeldingen alleen de aanvullende e-mail overslaan");
@@ -909,7 +911,7 @@ const customerReminderState = JSON.parse(dom.window.localStorage.getItem("path-u
 assert(customerReminderState.notifications.length === notificationsBeforeCustomerReminder + 1 && customerReminderState.notifications.at(-1).title === "Klanturenstaat ontbreekt", "Backoffice moet vanuit de rustige maand een ontbrekende klanturenstaatherinnering kunnen klaarzetten");
 choosePeriod("#period-month-picker", "#period-year-picker", "2026-08");
 assert(document.querySelector("#customer-timesheet-admin-list").textContent.includes("Controle nodig"), "Een geüploade klanturenstaat moet voor Backoffice op Controle nodig staan");
-// Sinds Klanturenstaten een eigen scherm heeft (v2.0.99) bestaat dezelfde
+// Sinds Klanturenstaten een eigen scherm heeft (v2.0.101) bestaat dezelfde
 // data-review-customer-timesheet-knop twee keer: hier in de werkvoorraad
 // (#admin-task-panel, met workflow-vervolg via openAdminTask) en nogmaals in
 // #customer-timesheet-admin-list (losstaand, zonder taak-workflow). Scope
@@ -1383,15 +1385,13 @@ const dashboardCorrectionText = document.querySelector("#employee-dashboard-corr
 assert(dashboardCorrectionText.includes("12 augustus"), "De correctiekaart moet de openstaande correctie van de huidige maand tonen");
 assert(!dashboardCorrectionText.includes("14 juli"), "Een correctie op een afgesloten maand mag de kaart van de huidige maand niet overschrijven");
 click("#notification-button");
-assert(document.querySelector("#notification-list").textContent.includes("Algemene testmededeling"), "Een algemene mededeling moet bij iedere gekozen medewerker in de app verschijnen");
-assert(document.querySelector("#notification-list").textContent.includes("deadline is vrijdag"), "Een correctie op een mededeling moet als nieuw bericht zichtbaar zijn");
-assert(!document.querySelector("#notification-list").textContent.includes("Dit bericht is voor alle actieve medewerkers"), "De oude tekst mag na een wijziging niet meer in de medewerkersbel staan");
-assert(!document.querySelector("#notification-list").textContent.includes("Correctie:"), "De medewerker mag niet zien dat een mededeling een gecorrigeerde versie is");
-assert(document.querySelector("#notification-list").textContent.includes("is ingetrokken"), "Een intrekking moet als nieuwe melding bij dezelfde medewerker verschijnen");
-assert(!document.querySelector("#notification-list").textContent.includes("IND-groepsbericht"), "Een medewerker buiten de gekozen groep mag het groepsbericht niet zien");
-const withdrawalNotificationButton = [...document.querySelectorAll("[data-notification-id]")].find(item => item.textContent.includes("is ingetrokken"));
-withdrawalNotificationButton.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-assert(document.querySelector("#view-employee-announcements").classList.contains("is-active"), "Een mededelingenmelding moet rechtstreeks naar het medewerkersarchief gaan");
+assert(!document.querySelector("#notification-list").textContent.includes("Algemene testmededeling"), "Een algemene mededeling hoort niet in de bel van de medewerker (Berichten)");
+assert(!document.querySelector("#notification-list").textContent.includes("is ingetrokken"), "Een intrekking hoort niet in de bel van de medewerker (Berichten)");
+click("#notification-button");
+click('[data-view="employee-announcements"]');
+assert(document.querySelector("#view-employee-announcements").classList.contains("is-active"), "Berichten moet het medewerkersarchief openen");
+assert(!document.querySelector("#employee-announcement-list").textContent.includes("Correctie:"), "De medewerker mag niet zien dat een mededeling een gecorrigeerde versie is");
+assert(document.querySelector("#employee-announcement-list").textContent.includes("is ingetrokken"), "Een intrekking moet als nieuw bericht bij dezelfde medewerker verschijnen");
 assert(document.querySelector("#employee-announcement-list").textContent.includes("Algemene testmededeling"), "Het medewerkersarchief moet de actuele mededeling tonen");
 assert(document.querySelector("#announcement-unread-filter").textContent.includes("Ongelezen mededelingen"), "Het archief moet duidelijk maken dat dit aantal alleen algemene mededelingen telt");
 assert(document.querySelector("#employee-announcement-list").textContent.includes("deadline is vrijdag"), "Het medewerkersarchief moet uitsluitend de nieuwste tekst tonen");
@@ -1406,10 +1406,12 @@ assert(!document.querySelector('[data-announcement-archive-filter="corrections"]
 click('[data-announcement-archive-filter="withdrawn"]');
 assert(/ingetrokken/i.test(document.querySelector("#employee-announcement-list").textContent), "Het intrekkingsfilter moet ingetrokken historie tonen");
 click('[data-announcement-archive-filter="all"]');
-assert(!document.querySelector('[data-read-announcement="' + testAnnouncement.id + '"]'), "De vervangen eerste versie mag niet als actieve archiefmelding blijven staan");
-assert(document.querySelector('[data-read-announcement="' + correctedTestAnnouncement.id + '"]'), "Een andere ongelezen archiefmededeling moet afzonderlijk als gelezen gemarkeerd kunnen worden");
-click('[data-read-announcement="' + correctedTestAnnouncement.id + '"]');
-assert(!document.querySelector('[data-read-announcement="' + correctedTestAnnouncement.id + '"]'), "Na markeren moet het betreffende archiefbericht gelezen zijn");
+assert(!document.querySelector('[data-bericht-toggle="' + testAnnouncement.id + '"]'), "De vervangen eerste versie mag niet als actieve archiefmelding blijven staan");
+assert(!document.querySelector("#employee-announcement-list [data-read-announcement]"), "Er is geen knop Markeer als gelezen meer: lezen gaat vanzelf");
+assert(document.querySelector('.employee-announcement-card.is-unread[data-bericht-id="' + correctedTestAnnouncement.id + '"]'), "Een ongelezen mededeling moet open en als nieuw in het archief staan");
+click('[data-bericht-toggle="' + correctedTestAnnouncement.id + '"]');
+await new Promise(resolve => setTimeout(resolve, 0));
+assert(!document.querySelector('.employee-announcement-card.is-unread[data-bericht-id="' + correctedTestAnnouncement.id + '"]'), "Een tik op de kop van een ongelezen bericht moet het als gelezen tellen");
 click("#notification-button");
 const correctionNotification = [...document.querySelectorAll("[data-notification-id]")].find(item => item.textContent.includes("14 juli"));
 assert(correctionNotification, "De correctiemelding moet de eigen toelichting bevatten");
@@ -2167,7 +2169,7 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v2.0.99 volledige smoke test: geslaagd");
+console.log("Path v2.0.101 volledige smoke test: geslaagd");
 // app.js schedules browser refresh timers. In JSDOM those timers can keep Node
 // alive after every assertion has completed, which made the release check look
 // stuck. End explicitly only after the complete smoke contract is green.

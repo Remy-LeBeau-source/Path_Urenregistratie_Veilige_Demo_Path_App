@@ -366,65 +366,111 @@ test.describe('notifications api', () => {
   // berichten zijn ingeklapt. Gelezen gaat vanzelf: een tik op de kop, of 2 seconden in
   // beeld. Er is geen knop "Markeer als gelezen" meer, wel "Alles gelezen".
   test('[NOT-H-011] medewerker leest mededelingen door ze te zien: tellers lopen vanzelf naar nul, zonder markeerknop', async ({ page }) => {
+    // Nagebootste meldingenlijst: gelezen gaat nu vanzelf, dus elke case die Berichten
+    // opent kan de ongelezen seed-mededelingen al gelezen hebben. Deze case bewaakt het
+    // gedrag en hangt daarom niet af van die gedeelde stand.
+    const meldingen = [
+      { id: 9301, notification_type: 'announcement', announcement_id: 801, title: 'Nieuwe mededeling een', read: false, created_at: '2026-08-20 09:00:00' },
+      { id: 9302, notification_type: 'announcement', announcement_id: 802, title: 'Nieuwe mededeling twee', read: false, created_at: '2026-08-19 09:00:00' },
+      { id: 9303, notification_type: 'announcement', announcement_id: 803, title: 'Oude gelezen mededeling', read: true, created_at: '2026-08-25 09:00:00' },
+      { id: 9304, notification_type: 'announcement', announcement_id: 804, title: 'Nieuwe mededeling drie', read: false, created_at: '2026-08-18 09:00:00' },
+      { id: 9305, notification_type: 'correction_required', announcement_id: null, title: 'Correctie gevraagd juli', read: false, created_at: '2026-08-17 09:00:00', period_key: '2026-07' },
+    ];
+    await page.route('**/server/api/notifications.php*', async route => {
+      if (route.request().method() === 'POST') {
+        const body = route.request().postDataJSON() as Record<string, unknown>;
+        meldingen.forEach(melding => {
+          if (body.action === 'mark_announcement_read' && melding.announcement_id === Number(body.announcement_id)) melding.read = true;
+        });
+        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, updated: 1 }) });
+        return;
+      }
+      const items = meldingen.map(melding => ({ period_id: null, period_key: null, message: 'Tekst van de mededeling.', target_route: 'employee-announcements', read_at: null, ...melding }));
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, count: items.length, unread_count: items.filter(item => !item.read).length, items }) });
+    });
     const loginPage = new LoginPage(page);
     const lijst = page.locator('#employee-announcement-list');
     const ongelezen = lijst.locator('.employee-announcement-card.is-unread');
-    let aantal = 0;
 
-    await test.step('Given Stasjo ongelezen mededelingen uit de serverbaseline heeft', async () => {
+    await test.step('Given drie ongelezen mededelingen en een ongelezen statusmelding', async () => {
       await loginPage.open();
       await loginPage.loginAsEmployee();
-      await expect(page.locator('#employee-berichten-count')).toBeVisible();
-      aantal = Number(await page.locator('#employee-berichten-count').textContent());
-      expect(aantal, 'de TEST-basis heeft ongelezen mededelingen').toBeGreaterThan(0);
+      await page.evaluate(() => { void (window as unknown as { refreshNotificationsReadApi: (force: boolean) => Promise<unknown> }).refreshNotificationsReadApi(true); });
+      await expect(page.locator('#employee-berichten-count')).toHaveText('3');
     });
 
-    await test.step('Then staan die niet in de bel, maar in Berichten: open en bovenaan, zonder markeerknop', async () => {
+    await test.step('Then staat alleen de statusmelding in de bel', async () => {
+      await expect(page.locator('#notification-count')).toHaveText('1');
       await page.locator('#notification-button').click();
-      for (const titel of await page.evaluate(() => ((0, eval)('employeeAnnouncementItemsFromNotifications') as () => Array<{ title: string }>)().map(item => item.title))) {
-        await expect(page.locator('#notification-list'), `mededeling "${titel}" hoort niet in de bel`).not.toContainText(titel);
-      }
+      await expect(page.locator('#notification-list .notification-item')).toHaveCount(1);
+      await expect(page.locator('#notification-list')).not.toContainText('Nieuwe mededeling');
       await page.keyboard.press('Escape');
-      // Nog niet naar Berichten via de klik: eerst de stand van de lijst vastleggen zonder
-      // dat de 2 seconden al lopen.
+    });
+
+    await test.step('And staan in Berichten de ongelezen open en bovenaan, de gelezen ingeklapt, zonder markeerknop', async () => {
       await page.evaluate(() => { (0, eval)('state').announcementArchiveFilter = 'all'; });
       await page.locator('button[data-view="employee-announcements"]').click();
-      await expect(page.locator('#announcement-unread-filter')).toHaveText(`Ongelezen mededelingen · ${aantal}`);
-      await expect(ongelezen).toHaveCount(aantal);
+      await expect(lijst.locator('.employee-announcement-card')).toHaveCount(4);
       const kaarten = await lijst.locator('.employee-announcement-card').evaluateAll(els => els.map(el => ({
-        ongelezen: el.classList.contains('is-unread'),
+        titel: el.querySelector('h3')?.textContent,
         open: el.querySelector('[data-bericht-toggle]')?.getAttribute('aria-expanded') === 'true',
-        inhoudVerborgen: (el.querySelector('.bericht-inhoud') as HTMLElement | null)?.hidden ?? null,
+        inhoudVerborgen: (el.querySelector('.bericht-inhoud') as HTMLElement | null)?.hidden,
       })));
-      const eersteGelezen = kaarten.findIndex(kaart => !kaart.ongelezen);
-      expect(kaarten.slice(0, aantal).every(kaart => kaart.ongelezen), 'ongelezen bovenaan').toBe(true);
-      expect(kaarten.filter(kaart => kaart.ongelezen).every(kaart => kaart.open && kaart.inhoudVerborgen === false), 'ongelezen staan open').toBe(true);
-      if (eersteGelezen >= 0) expect(kaarten.slice(eersteGelezen).every(kaart => !kaart.open && kaart.inhoudVerborgen === true), 'gelezen staan ingeklapt').toBe(true);
+      // Ongelezen eerst, onderling nieuwste eerst (zoals de meldingenlijst: hoogste id
+      // bovenaan); de gelezen mededeling daarna, ook al staat die tussen de ongelezen in.
+      expect(kaarten.map(kaart => kaart.titel)).toEqual(['Nieuwe mededeling drie', 'Nieuwe mededeling twee', 'Nieuwe mededeling een', 'Oude gelezen mededeling']);
+      expect(kaarten.slice(0, 3).every(kaart => kaart.open && kaart.inhoudVerborgen === false), 'ongelezen staan open').toBe(true);
+      expect(kaarten[3], 'gelezen staat ingeklapt').toMatchObject({ open: false, inhoudVerborgen: true });
       await expect(page.getByRole('button', { name: /Markeer als gelezen/i })).toHaveCount(0);
       await expect(page.locator('#berichten-alles-gelezen')).toBeVisible();
     });
 
-    await test.step('When de medewerker elk ongelezen bericht in beeld heeft, then telt het na 2 seconden vanzelf als gelezen', async () => {
-      await expect(async () => {
-        const nog = ongelezen.first();
-        if (await nog.count()) await nog.scrollIntoViewIfNeeded();
-        await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen mededelingen · 0', { timeout: 3_000 });
-      }).toPass({ timeout: 30_000 });
+    await test.step('When elk ongelezen bericht 2 seconden in beeld is, then telt het vanzelf als gelezen', async () => {
+      await page.setViewportSize({ width: 1280, height: 1400 });
+      await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen mededelingen · 0', { timeout: 10_000 });
       await expect(ongelezen).toHaveCount(0);
       await expect(page.locator('#employee-berichten-count')).toBeHidden();
       await expect(page.locator('#berichten-alles-gelezen')).toBeHidden();
+      await expect(page.locator('#notification-count'), 'de statusmelding in de bel blijft ongelezen').toHaveText('1');
     });
 
-    await test.step('And blijven de net gelezen berichten open staan tot je wegnavigeert; daarna zijn ze ingeklapt', async () => {
-      await expect(lijst.locator('.employee-announcement-card.is-open')).toHaveCount(aantal);
+    await test.step('And blijven de net gelezen berichten open staan; na herladen zijn ze ingeklapt', async () => {
+      await expect(lijst.locator('.employee-announcement-card.is-open')).toHaveCount(3);
       await page.reload();
       if (await page.locator('#login-screen').isVisible()) await loginPage.loginAsEmployee();
+      await page.evaluate(() => { void (window as unknown as { refreshNotificationsReadApi: (force: boolean) => Promise<unknown> }).refreshNotificationsReadApi(true); });
       await page.locator('button[data-view="employee-announcements"]').click();
-      await expect(lijst.locator('.employee-announcement-card')).not.toHaveCount(0);
+      await expect(lijst.locator('.employee-announcement-card')).toHaveCount(4);
       await expect(lijst.locator('.employee-announcement-card.is-open')).toHaveCount(0);
     });
+  });
 
-    await loginPage.logout();
+  test('[NOT-N-015] een ongelezen bericht dat maar kort in beeld is, blijft ongelezen', async ({ page }) => {
+    // Grenswaarde van "vanzelf gelezen": wie Berichten binnen 2 seconden weer verlaat,
+    // heeft niets gelezen.
+    const meldingen = [{ id: 9401, notification_type: 'announcement', announcement_id: 901, title: 'Kort bekeken mededeling', read: false }];
+    const verzonden: string[] = [];
+    await page.route('**/server/api/notifications.php*', async route => {
+      if (route.request().method() === 'POST') {
+        verzonden.push(String((route.request().postDataJSON() as Record<string, unknown>).action));
+        await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, updated: 1 }) });
+        return;
+      }
+      const items = meldingen.map(melding => ({ period_id: null, period_key: null, message: 'Tekst.', target_route: 'employee-announcements', read_at: null, created_at: '2026-08-20 09:00:00', ...melding }));
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, count: 1, unread_count: 1, items }) });
+    });
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.evaluate(() => { void (window as unknown as { refreshNotificationsReadApi: (force: boolean) => Promise<unknown> }).refreshNotificationsReadApi(true); });
+    await expect(page.locator('#employee-berichten-count')).toHaveText('1');
+    await page.locator('button[data-view="employee-announcements"]').click();
+    await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-unread')).toHaveCount(1);
+    await page.waitForTimeout(900);
+    await page.locator('button[data-view="timesheet"]:visible').first().click();
+    await page.waitForTimeout(2_500);
+    expect(verzonden, 'na minder dan 2 seconden in beeld mag niets als gelezen worden gemeld').toEqual([]);
+    await expect(page.locator('#employee-berichten-count')).toHaveText('1');
   });
 
   test('[NOT-H-012] medewerker ziet ingetrokken mededelingen ingeklapt met label, de reden bij openen, en het filter toont precies die', async ({ page }) => {
@@ -443,7 +489,9 @@ test.describe('notifications api', () => {
     await test.step('Then staan alleen ingetrokken berichten er, ingeklapt met label, en geen ervan als ongelezen', async () => {
       const kaarten = page.locator('#employee-announcement-list .employee-announcement-card');
       const aantalIngetrokken = await page.evaluate(() => ((0, eval)('employeeAnnouncementItemsFromNotifications') as () => Array<{ status: string }>)().filter(item => item.status === 'withdrawn').length);
-      expect(aantalIngetrokken, 'de TEST-basis heeft ingetrokken voorbeelden').toBeGreaterThanOrEqual(3);
+      // TEST-seed (opdracht Gio 15 sep): 10 mededelingen, waarvan 6 ingetrokken en 4 ongelezen.
+      expect(aantalIngetrokken, 'de TEST-basis heeft zes ingetrokken voorbeelden').toBe(6);
+      expect(await page.evaluate(() => ((0, eval)('employeeAnnouncementItemsFromNotifications') as () => unknown[])().length), 'tien mededelingen in de TEST-basis').toBe(10);
       await expect(kaarten).toHaveCount(aantalIngetrokken);
       await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-withdrawn')).toHaveCount(aantalIngetrokken);
       await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-unread')).toHaveCount(0);
