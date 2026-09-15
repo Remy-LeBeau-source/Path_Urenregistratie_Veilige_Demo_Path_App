@@ -2,7 +2,45 @@
 
 Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
 
-## Tussenstand Claude Code 15 sep, avond — Berichten, bel en Nieuw in de app (2.0.102 – 2.0.113)
+## Hoe dit bestand is ingedeeld (vanaf 15 sep)
+
+Er werken twee Claude Code-sessies aan dit project, elk met een eigen hoofdstuk hieronder. Codex leest beide; bij twijfel wie iets doet: GIO-WENSEN.md (kolom "Wie").
+
+| Hoofdstuk | Sessie | Branch | Eigenaar van |
+|---|---|---|---|
+| **A. Herontwerp** | herontwerp-sessie | `herontwerp` | medewerkerschermen en vormgeving (`assets/app.js` voor die schermen, `styles.css`, `styles-new.css`, `index.html`), bijbehorende Playwright-cases (KLV-, NOT-, DASH-medewerker), "Nieuw in de app" |
+| **B. Main** | main-sessie | `main` | testdata (`database/seed-demo-data.sql`), server en migraties, CI en releasepipeline, PROD-wekker, BESLISTABEL, binnenhalen van herontwerp op main |
+
+## Stokje: wie is aan zet (verplicht lezen vóór je iets wijzigt)
+
+**AAN ZET op `herontwerp`: herontwerp-sessie (Claude Code), sinds 15 sep 23:30.**
+**AAN ZET op `main`: main-sessie (Claude Code).**
+
+Waarom deze regel: op 14 sep werkten Codex en Claude Code tegelijk op dezelfde branch. Gevolg: versienummer 2.0.69 werd twee keer gebruikt, een CI-run (2.0.73) moest worden afgebroken en een lokale, niet gepushte commit (2.0.70) raakte achter terwijl de ander doorwerkte. Dat mag niet opnieuw gebeuren.
+
+1. **Eén agent per branch tegelijk.** Alleen wie hierboven "aan zet" staat, wijzigt bestanden, commit of pusht op die branch. De rest kijkt alleen (lezen, tests draaien zonder te committen).
+2. **Overdragen:**
+   - alles committen én pushen, zonder lokale ongepushte commits;
+   - de CI-uitkomst noemen (groen of nog lopend, met run-id);
+   - de regel hierboven bijwerken naar de nieuwe agent, met tijd;
+   - dat committen en pushen, en Gio laten weten.
+3. **Overnemen:** pas beginnen als je hierboven aan zet staat. Daarna eerst:
+   - `git fetch`;
+   - `git status` moet schoon zijn;
+   - `git log -5 origin/<branch>`;
+   - GIO-WENSEN.md en dit bestand lezen.
+
+   Staan er onbekende wijzigingen in de werkmap, stop dan en vraag het, in plaats van ze te committen, weg te gooien of te overschrijven.
+4. **Versienummer:** vlak vóór `version:set` eerst `git fetch`. Neem het hoogste nummer op `origin/main` en `origin/herontwerp`, plus 1. Nooit een nummer hergebruiken.
+5. **Nooit andermans werk ongedaan maken:** geen `git stash`, geen `checkout`/`reset` van bestanden die je niet zelf wijzigde, geen force-push, geen CI-run van een ander annuleren.
+6. **Machine:** "bezet/vrij" melden bij lange lokale runs (smoke, Playwright), want de sessies delen CPU.
+7. **PROD** keurt alleen Gio goed.
+
+Zegt Gio "Codex gaat verder": de Claude-sessie draagt over volgens stap 2 en wijzigt daarna niets meer op die branch tot het stokje terug is.
+
+# A. Herontwerp
+
+## Tussenstand herontwerp 15 sep, avond — Berichten, bel en Nieuw in de app (2.0.102 – 2.0.113)
 
 Alle wensen en besluiten van Gio staan in `GIO-WENSEN.md` (open/bezig/klaar met versie). Daar staat altijd de actuele lijst; begin daar.
 
@@ -61,6 +99,33 @@ Alle wensen en besluiten van Gio staan in `GIO-WENSEN.md` (open/bezig/klaar met 
 - SKIN-N-008 (fixme): dialoog met toetsenbord onder "minder beweging". Controleren op een echte iPhone.
 - MOB-H-024 op mobile-chrome: af en toe een 401 in de console bij het laden net na inloggen (race). Los 3/3 groen.
 - PROD-wekker (main 2.0.106): nog niet bevestigd dat een release zonder nieuwere commit na 10 minuten echt blijft wachten.
+
+# B. Main
+
+_Aangeleverd door de main-sessie, 16 sep._
+
+**Stand van main**
+- **Testdata mededelingen**: elke medewerker (Stasjo, Marc, Brian, Shawn) heeft dezelfde 15 mededelingen, waarvan 6 ingetrokken, 9 actueel en 5 ongelezen (commit f9b10a76). Alle vier hebben ook dezelfde 4 belmeldingen: correctie, herinnering, goedgekeurd, klanturenstaat.
+- **PROD-wekker (2.0.106, R45)**:
+  - breekt een release alleen af als main een nieuwere commit heeft dan de wachtende release;
+  - anders blijft de goedkeuring open en kijkt hij elke 5 minuten opnieuw, tot 360 minuten;
+  - de contractcheck met tegenproef staat;
+  - nog niet bevestigd in een echte release: dat de goedkeuring echt openblijft. Alleen het afbreken is al in het echt gezien.
+- **ERD (2.0.110, `database/ERD-nieuw.svg` en `.md`)**:
+  - automatisch gegenereerd met `npm run erd` uit `database/schema.sql`, tabellen per domein, met PK/FK;
+  - de oude handgemaakte ERD blijft ernaast tot Gio hem weg wil;
+  - **Regel:** na elke wijziging in schema.sql `npm run erd` opnieuw draaien, anders raakt hij weer achter (hij liep 13 dagen achter).
+- **Valkuil in migrate.php**: `execute_sql_script()` in `server/migrate.php` knipt seed-demo-data.sql simpelweg op `;`.
+  - Een puntkomma waar dan ook breekt de migratie (SQLSTATE 1064), ook in `--`-commentaar of in Nederlandse tekst in een waarde.
+  - Gebruik in nieuwe seedregels of commentaar nooit `;`, maar `,` of `:`.
+  - Vooraf controleren: `grep -n -- "--.*;" database/seed-demo-data.sql`.
+- **Codex-taak (nog niet opgepakt)**: de demo-pipeline (simulatie van Jira, Confluence en Zephyr) ook als echte TEST-URL, in plaats van alleen een Claude-artifact-link. De volledige spec staat klaar; referentie is de live artifact-link. Harde eis: alleen TEST, nooit PROD. Main vult de opdracht hieronder aan.
+- **Open punten server/CI**: geen bekende rode CI op main. Of de wekker de goedkeuring echt openlaat, moet nog blijken in een echte release (zie boven).
+- **Herontwerp binnenhalen op main**:
+  - alleen fast-forward (`git merge --ff-only`) zodra herontwerp meldt dat CI groen is, nooit force;
+  - versienummers vooraf afstemmen; main neemt 2.0.114 als volgende.
+
+# Eerdere overdrachten (herontwerp, chronologisch aflopend)
 
 ## Update Claude Code nacht 14→15 sep — monkey-verkenning Klassiek (2.0.77)
 
