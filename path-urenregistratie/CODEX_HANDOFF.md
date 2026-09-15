@@ -13,7 +13,7 @@ Er werken twee Claude Code-sessies aan dit project, elk met een eigen hoofdstuk 
 
 ## Stokje: wie is aan zet (verplicht lezen vóór je iets wijzigt)
 
-**AAN ZET op `herontwerp`: herontwerp-sessie (Claude Code), sinds 15 sep 23:30.**
+**AAN ZET op `herontwerp`: Codex, sinds 16 sep (overdracht door de herontwerp-sessie op verzoek van Gio, bij de push van 2.0.113). De herontwerp-sessie wijzigt niets meer op `herontwerp` tot Gio het stokje teruggeeft.**
 **AAN ZET op `main`: main-sessie (Claude Code).**
 
 Waarom deze regel: op 14 sep werkten Codex en Claude Code tegelijk op dezelfde branch. Gevolg: versienummer 2.0.69 werd twee keer gebruikt, een CI-run (2.0.73) moest worden afgebroken en een lokale, niet gepushte commit (2.0.70) raakte achter terwijl de ander doorwerkte. Dat mag niet opnieuw gebeuren.
@@ -44,10 +44,11 @@ Zegt Gio "Codex gaat verder": de Claude-sessie draagt over volgens stap 2 en wij
 
 Alle wensen en besluiten van Gio staan in `GIO-WENSEN.md` (open/bezig/klaar met versie). Daar staat altijd de actuele lijst; begin daar.
 
-**Stand bij deze overdracht**
+**Stand bij deze overdracht (Codex begint hier)**
+- Eerst: stokjesregel bovenaan lezen, `git fetch`, `git status` schoon, `git log -5 origin/herontwerp`. Versie van de volgende bundel = hoogste op origin/main of origin/herontwerp + 1 (main heeft 2.0.114 gereserveerd, neem dus 2.0.115 of hoger).
 - Herontwerp is de branch waar Claude Code (herontwerp-sessie) werkt. Main (andere Claude-sessie) haalt herontwerp binnen op main, en de pipeline zet het op TEST.
 - Laatst gepusht en groen: 2.0.112 (81be0b81), staat op main.
-- Lokaal klaar op herontwerp, wordt **2.0.113**:
+- **2.0.113** is de laatste push van de herontwerp-sessie vóór de overdracht aan Codex (CI-run en uitkomst: zie de melding aan Gio en main; controleer met `gh run list --branch herontwerp --limit 1`):
   - filter **Gelezen** in Berichten, compacte filters met aantallen;
   - ingetrokken berichten in zachte **lavendel**;
   - merge van de seed 15/6/9/5 van main (f9b10a76), met NOT-H-012 en NOT-H-017 op die aantallen.
