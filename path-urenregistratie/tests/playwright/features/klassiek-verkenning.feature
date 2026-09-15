@@ -50,6 +50,15 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
     Then wordt met Playwright-assertions bevestigd dat op geen enkel beheerscherm valt inhoud buiten de rechterrand rond de breekpunten
 
   @negative
+  Scenario: [KLV-N-007] elk scherm heeft een paginatitel, ook Klanturenstaten bij de beheerder
+    # Testtechniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given een beheerder op het dashboard
+    When de beheerder de klanturenstaten opent vanaf het dashboard
+    Then staat er een paginatitel
+    And heeft ieder scherm in de app een eigen titel
+
+  @negative
   Scenario: [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie
     # Testtechniek: Monkey testing (seeded) + concurrency + toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 11

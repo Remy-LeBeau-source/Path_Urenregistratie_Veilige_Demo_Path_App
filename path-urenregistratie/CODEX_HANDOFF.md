@@ -39,6 +39,8 @@ Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
   smalle indelingen golden alleen tot 820px. Fix (styles.css, onderaan): de inhoudsindelingen uit het 820px-blok
   gelden nu ook voor beheer tussen 821-1023px (`body:not([data-role="employee"])`, zonder navigatieregels);
   teamoverzicht één kolom in dat bereik; mailfilters als flex-wrap op elke breedte. Visueel gecontroleerd.
+- **2.0.81**: **KLV-N-007** "Bekijk klanturenstaten →" op het beheerdashboard opende een scherm met lege
+  paginatitel (`pageTitles` miste `customer-timesheet-admin`). Case controleert ook dat elk `.view`-scherm een titel heeft.
 - Open vondst: monkey seed 15 (desktop, licht) toont na "Herstel demo"-klik, herladen en snelle klikken nog
   "door iemand anders gewijzigd": de app stuurde expected=7 terwijl de server op 8 stond, en herladen haalde de
   maand niet opnieuw op. Niet deterministisch te reproduceren (gewoon herladen, andere maand, lokaal demoherstel

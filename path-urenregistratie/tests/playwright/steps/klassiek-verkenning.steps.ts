@@ -30,6 +30,10 @@ Then("wordt met Playwright-assertions bevestigd dat op geen enkel medewerkersche
 Given("een beheerder in Klassiek");
 When("de flow voor KLV-N-006 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat op geen enkel beheerscherm valt inhoud buiten de rechterrand rond de breekpunten");
+Given("een beheerder op het dashboard");
+When("de beheerder de klanturenstaten opent vanaf het dashboard");
+Then("staat er een paginatitel");
+And("heeft ieder scherm in de app een eigen titel");
 Given("een medewerker op Mijn uren van een open maand");
 And("de urenstaat staat al met een versie op de server");
 When("de eerste invoer onderweg is en er intussen twee nieuwe invoeren volgen");

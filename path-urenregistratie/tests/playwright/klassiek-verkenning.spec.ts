@@ -252,6 +252,38 @@ test('[KLV-N-006] op geen enkel beheerscherm valt inhoud buiten de rechterrand r
   }
 });
 
+test('[KLV-N-007] elk scherm heeft een paginatitel, ook Klanturenstaten bij de beheerder', async ({ page }) => {
+  // Vondst monkey beheerkant (seeds 6 en 7, al na 3 handelingen): "Bekijk
+  // klanturenstaten →" op het dashboard opende een scherm met een lege
+  // paginatitel. pageTitles miste customer-timesheet-admin. Case in twee delen:
+  // de echte route via de knop, en een controle dat geen enkel scherm (.view) in
+  // de app zonder titel zit, zodat een volgend nieuw scherm niet hetzelfde overkomt.
+  const loginPage = new LoginPage(page);
+  await test.step('Given een beheerder op het dashboard', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
+  });
+  await test.step('When de beheerder de klanturenstaten opent vanaf het dashboard', async () => {
+    const knop = page.getByRole('button', { name: /Bekijk klanturenstaten/ }).first();
+    await expect(knop).toBeVisible();
+    await knop.click();
+    await expect(page.locator('#view-customer-timesheet-admin')).toHaveClass(/is-active/);
+  });
+  await test.step('Then staat er een paginatitel', async () => {
+    await expect(page.locator('#page-title')).toHaveText('Klanturenstaten');
+  });
+  await test.step('And heeft ieder scherm in de app een eigen titel', async () => {
+    const zonderTitel = await page.evaluate(() => {
+      const titels = (0, eval)('pageTitles') as Record<string, string>;
+      return Array.from(document.querySelectorAll<HTMLElement>('.view[id^="view-"]'))
+        .map(v => v.id.replace(/^view-/, ''))
+        .filter(naam => !String(titels[naam] || '').trim());
+    });
+    expect(zonderTitel).toEqual([]);
+  });
+});
+
 test('[KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie', async ({ page }) => {
   // Vondst seed 5 (5 handelingen): 9 aanklikken en meteen doortypen gaf een 409
   // stale-version, "door iemand anders gewijzigd", terwijl er maar één

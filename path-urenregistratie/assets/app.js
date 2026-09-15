@@ -1202,6 +1202,9 @@ const pageTitles = {
   "employee-dashboard": "Mijn overzicht",
   timesheet: "Mijn uren",
   "customer-timesheet": "Klanturenstaat",
+  // Ontbrak: "Bekijk klanturenstaten →" op het dashboard opende dit scherm met een
+  // lege paginatitel (monkey-vondst beheerkant, KLV-N-007).
+  "customer-timesheet-admin": "Klanturenstaten",
   historie: "Mijn maanden",
   teamstatus: "Procesvoortgang",
   approvals: "Goedkeuringen",

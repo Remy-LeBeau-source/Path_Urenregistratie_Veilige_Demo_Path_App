@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 556 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 557 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 556 unieke case-ID's
+- Playwright executable cases: 557 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 557 unieke case-ID's
+- Totaal executable cases: 558 unieke case-ID's
 - Playwright features: 31
 - Database features: 1
 - Playwright steps mappings: 31
 - Database steps mappings: 1
-- Uitvoeringen: 598
-- Niet-mobile projectuitvoeringen: 514
+- Uitvoeringen: 599
+- Niet-mobile projectuitvoeringen: 515
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 556 Playwright-functionele cases in totaal 598 resultaten op: 514 + (42 x 2) = 598.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 557 Playwright-functionele cases in totaal 599 resultaten op: 515 + (42 x 2) = 599.
 
 ## Documentatieketen
 
@@ -642,13 +642,14 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 556 Playwri
 
 - Feature: `tests/playwright/features/klassiek-verkenning.feature`
 - Source: `tests/playwright/klassiek-verkenning.spec.ts`
-- Cases: 6
+- Cases: 7
 
 - [KLV-N-002] het maandkeuzepaneel valt op geen enkele breedte buiten het scherm — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 8
 - [KLV-N-003] in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 3
 - [KLV-N-004] een trage opslag die pas na herladen aankomt, blokkeert de volgende invoer niet — Techniek: Monkey testing (seeded) + concurrency + herstelbaarheid · Assertions: 7
 - [KLV-N-005] op geen enkel medewerkerscherm valt inhoud buiten de rechterrand rond de breekpunten — Techniek: Monkey testing (seeded) + grenswaardenanalyse + toestandsovergang + responsive viewport · Assertions: 2
 - [KLV-N-006] op geen enkel beheerscherm valt inhoud buiten de rechterrand rond de breekpunten — Techniek: Monkey testing (seeded) + grenswaardenanalyse + toestandsovergang + responsive viewport · Assertions: 2
+- [KLV-N-007] elk scherm heeft een paginatitel, ook Klanturenstaten bij de beheerder — Techniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing · Assertions: 5
 - [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie — Techniek: Monkey testing (seeded) + concurrency + toestandsovergang · Assertions: 11
 
 ### Vormgevingsschakelaar (klassiek / nieuw)

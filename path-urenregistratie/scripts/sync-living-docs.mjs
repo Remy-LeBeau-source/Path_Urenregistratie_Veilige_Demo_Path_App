@@ -136,6 +136,7 @@ function techniqueFor(definition, testCase) {
       'KLV-N-004': 'Monkey testing (seeded) + concurrency + herstelbaarheid',
       'KLV-N-005': 'Monkey testing (seeded) + grenswaardenanalyse + toestandsovergang + responsive viewport',
       'KLV-N-006': 'Monkey testing (seeded) + grenswaardenanalyse + toestandsovergang + responsive viewport',
+      'KLV-N-007': 'Monkey testing (seeded) + negatieve equivalentieklasse + error guessing',
     };
     return perCase[testCase.id] || 'Monkey testing (seeded) + negatieve equivalentieklasse + error guessing';
   }
