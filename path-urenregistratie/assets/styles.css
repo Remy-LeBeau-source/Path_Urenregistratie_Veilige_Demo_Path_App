@@ -5196,8 +5196,12 @@ html:not([data-skin="new"]) body[data-role="employee"] .klantkaart-meer { displa
    38 tot 63px buiten beeld. De middenkolom had minimaal 180px en een lang onderwerp of
    e-mailadres brak niet af (KLV-N-011, rood in release 34950426101). Beide tekstkolommen
    mogen krimpen en lange adressen breken af; de kolom met status en herstelknop houdt
-   zijn eigen breedte. */
-.mail-delivery-history-item { grid-template-columns: minmax(0, 1.25fr) minmax(0, .8fr) auto; }
+   zijn eigen breedte. Alleen vanaf 761px: daaronder is de regel bewust één kolom
+   (@media max-width 760px hogerop, [MOB-H-005]); zonder deze grens overschreef deze
+   latere regel dat op de telefoon (CI 1002e11b). */
+@media (min-width: 761px) {
+  .mail-delivery-history-item { grid-template-columns: minmax(0, 1.25fr) minmax(0, .8fr) auto; }
+}
 .mail-delivery-history-main,
 .mail-delivery-history-meta { min-width: 0; overflow-wrap: anywhere; }
 
