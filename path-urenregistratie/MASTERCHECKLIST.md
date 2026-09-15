@@ -3184,6 +3184,15 @@ door de lane die de case schreef en niet door mij herhaald.
   openstaan. Een gecancelde run is `completed`, dus niet meer actief voor de wachtrij.
 - Bewaakt in `scripts/deployment-contract-check.mjs` (naam, needs, geen environment, cancel alleen bij
   wachtende prod, standaard 600). Tegenproef: met de naam "Prod-poort wekker" is de check rood.
+- **Eerste proef mislukt (release 34961082434, 2.0.90, 15 sep):** TEST uitgerold (Deploy Test 11:34:43Z),
+  wekker liep 11:34:46-11:44:51Z, zag de wachtende poort en riep `cancel` aan zonder fout -- maar de run
+  bleef wachten tot herontwerp de poort om 12:23Z handmatig afwees; pas daarna eindigde hij `cancelled`.
+  De cancel werd dus geregistreerd maar niet uitgevoerd zolang de goedkeuring openstond (prod-gate en de
+  PROD-jobs hebben `always()` in hun `if`). **Fix:** `force-cancel`, dat zulke voorwaarden omzeilt, plus
+  twee minuten controle; staat de run daarna nog open, dan faalt de wekker met een `::error::` in plaats van
+  stil success. Contractcheck eist force-cancel en die foutmelding; tegenproef met gewone cancel is rood.
+  **Of force-cancel een wachtende environment-goedkeuring echt doorbreekt, laat pas de volgende release
+  zien.**
 - **Nog te bevestigen in CI:** de eerste release na deze push. Keurt Gio PROD niet binnen 10 min goed, dan
   hoort die run `cancelled` te eindigen met de notice. Een tijdige goedkeuring (wekker doet dan niets) kan
   alleen Gio zelf laten zien. Kortere proef kan via workflow_dispatch met `prod_wekker_seconden`.

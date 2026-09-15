@@ -86,7 +86,9 @@ assert.match(wekkerJob, /needs:\s*\[test, deploy-test\]/, 'PROD gate timer must 
 assert.match(wekkerJob, /needs\.deploy-test\.result == 'success'/, 'PROD gate timer must require a successful TEST deploy');
 assert.doesNotMatch(wekkerJob, /\n    environment:/, 'PROD gate timer may not declare an environment (it must never request or grant approval itself)');
 assert.match(wekkerJob, /actions:\s*write/, 'PROD gate timer needs actions: write to cancel the run');
-assert.match(wekkerJob, /pending_deployments[\s\S]*environment\.name == "prod"[\s\S]*actions\/runs\/\$RUN_ID\/cancel/, 'PROD gate timer must cancel only while a prod deployment is still pending');
+assert.match(wekkerJob, /pending_deployments[\s\S]*environment\.name == "prod"[\s\S]*actions\/runs\/\$RUN_ID\/force-cancel/, 'PROD gate timer must force-cancel only while a prod deployment is still pending (plain cancel waited for the approval, release 34961082434)');
+assert.doesNotMatch(wekkerJob, /actions\/runs\/\$RUN_ID\/cancel"/, 'PROD gate timer may not use plain cancel: it is only executed after the pending approval is handled');
+assert.match(wekkerJob, /::error title=PROD-poort niet afgebroken::[\s\S]*exit 1/, 'PROD gate timer must fail visibly when the run is still waiting after force-cancel');
 assert.match(wekkerJob, /WACHT_SECONDEN[^\n]*'600'/, 'PROD gate timer must default to 600 seconds');
 assert.match(pilotMergeQueue, /listJobsForWorkflowRun/,'Pilot merge queue must inspect active release jobs, not only workflow status');
 assert.match(pilotMergeQueue, /Deploy Test to TransIP[\s\S]*conclusion === 'success'/, 'Pilot merge queue may ignore a waiting production gate only after TEST deploy succeeded');

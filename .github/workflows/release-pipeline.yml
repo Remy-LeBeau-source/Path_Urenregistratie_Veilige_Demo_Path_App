@@ -1100,7 +1100,22 @@ jobs:
           wachtend="$(gh api "repos/$REPO/actions/runs/$RUN_ID/pending_deployments" --jq '[.[] | select(.environment.name == "prod")] | length')"
           if [ "${wachtend:-0}" -gt 0 ]; then
             echo "::notice title=PROD overgeslagen::Prod niet binnen $((WACHT_SECONDEN / 60)) min goedgekeurd, run afgebroken. TEST is al uitgerold."
-            gh api -X POST "repos/$REPO/actions/runs/$RUN_ID/cancel"
+            # force-cancel en niet cancel (15 sep, release 34961082434): het gewone
+            # cancel-endpoint werd geregistreerd maar pas uitgevoerd nadat de
+            # wachtende goedkeuring handmatig was afgehandeld -- prod-gate en de
+            # PROD-jobs hebben always() in hun if, en cancel respecteert dat.
+            # force-cancel omzeilt zulke voorwaarden.
+            gh api -X POST "repos/$REPO/actions/runs/$RUN_ID/force-cancel"
+            # Lukt het, dan wordt deze job zelf mee afgebroken en komen we hier niet
+            # meer. Komen we hier wél nog, dan werkt het niet: zichtbaar falen in
+            # plaats van stil "success", zodat Gio of een sessie de poort afhandelt.
+            for _ in $(seq 1 12); do
+              sleep 10
+              status="$(gh api "repos/$REPO/actions/runs/$RUN_ID" --jq '.status')"
+              [ "$status" = "completed" ] && exit 0
+            done
+            echo "::error title=PROD-poort niet afgebroken::force-cancel gaf geen fout, maar de run staat na 2 minuten nog op '${status}'. Wijs de PROD-poort handmatig af."
+            exit 1
           else
             echo "PROD-poort wacht niet meer (goedgekeurd of afgewezen); niets te doen."
           fi
