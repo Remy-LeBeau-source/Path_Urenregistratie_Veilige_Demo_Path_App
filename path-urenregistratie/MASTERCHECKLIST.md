@@ -3191,11 +3191,25 @@ door de lane die de case schreef en niet door mij herhaald.
   PROD-jobs hebben `always()` in hun `if`). **Fix:** `force-cancel`, dat zulke voorwaarden omzeilt, plus
   twee minuten controle; staat de run daarna nog open, dan faalt de wekker met een `::error::` in plaats van
   stil success. Contractcheck eist force-cancel en die foutmelding; tegenproef met gewone cancel is rood.
-  **Of force-cancel een wachtende environment-goedkeuring echt doorbreekt, laat pas de volgende release
-  zien.**
+  **Bevestigd in release 34968735951 (2.0.92, 5c42ddf3):** Deploy Test klaar 12:57:46Z, poort ging
+  wachten 12:57:46Z, wekker 12:57:57Z-13:07:59Z; poort en run `cancelled` om 13:07:59Z (10 min 13 s), zonder
+  handmatige afwijzing. TEST draait 2.0.92. Nog niet getoetst: dat de wekker niets doet bij een tijdige
+  goedkeuring -- dat kan alleen Gio laten zien.
 - **Nog te bevestigen in CI:** de eerste release na deze push. Keurt Gio PROD niet binnen 10 min goed, dan
   hoort die run `cancelled` te eindigen met de notice. Een tijdige goedkeuring (wekker doet dan niets) kan
   alleen Gio zelf laten zien. Kortere proef kan via workflow_dispatch met `prod_wekker_seconden`.
+
+**OPGELOST (15 sep, besluit Gio, punt 2 "Mededeling intrekken"): een ingetrokken mededeling blijft voor
+de medewerker zichtbaar, nu wel herkenbaar als ingetrokken.**
+- `employeeAnnouncementItemsFromNotifications()` (app.js) leest de status nu ook uit `state.announcements`
+  i.p.v. alleen uit de melding zelf; een ingetrokken bericht krijgt het label "Ingetrokken" plus de reden
+  (`renderEmployeeAnnouncementArchive`, dezelfde stijl als bij Backoffice).
+- Het filter "Ingetrokken" in servermodus (`state.announcementArchiveFilter === "withdrawn"`) filterde
+  voorheen hard naar een lege lijst; filtert nu echt op status.
+- TEST-basis (`database/seed-demo-data.sql`) kreeg drie ingetrokken voorbeeldmededelingen (al gelezen,
+  tellers dus ongewijzigd), zodat het filter iets toont. Nooit op PROD.
+- Nieuwe case `[NOT-H-012]`; `[NOT-H-011]` aangepast (6 kaarten i.p.v. 3 onder "Alles", door de drie nieuwe
+  seedrijen). Zie R44 in BESLISTABEL.md voor de PROD-databeslissing (geen migratie, PROD is nog niet live).
 
 **OPGELOST: `[HELP-N-001]` op mobile-safari faalde bij het uitloggen, niet bij het inloggen (14 sep).**
 Het hulppaneel onderschepte 15 s lang de klik op `#switch-role`.

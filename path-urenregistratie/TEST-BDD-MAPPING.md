@@ -354,6 +354,7 @@
 | NOT-H-009 | api | notifications.feature | alles gelezen wist teller en een oudere response kan deze niet herstellen | Herstelbaarheid + toestandsovergang | 9 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | alles gelezen wist teller en een oudere response kan deze niet herstellen | Happy | 15 | Actueel |
 | NOT-H-010 | api | notifications.feature | Herstel zet drie lokale basismeldingen terug en beschermt ze tegen serveroverschrijving | Herstelbaarheid + toestandsovergang | 15 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | Herstel zet drie lokale basismeldingen terug en beschermt ze tegen serveroverschrijving | Happy | 15 | Actueel |
 | NOT-H-011 | api | notifications.feature | medewerker ziet drie echte mededelingen en tellers lopen gelijk terug naar nul | Grenswaardenanalyse | 10 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | medewerker ziet drie echte mededelingen en tellers lopen gelijk terug naar nul | Happy | 15 | Actueel |
+| NOT-H-012 | api | notifications.feature | medewerker ziet ingetrokken mededelingen als ingetrokken met reden, en het filter toont precies die | Beslissingstabel rollen en autorisatie | 8 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | medewerker ziet ingetrokken mededelingen als ingetrokken met reden, en het filter toont precies die | Happy | 15 | Actueel |
 | ANN-H-001 | api | announcements.feature | beheerder verstuurt een mededeling aan een gekozen medewerker | Beslissingstabel rollen en autorisatie | 8 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | beheerder verstuurt een mededeling aan een gekozen medewerker | Happy | 15 | Actueel |
 | ANN-H-002 | api | announcements.feature | een concept blijft intern en kan daarna definitief worden verwijderd | API-contract + equivalentieklasse | 7 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | een concept blijft intern en kan daarna definitief worden verwijderd | Happy | 15 | Actueel |
 | ANN-H-003 | api | announcements.feature | intrekken met reden en daarna verbergen bij medewerkers | Beslissingstabel rollen en autorisatie | 7 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | intrekken met reden en daarna verbergen bij medewerkers | Happy | 15 | Actueel |
@@ -593,9 +594,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 571
+- Playwright executable cases: 572
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 572
+- Totaal unieke executable cases: 573
 - Playwright features: 31
 - Database features: 1
 - Playwright steps mappings: 31

@@ -93,3 +93,12 @@ Feature: Meldingen beheren
     Given Stasjo drie ongelezen mededelingen uit de serverbaseline heeft
     When hij de mededelingen een voor een als gelezen markeert
     Then blijven bel, filter en persoonlijke historie op dezelfde serverwaarheid
+
+  @happy
+  Scenario: [NOT-H-012] medewerker ziet ingetrokken mededelingen als ingetrokken met reden, en het filter toont precies die
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given Stasjo opent Berichten met drie ingetrokken voorbeeldmededelingen in de TEST-basis
+    When hij het filter Ingetrokken kiest
+    Then staan precies de drie ingetrokken berichten er, elk met label en reden, en geen ervan als ongelezen
+    And staat onder Alles een geldige mededeling niet als ingetrokken

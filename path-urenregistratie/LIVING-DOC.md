@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 571 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 572 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 571 unieke case-ID's
+- Playwright executable cases: 572 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 572 unieke case-ID's
+- Totaal executable cases: 573 unieke case-ID's
 - Playwright features: 31
 - Database features: 1
 - Playwright steps mappings: 31
 - Database steps mappings: 1
-- Uitvoeringen: 613
-- Niet-mobile projectuitvoeringen: 529
+- Uitvoeringen: 614
+- Niet-mobile projectuitvoeringen: 530
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 571 Playwright-functionele cases in totaal 613 resultaten op: 529 + (42 x 2) = 613.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 572 Playwright-functionele cases in totaal 614 resultaten op: 530 + (42 x 2) = 614.
 
 ## Documentatieketen
 
@@ -463,7 +463,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 571 Playwri
 
 - Feature: `tests/playwright/features/notifications.feature`
 - Source: `tests/playwright/notifications.spec.ts`
-- Cases: 11
+- Cases: 12
 
 - [NOT-H-001] ingelogde gebruiker kan notificaties ophalen — Techniek: API-contract + equivalentieklasse · Assertions: 5
 - [NOT-H-002] mark_all_read werkt zonder fouten — Techniek: Toestandsovergang · Assertions: 8
@@ -476,6 +476,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 571 Playwri
 - [NOT-H-009] alles gelezen wist teller en een oudere response kan deze niet herstellen — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 9
 - [NOT-H-010] Herstel zet drie lokale basismeldingen terug en beschermt ze tegen serveroverschrijving — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 15
 - [NOT-H-011] medewerker ziet drie echte mededelingen en tellers lopen gelijk terug naar nul — Techniek: Grenswaardenanalyse · Assertions: 10
+- [NOT-H-012] medewerker ziet ingetrokken mededelingen als ingetrokken met reden, en het filter toont precies die — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 
 ### Mededelingen versturen, intrekken en verbergen
 

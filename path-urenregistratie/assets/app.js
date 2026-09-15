@@ -9128,7 +9128,7 @@ function renderEmployeeAnnouncementArchive() {
     document.querySelector("#announcement-unread-filter").textContent = "Ongelezen mededelingen · " + unreadAnnouncementCount;
     zetBerichtenTeller(unreadAnnouncementCount);
     if (state.announcementArchiveFilter === "unread") announcements = announcements.filter(item => !item.read);
-    if (state.announcementArchiveFilter === "withdrawn") announcements = [];
+    if (state.announcementArchiveFilter === "withdrawn") announcements = announcements.filter(item => item.status === "withdrawn");
     document.querySelectorAll("[data-announcement-archive-filter]").forEach(button => button.classList.toggle("is-active", button.dataset.announcementArchiveFilter === state.announcementArchiveFilter));
     if (!announcements.length) {
       list.innerHTML = '<div class="dashboard-action-empty"><strong>Geen mededelingen binnen dit filter.</strong><br>Nieuwe berichten verschijnen ook via de bel.</div>';
@@ -9137,8 +9137,16 @@ function renderEmployeeAnnouncementArchive() {
 
     list.innerHTML = announcements.map(item => {
       const unread = !item.read;
-      return '<article class="employee-announcement-card' + (unread ? " is-unread" : "") + '">' +
-        '<header><div><span class="status-pill ' + (unread ? 'status-warning' : 'status-approved') + '">' + (unread ? 'Ongelezen' : 'Gelezen') + '</span><h3>' + escapeHtml(item.title) + '</h3></div><small>' + escapeHtml(item.createdAt) + '</small></header>' +
+      const ingetrokken = item.status === "withdrawn";
+      const pill = ingetrokken
+        ? '<span class="status-pill status-warning">Ingetrokken</span>'
+        : '<span class="status-pill ' + (unread ? 'status-warning' : 'status-approved') + '">' + (unread ? 'Ongelezen' : 'Gelezen') + '</span>';
+      const intrekking = ingetrokken
+        ? '<div class="announcement-withdrawal-note" data-employee-withdrawal-note><strong>Deze mededeling is ingetrokken en geldt niet meer</strong>' + escapeHtml(item.withdrawalReason || "Er is geen reden vastgelegd.") + '</div>'
+        : "";
+      return '<article class="employee-announcement-card' + (unread ? " is-unread" : "") + (ingetrokken ? " is-withdrawn" : "") + '">' +
+        '<header><div>' + pill + '<h3>' + escapeHtml(item.title) + '</h3></div><small>' + escapeHtml(item.createdAt) + '</small></header>' +
+        intrekking +
         '<p>' + escapeHtml(item.message) + '</p>' +
         '<footer><span>Van ' + escapeHtml(item.createdBy) + ' · ' + (unread ? 'Ongelezen' : 'Gelezen') + '</span>' + (unread ? '<button class="small-button" data-read-announcement="' + item.id + '">Markeer als gelezen</button>' : '') + '</footer>' +
       '</article>';
@@ -11455,16 +11463,28 @@ function renderNotifications() {
 function employeeAnnouncementItemsFromNotifications() {
   return notificationsForCurrentProfile()
     .filter(item => String(item.notificationType || "").toLowerCase() === "announcement" || item.type === "announcement")
-    .map(item => ({
-      id: Number(item.announcementId || item.id),
-      title: String(item.title || "Mededeling"),
-      message: String(item.message || ""),
-      createdBy: "Beheerder",
-      createdAt: String(item.createdAt || ""),
-      updatedAt: String(item.createdAt || ""),
-      status: "sent",
-      read: Boolean(item.read)
-    }));
+    .map(item => {
+      const id = Number(item.announcementId || item.id);
+      // Besluit Gio (15 sep, punt 2): een ingetrokken mededeling blijft voor de
+      // medewerker zichtbaar, maar als ingetrokken en met de reden -- anders leest
+      // "Kantoor vandaag gesloten" als nog geldig. De status komt uit de
+      // mededelingen-API (state.announcements), die de medewerker ook ophaalt;
+      // de melding zelf kent geen intrekstatus.
+      const bron = (state.announcements || []).find(announcement => Number(announcement.id) === id);
+      const ingetrokken = Boolean(bron && bron.status === "withdrawn");
+      return {
+        id,
+        title: String(item.title || "Mededeling"),
+        message: String(item.message || ""),
+        createdBy: "Beheerder",
+        createdAt: String(item.createdAt || ""),
+        updatedAt: String(item.createdAt || ""),
+        status: ingetrokken ? "withdrawn" : "sent",
+        withdrawalReason: ingetrokken ? String(bron.withdrawalReason || "") : "",
+        withdrawnAt: ingetrokken ? String(bron.withdrawnAt || "") : "",
+        read: Boolean(item.read)
+      };
+    });
 }
 
 function createTestNotification(type) {

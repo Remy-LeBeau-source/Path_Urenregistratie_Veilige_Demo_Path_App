@@ -384,10 +384,53 @@ test.describe('notifications api', () => {
     });
 
     await test.step('Then blijven bel, filter en persoonlijke historie op dezelfde serverwaarheid', async () => {
+      // Sinds 15 sep (besluit Gio) bevat de TEST-basis ook drie ingetrokken
+      // voorbeeldmededelingen, al gelezen. "Alles" toont dus de drie echte plus de
+      // drie ingetrokken, en geen daarvan telt als ongelezen. Wat de medewerker
+      // bij een ingetrokken bericht ziet, bewaakt [NOT-H-012].
       await page.locator('[data-announcement-archive-filter="all"]').click();
-      await expect(page.locator('#employee-announcement-list .employee-announcement-card')).toHaveCount(3);
+      await expect(page.locator('#employee-announcement-list .employee-announcement-card')).toHaveCount(6);
       await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-unread')).toHaveCount(0);
       await expect(page.locator('#notification-title')).toHaveText('Geen ongelezen meldingen');
+    });
+
+    await loginPage.logout();
+  });
+
+  // Besluit Gio (15 sep, punt 2 "Mededeling intrekken"): een ingetrokken
+  // mededeling blijft voor de medewerker zichtbaar, maar als ingetrokken en met de
+  // reden, en het filter "Ingetrokken" toont precies die berichten. Tot deze
+  // datum zette de app dat filter in servermodus hard leeg, en stond een
+  // ingetrokken bericht onder "Alles" als gewone, nog geldige mededeling.
+  test('[NOT-H-012] medewerker ziet ingetrokken mededelingen als ingetrokken met reden, en het filter toont precies die', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+
+    await test.step('Given Stasjo opent Berichten met drie ingetrokken voorbeeldmededelingen in de TEST-basis', async () => {
+      await loginPage.open();
+      await loginPage.loginAsEmployee();
+      await page.locator('button[data-view="employee-announcements"]').click();
+    });
+
+    await test.step('When hij het filter Ingetrokken kiest', async () => {
+      await page.locator('[data-announcement-archive-filter="withdrawn"]').click();
+    });
+
+    await test.step('Then staan precies de drie ingetrokken berichten er, elk met label en reden, en geen ervan als ongelezen', async () => {
+      const kaarten = page.locator('#employee-announcement-list .employee-announcement-card');
+      await expect(kaarten).toHaveCount(3);
+      await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-withdrawn')).toHaveCount(3);
+      await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-unread')).toHaveCount(0);
+      const borrel = kaarten.filter({ hasText: 'Vrijdagborrel gaat niet door' });
+      await expect(borrel.locator('.status-pill')).toHaveText('Ingetrokken');
+      await expect(borrel.locator('[data-employee-withdrawal-note]')).toContainText('Hij gaat toch door: er is nieuwe taart.');
+    });
+
+    await test.step('And staat onder Alles een geldige mededeling niet als ingetrokken', async () => {
+      await page.locator('[data-announcement-archive-filter="all"]').click();
+      const geldig = page.locator('#employee-announcement-list .employee-announcement-card').filter({ hasText: 'Planning augustus beschikbaar' });
+      await expect(geldig).toHaveCount(1);
+      await expect(geldig).not.toHaveClass(/is-withdrawn/);
+      await expect(geldig.locator('[data-employee-withdrawal-note]')).toHaveCount(0);
     });
 
     await loginPage.logout();
