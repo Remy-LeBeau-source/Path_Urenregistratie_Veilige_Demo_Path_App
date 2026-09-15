@@ -16,6 +16,7 @@ import { expect, test } from '@playwright/test';
 import { openPaneel, openProfielmenu } from './pages/TopbarMenu';
 import { suppressInstallBanner } from './fixtures/suppressInstallBanner';
 import { useFixedDemoClock } from './fixtures/fixedDemoClock';
+import { klikTestknop, openTestknoppen } from './fixtures/testknoppen';
 // Scope rechtgezet 14 sep: Vandaag (#vandaag) vervangt in Klassiek de oude
 // dashboardblokken ("Open acties per maand", de volgende-actieknop, de
 // kerncijfers en de stappenlijst), op desktop volgens handoff/medewerker-gui.html
@@ -999,7 +1000,7 @@ test('[DASH-N-028] Mijn uren toont in het weekend de week waar vandaag in valt, 
   await test.step('Given een medewerker inlogt op een zaterdag', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
   });
 
@@ -1064,7 +1065,7 @@ test('[DASH-N-029] de pijl springt naar de eerstvolgende week met een leeg urenv
   await test.step('Given een medewerker op de week van vandaag (Week 37), met die week en de volgende al volledig ingevuld, maar een eerdere week nog leeg', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('#new-bento-week-title')).toHaveText('Week 37');
 
     await page.evaluate(() => {
@@ -1202,7 +1203,7 @@ test('[DASH-H-026] het medewerkerdashboard houdt op telefoonbreedte de afgesprok
   });
 
   await test.step('And staat in Nieuw open acties in ieder geval boven de correctie- en archiefingang', async () => {
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await expect(page.locator('#new-employee-bento')).toBeVisible();
     const blokken = await volgorde();
@@ -1904,11 +1905,11 @@ test('[DASH-H-036] Vandaag gebruikt in Klassiek de ene kopkaart op desktop en de
   });
 
   await test.step('And staat Vandaag niet in Modern, en daar blijft de bento', async () => {
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await expect(vandaag).toBeHidden();
     await expect(page.locator('#new-employee-bento')).toBeVisible();
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
   });
 
@@ -2204,7 +2205,7 @@ test('[DASH-N-032] een hertekening op de achtergrond zet "Hele maand" in Mijn ur
   });
 
   await test.step('And geldt dat ook in Modern op Mijn uren', async () => {
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     // Modern verbergt de zijbalk op de medewerkerschermen; na de wissel staan we
     // nog op Mijn uren.
@@ -2232,7 +2233,7 @@ test('[DASH-N-032] een hertekening op de achtergrond zet "Hele maand" in Mijn ur
     });
     await hertekenTweeKeer();
     expect(await scope()).toMatch(/^week-\d+$/);
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
   });
 });
@@ -2751,8 +2752,11 @@ test('[DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbal
     await expect(balk).toBeVisible();
     await openTestpil();
     await expect(page.locator('#testbalk-label')).toHaveText(/(TESTOMGEVING|LOKAAL) · Versie \d+\.\d+\.\d+/);
+    await openTestknoppen(page);
     await expect(page.locator('#testbalk-knoppen #quick-reset-demo')).toBeVisible();
+    await openTestknoppen(page);
     await expect(page.locator('#testbalk-knoppen #quick-skin-toggle')).toBeVisible();
+    await openTestknoppen(page);
     await expect(page.locator('#testbalk-knoppen #quick-theme-toggle')).toBeVisible();
     await expect(page.locator('.topbar-actions #quick-skin-toggle')).toHaveCount(0);
     // Gio 14 sep: rechtsboven en geen band door de app. Op desktop in de
@@ -2790,11 +2794,11 @@ test('[DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbal
 
   await test.step('When de medewerker naar Modern wisselt, then staan de knoppen weer in de topbalk en is de balk weg', async () => {
     await openTestpil();
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await expect(balk).toBeHidden();
     await expect(page.locator('.topbar-actions #quick-skin-toggle')).toHaveCount(1);
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
     await expect(page.locator('#testbalk-knoppen #quick-skin-toggle')).toHaveCount(1);
   });

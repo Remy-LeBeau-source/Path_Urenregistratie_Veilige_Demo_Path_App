@@ -2,6 +2,7 @@ import { expect, request as playwrightRequest, test, type Page } from '@playwrig
 import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 import { LoginPage } from './pages/LoginPage';
+import { klikTestknop } from './fixtures/testknoppen';
 
 async function getCSRF(ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>) {
   const r = await ctx.get('/server/auth/csrf.php');
@@ -309,7 +310,7 @@ test.describe('notifications api', () => {
     // De oude serverwaarheid is 0. Die mag de herstelde lokale baseline niet
     // opnieuw overschrijven zolang Herstel lokaal leidend is.
     unreadCount = 0;
-    await page.locator('#quick-reset-demo').click();
+    await klikTestknop(page, '#quick-reset-demo');
     await page.locator('#modal-confirm').click();
 
     await expect(page.locator('#notification-count')).toHaveText('3');

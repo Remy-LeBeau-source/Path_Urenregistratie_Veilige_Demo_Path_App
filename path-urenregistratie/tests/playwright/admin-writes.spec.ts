@@ -2,6 +2,7 @@ import { expect, request as playwrightRequest, test } from '@playwright/test';
 import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 import { LoginPage } from './pages/LoginPage';
+import { klikTestknop } from './fixtures/testknoppen';
 
 async function getCSRF(ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>) {
   const r = await ctx.get('/server/auth/csrf.php');
@@ -895,7 +896,7 @@ Uren: {uren} uur.`;
     const loginPage = new LoginPage(page);
     await loginPage.open();
     await loginPage.loginAsAdmin();
-    await page.locator('#quick-reset-demo').click();
+    await klikTestknop(page, '#quick-reset-demo');
     await page.locator('#modal-confirm').click();
     await expect.poll(() => page.evaluate(() => localStorage.getItem('path-uren-demo-v07-final:local-reset-authoritative'))).toBe('1');
     await page.locator('[data-view="employees"]').click();
@@ -969,7 +970,7 @@ Uren: {uren} uur.`;
     const loginPage = new LoginPage(page);
     await loginPage.open();
     await loginPage.loginAsAdmin();
-    await page.locator('#quick-reset-demo').click();
+    await klikTestknop(page, '#quick-reset-demo');
     await page.locator('#modal-confirm').click();
     await expect.poll(() => page.evaluate(() => localStorage.getItem('path-uren-demo-v07-final:local-reset-authoritative'))).toBe('1');
     await page.locator('[data-view="employees"]').click();
@@ -1012,7 +1013,7 @@ Uren: {uren} uur.`;
     await test.step('Given de administrator is ingelogd en reset naar vaste baseline', async () => {
       await loginPage.open();
       await loginPage.loginAsAdmin();
-      await page.locator('#quick-reset-demo').click();
+      await klikTestknop(page, '#quick-reset-demo');
       await page.locator('#modal-confirm').click();
       await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
     });
@@ -1230,7 +1231,7 @@ Uren: {uren} uur.`;
     await test.step('Given de administrator is ingelogd en Teambeheer heeft geopend', async () => {
       await loginPage.open();
       await loginPage.loginAsAdmin();
-      await page.locator('#quick-reset-demo').click();
+      await klikTestknop(page, '#quick-reset-demo');
       await page.locator('#modal-confirm').click();
       await page.locator('[data-view="employees"]').click();
       await expect(page.locator('#team-active-account-count')).toBeVisible({ timeout: 10_000 });
@@ -1307,7 +1308,7 @@ Uren: {uren} uur.`;
     });
 
     await test.step('When de administrator Herstel gebruikt en terugkeert naar Teambeheer', async () => {
-      await page.locator('#quick-reset-demo').click();
+      await klikTestknop(page, '#quick-reset-demo');
       await page.locator('#modal-confirm').click();
       await page.locator('[data-view="employees"]').click();
     });

@@ -18,6 +18,7 @@ import { readFileSync } from 'node:fs';
 import { staleServerStateWith132OpenActions, verwachtAlleenSchermActief } from './fixtures/dashboardGedeeld';
 import { suppressInstallBanner } from './fixtures/suppressInstallBanner';
 import { useFixedDemoClock } from './fixtures/fixedDemoClock';
+import { klikTestknop, openTestknoppen } from './fixtures/testknoppen';
 
 // Scrolt het element eerst in beeld en klikt daarna pas.
 //
@@ -99,7 +100,7 @@ test('[DASH-H-018] elke login en elke Dashboard-klik opent de actuele maand; een
     // lokale demo-beginstand, zodat mutaties uit andere CI-shards de aantallen
     // van deze scenario-asserties niet kunnen beïnvloeden.
     await expect(page.locator('#period-label')).toHaveText('September 2026');
-    await page.locator('#quick-reset-demo').click();
+    await klikTestknop(page, '#quick-reset-demo');
     await page.locator('#modal-confirm').click();
   });
 
@@ -396,8 +397,10 @@ test('[DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus', as
   await test.step('Given Backoffice de voorbeeldomgeving herstelt en daarna naar Stasjo wisselt', async () => {
     await loginPage.open();
     await loginPage.loginAsAdmin();
+    await openTestknoppen(page);
+
     await expect(page.locator('#quick-reset-demo')).toBeVisible();
-    await page.locator('#quick-reset-demo').click();
+    await klikTestknop(page, '#quick-reset-demo');
     await page.locator('#modal-confirm').click();
     await expect(page.locator('#hero-task-total')).toHaveText('12 open acties');
     await loginPage.logout();
@@ -406,6 +409,8 @@ test('[DASH-N-010] herstel blijft na F5 leidend boven een oude serverstatus', as
   });
 
   await test.step('When Stasjo daarna een open urenactie indient', async () => {
+    await openTestknoppen(page);
+
     await expect(page.locator('#quick-reset-demo')).toBeVisible();
     await expect(page.locator('#employee-open-task-total')).toHaveText('3 open acties');
     await expect(page.locator('#period-label')).toHaveText('Augustus 2026');
@@ -470,7 +475,7 @@ test('[DASH-N-011] afgeronde Backoffice-taak en teller blijven na F5 stabiel, on
   await test.step('Given de administrator is ingelogd en reset naar vaste baseline', async () => {
     await loginPage.open();
     await loginPage.loginAsAdmin();
-    await page.locator('#quick-reset-demo').click();
+    await klikTestknop(page, '#quick-reset-demo');
     await page.locator('#modal-confirm').click();
     await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
   });
@@ -583,7 +588,7 @@ test('[DASH-H-008] GUI-closeout verwerkt alle 12 voorbeeldtaken via medewerker e
   await test.step('Given de lokale demo toont alle 12 beginacties en tellerverdeling', async () => {
     await page.goto('/');
     await openDemoAdmin();
-    await page.locator('#quick-reset-demo').click();
+    await klikTestknop(page, '#quick-reset-demo');
     await page.locator('#modal-confirm').click();
     await expect(page.locator('#hero-task-total')).toHaveText('12 open acties');
     await expect(page.locator('#admin-task-summary')).toContainText('Backoffice kan 7 oppakken; 5 wachten op medewerkers');
@@ -679,7 +684,7 @@ test('[DASH-N-012] afgeronde verzendcontrole blijft na F5 weg, ongeacht het begi
   await test.step('Given de administrator is ingelogd, reset naar vaste baseline en keurt een ingediende urenstaat goed', async () => {
     await loginPage.open();
     await loginPage.loginAsAdmin();
-    await page.locator('#quick-reset-demo').click();
+    await klikTestknop(page, '#quick-reset-demo');
     await page.locator('#modal-confirm').click();
     await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
     await expect(page.locator('#hero-task-total')).toHaveText('12 open acties');
@@ -836,7 +841,7 @@ test('[DASH-N-040] een facturenantwoord van vóór "Herstel demo" vult de cache 
       });
       await expect.poll(() => oudAntwoordOpgehouden, { timeout: 10_000 }).toBe(true);
 
-      await page.locator('#quick-reset-demo').click();
+      await klikTestknop(page, '#quick-reset-demo');
       await page.locator('#modal-confirm').click();
       resetGedaan = true;
       await expect(page.locator('#hero-task-total')).toHaveText('12 open acties');
@@ -896,7 +901,7 @@ test('[DASH-H-012] GUI-smoke scheidt werkacties van medewerkers- en beheerdersac
   await test.step('Given de vaste GUI-baseline met twaalf open acties en zes actieve accounts', async () => {
     await loginPage.open();
     await loginPage.loginAsAdmin();
-    await page.locator('#quick-reset-demo').click();
+    await klikTestknop(page, '#quick-reset-demo');
     await page.locator('#modal-confirm').click();
     await expect(page.locator('#hero-task-total')).toHaveText('12 open acties');
   });
@@ -968,7 +973,7 @@ test('[DASH-H-013] dashboardmodules tonen compacte documenten, procesfasen en te
   await test.step('Given Backoffice de vaste augustusbaseline opent', async () => {
     await loginPage.open();
     await loginPage.loginAsAdmin();
-    await page.locator('#quick-reset-demo').click();
+    await klikTestknop(page, '#quick-reset-demo');
     await page.locator('#modal-confirm').click();
   });
 

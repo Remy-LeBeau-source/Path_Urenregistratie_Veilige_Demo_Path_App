@@ -1,6 +1,7 @@
 import { test, expect } from './fixtures/e2eIsolation';
 import type { Page } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
+import { klikTestknop } from './fixtures/testknoppen';
 
 // Twee keer klikken mag nooit twee keer gebeuren.
 //
@@ -276,7 +277,7 @@ test('[E2E-H-028] uren invullen en meteen verversen wordt native afgeraden zolan
   await test.step('And hetzelfde geldt in Nieuw, via het bento-uurveld', async () => {
     // Mijn uren staat al actief (vorige stap); de skin-wissel zelf navigeert
     // nergens heen, dus geen nieuwe klik nodig om er te blijven.
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     // De bento-kaartjes tonen alleen bij een enkele weekweergave, niet bij
     // "Hele maand" (die toont ook in Nieuw de compacte tabel). Alle weken

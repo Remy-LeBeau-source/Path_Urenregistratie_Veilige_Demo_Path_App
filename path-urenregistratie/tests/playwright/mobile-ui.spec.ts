@@ -7,6 +7,7 @@ import { LoginPage } from './pages/LoginPage';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
 import { openProfielmenu } from './pages/TopbarMenu';
 import { openHulp } from './fixtures/hulp';
+import { klikTestknop, openTestknoppen } from './fixtures/testknoppen';
 
 // Gedeeld door [MOB-H-030] (beheerschermen) en [MOB-H-031] (medewerkerschermen).
 //
@@ -460,6 +461,8 @@ test('[MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikba
     await expect(page.locator('#mobile-switch-role')).toBeVisible();
     await expect(page.locator('.mobile-version-badge')).toBeVisible();
     await expect(page.locator('.mobile-version-badge')).toHaveText(/Versie \d+\.\d+\.\d+/);
+    await openTestknoppen(page);
+
     await expect(page.locator('#quick-reset-demo')).toBeVisible();
     const resetBox = await page.locator('#quick-reset-demo').boundingBox();
     expect(resetBox?.height || 0).toBeGreaterThanOrEqual(42);
@@ -495,7 +498,7 @@ test('[MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikba
     await expect(page.locator('#mobile-switch-role')).toBeVisible();
     await page.locator('.mobile-brand-home').click();
     await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
-    await page.locator('#quick-reset-demo').click();
+    await klikTestknop(page, '#quick-reset-demo');
     await expect(page.locator('#modal-title')).toHaveText('Alle lokale wijzigingen wissen?');
     await expect(page.locator('#modal-confirm')).toHaveText('Voorbeeldgegevens herstellen');
     await page.locator('#modal-cancel').click();
@@ -2086,7 +2089,7 @@ test('[MOB-H-030] op de kleinste gangbare telefoon (360px) scrollt geen enkel ho
   });
 
   await test.step('And ook niet in de nieuwe vormgeving', async () => {
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     for (const scherm of ['dashboard', 'approvals', 'invoices', 'employees', 'announcements', 'settings']) {
       await metenOpScherm(scherm, `Nieuw/${scherm}`);
@@ -2171,7 +2174,7 @@ test('[MOB-H-031] op 360px valt ook op de medewerkerschermen niets buiten de rec
   });
 
   await test.step('And ook niet in de nieuwe vormgeving', async () => {
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await metenOpScherm('employee-dashboard', 'Nieuw/employee-dashboard');
     await metenOpScherm('timesheet', 'Nieuw/timesheet');

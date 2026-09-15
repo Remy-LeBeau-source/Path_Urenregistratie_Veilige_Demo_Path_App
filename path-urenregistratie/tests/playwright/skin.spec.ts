@@ -5,6 +5,7 @@ import { LoginPage } from './pages/LoginPage';
 import { bewaarUrenstaat } from './fixtures/urenstaatHerstel';
 import { openProfielmenu } from './pages/TopbarMenu';
 import { appConfig, requirePassword } from './fixtures/appConfig';
+import { klikTestknop, openTestknoppen } from './fixtures/testknoppen';
 // Scope rechtgezet 14 sep: op desktop vervangt Vandaag (#vandaag, referentie
 // handoff/medewerker-gui.html) in Klassiek de oude dashboardblokken: "Open acties
 // per maand", de volgende-actieknop, de kerncijfers en de stappenlijst. Sinds 14
@@ -162,18 +163,18 @@ test('[SKIN-H-005] Klassiek start donker en Nieuw donker en onthoudt daarna elk 
   });
 
   await test.step('When Nieuw voor het eerst direct wordt geopend', async () => {
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
   });
 
   await test.step('Then bewaart iedere skin zijn eigen keuze bij heen en weer schakelen', async () => {
-    await page.locator('#quick-theme-toggle').click();
+    await klikTestknop(page, '#quick-theme-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
     await page.reload();
@@ -201,7 +202,7 @@ test('[SKIN-H-006] de echte medewerkerroute toont de live bento en blijft mobiel
   await test.step('Given de medewerker de nieuwe vormgeving opent', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
   });
 
@@ -287,7 +288,7 @@ test('[SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en
   const teamTitelVoor = await genormaliseerdeTekst(page.locator('#dashboard-team-title'));
 
   await test.step('When Nieuw wordt geactiveerd en Backoffice alle hoofdschermen bezoekt', async () => {
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await expect(page.locator('.new-admin-topnav')).toBeVisible();
 
@@ -311,7 +312,7 @@ test('[SKIN-H-008] Nieuw houdt dezelfde beheergegevens vast tijdens navigatie en
     expect(await genormaliseerdeTekst(page.locator('#dashboard-employee-rows'))).toBe(dashboardVoor);
     expect(await genormaliseerdeTekst(page.locator('#dashboard-team-title'))).toBe(teamTitelVoor);
 
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
     expect(await genormaliseerdeTekst(page.locator('#dashboard-employee-rows'))).toBe(dashboardVoor);
     expect(await genormaliseerdeTekst(page.locator('#dashboard-team-title'))).toBe(teamTitelVoor);
@@ -353,7 +354,7 @@ test('[SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en K
   const modernStatusVoor = await page.locator('#employee-dashboard-status').textContent();
 
   await test.step('When de medewerker Nieuw activeert en via de bento naar Mijn uren navigeert', async () => {
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     // De pijl in de bento blijft sinds SKIN-H-021 op het Dashboard; de
     // volledige Mijn uren-pagina is nog steeds bereikbaar via de route zelf.
     await page.evaluate(() => { window.location.hash = 'timesheet'; });
@@ -376,7 +377,7 @@ test('[SKIN-H-009] medewerker houdt dezelfde urenstatus in Nieuw, Mijn uren en K
     await expect(page.locator('#employee-dashboard-hours')).toHaveText(modernUrenVoor || '');
     await expect(page.locator('#employee-dashboard-status')).toHaveText(modernStatusVoor || '');
 
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
     await expect(klassiekUren).toBeVisible();
     await expect(klassiekUren).toHaveText(urenVoor);
@@ -390,7 +391,7 @@ test('[SKIN-H-010] de admin-verhaallijn wisselt van medewerker en toont bijbehor
   await test.step('Given Backoffice in de nieuwe skin met minstens twee medewerkers in de verhaallijn', async () => {
     await loginPage.open();
     await loginPage.loginAsAdmin();
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
   });
 
@@ -429,7 +430,7 @@ test('[SKIN-H-026] tab-navigatie tussen uren-invoervelden in Nieuw springt niet 
   const loginPage = new LoginPage(page);
   await loginPage.open();
   await loginPage.loginAsEmployee();
-  await page.locator('#quick-skin-toggle').click();
+  await klikTestknop(page, '#quick-skin-toggle');
   await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
   await expect(page.locator('#new-employee-bento')).toBeVisible();
 
@@ -460,7 +461,7 @@ test('[SKIN-H-011] een bewust opgeslagen 0 uur telt mee voor de weekvoortgang in
   await test.step('Given de medewerker de nieuwe vormgeving opent op de huidige week', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await expect(page.locator('#new-employee-bento')).toBeVisible();
   });
@@ -533,7 +534,7 @@ test('[SKIN-H-012] Mededelingen valt niet terug op de klassieke sidebar in Nieuw
   await test.step('Given de medewerker de nieuwe vormgeving opent', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
   });
 
@@ -575,7 +576,7 @@ test('[SKIN-H-013] de medewerkerroute blijft op elk scherm consequent Nieuw, ook
   await test.step('Given de medewerker inlogt en Nieuw activeert', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await assertConsistentNewSkin('view-employee-dashboard');
   });
 
@@ -603,12 +604,13 @@ test('[SKIN-H-015] de theme-snelknop staat niet meer op de medewerker-startpagin
   await test.step('Given de medewerker Nieuw activeert', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
   });
 
   await test.step('Then staat de theme-snelknop niet meer op het dashboard', async () => {
     await expect(page.locator('#quick-theme-toggle')).toBeHidden();
+    await openTestknoppen(page);
     await expect(page.locator('#quick-skin-toggle')).toBeVisible();
   });
 
@@ -636,7 +638,7 @@ test('[SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar
   await test.step('Given een gebruiker heeft de nieuwe vormgeving in een pilotomgeving gekozen', async () => {
     await loginPage.open();
     await loginPage.loginAsAdmin();
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
   });
 
@@ -655,6 +657,7 @@ test('[SKIN-N-007] productie forceert Klassiek en verbergt de redesignschakelaar
       runtime.applySkin('uren-test.pathconsultancy.nl');
     });
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    await openTestknoppen(page);
     await expect(page.locator('#quick-skin-toggle')).toBeVisible();
   });
 });
@@ -677,7 +680,7 @@ test('[SKIN-H-014] snelkeuze in Mijn uren-bento heeft ook een 0-optie naast 8 en
   await test.step('Given de medewerker de nieuwe vormgeving opent op Mijn uren', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await expect(page.locator('#new-employee-bento')).toBeVisible();
   });
@@ -802,7 +805,7 @@ test('[SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en telt
       await expect(page.locator('#auth-login-form')).toBeVisible();
       await loginPage.login(eigenAdres, nieuwWachtwoord);
       await expect(page.locator('#app-shell')).toBeVisible();
-      await page.locator('#quick-skin-toggle').click();
+      await klikTestknop(page, '#quick-skin-toggle');
       await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
       await expect(page.locator('#new-employee-bento')).toBeVisible();
     });
@@ -834,7 +837,7 @@ test('[SKIN-H-016] een eigen werkpatroon per weekdag vult Mijn uren voor en telt
       await page.locator('#fill-standard-hours').click();
       await expect(newCardsInput).toHaveValue('6', { timeout: 5_000 });
 
-      await page.locator('#quick-skin-toggle').click();
+      await klikTestknop(page, '#quick-skin-toggle');
       await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
       await page.locator('[data-hours-week-scope="week-2"]').click();
       await expect(page.locator('#hours-table-wrap')).toBeVisible();
@@ -930,7 +933,7 @@ test('[SKIN-H-017] Mijn uren toont bij een enkele week dezelfde bento-kaartjes a
   await test.step('Given de medewerker Nieuw activeert en Mijn uren opent op een enkele week', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     // De pijl in de bento blijft sinds SKIN-H-021 op het Dashboard; Mijn uren
     // wordt hier via de route zelf geopend.
@@ -1005,7 +1008,7 @@ test('[SKIN-H-017] Mijn uren toont bij een enkele week dezelfde bento-kaartjes a
   });
 
   await test.step('And in Klassiek blijft Mijn uren altijd de tabel, zonder kaartjes of pijlen', async () => {
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
     await page.locator('[data-hours-week-scope="week-0"]').click();
     await expect(page.locator('#hours-table-wrap')).toBeVisible();
@@ -1030,7 +1033,7 @@ test('[SKIN-H-018] Klanturenstaat-blok klapt inline open op het Dashboard, zonde
   await test.step('Given de medewerker Nieuw activeert op het Dashboard', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await expect(page.locator('#new-employee-bento')).toBeVisible();
   });
@@ -1118,7 +1121,7 @@ test('[SKIN-H-019] de beheerroute blijft op elk van de 6 pilot-tabs consequent N
     await loginPage.open();
     await loginPage.loginAsAdmin();
     await expect(page.locator('#app-shell')).toBeVisible();
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await assertConsistentNewAdminSkin('dashboard', 'view-dashboard');
   });
 
@@ -1146,7 +1149,7 @@ test('[SKIN-H-020] de voetstrip onder Verhalen per medewerker toont de echte per
   await loginPage.open();
   await loginPage.loginAsAdmin();
   await expect(page.locator('#app-shell')).toBeVisible();
-  await page.locator('#quick-skin-toggle').click();
+  await klikTestknop(page, '#quick-skin-toggle');
   await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
 
   const foot = page.locator('.new-admin-storyline-foot');
@@ -1203,7 +1206,7 @@ test('[SKIN-H-021] de medewerker blijft op het Dashboard: de pijl springt naar v
   await test.step('Given de medewerker Nieuw activeert op het Dashboard', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await expect(page.locator('#view-employee-dashboard')).toHaveClass(/is-active/);
   });
@@ -1248,7 +1251,7 @@ test('[SKIN-H-021] de medewerker blijft op het Dashboard: de pijl springt naar v
     await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
     await page.locator('[data-hours-week-scope="week-1"]').click();
     await expect(page.locator('#hours-grid-cards .new-bento-day').first()).toBeVisible();
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
   });
 
@@ -1273,7 +1276,7 @@ test('[SKIN-H-022] een tweede herlading zet de skin/thema-voorkeur niet terug na
     await loginPage.open();
     await loginPage.loginAsAdmin();
     await expect(page.locator('#app-shell')).toBeVisible();
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   });
@@ -1388,7 +1391,7 @@ test('[SKIN-H-023] "Standaardweek/-maand vullen" vult alleen lege dagen met het 
       await expect(page.locator('#auth-login-form')).toBeVisible();
       await loginPage.login(eigenAdres, nieuwWachtwoord);
       await expect(page.locator('#app-shell')).toBeVisible();
-      await page.locator('#quick-skin-toggle').click();
+      await klikTestknop(page, '#quick-skin-toggle');
       await expect(page.locator('#new-employee-bento')).toBeVisible();
     });
 
@@ -1466,7 +1469,7 @@ test('[SKIN-H-023] "Standaardweek/-maand vullen" vult alleen lege dagen met het 
     });
 
     await test.step('And blijft de knop ook in Klassiek werken', async () => {
-      await page.locator('#quick-skin-toggle').click();
+      await klikTestknop(page, '#quick-skin-toggle');
       await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
       await expect(page.locator('#fill-standard-hours')).toBeVisible();
       const entriesNaVulling = await page.evaluate(() => {
@@ -1655,7 +1658,7 @@ test('[SKIN-H-024] "Volgende actie" bovenaan Open acties per maand toont de eers
     // case gaat over Modern, waar "Open acties per maand" op elke breedte staat.
     await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
     await expect(page.locator('#vandaag:visible, #view-employee-dashboard > .employee-hero:visible').first()).toBeVisible();
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
   });
 
@@ -1749,7 +1752,7 @@ test('[SKIN-H-025] de 0/8/9-snelkeuze bij elke dag staat altijd zichtbaar, in Kl
   });
 
   await test.step('When naar Nieuw wordt gewisseld op dezelfde week', async () => {
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await page.locator('[data-hours-week-scope="week-0"]').click();
   });
@@ -1829,7 +1832,7 @@ test('[SKIN-H-029] nog niet opgeslagen uren overleven rotatie, themawissel, moda
     await loginPage.open();
     await loginPage.loginAsEmployee();
     await expect(page.locator('#employee-open-task-total')).not.toHaveText(/laden/i, { timeout: 20_000 });
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await expect(page.locator('#new-employee-bento')).toBeVisible();
   });
@@ -1888,7 +1891,7 @@ test('[SKIN-H-029] nog niet opgeslagen uren overleven rotatie, themawissel, moda
     // toont: dat is wat de eindassertie hieronder discriminerend maakt.
     expect(await klassiekVeld.inputValue(), 'het inactieve Klassieke blok hoort nog de oude render te tonen -- zonder dat verschil bewijst deze case niets')
       .not.toBe(ingevuld);
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
     await page.locator('button[data-view="timesheet"]').first().click();
     await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
@@ -1955,7 +1958,7 @@ test('[SKIN-H-030] een lang e-mailadres duwt de statuspil niet buiten beeld op 3
   });
 
   await test.step('And ook in de nieuwe vormgeving', async () => {
-    await page.locator('#quick-skin-toggle').click();
+    await klikTestknop(page, '#quick-skin-toggle');
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
     await expect(page.locator('.employee-card').first()).toBeVisible();
     await zetLangAdres();
@@ -1985,7 +1988,7 @@ test('[SKIN-H-031] de vijf stappen lopen in volgorde en geen stap staat groen te
   await loginPage.open();
   await loginPage.loginAsEmployee();
   await expect(page.locator('#vd-kop-open')).not.toBeEmpty();
-  await page.locator('#quick-skin-toggle').click();
+  await klikTestknop(page, '#quick-skin-toggle');
   await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
   // Deze case zet de gedeelde demomedewerker in een extreme toestand (hele
   // maand gevuld en ingediend). Zonder terugzetten lopen latere cases daar
@@ -2183,7 +2186,7 @@ test('[SKIN-H-032] Klassiek en Modern tonen dezelfde statusketen, uit dezelfde b
       // De vergelijking hierboven leest de DOM, niet het beeld. Deze stap
       // controleert dat elke skin ook echt zijn eigen weergave toont.
       await expect(page.locator('#vdt-verloop-lijst')).toBeVisible();
-      await page.locator('#quick-skin-toggle').click();
+      await klikTestknop(page, '#quick-skin-toggle');
       await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
       await expect(page.locator('#new-bento-steps')).toBeVisible();
       await expect(page.locator('#vdt-verloop-lijst')).toBeHidden();

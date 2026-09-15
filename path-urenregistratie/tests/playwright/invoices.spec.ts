@@ -5,6 +5,7 @@ import { captureConsoleErrors, clearConsoleErrors } from './fixtures/consoleErro
 import { appConfig, requirePassword } from './fixtures/appConfig';
 import { InvoicesPage } from './pages/InvoicesPage';
 import { LoginPage } from './pages/LoginPage';
+import { klikTestknop } from './fixtures/testknoppen';
 
 async function readInvoicesInBrowser(page: import('@playwright/test').Page) {
   return page.evaluate(async () => {
@@ -588,7 +589,7 @@ test('[INV-H-007] factuurnavigatie onderscheidt geblokkeerde en controleklare ma
     await loginPage.loginAsAdmin();
     // Earlier write scenarios intentionally mutate the shared suite database. Reset through
     // the UI so this baseline test stays authoritative over historic server invoice rows.
-    await page.locator('#quick-reset-demo').click();
+    await klikTestknop(page, '#quick-reset-demo');
     await page.locator('#modal-confirm').click();
     await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
   });
@@ -623,7 +624,7 @@ test('[INV-N-019] lege actuele maand met open medewerkeruren is geblokkeerd en n
     await loginPage.loginAsAdmin();
     // Andere factuurcases in dezelfde CI-shard schrijven bewust serverdata.
     // Herstel daarom eerst de vaste TEST-baseline voordat september wordt geteld.
-    await page.locator('#quick-reset-demo').click();
+    await klikTestknop(page, '#quick-reset-demo');
     await page.locator('#modal-confirm').click();
     await expect(page.locator('#view-dashboard')).toHaveClass(/is-active/);
   });
@@ -653,7 +654,7 @@ test('[INV-H-009] server-PDF-content moet identiek zijn aan app-preview', async 
   await test.step('Given de administrator is ingelogd en reset naar vaste baseline', async () => {
     await loginPage.open();
     await loginPage.loginAsAdmin();
-    await page.locator('#quick-reset-demo').click();
+    await klikTestknop(page, '#quick-reset-demo');
     await page.locator('#modal-confirm').click();
     clearConsoleErrors(consoleErrors);
   });
@@ -716,7 +717,7 @@ test('[INV-H-010] gecontroleerde concept-PDF wordt als mailbijlage naar de serve
   await test.step('Given de administrator is ingelogd met demo-data', async () => {
     await loginPage.open();
     await loginPage.loginAsAdmin();
-    await page.locator('#quick-reset-demo').click();
+    await klikTestknop(page, '#quick-reset-demo');
     await page.locator('#modal-confirm').click();
     clearConsoleErrors(consoleErrors);
   });
@@ -745,7 +746,7 @@ test('[INV-H-011] beperkte factuur-inhoud: alle velden in server-PDF inclusief r
   await test.step('Given de administrator is ingelogd met demo-data inclusief geassigneerde taken', async () => {
     await loginPage.open();
     await loginPage.loginAsAdmin();
-    await page.locator('#quick-reset-demo').click();
+    await klikTestknop(page, '#quick-reset-demo');
     await page.locator('#modal-confirm').click();
     clearConsoleErrors(consoleErrors);
   });
@@ -778,7 +779,7 @@ test('[INV-H-012] gesloten factuur PDF bevat alle content sections (recipient, p
   await test.step('Given de administrator is ingelogd en reset naar vaste baseline', async () => {
     await loginPage.open();
     await loginPage.loginAsAdmin();
-    await page.locator('#quick-reset-demo').click();
+    await klikTestknop(page, '#quick-reset-demo');
     await page.locator('#modal-confirm').click();
   });
 

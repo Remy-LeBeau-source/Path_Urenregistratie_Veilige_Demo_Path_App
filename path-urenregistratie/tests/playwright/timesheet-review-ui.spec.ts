@@ -6,6 +6,7 @@ import { setLeaveSickEntryEnabled } from './helpers/companySettings';
 import { LoginPage } from './pages/LoginPage';
 import { openUrenactieVanMaand } from './fixtures/klassiekDashboard';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
+import { klikTestknop } from './fixtures/testknoppen';
 
 test.beforeEach(async ({ page }) => {
   // Dit bestand draait sinds R26 ook op mobile-chrome/mobile-safari; zonder
@@ -570,7 +571,7 @@ test('[TS-REV-UI-N-011] localhost kan demo-uren zonder serverversie voor correct
   await test.step('Given de ingelogde localhostomgeving een lokaal demo-record zonder serverversie toont', async () => {
     await loginPage.open();
     await loginPage.loginAsAdmin();
-    await page.locator('#quick-reset-demo').click();
+    await klikTestknop(page, '#quick-reset-demo');
     await page.locator('#modal-confirm').click();
     await openView(page, 'approvals');
   });

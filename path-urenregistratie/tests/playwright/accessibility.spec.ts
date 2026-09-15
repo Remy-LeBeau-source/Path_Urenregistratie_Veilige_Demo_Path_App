@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
 import { openProfielmenu } from './pages/TopbarMenu';
+import { klikTestknop } from './fixtures/testknoppen';
 
 // Basic keyboard/accessibility smoke coverage (Fase 15: "Basiscontrole op
 // toetsenbordbediening en leesbaarheid"). Deliberately scoped: this checks that
@@ -123,7 +124,7 @@ test('[A11Y-H-004] een geopende dialoog is met het toetsenbord te bedienen en te
     await loginPage.open();
     await loginPage.loginAsAdmin();
     await expect(page.locator('#app-shell')).toBeVisible();
-    await page.locator('#quick-reset-demo').click();
+    await klikTestknop(page, '#quick-reset-demo');
     await expect(page.locator('#modal')).toBeVisible();
   });
 
