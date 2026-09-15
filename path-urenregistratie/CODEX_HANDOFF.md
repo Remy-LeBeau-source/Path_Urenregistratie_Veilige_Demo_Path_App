@@ -2,6 +2,30 @@
 
 Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
 
+## Update Codex 16 sep — 2.0.115 Berichten duidelijker + bel naar juiste situatie
+
+- Op `herontwerp` gebouwd als **2.0.115**.
+- Berichtenarchief medewerker:
+  - copy verduidelijkt: algemene mededelingen staan in Berichten; uren/correcties/klanturenstaat-taken via de bel;
+  - filterbalk en berichtkaarten kregen meer contrast/structuur, ook in donker;
+  - ingetrokken berichten blijven rustig, maar titel en tekst zijn beter leesbaar.
+- Belmelding klanturenstaat:
+  - `meldingBestemming()` stuurt `customer_timesheet_*` nu naar het eigen scherm `customer-timesheet`;
+  - na klik wordt de juiste maand gezet, het klanturenstaat-uploadpaneel zichtbaar en het bestandveld gefocust;
+  - de help-entry “Klanturenstaat opslaan” wijst nu ook naar `customer-timesheet`.
+- Testdekking:
+  - NOT-H-013 uitgebreid van 3 naar 4 belmeldingen: correctie, goedgekeurd, herinnering, klanturenstaat;
+  - case controleert bij klanturenstaat: scherm actief, periode correct, uploadpaneel zichtbaar, bestandveld gefocust.
+- Lokaal groen:
+  - `node --check assets/app.js`
+  - `node scripts/run-playwright-e2e.mjs --project=desktop-chromium --grep "NOT-H-013"`
+  - `npm run docs:sync`
+  - `npm run test:design`
+  - `npm run test:bdd:design`
+  - `npm run version:check`
+  - `node scripts/contrast-licht-donker.mjs`
+- Nog niet gedaan: volledige regressie/smoke lokaal; volgens Gio via CI laten lopen.
+
 ## Hoe dit bestand is ingedeeld (vanaf 15 sep)
 
 Er werken twee Claude Code-sessies aan dit project, elk met een eigen hoofdstuk hieronder. Codex leest beide; bij twijfel wie iets doet: GIO-WENSEN.md (kolom "Wie").

@@ -1231,7 +1231,7 @@ const HELP_TOPICS = [
   { id: "approvals", roles: ["admin"], label: "Goedkeuringen", terms: "keur keuren goed goedkeuren controle uren alle openstaande maand terugsturen afkeuren correctie reden toelichting", answer: "Goedkeuringen opent standaard alle openstaande maanden. Je kunt filteren op de gekozen maand, uren bekijken, met een verplichte toelichting terugsturen voor correctie of goedkeuren. De medewerker ziet de reden bij de melding en urenstaat. Na goedkeuring staat de factuur klaar.", view: "approvals" },
   { id: "invoices", roles: ["admin"], label: "Facturen", terms: "factuur facturen klaar mailvoorbeeld ongefactureerd", answer: "Facturen toont per gekozen maand wat nog op uren wacht, wat klaarstaat en welke verzending al is gecontroleerd. E-mailverzending blijft uitgeschakeld totdat de productiekoppeling actief is.", view: "invoices" },
   { id: "invoice-test", roles: ["admin"], label: "Verzending controleren", terms: "verzendcontrole controle mail e-mail bijlagen sturen boekhouder broker ontvanger openstaand blokkeren", answer: "De maandverzending kan pas worden gecontroleerd als iedere urenregistratie van die maand is goedgekeurd. Daarna controleert één actie per medewerker en per aangevinkte ontvanger een afzonderlijk factuurbericht. De officiële klanturenstaat heeft een eigen, optionele brokerroute en BCC wordt niet gebruikt.", view: "invoices" },
-  { id: "customer-timesheet", roles: ["admin", "employee"], label: "Klanturenstaat opslaan", terms: "klanturenstaat pdf jpg jpeg png foto afbeelding upload opslaan concept indienen overslaan al gemaild rechtstreeks reden broker deadline maand jaar herinnering officieel document mail bijlage download bestanden backoffice werkvoorraad alle maanden", answer: "Op Mijn overzicht zie je apart of de klanturenstaat nog openstaat. Download de officiële bijlage uit de klantmail eerst naar Downloads of Bestanden. PDF, JPG en PNG zijn toegestaan; een JPG of PNG wordt automatisch als PDF opgeslagen. Met Concept opslaan blijft het nog buiten de controle van Backoffice. Met Indienen bij Backoffice krijgt Backoffice een melding in de app. Heb je het document al rechtstreeks naar Backoffice gemaild, kies dan Die heb ik al gemaild en leg de reden vast. Backoffice ziet wie dit wanneer heeft geregistreerd; de taak verdwijnt uit de open werkvoorraad maar blijft zichtbaar bij de maanddetails.", view: "timesheet" },
+  { id: "customer-timesheet", roles: ["admin", "employee"], label: "Klanturenstaat opslaan", terms: "klanturenstaat pdf jpg jpeg png foto afbeelding upload opslaan concept indienen overslaan al gemaild rechtstreeks reden broker deadline maand jaar herinnering officieel document mail bijlage download bestanden backoffice werkvoorraad alle maanden", answer: "Open Klanturenstaat voor het officiële klantdocument van de gekozen maand. Download de officiële bijlage uit de klantmail eerst naar Downloads of Bestanden. PDF, JPG en PNG zijn toegestaan; een JPG of PNG wordt automatisch als PDF opgeslagen. Met Concept opslaan blijft het nog buiten de controle van Backoffice. Met Indienen bij Backoffice krijgt Backoffice een melding in de app. Heb je het document al rechtstreeks naar Backoffice gemaild, kies dan Die heb ik al gemaild en leg de reden vast. Backoffice ziet wie dit wanneer heeft geregistreerd; de taak verdwijnt uit de open werkvoorraad maar blijft zichtbaar bij de maanddetails.", view: "customer-timesheet" },
   { id: "invoice-filter", roles: ["admin"], label: "Factuurfilters", terms: "filter factuur nog niet klaar verzending gecontroleerd alle", answer: "Gebruik boven de factuurlijst de filters Alle, Nog niet klaar, Factuur klaar en Verzending gecontroleerd. De maandkiezer blijft bepalen welke maand je ziet.", view: "invoices" },
   { id: "easysalary", roles: ["admin"], label: "Salarisadministratie", terms: "easysalary salaris salarisadmin loon uren mail per medewerker excel csv een knop maandverzending", answer: "De ingestelde salarisadministratie loopt mee in dezelfde maandverzending, maar ontvangt een eigen bericht per medewerker. Standaard gaat alleen de tekst met naam, maand en goedgekeurde uren mee en geen factuur.", view: "invoices" },
   { id: "announcements", roles: ["admin"], label: "Mededelingen sturen", terms: "mededeling bericht iedereen groep medewerkers mail e-mail correctie intrekken verwijderen concept verbeteren algemeen update versie", answer: "Onder Mededelingen maak je een concept of plaats je een bericht voor alle actieve medewerkers, één klantgroep of gekozen medewerkers. Een ingetrokken bericht kan bij een fout nog worden bewerkt. Met Bij medewerkers verwijderen verdwijnen het origineel en de intrekkingsmelding uit hun bel en lijst; de interne beheerhistorie blijft bewaard.", view: "announcements" },
@@ -11613,7 +11613,7 @@ function meldingBestemming(item) {
   const soort = String(item.type || "");
   if (["correction", "reminder", "submitted"].includes(soort)) return { view: "timesheet" };
   if (["approved", "invoice"].includes(soort)) return { view: "historie", maandOpen: item.periodKey || null };
-  if (soort.startsWith("customer-timesheet")) return { view: item.view && item.view !== "employee-dashboard" ? item.view : "historie", maandOpen: item.periodKey || null };
+  if (soort.startsWith("customer-timesheet")) return { view: "customer-timesheet", focus: "customer-timesheet", periodKey: item.periodKey || null };
   return { view: item.view || "employee-dashboard" };
 }
 
@@ -14435,8 +14435,13 @@ function toonInstallatieAanbod() {
         const bestemming = meldingBestemming(item);
         if (bestemming.maandOpen) state.historyVerloopOpen = bestemming.maandOpen;
         if (bestemming.bericht) openBerichten.add(bestemming.bericht);
-        if (bestemming.maandOpen || bestemming.bericht) renderAll();
+        if (bestemming.maandOpen || bestemming.bericht || bestemming.periodKey) renderAll();
         showView(bestemming.view || profileForRole(state.currentRole).home);
+        if (bestemming.focus === "customer-timesheet") {
+          const customerPanel = document.querySelector("#customer-timesheet-upload-panel");
+          if (customerPanel && typeof customerPanel.scrollIntoView === "function") customerPanel.scrollIntoView({ behavior: smoothScrollBehavior(), block: "start" });
+          document.querySelector("#customer-timesheet-file")?.focus();
+        }
         closeTopbarPopovers();
       };
 

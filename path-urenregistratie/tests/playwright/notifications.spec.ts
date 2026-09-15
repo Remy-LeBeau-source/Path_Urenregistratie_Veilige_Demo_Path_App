@@ -564,6 +564,7 @@ test.describe('notifications api', () => {
       { id: 9101, notification_type: 'correction_required', title: 'Correctie gevraagd juli', period_key: '2026-07', target_route: 'employee-dashboard' },
       { id: 9102, notification_type: 'timesheet_approved', title: 'Uren juni goedgekeurd', period_key: '2026-06', target_route: 'employee-dashboard' },
       { id: 9103, notification_type: 'timesheet_reminder', title: 'Dien augustus in', period_key: '2026-08', target_route: 'employee-dashboard' },
+      { id: 9105, notification_type: 'customer_timesheet_reminder', title: 'Klanturenstaat nog aanleveren', period_key: '2026-08', target_route: 'employee-dashboard' },
       { id: 9104, notification_type: 'announcement', title: 'Mededeling hoort niet in de bel', period_key: null, target_route: 'employee-announcements', announcement_id: 1 },
     ];
     const gelezen = new Set<number>();
@@ -583,9 +584,9 @@ test.describe('notifications api', () => {
     await page.evaluate(() => { void (window as unknown as { refreshNotificationsReadApi: (force: boolean) => Promise<unknown> }).refreshNotificationsReadApi(true); });
 
     await test.step('Then toont de bel alleen de drie meldingen over de medewerker zelf', async () => {
-      await expect(page.locator('#notification-count')).toHaveText('3');
+      await expect(page.locator('#notification-count')).toHaveText('4');
       await page.locator('#notification-button').click();
-      await expect(page.locator('#notification-list .notification-item')).toHaveCount(3);
+      await expect(page.locator('#notification-list .notification-item')).toHaveCount(4);
       await expect(page.locator('#notification-list')).not.toContainText('Mededeling hoort niet in de bel');
     });
 
@@ -593,6 +594,7 @@ test.describe('notifications api', () => {
       { titel: 'Correctie gevraagd juli', scherm: 'timesheet', maand: '2026-07' },
       { titel: 'Uren juni goedgekeurd', scherm: 'historie', maand: '2026-06', extra: 'maand opengeklapt' },
       { titel: 'Dien augustus in', scherm: 'timesheet', maand: '2026-08' },
+      { titel: 'Klanturenstaat nog aanleveren', scherm: 'customer-timesheet', maand: '2026-08', extra: 'uploadveld gefocust' },
     ];
     for (const doel of bestemmingen) {
       await test.step(`When "${doel.titel}" wordt aangeklikt, then staat ${doel.scherm} van ${doel.maand} open${doel.extra ? ' (' + doel.extra + ')' : ''}`, async () => {
@@ -603,9 +605,14 @@ test.describe('notifications api', () => {
         if (doel.scherm === 'historie') {
           await expect(page.locator(`#employee-history-verloop-${doel.maand}`)).toBeVisible();
         }
+        if (doel.scherm === 'customer-timesheet') {
+          await expect(page.locator('#customer-timesheet-upload-panel')).toBeVisible();
+          await expect(page.locator('#customer-timesheet-period')).toHaveValue(doel.maand);
+          await expect(page.locator('#customer-timesheet-file')).toBeFocused();
+        }
       });
     }
-    expect([...gelezen].sort(), 'elke aangeklikte melding telt als gelezen').toEqual([9101, 9102, 9103]);
+    expect([...gelezen].sort(), 'elke aangeklikte melding telt als gelezen').toEqual([9101, 9102, 9103, 9105]);
   });
 
   test('[NOT-H-014] Alles gelezen in Berichten leest alleen de mededelingen en laat de bel met rust', async ({ page }) => {
