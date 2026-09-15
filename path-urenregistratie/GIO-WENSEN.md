@@ -8,6 +8,8 @@ Nieuwste bovenaan per status. Statussen: **open**, **bezig**, **klaar (versie)**
 
 | Datum | Wens / besluit van Gio | Wie | Status |
 |---|---|---|---|
+| 15 sep | **Voorbeeldberichten TEST:** 10 mededelingen, waarvan 6 ingetrokken en 4 ongelezen. | main | bij main |
+| 15 sep | **Bel en Berichten slimmer:** klik op een melding brengt je direct naar de juiste plek; onderscheid bel vs. Berichten; ingeklapt tonen?; wanneer telt iets als gelezen (geen Markeer als gelezen-knop). Voorstel aan Gio gedaan. | herontwerp | wacht op keuze Gio |
 | 15 sep | **Drie ingetrokken voorbeeldmededelingen** in de TEST-basis ("Kantoor gesloten", "Vrijdagborrel gaat niet door", "Parkeergarage dicht"), zoals de echte flow, meldingen al gelezen. | main | bij main |
 | 15 sep | Oude 0-regels uit de indienbug: geen opschoonscript. PROD is nog niet live (alleen gebruikers gemigreerd) en krijgt bij de livegang een verse migratie/reset met de gerepareerde code (R44 in BESLISTABEL.md; de reset hoort bij de livegangchecklist van Gio). | besluit | vastgelegd |
 | 15 sep | Bel en Berichten blijven allebei: bel = eigen urenstatus, correcties, herinneringen; Berichten = algemene mededelingen. | besluit | vastgelegd |
@@ -18,6 +20,7 @@ Nieuwste bovenaan per status. Statussen: **open**, **bezig**, **klaar (versie)**
 
 | Datum | Wens / besluit | Versie |
 |---|---|---|
+| 15 sep | Testfunctieknoppen tonen het doel: in licht "Donker", in Klassiek "Modern" en andersom; geen aria-pressed meer (KLV-H-021). | 2.0.99 |
 | 15 sep | Knop in Mijn maanden: huisstijlknop (mint, zelfde vorm als andere hoofdknoppen) in plaats van kale grijze browserknop, en de tekst volgt de stap: Uren invullen, Maand indienen, Correctie doorvoeren, Opnieuw indienen, Klanturenstaat aanleveren (KLV-H-020). | 2.0.98 |
 | 15 sep | Ingevulde uren onleesbaar in donker op Mijn uren (Klassiek, desktop): vak was bijna wit met bijna witte cijfers (contrast 1,04:1). Nu donker vak met lichte cijfers en zichtbare rand; KLV-H-019 meet contrast ≥ 4,5:1 in licht en donker op 390 en 1280. | 2.0.97 |
 | 15 sep | Tooltip vormgevingsknop: "Naar Modern" / "Naar Klassiek" in plaats van "Naar nieuw" (bewaakt in KLV-H-010). | 2.0.97 |

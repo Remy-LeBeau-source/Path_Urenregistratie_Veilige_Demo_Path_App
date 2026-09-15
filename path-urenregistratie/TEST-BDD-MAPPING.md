@@ -471,6 +471,7 @@
 | KLV-N-008 | ui | klassiek-verkenning.feature | meer dan 24 uur op een dag wordt direct in het vak gemeld en niet naar de server gestuurd | Monkey testing (seeded) + grenswaardenanalyse + negatieve equivalentieklasse | 9 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | meer dan 24 uur op een dag wordt direct in het vak gemeld en niet naar de server gestuurd | Negative | 19 | Actueel |
 | KLV-N-009 | ui | klassiek-verkenning.feature | in Klassiek staat het klanturenstaatlabel niet op Mijn uren maar op het eigen Klanturenstaat-scherm | Beslissingstabel vormgeving en scherm + regressiebewaking | 6 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | in Klassiek staat het klanturenstaatlabel niet op Mijn uren maar op het eigen Klanturenstaat-scherm | Negative | 19 | Actueel |
 | KLV-H-010 | ui | klassiek-verkenning.feature | op TEST staat alleen Herstel bovenin; thema, vormgeving en versie staan in het profielmenu | Responsive viewport + toegankelijkheidsinspectie (44px, toetsenbord) + end-to-end use-case | 15 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | op TEST staat alleen Herstel bovenin; thema, vormgeving en versie staan in het profielmenu | Happy | 19 | Actueel |
+| KLV-H-021 | ui | klassiek-verkenning.feature | de knoppen onder Testfuncties tonen waar je naartoe gaat, niet waar je bent | Toestandsovergangtest (licht↔donker, Klassiek↔Modern, heen en terug) + toegankelijkheidsinspectie (geen misleidend aria-pressed) | 16 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | de knoppen onder Testfuncties tonen waar je naartoe gaat, niet waar je bent | Happy | 19 | Actueel |
 | KLV-N-011 | ui | klassiek-verkenning.feature | de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop | Monkey testing (seeded) + grenswaardenanalyse + responsive viewport | 5 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop | Negative | 19 | Actueel |
 | KLV-N-012 | ui | klassiek-verkenning.feature | typen in één dag van de laatste open week maakt de rest van die week niet ingevuld | Toestandsovergangtest (onaangeraakt → deels ingevuld) + beslistabel indienbaarheid + herladen (persistentie) | 6 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | typen in één dag van de laatste open week maakt de rest van die week niet ingevuld | Negative | 19 | Actueel |
 | KLV-H-013 | ui | klassiek-verkenning.feature | Week opslaan telt lege dagen als bewust 0: daarna Maand indienen, ook buiten de laatste week | Toestandsovergangtest (Opslaan = bewust 0) + beslistabel indienbaarheid | 4 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | Week opslaan telt lege dagen als bewust 0: daarna Maand indienen, ook buiten de laatste week | Happy | 19 | Actueel |
@@ -596,9 +597,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 574
+- Playwright executable cases: 575
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 575
+- Totaal unieke executable cases: 576
 - Playwright features: 31
 - Database features: 1
 - Playwright steps mappings: 31

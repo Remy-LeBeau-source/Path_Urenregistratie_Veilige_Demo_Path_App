@@ -84,6 +84,16 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
     When de flow voor KLV-H-010 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat op TEST staat alleen Herstel bovenin; thema, vormgeving en versie staan in het profielmenu
 
+  @happy
+  Scenario: [KLV-H-021] de knoppen onder Testfuncties tonen waar je naartoe gaat, niet waar je bent
+    # Testtechniek: Toestandsovergangtest (licht↔donker, Klassiek↔Modern, heen en terug) + toegankelijkheidsinspectie (geen misleidend aria-pressed)
+    # Aantoonbare Playwright-assertions in deze case: 16
+    Given licht en Klassiek: de knoppen zeggen Donker en Modern
+    When naar donker, then zegt de themaknop Licht
+    When naar Modern, then zegt de vormgevingsknop Klassiek
+    And terug naar Klassiek en licht: weer Modern en Donker
+    Then wordt met Playwright-assertions bevestigd dat de knoppen onder Testfuncties tonen waar je naartoe gaat, niet waar je bent
+
   @negative
   Scenario: [KLV-N-011] de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop
     # Testtechniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport

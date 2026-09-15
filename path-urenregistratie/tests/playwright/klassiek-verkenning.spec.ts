@@ -2,6 +2,7 @@ import { expect, test, type Page, type Request } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
 import { openProfielmenu } from './pages/TopbarMenu';
 import { bewaarUrenstaat } from './fixtures/urenstaatHerstel';
+import { klikTestknop } from './fixtures/testknoppen';
 
 // Vaste regressiecases uit de seeded monkey-verkenning op de medewerker in
 // Klassiek (tests/verkenning/klassiek-monkey.spec.ts, nacht van 14 op 15 sep).
@@ -407,6 +408,50 @@ test('[KLV-H-010] op TEST staat alleen Herstel bovenin; thema, vormgeving en ver
       await loginPage.logout();
     });
   }
+});
+
+test('[KLV-H-021] de knoppen onder Testfuncties tonen waar je naartoe gaat, niet waar je bent', async ({ page }) => {
+  // Gio 15 sep: "als je van licht naar donker gaat moet je daar Donker zien en als je van
+  // Klassiek naar Modern gaat moet je daar Modern zien". Toestandsovergang heen en terug.
+  test.setTimeout(90_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  const thema = page.locator('#quick-theme-toggle');
+  const vormgeving = page.locator('#quick-skin-toggle');
+  const html = page.locator('html');
+  await test.step('Given licht en Klassiek: de knoppen zeggen Donker en Modern', async () => {
+    // De themakeuze blijft per gebruiker bewaard; een eerdere case kan donker hebben
+    // achtergelaten. Eerst een bekende beginstand.
+    if ((await html.getAttribute('data-theme')) === 'dark') await klikTestknop(page, '#quick-theme-toggle');
+    if ((await html.getAttribute('data-skin')) === 'new') await klikTestknop(page, '#quick-skin-toggle');
+    await expect(html).toHaveAttribute('data-theme', 'light');
+    await expect(html).toHaveAttribute('data-skin', 'classic');
+    await expect(thema).toHaveText(/Donker/);
+    await expect(vormgeving).toHaveText(/Modern/);
+    await expect(thema).not.toHaveAttribute('aria-pressed', /.*/);
+    await expect(vormgeving).not.toHaveAttribute('aria-pressed', /.*/);
+  });
+  await test.step('When naar donker, then zegt de themaknop Licht', async () => {
+    await klikTestknop(page, '#quick-theme-toggle');
+    await expect(html).toHaveAttribute('data-theme', 'dark');
+    await expect(thema).toHaveText(/Licht/);
+    await expect(thema).toHaveAttribute('aria-label', /lichte/);
+  });
+  await test.step('When naar Modern, then zegt de vormgevingsknop Klassiek', async () => {
+    await klikTestknop(page, '#quick-skin-toggle');
+    await expect(html).toHaveAttribute('data-skin', 'new');
+    await expect(vormgeving).toHaveText(/Klassiek/);
+    await expect(vormgeving).toHaveAttribute('title', 'Naar Klassiek');
+  });
+  await test.step('And terug naar Klassiek en licht: weer Modern en Donker', async () => {
+    await klikTestknop(page, '#quick-skin-toggle');
+    await expect(html).toHaveAttribute('data-skin', 'classic');
+    await klikTestknop(page, '#quick-theme-toggle');
+    await expect(html).toHaveAttribute('data-theme', 'light');
+    await expect(vormgeving).toHaveText(/Modern/);
+    await expect(thema).toHaveText(/Donker/);
+  });
 });
 
 test('[KLV-N-011] de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop', async ({ page }) => {

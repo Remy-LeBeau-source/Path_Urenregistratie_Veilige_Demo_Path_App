@@ -5445,14 +5445,17 @@ function syncAppearanceSwitches(hostname = window.location.hostname) {
   const vernieuwd = document.documentElement.dataset.skin === "new";
   const redesignAllowed = testAccountToolsAllowed(hostname);
   if (themeButton) {
-    themeButton.setAttribute("aria-pressed", String(dark));
+    // Geen aria-pressed: de tekst noemt het doel, dus "ingedrukt" zou het omgekeerde zeggen.
+    themeButton.removeAttribute("aria-pressed");
     themeButton.setAttribute("aria-label", dark ? "Schakel naar lichte modus" : "Schakel naar donkere modus");
     themeButton.title = dark ? "Naar licht" : "Naar donker";
-    themeButton.innerHTML = '<span aria-hidden="true">' + (dark ? "☾" : "☀") + "</span><strong>" + (dark ? "Donker" : "Licht") + "</strong>";
+    // De knop toont waar je naartoe gaat, niet de huidige stand (Gio 15 sep: "als je van
+    // licht naar donker gaat moet je daar Donker zien").
+    themeButton.innerHTML = '<span aria-hidden="true">' + (dark ? "☀" : "☾") + "</span><strong>" + (dark ? "Licht" : "Donker") + "</strong>";
   }
   if (skinButton) {
     skinButton.hidden = !redesignAllowed;
-    skinButton.setAttribute("aria-pressed", String(vernieuwd));
+    skinButton.removeAttribute("aria-pressed");
     // De vormgevingen heten Klassiek en Modern, ook in de hint (Gio 15 sep: "Naar nieuw"
     // moest "Naar Modern" zijn).
     skinButton.setAttribute("aria-label", vernieuwd ? "Schakel naar vormgeving Klassiek" : "Schakel naar vormgeving Modern");
@@ -5463,7 +5466,8 @@ function syncAppearanceSwitches(hostname = window.location.hostname) {
     // als statuslabel dan als knop. Het rasterpictogram (◫) is vervangen door een
     // wisselpictogram (⇄) dat "omschakelen" communiceert, ongeacht welke stand
     // actief is; het gedrag (beide kanten op tikken) was al goed.
-    skinButton.innerHTML = '<span aria-hidden="true">⇄</span><strong>' + (vernieuwd ? "Modern" : "Klassiek") + "</strong>";
+    // Ook hier het doel: in Klassiek staat er Modern, in Modern staat er Klassiek (Gio 15 sep).
+    skinButton.innerHTML = '<span aria-hidden="true">⇄</span><strong>' + (vernieuwd ? "Klassiek" : "Modern") + "</strong>";
   }
 }
 
