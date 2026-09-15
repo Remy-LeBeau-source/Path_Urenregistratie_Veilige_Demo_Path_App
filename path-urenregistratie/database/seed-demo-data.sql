@@ -304,7 +304,25 @@ INSERT INTO notifications (
   (37, 1, 4, 4, NULL, 'correction_required', 'Correctie gevraagd', 'Controleer 14 augustus, dit moet worden aangepast.', 'timesheet', NULL, '2026-08-28 10:00:00'),
   (38, 1, 4, 4, NULL, 'timesheet_reminder', 'Vergeet je uren niet', 'Je hebt deze maand nog uren open staan.', 'timesheet', NULL, '2026-08-29 08:00:00'),
   (39, 1, 4, 3, NULL, 'timesheet_approved', 'Uren goedgekeurd', 'Je uren van vorige maand zijn goedgekeurd.', 'historie', NULL, '2026-08-27 15:30:00'),
-  (40, 1, 4, 3, NULL, 'customer_timesheet_reminder', 'Klanturenstaat nog aanleveren', 'De klanturenstaat van vorige maand is nog niet aangeleverd.', 'historie', NULL, '2026-08-27 16:00:00');
+  (40, 1, 4, 3, NULL, 'customer_timesheet_reminder', 'Klanturenstaat nog aanleveren', 'De klanturenstaat van vorige maand is nog niet aangeleverd.', 'historie', NULL, '2026-08-27 16:00:00'),
+  -- Aanvulling (16 sep, opdracht Gio): dezelfde vier belmeldingen, ook voor de
+  -- andere actieve medewerkers, niet alleen Stasjo. Marc en Brian zijn net als
+  -- Stasjo sinds mei in dienst, dus juli/augustus zijn voor hen ook gewoon
+  -- eigen maanden. Shawn is pas per juli gestart, juli is dan zijn eerste
+  -- maand, geen probleem voor "vorige maand"-teksten, want die verwijzen naar
+  -- een maand waarin hij al actief was.
+  (41, 1, 3, 4, NULL, 'correction_required', 'Correctie gevraagd', 'Controleer 14 augustus, dit moet worden aangepast.', 'timesheet', NULL, '2026-08-28 10:00:00'),
+  (42, 1, 3, 4, NULL, 'timesheet_reminder', 'Vergeet je uren niet', 'Je hebt deze maand nog uren open staan.', 'timesheet', NULL, '2026-08-29 08:00:00'),
+  (43, 1, 3, 3, NULL, 'timesheet_approved', 'Uren goedgekeurd', 'Je uren van vorige maand zijn goedgekeurd.', 'historie', NULL, '2026-08-27 15:30:00'),
+  (44, 1, 3, 3, NULL, 'customer_timesheet_reminder', 'Klanturenstaat nog aanleveren', 'De klanturenstaat van vorige maand is nog niet aangeleverd.', 'historie', NULL, '2026-08-27 16:00:00'),
+  (45, 1, 5, 4, NULL, 'correction_required', 'Correctie gevraagd', 'Controleer 14 augustus, dit moet worden aangepast.', 'timesheet', NULL, '2026-08-28 10:00:00'),
+  (46, 1, 5, 4, NULL, 'timesheet_reminder', 'Vergeet je uren niet', 'Je hebt deze maand nog uren open staan.', 'timesheet', NULL, '2026-08-29 08:00:00'),
+  (47, 1, 5, 3, NULL, 'timesheet_approved', 'Uren goedgekeurd', 'Je uren van vorige maand zijn goedgekeurd.', 'historie', NULL, '2026-08-27 15:30:00'),
+  (48, 1, 5, 3, NULL, 'customer_timesheet_reminder', 'Klanturenstaat nog aanleveren', 'De klanturenstaat van vorige maand is nog niet aangeleverd.', 'historie', NULL, '2026-08-27 16:00:00'),
+  (49, 1, 6, 4, NULL, 'correction_required', 'Correctie gevraagd', 'Controleer 14 augustus, dit moet worden aangepast.', 'timesheet', NULL, '2026-08-28 10:00:00'),
+  (50, 1, 6, 4, NULL, 'timesheet_reminder', 'Vergeet je uren niet', 'Je hebt deze maand nog uren open staan.', 'timesheet', NULL, '2026-08-29 08:00:00'),
+  (51, 1, 6, 3, NULL, 'timesheet_approved', 'Uren goedgekeurd', 'Je uren van vorige maand zijn goedgekeurd.', 'historie', NULL, '2026-08-27 15:30:00'),
+  (52, 1, 6, 3, NULL, 'customer_timesheet_reminder', 'Klanturenstaat nog aanleveren', 'De klanturenstaat van vorige maand is nog niet aangeleverd.', 'historie', NULL, '2026-08-27 16:00:00');
 
 INSERT INTO audit_log (company_id, actor_user_id, event_type, entity_type, entity_id, event_data) VALUES
   (1, 1, 'demo_seed_loaded', 'database', 'path_urenregistratie', JSON_OBJECT('version', '0.9.71', 'note', 'Demo-data sluit aan op de browser-GUI basisstand.'));
