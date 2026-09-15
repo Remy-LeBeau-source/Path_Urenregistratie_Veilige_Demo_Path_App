@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 563 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 564 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 563 unieke case-ID's
+- Playwright executable cases: 564 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 564 unieke case-ID's
+- Totaal executable cases: 565 unieke case-ID's
 - Playwright features: 31
 - Database features: 1
 - Playwright steps mappings: 31
 - Database steps mappings: 1
-- Uitvoeringen: 605
-- Niet-mobile projectuitvoeringen: 521
+- Uitvoeringen: 606
+- Niet-mobile projectuitvoeringen: 522
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 563 Playwright-functionele cases in totaal 605 resultaten op: 521 + (42 x 2) = 605.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 564 Playwright-functionele cases in totaal 606 resultaten op: 522 + (42 x 2) = 606.
 
 ## Documentatieketen
 
@@ -644,7 +644,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 563 Playwri
 
 - Feature: `tests/playwright/features/klassiek-verkenning.feature`
 - Source: `tests/playwright/klassiek-verkenning.spec.ts`
-- Cases: 10
+- Cases: 11
 
 - [KLV-N-002] het maandkeuzepaneel valt op geen enkele breedte buiten het scherm — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 8
 - [KLV-N-003] in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 3
@@ -655,6 +655,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 563 Playwri
 - [KLV-N-008] meer dan 24 uur op een dag wordt direct in het vak gemeld en niet naar de server gestuurd — Techniek: Monkey testing (seeded) + grenswaardenanalyse + negatieve equivalentieklasse · Assertions: 9
 - [KLV-N-009] in Klassiek staat het klanturenstaatlabel niet op Mijn uren maar op het eigen Klanturenstaat-scherm — Techniek: Beslissingstabel vormgeving en scherm + regressiebewaking · Assertions: 6
 - [KLV-H-010] op de telefoon zitten de testknoppen van de medewerker achter één testpil, zonder functie te verliezen — Techniek: Responsive viewport + toegankelijkheidsinspectie (44px, toetsenbord) + end-to-end use-case · Assertions: 22
+- [KLV-N-011] de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 3
 - [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie — Techniek: Monkey testing (seeded) + concurrency + toestandsovergang · Assertions: 11
 
 ### Vormgevingsschakelaar (klassiek / nieuw)

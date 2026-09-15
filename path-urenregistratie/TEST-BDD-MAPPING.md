@@ -470,6 +470,7 @@
 | KLV-N-008 | ui | klassiek-verkenning.feature | meer dan 24 uur op een dag wordt direct in het vak gemeld en niet naar de server gestuurd | Monkey testing (seeded) + grenswaardenanalyse + negatieve equivalentieklasse | 9 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | meer dan 24 uur op een dag wordt direct in het vak gemeld en niet naar de server gestuurd | Negative | 19 | Actueel |
 | KLV-N-009 | ui | klassiek-verkenning.feature | in Klassiek staat het klanturenstaatlabel niet op Mijn uren maar op het eigen Klanturenstaat-scherm | Beslissingstabel vormgeving en scherm + regressiebewaking | 6 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | in Klassiek staat het klanturenstaatlabel niet op Mijn uren maar op het eigen Klanturenstaat-scherm | Negative | 19 | Actueel |
 | KLV-H-010 | ui | klassiek-verkenning.feature | op de telefoon zitten de testknoppen van de medewerker achter één testpil, zonder functie te verliezen | Responsive viewport + toegankelijkheidsinspectie (44px, toetsenbord) + end-to-end use-case | 22 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | op de telefoon zitten de testknoppen van de medewerker achter één testpil, zonder functie te verliezen | Happy | 19 | Actueel |
+| KLV-N-011 | ui | klassiek-verkenning.feature | de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop | Monkey testing (seeded) + grenswaardenanalyse + responsive viewport | 3 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop | Negative | 19 | Actueel |
 | KLV-N-001 | ui | klassiek-verkenning.feature | snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie | Monkey testing (seeded) + concurrency + toestandsovergang | 11 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie | Negative | 19 | Actueel |
 | SKIN-H-001 | ui | skin.feature | de app start standaard in de klassieke vormgeving | End-to-end use-case + visuele contractasserties | 3 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de app start standaard in de klassieke vormgeving | Happy | 19 | Actueel |
 | SKIN-H-002 | ui | skin.feature | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | End-to-end use-case + visuele contractasserties | 6 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | Happy | 19 | Actueel |
@@ -585,9 +586,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 563
+- Playwright executable cases: 564
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 564
+- Totaal unieke executable cases: 565
 - Playwright features: 31
 - Database features: 1
 - Playwright steps mappings: 31

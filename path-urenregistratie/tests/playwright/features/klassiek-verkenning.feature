@@ -89,6 +89,14 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
     And blijft desktop ongewijzigd: geen pil, knoppen direct in de menubalk
 
   @negative
+  Scenario: [KLV-N-011] de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop
+    # Testtechniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given een beheerder op Instellingen met drie mailregels in de geschiedenis
+    When de flow voor KLV-N-011 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop
+
+  @negative
   Scenario: [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie
     # Testtechniek: Monkey testing (seeded) + concurrency + toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 11

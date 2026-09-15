@@ -51,6 +51,11 @@ Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
   uren staat (besluit met main: niets weghalen, al verhuisd sinds 2.0.68).
 - Prod-poort: regel Gio 15 sep, niet binnen 10 min goedgekeurd = afwijzen; main bouwde "Promote Prod (wekker)"
   (2.0.86). Test loopt altijd door.
+- **2.0.89**: vondsten uit release 34950426101 (eerste met reducedMotion echt actief): mailgeschiedenis in
+  Instellingen 38-63px buiten beeld met echte maildata (KLV-N-011, nieuwe case met nagebootste regels, CSS-fix); gloed
+  onder de teller op Vandaag telefoon schoof onder reduce 58px over de rand omdat translateX(-50%) alleen in de
+  keyframes stond (MOB-H-031, basis-transform); KLV-N-002 en DASH-H-049 wachten nu op het eindbeeld (onder reduce
+  wordt een translate- of themawissel pas later meetbaar).
 - Open vondst (15 sep): dialoog met open toetsenbord onder reducedMotion "reduce" (SKIN-H-036). Chromium hield
   de max-height van .modal op 824px (100dvh-20) terwijl --zichtbaar-hoogte 300px was en de juiste regel matchte;
   dialoog 534px boven het scherm, kruisje onbereikbaar. Geprobeerd en teruggedraaid (niet betrouwbaar, wisselend
