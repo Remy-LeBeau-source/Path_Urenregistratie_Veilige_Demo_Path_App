@@ -59,3 +59,12 @@ Feature: Hulp en contact
     Given de medewerker heeft verminderde beweging ingesteld en het paneel staat open
     When de medewerker het paneel sluit
     Then is het paneel direct verborgen, niet pas na de normale overgangsduur
+
+  @happy
+  Scenario: [HELP-H-005] op telefoon zit hulp in het profielmenu in plaats van een zwevende knop, voor medewerker en beheerder
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given hulp en contact is voorbereid
+    And houdt desktop de zwevende hulpknop
+    When de flow voor HELP-H-005 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat op telefoon zit hulp in het profielmenu in plaats van een zwevende knop, voor medewerker en beheerder

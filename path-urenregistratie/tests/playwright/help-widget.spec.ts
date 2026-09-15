@@ -4,6 +4,8 @@ import { appConfig, requirePassword } from './fixtures/appConfig';
 import { suppressInstallBanner } from './fixtures/suppressInstallBanner';
 import { setLeaveSickEntryEnabled } from './helpers/companySettings';
 import { LoginPage } from './pages/LoginPage';
+import { openHulp } from './fixtures/hulp';
+import { openProfielmenu } from './pages/TopbarMenu';
 
 test.beforeEach(async ({ page }) => {
   await suppressInstallBanner(page);
@@ -22,7 +24,7 @@ test('[HELP-H-001] medewerker zoekt een bekende vraag en krijgt het juiste antwo
   await test.step('Given de medewerker opent Hulp & contact', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('#help-launcher').click();
+    await openHulp(page);
     await expect(page.locator('#help-panel')).toBeVisible();
     await expect(page.locator('#help-messages .help-message').first()).toContainText('alleen tijdens deze sessie');
   });
@@ -61,7 +63,7 @@ test('[HELP-N-001] het hulpgesprek overleeft geen paginaherlading, alleen "Gespr
   await test.step('Given de medewerker heeft binnen het gesprek een vraag gesteld', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('#help-launcher').click();
+    await openHulp(page);
     await page.locator('#help-input').fill('waar zie ik mijn status');
     await page.locator('#help-form').locator('button[type="submit"]').click();
     await expect(page.locator('#help-messages .help-message')).toHaveCount(3);
@@ -86,7 +88,7 @@ test('[HELP-N-001] het hulpgesprek overleeft geen paginaherlading, alleen "Gespr
   });
 
   await test.step('Then is het gesprek net zo leeg als bij een eerste opening, niet ergens onthouden', async () => {
-    await page.locator('#help-launcher').click();
+    await openHulp(page);
     await expect(page.locator('#help-messages .help-message')).toHaveCount(1);
     await expect(page.locator('#help-messages .help-message').first()).toContainText('alleen tijdens deze sessie');
     await expect(page.locator('#help-messages')).not.toContainText('waar zie ik mijn status');
@@ -106,7 +108,7 @@ test('[HELP-H-003] contact opnemen toont precies één mailknop en een kopieer-v
   await test.step('Given de medewerker opent Hulp & contact', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('#help-launcher').click();
+    await openHulp(page);
   });
 
   await test.step('When de medewerker het onderwerp Contact opnemen kiest', async () => {
@@ -137,7 +139,7 @@ test('[HELP-H-004] het hulpantwoord over verlof/ziekte volgt de beheerderschakel
   const loginPage = new LoginPage(page);
 
   const vraagVerlofAntwoord = async () => {
-    await page.locator('#help-launcher').click();
+    await openHulp(page);
     await page.locator('#help-input').fill('verlof');
     await page.locator('#help-form').locator('button[type="submit"]').click();
     return page.locator('#help-messages .help-message').last();
@@ -201,7 +203,7 @@ test('[HELP-H-002] het paneel opent en sluit met een vloeiende overgang, en mete
   });
 
   await test.step('When de medewerker Hulp & contact opent', async () => {
-    await page.locator('#help-launcher').click();
+    await openHulp(page);
   });
 
   await test.step('Then krijgt het paneel de is-open-klasse en telt op als daadwerkelijk zichtbaar', async () => {
@@ -232,7 +234,7 @@ test('[HELP-N-002] met een voorkeur voor verminderde beweging sluit het paneel d
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('#help-launcher').click();
+    await openHulp(page);
     await expect(page.locator('#help-panel')).toBeVisible();
   });
 
@@ -250,4 +252,47 @@ test('[HELP-N-002] met een voorkeur voor verminderde beweging sluit het paneel d
   });
 
   await loginPage.logout();
+});
+
+// Besluit Gio (15 sep): op telefoon geen zwevende "Hulp & contact"-knop meer,
+// omdat hij over de inhoud van Vandaag lag. Hulp mag daardoor niet onvindbaar
+// worden: deze case bewijst voor medewerker én beheerder dat de knop onder 821px
+// weg is en dat hulp via het profielmenu echt opent, en dat desktop de zwevende
+// knop houdt.
+test('[HELP-H-005] op telefoon zit hulp in het profielmenu in plaats van een zwevende knop, voor medewerker en beheerder', async ({ page }) => {
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+
+  for (const rol of ['medewerker', 'beheerder'] as const) {
+    await test.step(`Given de ${rol} is ingelogd op een telefoon van 390px breed`, async () => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await loginPage.open();
+      if (rol === 'medewerker') await loginPage.loginAsEmployee();
+      else await loginPage.loginAsAdmin();
+      await expect(page.locator('#app-shell')).toBeVisible();
+    });
+
+    await test.step(`Then ligt er geen zwevende hulpknop over de inhoud (${rol})`, async () => {
+      await expect(page.locator('#help-launcher')).toBeHidden();
+    });
+
+    await test.step(`When de ${rol} Hulp & contact kiest in het profielmenu, then opent het hulppaneel`, async () => {
+      await openProfielmenu(page);
+      await page.locator('#profile-menu [data-profile-action="help"]').click();
+      await expect(page.locator('#help-panel')).toBeVisible();
+      await expect(page.locator('#help-messages .help-message').first()).toContainText('alleen tijdens deze sessie');
+      await page.locator('#help-close').click();
+      await expect(page.locator('#help-panel')).toBeHidden();
+    });
+
+    await loginPage.logout();
+  }
+
+  await test.step('And houdt desktop de zwevende hulpknop', async () => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#help-launcher')).toBeVisible();
+    await loginPage.logout();
+  });
 });

@@ -68,6 +68,27 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
     And geldt 24,5 ook als te veel, maar 24 precies niet
 
   @negative
+  Scenario: [KLV-N-009] in Klassiek staat het klanturenstaatlabel niet op Mijn uren maar op het eigen Klanturenstaat-scherm
+    # Testtechniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given een medewerker in Klassiek
+    When de medewerker Mijn uren opent
+    Then staat er op Mijn uren geen klanturenstaatlabel of -paneel
+    And staat het label wel op het Klanturenstaat-scherm
+
+  @happy
+  Scenario: [KLV-H-010] op de telefoon zitten de testknoppen van de medewerker achter één testpil, zonder functie te verliezen
+    # Testtechniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 22
+    Given een medewerker in Klassiek op een telefoon van 390px
+    Then staat er één testpil in plaats van losse knoppen
+    When de medewerker de pil opent, then staan alle testknoppen voluit, 44px hoog en binnen beeld
+    And werkt een keuze in het paneel en gaat het paneel daarna dicht
+    And sluit Escape het paneel
+    And staat het versienummer onderaan het profielmenu
+    And blijft desktop ongewijzigd: geen pil, knoppen direct in de menubalk
+
+  @negative
   Scenario: [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie
     # Testtechniek: Monkey testing (seeded) + concurrency + toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 11

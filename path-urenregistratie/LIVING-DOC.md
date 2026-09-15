@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 559 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 562 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 559 unieke case-ID's
+- Playwright executable cases: 562 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 560 unieke case-ID's
+- Totaal executable cases: 563 unieke case-ID's
 - Playwright features: 31
 - Database features: 1
 - Playwright steps mappings: 31
 - Database steps mappings: 1
-- Uitvoeringen: 601
-- Niet-mobile projectuitvoeringen: 517
+- Uitvoeringen: 604
+- Niet-mobile projectuitvoeringen: 520
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 559 Playwright-functionele cases in totaal 601 resultaten op: 517 + (42 x 2) = 601.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 562 Playwright-functionele cases in totaal 604 resultaten op: 520 + (42 x 2) = 604.
 
 ## Documentatieketen
 
@@ -342,7 +342,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 559 Playwri
 
 - Feature: `tests/playwright/features/help-widget.feature`
 - Source: `tests/playwright/help-widget.spec.ts`
-- Cases: 6
+- Cases: 7
 
 - [HELP-H-001] medewerker zoekt een bekende vraag en krijgt het juiste antwoord met werkende knop — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
 - [HELP-N-001] het hulpgesprek overleeft geen paginaherlading, alleen "Gesprek wissen" binnen de sessie — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 9
@@ -350,6 +350,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 559 Playwri
 - [HELP-H-004] het hulpantwoord over verlof/ziekte volgt de beheerderschakelaar — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 5
 - [HELP-H-002] het paneel opent en sluit met een vloeiende overgang, en meteen zonder animatievoorkeur — Techniek: Toestandsovergang · Assertions: 4
 - [HELP-N-002] met een voorkeur voor verminderde beweging sluit het paneel direct, zonder op een animatie te wachten — Techniek: Toestandsovergang · Assertions: 2
+- [HELP-H-005] op telefoon zit hulp in het profielmenu in plaats van een zwevende knop, voor medewerker en beheerder — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 
 ### Facturen definitief maken en vergrendelen
 
@@ -643,7 +644,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 559 Playwri
 
 - Feature: `tests/playwright/features/klassiek-verkenning.feature`
 - Source: `tests/playwright/klassiek-verkenning.spec.ts`
-- Cases: 8
+- Cases: 10
 
 - [KLV-N-002] het maandkeuzepaneel valt op geen enkele breedte buiten het scherm — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 8
 - [KLV-N-003] in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 3
@@ -652,6 +653,8 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 559 Playwri
 - [KLV-N-006] op geen enkel beheerscherm valt inhoud buiten de rechterrand rond de breekpunten — Techniek: Monkey testing (seeded) + grenswaardenanalyse + toestandsovergang + responsive viewport · Assertions: 2
 - [KLV-N-007] elk scherm heeft een paginatitel, ook Klanturenstaten bij de beheerder — Techniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing · Assertions: 5
 - [KLV-N-008] meer dan 24 uur op een dag wordt direct in het vak gemeld en niet naar de server gestuurd — Techniek: Monkey testing (seeded) + grenswaardenanalyse + negatieve equivalentieklasse · Assertions: 9
+- [KLV-N-009] in Klassiek staat het klanturenstaatlabel niet op Mijn uren maar op het eigen Klanturenstaat-scherm — Techniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing · Assertions: 6
+- [KLV-H-010] op de telefoon zitten de testknoppen van de medewerker achter één testpil, zonder functie te verliezen — Techniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing · Assertions: 22
 - [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie — Techniek: Monkey testing (seeded) + concurrency + toestandsovergang · Assertions: 11
 
 ### Vormgevingsschakelaar (klassiek / nieuw)
