@@ -87,22 +87,24 @@ Feature: Meldingen beheren
     Then wordt met Playwright-assertions bevestigd dat herstel zet drie lokale basismeldingen terug en beschermt ze tegen serveroverschrijving
 
   @happy
-  Scenario: [NOT-H-011] medewerker leest mededelingen door ze te zien: tellers lopen vanzelf naar nul, zonder markeerknop
-    # Testtechniek: Grenswaardenanalyse
-    # Aantoonbare Playwright-assertions in deze case: 18
-    Given drie ongelezen mededelingen en een ongelezen statusmelding
-    Then staat alleen de statusmelding in de bel
-    And staan in Berichten de ongelezen open en bovenaan, de gelezen ingeklapt, zonder markeerknop
-    When elk ongelezen bericht 2 seconden in beeld is, then telt het vanzelf als gelezen
-    And blijven de net gelezen berichten open staan; na herladen zijn ze ingeklapt
+  Scenario: [NOT-H-011] een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 22
+    Given twee ongelezen mededelingen en een ongelezen statusmelding
+    When de medewerker Berichten opent, then zijn alle berichten ingeklapt, staan de nieuwe bovenaan en is de eerste in beeld
+    And blijven ze ongelezen, ook als ze langer in beeld staan
+    When de medewerker het eerste bericht openklapt, then is dat bericht gelezen en blijft het open
+    When de medewerker bij het tweede op Markeer als gelezen tikt, then is het gelezen zonder open te gaan
+    And valt een leeg filter Ongelezen bij terugkomen terug op Alles
+    Then wordt met Playwright-assertions bevestigd dat een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen
 
   @negative
-  Scenario: [NOT-N-015] een ongelezen bericht dat maar kort in beeld is, blijft ongelezen
+  Scenario: [NOT-N-015] dichtklappen of alleen bekijken leest een ongelezen bericht niet
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 4
+    # Aantoonbare Playwright-assertions in deze case: 5
     Given meldingen beheren is voorbereid
     When de flow voor NOT-N-015 wordt uitgevoerd
-    Then wordt met Playwright-assertions bevestigd dat een ongelezen bericht dat maar kort in beeld is, blijft ongelezen
+    Then wordt met Playwright-assertions bevestigd dat dichtklappen of alleen bekijken leest een ongelezen bericht niet
 
   @happy
   Scenario: [NOT-H-012] medewerker ziet ingetrokken mededelingen ingeklapt met label, de reden bij openen, en het filter toont precies die

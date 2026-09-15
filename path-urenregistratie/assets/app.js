@@ -1165,8 +1165,6 @@ let newAdminStoryExportRows = [];
 // Berichten die de medewerker deze sessie heeft opengeklapt of net heeft gelezen. Die
 // blijven open staan, ook als ze na het lezen niet meer ongelezen zijn.
 const openBerichten = new Set();
-const berichtLeesTimers = new Map();
-let berichtLeesObserver = null;
 
 function newAdminStageLabel(state) {
   return state === "done" ? "Gereed" : state === "current" ? "Actie vereist" : "Nog niet gestart";
@@ -9132,12 +9130,13 @@ function isAnnouncementUnread(employeeId, announcementId) {
   return announcementNotificationsFor(employeeId, announcementId).some(item => !item.read);
 }
 
-// Eén kaart in Berichten (besluit Gio 15 sep, "slim voorstel"). Ongelezen berichten staan
-// open; gelezen en ingetrokken berichten zijn ingeklapt tot één regel (titel · datum ›)
-// en gaan open met een tik. Gelezen gaat vanzelf: bij open- of dichtklappen, of als het
-// bericht 2 seconden in beeld is geweest. Geen knop "Markeer als gelezen" meer.
+// Eén kaart in Berichten (besluit Gio 15 sep, ronde 2). Elk bericht is ingeklapt tot één
+// regel (label, titel, datum ›) en gaat open met een tik. Een ongelezen bericht draagt het
+// label Nieuw en telt pas als gelezen als je het openklapt of op het kleine knopje
+// "Markeer als gelezen" tikt. Er gaat niets vanzelf: eerder telde 2 seconden in beeld als
+// gelezen, en op de telefoon verdwenen dan alle nieuwe berichten tegelijk (Gio 15 sep).
 function berichtKaartHtml(bericht) {
-  const open = bericht.unread || openBerichten.has(bericht.id);
+  const open = openBerichten.has(bericht.id);
   const inhoudId = "bericht-inhoud-" + bericht.id;
   const label = bericht.ingetrokken
     ? '<span class="status-pill status-warning">Ingetrokken</span>'
@@ -9145,12 +9144,18 @@ function berichtKaartHtml(bericht) {
   const intrekking = bericht.ingetrokken
     ? '<div class="announcement-withdrawal-note" data-employee-withdrawal-note><strong>Deze mededeling is ingetrokken en geldt niet meer</strong>' + escapeHtml(bericht.reden || "Er is geen reden vastgelegd.") + '</div>'
     : "";
+  const markeer = bericht.unread
+    ? '<button class="text-button bericht-markeer" type="button" data-bericht-gelezen="' + bericht.id + '" aria-label="' + escapeHtml("Markeer " + bericht.title + " als gelezen") + '">Markeer als gelezen</button>'
+    : "";
   return '<article class="employee-announcement-card' + (bericht.unread ? " is-unread" : "") + (bericht.ingetrokken ? " is-withdrawn" : "") + (open ? " is-open" : " is-dicht") + '" data-bericht-id="' + bericht.id + '">'
-    + '<button class="bericht-kop" type="button" data-bericht-toggle="' + bericht.id + '" aria-expanded="' + (open ? "true" : "false") + '" aria-controls="' + inhoudId + '">'
-      + '<span class="bericht-kop-tekst">' + label + '<h3>' + escapeHtml(bericht.title) + '</h3></span>'
-      + '<small>' + escapeHtml(bericht.createdAt) + '</small>'
-      + '<span class="bericht-chevron" aria-hidden="true"></span>'
-    + '</button>'
+    + '<div class="bericht-kop-rij">'
+      + '<button class="bericht-kop" type="button" data-bericht-toggle="' + bericht.id + '" aria-expanded="' + (open ? "true" : "false") + '" aria-controls="' + inhoudId + '">'
+        + '<span class="bericht-kop-tekst">' + label + '<h3>' + escapeHtml(bericht.title) + '</h3></span>'
+        + '<small>' + escapeHtml(bericht.createdAt) + '</small>'
+        + '<span class="bericht-chevron" aria-hidden="true"></span>'
+      + '</button>'
+      + markeer
+    + '</div>'
     + '<div class="bericht-inhoud" id="' + inhoudId + '"' + (open ? "" : " hidden") + '>'
       + intrekking
       + '<p>' + escapeHtml(bericht.message) + '</p>'
@@ -9172,38 +9177,11 @@ function toonBerichtenLijst(list, berichten, unreadCount) {
   // Ongelezen bovenaan, verder de volgorde van de bron (nieuwste eerst).
   const geordend = berichten.filter(bericht => bericht.unread).concat(berichten.filter(bericht => !bericht.unread));
   list.innerHTML = geordend.map(berichtKaartHtml).join("");
-  volgBerichtenInBeeld(list);
-}
-
-const BERICHT_LEESTIJD_MS = 2000;
-
-// Een ongelezen bericht dat 2 seconden grotendeels in beeld is, telt als gelezen.
-function volgBerichtenInBeeld(list) {
-  berichtLeesTimers.forEach(timer => clearTimeout(timer));
-  berichtLeesTimers.clear();
-  if (berichtLeesObserver) berichtLeesObserver.disconnect();
-  if (typeof IntersectionObserver !== "function") return;
-  berichtLeesObserver = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      const id = Number(entry.target.dataset.berichtId || 0);
-      const zichtbaar = entry.isIntersecting && entry.intersectionRatio >= 0.6
-        && Boolean(document.querySelector("#view-employee-announcements.is-active"))
-        && document.visibilityState !== "hidden";
-      if (zichtbaar && !berichtLeesTimers.has(id)) {
-        berichtLeesTimers.set(id, setTimeout(() => { berichtLeesTimers.delete(id); markeerBerichtGelezen(id); }, BERICHT_LEESTIJD_MS));
-      } else if (!zichtbaar && berichtLeesTimers.has(id)) {
-        clearTimeout(berichtLeesTimers.get(id));
-        berichtLeesTimers.delete(id);
-      }
-    });
-  }, { threshold: [0, 0.6, 1] });
-  list.querySelectorAll(".employee-announcement-card.is-unread").forEach(kaart => berichtLeesObserver.observe(kaart));
 }
 
 function markeerBerichtGelezen(announcementId) {
   const id = Number(announcementId || 0);
   if (!id || state.currentRole !== "employee") return Promise.resolve();
-  openBerichten.add(id);
   if (API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative()) {
     const melding = employeeAnnouncementItemsFromNotifications().find(item => item.id === id);
     if (!melding || melding.read) return Promise.resolve();
@@ -9225,7 +9203,6 @@ function markeerAlleBerichtenGelezen() {
   if (state.currentRole !== "employee") return;
   if (API_ENABLED && authRuntime.mode === "auth" && !isLocalResetAuthoritative()) {
     const ongelezen = employeeAnnouncementItemsFromNotifications().filter(item => !item.read);
-    ongelezen.forEach(item => openBerichten.add(item.id));
     Promise.all(ongelezen.map(item => markAnnouncementReadApi(item.id).catch(() => null)))
       .then(() => refreshNotificationsReadApi(true))
       .catch(() => null)
@@ -9234,7 +9211,7 @@ function markeerAlleBerichtenGelezen() {
   }
   const employee = currentEmployee();
   state.notifications.filter(item => item.audience === "employee" && Number(item.employeeId) === employee.id && isMededelingMelding(item) && !item.read)
-    .forEach(item => { openBerichten.add(Number(item.announcementId || item.id)); item.read = true; });
+    .forEach(item => { item.read = true; });
   persistState();
   renderNotifications();
   renderEmployeeAnnouncementArchive();
@@ -9247,7 +9224,7 @@ function renderEmployeeAnnouncementArchive() {
     list.innerHTML = "";
     return;
   }
-  // Onder het filter Ongelezen blijft een bericht dat je net las staan tot je
+  // Onder het filter Ongelezen blijft een bericht dat je net openklapte staan tot je
   // wegnavigeert, anders verdwijnt het onder je handen.
   const houdVast = item => !item.read || openBerichten.has(item.id);
 
@@ -12002,7 +11979,27 @@ function showView(view, options = {}) {
   // becomes active so an equal-period navigation cannot expose stale locked input.
   if (view === "timesheet") renderHoursGrid();
   window.location.hash = view;
+  if (view !== "employee-announcements") openBerichten.clear();
+  if (view === "employee-announcements" && state.currentRole === "employee" && springNaarOngelezenBericht()) return;
   window.scrollTo({ top: 0, behavior: smoothScrollBehavior() });
+}
+
+// Gio 15 sep: "hij moet toch springen naar ongelezen berichten". Een filter Ongelezen
+// zonder ongelezen berichten valt terug op Alles, en het eerste ongelezen bericht komt in
+// beeld met de focus op zijn kop. Geeft true als er gesprongen is.
+function springNaarOngelezenBericht() {
+  const lijst = document.querySelector("#employee-announcement-list");
+  if (!lijst) return false;
+  if (state.announcementArchiveFilter === "unread" && !lijst.querySelector(".employee-announcement-card.is-unread")) {
+    state.announcementArchiveFilter = "all";
+    renderEmployeeAnnouncementArchive();
+  }
+  const eerste = lijst.querySelector(".employee-announcement-card.is-unread");
+  if (!eerste) return false;
+  if (typeof eerste.scrollIntoView === "function") eerste.scrollIntoView({ block: "center", behavior: smoothScrollBehavior() });
+  else window.scrollTo({ top: 0, behavior: smoothScrollBehavior() });
+  eerste.querySelector("[data-bericht-toggle]")?.focus({ preventScroll: true });
+  return true;
 }
 
 function login(role) {
@@ -15072,8 +15069,8 @@ function toonInstallatieAanbod() {
   const withdrawAnnouncement = event.target.closest("[data-withdraw-announcement]");
   if (withdrawAnnouncement) showAnnouncementWithdrawal(Number(withdrawAnnouncement.dataset.withdrawAnnouncement));
 
-  // Berichten: een tik op de kop klapt open of dicht. Open- of dichtklappen van een
-  // ongelezen bericht telt als gelezen (besluit Gio 15 sep); er is geen aparte knop meer.
+  // Berichten: een tik op de kop klapt open of dicht. Openklappen van een ongelezen
+  // bericht telt als gelezen; dichtklappen niet (besluit Gio 15 sep, ronde 2).
   const berichtToggle = event.target.closest("[data-bericht-toggle]");
   if (berichtToggle && state.currentRole === "employee") {
     const id = Number(berichtToggle.dataset.berichtToggle || 0);
@@ -15085,10 +15082,10 @@ function toonInstallatieAanbod() {
     kaart?.classList.toggle("is-dicht", !wordtOpen);
     const inhoud = kaart?.querySelector(".bericht-inhoud");
     if (inhoud) inhoud.hidden = !wordtOpen;
-    if (kaart?.classList.contains("is-unread")) {
-      markeerBerichtGelezen(id).then(() => { if (!wordtOpen) { openBerichten.delete(id); renderEmployeeAnnouncementArchive(); } });
-    }
+    if (wordtOpen && kaart?.classList.contains("is-unread")) markeerBerichtGelezen(id);
   }
+  const berichtGelezen = event.target.closest("[data-bericht-gelezen]");
+  if (berichtGelezen && state.currentRole === "employee") markeerBerichtGelezen(Number(berichtGelezen.dataset.berichtGelezen || 0));
   if (event.target.closest("#berichten-alles-gelezen")) markeerAlleBerichtenGelezen();
 
   const review = event.target.closest("[data-review]");

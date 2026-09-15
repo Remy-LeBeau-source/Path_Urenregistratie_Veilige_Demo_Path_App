@@ -2245,6 +2245,13 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .bericht-inhoud { padding: 0 24px 18px; }
 .bericht-inhoud > p { color: var(--ink); font-size: 13px; line-height: 1.65; margin: 4px 0 12px; max-width: 70ch; white-space: pre-line; }
 .bericht-inhoud .announcement-withdrawal-note { margin-top: 0; }
+/* Ronde 2: kop en het kleine knopje "Markeer als gelezen" op één rij; een ongelezen
+   bericht is ingeklapt maar valt op door Nieuw en een vette titel. */
+.bericht-kop-rij { display: flex; align-items: center; }
+.bericht-kop-rij > .bericht-kop { flex: 1 1 auto; min-width: 0; }
+.bericht-markeer { flex: 0 0 auto; min-height: 44px; margin-right: 16px; color: var(--muted); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.bericht-markeer:hover { color: var(--mint-dark-tekst); }
+.employee-announcement-card.is-unread.is-dicht .bericht-kop h3 { font-weight: 800; }
 .berichten-kop-acties { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px 14px; text-align: right; }
 .berichten-kop-acties small { color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { .bericht-chevron { transition: none; } }
@@ -2253,6 +2260,10 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
   .bericht-kop > small { grid-column: 1; grid-row: 2; }
   .bericht-chevron { grid-column: 2; grid-row: 1 / span 2; }
   .bericht-inhoud { padding: 0 16px 16px; }
+  .bericht-kop-tekst { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .bericht-kop-rij { flex-wrap: wrap; }
+  .bericht-kop-rij > .bericht-kop { flex-basis: 100%; }
+  .bericht-markeer { margin: -10px 0 4px 16px; min-height: 40px; }
   .berichten-kop-acties { justify-content: flex-start; text-align: left; }
 }
 .recipient-choice-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
