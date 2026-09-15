@@ -208,11 +208,33 @@ INSERT INTO announcements (
   (3, 1, 1, 'standard', 'sent', 'Planning augustus beschikbaar', 'De urenregistratie voor augustus staat klaar. Je kunt tussentijds opslaan en aan het einde van de maand indienen.', 'Alle medewerkers', FALSE, '2026-08-03 08:45:00', '2026-08-03 08:45:00'),
   (4, 1, 2, 'standard', 'sent', 'Controleer je open acties', 'Controleer vóór het indienen of je uren en klanturenstaat volledig zijn.', 'Alle medewerkers', FALSE, '2026-08-07 09:30:00', '2026-08-07 09:30:00');
 
+-- Drie ingetrokken voorbeeldmededelingen (besluit Gio 15 sep), zodat het filter
+-- "Ingetrokken" in Berichten op TEST iets toont. Volgt de echte serverflow van
+-- announcements.php action=withdraw: het verzonden bericht krijgt status
+-- withdrawn met reden, door wie en wanneer, en de meldingen van de ontvangers
+-- staan op gelezen (zie de notifications hieronder), zodat ongelezen-tellers
+-- niet veranderen. Deze seed draait alleen via demo-migraties en de TEST-reset,
+-- nooit op PROD.
+INSERT INTO announcements (
+  id, company_id, created_by, kind, status, title, message,
+  audience_label, email_requested, withdrawal_reason, withdrawn_by, withdrawn_at, created_at, updated_at
+) VALUES
+  (5, 1, 1, 'standard', 'withdrawn', 'Kantoor vandaag gesloten', 'Door een stroomstoring in het pand is het kantoor vandaag dicht. Iedereen werkt vandaag thuis.', 'Alle medewerkers', FALSE, 'De stroom was om 9:15 alweer terug, het kantoor is gewoon open.', 1, '2026-08-18 09:20:00', '2026-08-18 07:45:00', '2026-08-18 09:20:00'),
+  (6, 1, 2, 'standard', 'withdrawn', 'Vrijdagborrel gaat niet door', 'De vrijdagborrel van deze week vervalt.', 'Alle medewerkers', FALSE, 'Hij gaat toch door: er is nieuwe taart.', 2, '2026-08-21 11:05:00', '2026-08-21 09:30:00', '2026-08-21 11:05:00'),
+  (7, 1, 1, 'standard', 'withdrawn', 'Parkeergarage dicht', 'De parkeergarage is vandaag niet bereikbaar, want de sleutelkast is zoek. Parkeer even in de straat.', 'Alle medewerkers', FALSE, 'De sleutel lag in de koffiekamer, de garage is weer open.', 1, '2026-08-26 08:50:00', '2026-08-26 08:10:00', '2026-08-26 08:50:00');
+
 INSERT INTO announcement_recipients (announcement_id, user_id, email_requested, email_status) VALUES
   (1, 3, TRUE, 'sent'), (1, 4, TRUE, 'sent'), (1, 5, TRUE, 'sent'), (1, 6, TRUE, 'sent'),
   (2, 3, FALSE, 'not_requested'), (2, 4, FALSE, 'not_requested'), (2, 5, FALSE, 'not_requested'), (2, 6, FALSE, 'not_requested'),
   (3, 3, FALSE, 'not_requested'), (3, 4, FALSE, 'not_requested'), (3, 5, FALSE, 'not_requested'), (3, 6, FALSE, 'not_requested'),
   (4, 3, FALSE, 'not_requested'), (4, 4, FALSE, 'not_requested'), (4, 5, FALSE, 'not_requested'), (4, 6, FALSE, 'not_requested');
+
+-- De ingetrokken voorbeelden staan voor elke ontvanger al op gelezen: de
+-- ongelezen-teller van Berichten telt op announcement_recipients.read_at.
+INSERT INTO announcement_recipients (announcement_id, user_id, email_requested, email_status, read_at) VALUES
+  (5, 3, FALSE, 'not_requested', '2026-08-18 09:20:00'), (5, 4, FALSE, 'not_requested', '2026-08-18 09:20:00'), (5, 5, FALSE, 'not_requested', '2026-08-18 09:20:00'), (5, 6, FALSE, 'not_requested', '2026-08-18 09:20:00'),
+  (6, 3, FALSE, 'not_requested', '2026-08-21 11:05:00'), (6, 4, FALSE, 'not_requested', '2026-08-21 11:05:00'), (6, 5, FALSE, 'not_requested', '2026-08-21 11:05:00'), (6, 6, FALSE, 'not_requested', '2026-08-21 11:05:00'),
+  (7, 3, FALSE, 'not_requested', '2026-08-26 08:50:00'), (7, 4, FALSE, 'not_requested', '2026-08-26 08:50:00'), (7, 5, FALSE, 'not_requested', '2026-08-26 08:50:00'), (7, 6, FALSE, 'not_requested', '2026-08-26 08:50:00');
 
 INSERT INTO notifications (
   id, company_id, user_id, period_id, announcement_id, notification_type, title, message, target_route, read_at, created_at
@@ -224,7 +246,19 @@ INSERT INTO notifications (
   (5, 1, 6, 3, NULL, 'timesheet_submitted', 'Uren wachten op controle', 'Je uren voor augustus 2026 zijn ingediend.', 'employee-dashboard', NULL, '2026-08-07 09:18:00'),
   (6, 1, 4, NULL, 1, 'announcement', 'Uren juli indienen', 'Dien je uren over juli uiterlijk maandag 3 augustus in. Controleer vóór het indienen of alle werkdagen zijn ingevuld.', 'employee-announcements', NULL, '2026-07-30 10:15:00'),
   (7, 1, 4, NULL, 3, 'announcement', 'Planning augustus beschikbaar', 'De urenregistratie voor augustus staat klaar. Je kunt tussentijds opslaan en aan het einde van de maand indienen.', 'employee-announcements', NULL, '2026-08-03 08:45:00'),
-  (8, 1, 4, NULL, 4, 'announcement', 'Controleer je open acties', 'Controleer vóór het indienen of je uren en klanturenstaat volledig zijn.', 'employee-announcements', NULL, '2026-08-07 09:30:00');
+  (8, 1, 4, NULL, 4, 'announcement', 'Controleer je open acties', 'Controleer vóór het indienen of je uren en klanturenstaat volledig zijn.', 'employee-announcements', NULL, '2026-08-07 09:30:00'),
+  (9, 1, 3, NULL, 5, 'announcement', 'Kantoor vandaag gesloten', 'Door een stroomstoring in het pand is het kantoor vandaag dicht. Iedereen werkt vandaag thuis.', 'employee-announcements', '2026-08-18 09:20:00', '2026-08-18 07:45:00'),
+  (10, 1, 4, NULL, 5, 'announcement', 'Kantoor vandaag gesloten', 'Door een stroomstoring in het pand is het kantoor vandaag dicht. Iedereen werkt vandaag thuis.', 'employee-announcements', '2026-08-18 09:20:00', '2026-08-18 07:45:00'),
+  (11, 1, 5, NULL, 5, 'announcement', 'Kantoor vandaag gesloten', 'Door een stroomstoring in het pand is het kantoor vandaag dicht. Iedereen werkt vandaag thuis.', 'employee-announcements', '2026-08-18 09:20:00', '2026-08-18 07:45:00'),
+  (12, 1, 6, NULL, 5, 'announcement', 'Kantoor vandaag gesloten', 'Door een stroomstoring in het pand is het kantoor vandaag dicht. Iedereen werkt vandaag thuis.', 'employee-announcements', '2026-08-18 09:20:00', '2026-08-18 07:45:00'),
+  (13, 1, 3, NULL, 6, 'announcement', 'Vrijdagborrel gaat niet door', 'De vrijdagborrel van deze week vervalt.', 'employee-announcements', '2026-08-21 11:05:00', '2026-08-21 09:30:00'),
+  (14, 1, 4, NULL, 6, 'announcement', 'Vrijdagborrel gaat niet door', 'De vrijdagborrel van deze week vervalt.', 'employee-announcements', '2026-08-21 11:05:00', '2026-08-21 09:30:00'),
+  (15, 1, 5, NULL, 6, 'announcement', 'Vrijdagborrel gaat niet door', 'De vrijdagborrel van deze week vervalt.', 'employee-announcements', '2026-08-21 11:05:00', '2026-08-21 09:30:00'),
+  (16, 1, 6, NULL, 6, 'announcement', 'Vrijdagborrel gaat niet door', 'De vrijdagborrel van deze week vervalt.', 'employee-announcements', '2026-08-21 11:05:00', '2026-08-21 09:30:00'),
+  (17, 1, 3, NULL, 7, 'announcement', 'Parkeergarage dicht', 'De parkeergarage is vandaag niet bereikbaar, want de sleutelkast is zoek. Parkeer even in de straat.', 'employee-announcements', '2026-08-26 08:50:00', '2026-08-26 08:10:00'),
+  (18, 1, 4, NULL, 7, 'announcement', 'Parkeergarage dicht', 'De parkeergarage is vandaag niet bereikbaar, want de sleutelkast is zoek. Parkeer even in de straat.', 'employee-announcements', '2026-08-26 08:50:00', '2026-08-26 08:10:00'),
+  (19, 1, 5, NULL, 7, 'announcement', 'Parkeergarage dicht', 'De parkeergarage is vandaag niet bereikbaar, want de sleutelkast is zoek. Parkeer even in de straat.', 'employee-announcements', '2026-08-26 08:50:00', '2026-08-26 08:10:00'),
+  (20, 1, 6, NULL, 7, 'announcement', 'Parkeergarage dicht', 'De parkeergarage is vandaag niet bereikbaar, want de sleutelkast is zoek. Parkeer even in de straat.', 'employee-announcements', '2026-08-26 08:50:00', '2026-08-26 08:10:00');
 
 INSERT INTO audit_log (company_id, actor_user_id, event_type, entity_type, entity_id, event_data) VALUES
   (1, 1, 'demo_seed_loaded', 'database', 'path_urenregistratie', JSON_OBJECT('version', '0.9.71', 'note', 'Demo-data sluit aan op de browser-GUI basisstand.'));
