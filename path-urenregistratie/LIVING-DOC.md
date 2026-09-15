@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 556 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 557 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 556 unieke case-ID's
+- Playwright executable cases: 557 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 557 unieke case-ID's
+- Totaal executable cases: 558 unieke case-ID's
 - Playwright features: 31
 - Database features: 1
 - Playwright steps mappings: 31
 - Database steps mappings: 1
-- Uitvoeringen: 598
-- Niet-mobile projectuitvoeringen: 514
+- Uitvoeringen: 599
+- Niet-mobile projectuitvoeringen: 515
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 556 Playwright-functionele cases in totaal 598 resultaten op: 514 + (42 x 2) = 598.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 557 Playwright-functionele cases in totaal 599 resultaten op: 515 + (42 x 2) = 599.
 
 ## Documentatieketen
 
@@ -342,7 +342,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 556 Playwri
 
 - Feature: `tests/playwright/features/help-widget.feature`
 - Source: `tests/playwright/help-widget.spec.ts`
-- Cases: 6
+- Cases: 7
 
 - [HELP-H-001] medewerker zoekt een bekende vraag en krijgt het juiste antwoord met werkende knop — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
 - [HELP-N-001] het hulpgesprek overleeft geen paginaherlading, alleen "Gesprek wissen" binnen de sessie — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 9
@@ -350,6 +350,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 556 Playwri
 - [HELP-H-004] het hulpantwoord over verlof/ziekte volgt de beheerderschakelaar — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 5
 - [HELP-H-002] het paneel opent en sluit met een vloeiende overgang, en meteen zonder animatievoorkeur — Techniek: Toestandsovergang · Assertions: 4
 - [HELP-N-002] met een voorkeur voor verminderde beweging sluit het paneel direct, zonder op een animatie te wachten — Techniek: Toestandsovergang · Assertions: 2
+- [HELP-H-005] op telefoon zit hulp in het profielmenu in plaats van een zwevende knop, voor medewerker en beheerder — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 
 ### Facturen definitief maken en vergrendelen
 

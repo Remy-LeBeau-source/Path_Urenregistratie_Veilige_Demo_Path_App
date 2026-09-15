@@ -6,6 +6,7 @@ import { useFixedDemoClock } from './fixtures/fixedDemoClock';
 import { LoginPage } from './pages/LoginPage';
 import { attachBusinessScreenshot } from './reporting/uiAttachments';
 import { openProfielmenu } from './pages/TopbarMenu';
+import { openHulp } from './fixtures/hulp';
 
 // Gedeeld door [MOB-H-030] (beheerschermen) en [MOB-H-031] (medewerkerschermen).
 //
@@ -1022,7 +1023,7 @@ test('[MOB-H-019] mobiele Hulp & contact blijft sluitbaar nadat een FAQ-antwoord
   });
 
   await test.step('Given de medewerker opent Hulp & contact op de telefoon', async () => {
-    await page.locator('#help-launcher').click();
+    await openHulp(page);
     await expect(page.locator('#help-panel')).toBeVisible();
     await expect(closeButton).toBeVisible();
     expect((await withinViewport()).ok, 'het kruisje staat bij openen niet volledig in beeld').toBe(true);

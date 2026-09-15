@@ -35,3 +35,7 @@ When("de medewerker het paneel sluit");
 Then("verdwijnt het paneel weer volledig, ook na de sluitovergang");
 Given("de medewerker heeft verminderde beweging ingesteld en het paneel staat open");
 Then("is het paneel direct verborgen, niet pas na de normale overgangsduur");
+Given("hulp en contact is voorbereid");
+And("houdt desktop de zwevende hulpknop");
+When("de flow voor HELP-H-005 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat op telefoon zit hulp in het profielmenu in plaats van een zwevende knop, voor medewerker en beheerder");

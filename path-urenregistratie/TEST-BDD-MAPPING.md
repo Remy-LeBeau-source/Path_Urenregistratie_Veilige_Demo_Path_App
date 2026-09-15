@@ -263,6 +263,7 @@
 | HELP-H-004 | ui | help-widget.feature | het hulpantwoord over verlof/ziekte volgt de beheerderschakelaar | End-to-end use-case + visuele contractasserties | 5 | help-widget.steps.ts | help-widget.spec.ts | UI Desktop | Hulp & Contact | het hulpantwoord over verlof/ziekte volgt de beheerderschakelaar | Happy | 17 | Actueel |
 | HELP-H-002 | ui | help-widget.feature | het paneel opent en sluit met een vloeiende overgang, en meteen zonder animatievoorkeur | Toestandsovergang | 4 | help-widget.steps.ts | help-widget.spec.ts | UI Desktop | Hulp & Contact | het paneel opent en sluit met een vloeiende overgang, en meteen zonder animatievoorkeur | Happy | 17 | Actueel |
 | HELP-N-002 | ui | help-widget.feature | met een voorkeur voor verminderde beweging sluit het paneel direct, zonder op een animatie te wachten | Toestandsovergang | 2 | help-widget.steps.ts | help-widget.spec.ts | UI Desktop | Hulp & Contact | met een voorkeur voor verminderde beweging sluit het paneel direct, zonder op een animatie te wachten | Negative | 17 | Actueel |
+| HELP-H-005 | ui | help-widget.feature | op telefoon zit hulp in het profielmenu in plaats van een zwevende knop, voor medewerker en beheerder | Beslissingstabel rollen en autorisatie | 6 | help-widget.steps.ts | help-widget.spec.ts | UI Desktop | Hulp & Contact | op telefoon zit hulp in het profielmenu in plaats van een zwevende knop, voor medewerker en beheerder | Happy | 17 | Actueel |
 | INV-H-004 | integration | invoice-locking.feature | admin lockt approved timesheet naar definitieve immutable factuur | Concurrency + toestandsovergang | 26 | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | Factuur definitief maken | Happy | 11 | Actueel |
 | INV-N-015 | integration | invoice-locking.feature | definitief gefactureerde uren kunnen niet voor correctie worden heropend | Toestandsovergang | 9 | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | definitief gefactureerde uren kunnen niet voor correctie worden heropend | Negative | 11 | Actueel |
 | INV-H-025 | integration | invoice-locking.feature | een goedgekeurde urenstaat mag terug naar correctie zolang er alleen een niet-vergrendelde conceptfactuur ligt | Toestandsovergang | 8 | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | een goedgekeurde urenstaat mag terug naar correctie zolang er alleen een niet-vergrendelde conceptfactuur ligt | Happy | 11 | Actueel |
@@ -578,9 +579,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 556
+- Playwright executable cases: 557
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 557
+- Totaal unieke executable cases: 558
 - Playwright features: 31
 - Database features: 1
 - Playwright steps mappings: 31

@@ -5019,3 +5019,14 @@ html:not([data-skin="new"]) body[data-role="employee"] .klantkaart-meer { displa
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-buiten-veld { width: 100%; max-width: 84px; min-height: 38px; border: 1px solid var(--line-zacht); border-radius: 9px; background: var(--surface-muted); color: var(--muted); font: inherit; font-size: 15px; font-weight: 700; text-align: center; padding: 0 2px; cursor: default; }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet td.is-buiten .hours-day-entry::after { content: ""; display: block; height: 24px; }
 }
+
+/* "Hulp & contact" op telefoon (15 sep, besluit Gio): onder 821px geen zwevende
+   hulpknop meer. Hij lag over de inhoud van Vandaag (weekblokken, verloopkaart)
+   en tijdens het scrollen over elke kaart. Hulp blijft bereikbaar via het
+   profielmenu (data-profile-action="help"), zie [HELP-H-005]. Bewust een los
+   blok onderaan: de bottom-lift in het eerdere 820px-blok blijft staan, want
+   [MOB-H] bewaakt die klasse in de bron, en een regel hier wint van die
+   hogerop. Desktop (vanaf 821px) houdt de zwevende knop. */
+@media (max-width: 820px) {
+  .help-launcher { display: none !important; }
+}
