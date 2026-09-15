@@ -8,6 +8,11 @@ on:
         required: true
         default: "main"
         type: string
+      prod_wekker_seconden:
+        description: "Seconden dat de PROD-poort mag wachten voordat de run zichzelf afbreekt (standaard 600; alleen korter zetten voor een tegenproef)"
+        required: false
+        default: "600"
+        type: string
   push:
     branches:
       - main
@@ -1048,6 +1053,57 @@ jobs:
     steps:
       - name: Eén gezamenlijke prod-goedkeuringspoort
         run: echo "Prod-omgeving goedgekeurd; de gesharde Promote Prod-jobs en de TransIP-deploy mogen door."
+
+  prod-gate-wekker:
+    # Besluit Gio (15 sep): wordt PROD niet binnen 10 minuten goedgekeurd, dan
+    # breekt de run zichzelf af, zodat pipeline en merge-wachtrij vrij komen.
+    #
+    # - TEST loopt altijd door. Deze job heeft exact dezelfde `needs` en `if` als
+    #   prod-gate, dus hij start pas NA een geslaagde "Deploy Test to TransIP" --
+    #   precies op het moment dat de poort gaat wachten. Afbreken kan dus nooit
+    #   een TEST-uitrol afkappen; alleen PROD wordt dan overgeslagen.
+    # - Waarom een aparte job: `timeout-minutes` op prod-gate werkt niet, want
+    #   wachten op een environment-goedkeuring telt niet als looptijd.
+    # - Geen `environment`, dus deze job vraagt zelf geen goedkeuring. Goedkeuren
+    #   blijft alleen bij Gio; het GITHUB_TOKEN kan een review niet afwijzen,
+    #   alleen de run cancelen.
+    # - De naam begint bewust met "Promote Prod": pilot-merge-queue.yml ziet een
+    #   run waarin alleen Promote-Prod-jobs openstaan als niet-blokkerend. Een
+    #   andere naam zou de wachtrij tijdens deze 10 minuten laten wachten.
+    # - Een gecancelde run is `completed`, dus de wachtrij ziet hem daarna niet
+    #   meer als actief.
+    name: Promote Prod (wekker)
+    needs: [test, deploy-test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: write
+    if: >-
+      ${{ always()
+          && needs.test.result == 'success'
+          && needs.deploy-test.result == 'success'
+          && (github.event_name == 'push'
+              || inputs.ref == 'main'
+              || inputs.ref == 'refs/heads/main') }}
+    steps:
+      - name: PROD niet binnen de wachttijd goedgekeurd? Dan run afbreken
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          WACHT_SECONDEN: ${{ github.event_name == 'workflow_dispatch' && inputs.prod_wekker_seconden || '600' }}
+        run: |
+          set -euo pipefail
+          case "$WACHT_SECONDEN" in (''|*[!0-9]*) WACHT_SECONDEN=600 ;; esac
+          echo "PROD-poort mag ${WACHT_SECONDEN}s wachten op goedkeuring."
+          sleep "$WACHT_SECONDEN"
+          wachtend="$(gh api "repos/$REPO/actions/runs/$RUN_ID/pending_deployments" --jq '[.[] | select(.environment.name == "prod")] | length')"
+          if [ "${wachtend:-0}" -gt 0 ]; then
+            echo "::notice title=PROD overgeslagen::Prod niet binnen $((WACHT_SECONDEN / 60)) min goedgekeurd, run afgebroken. TEST is al uitgerold."
+            gh api -X POST "repos/$REPO/actions/runs/$RUN_ID/cancel"
+          else
+            echo "PROD-poort wacht niet meer (goedgekeurd of afgewezen); niets te doen."
+          fi
 
   prod:
     name: Promote Prod
