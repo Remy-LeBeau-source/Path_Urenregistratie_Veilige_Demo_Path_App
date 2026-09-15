@@ -312,7 +312,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-040] Standaardmaand vullen vult elke werkdag van de maand volgens het werkpatroon uit beheer, ook de vrije dag, en laat geen gaten
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 6
+    # Aantoonbare Playwright-assertions in deze case: 7
     Given dashboard en open werkvoorraad is voorbereid
     When de flow voor DASH-H-040 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat standaardmaand vullen vult elke werkdag van de maand volgens het werkpatroon uit beheer, ook de vrije dag, en laat geen gaten
@@ -320,7 +320,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-041] Maand terugzetten zet elke werkdag van de maand op 0,0, niet alleen één week
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 4
+    # Aantoonbare Playwright-assertions in deze case: 5
     Given dashboard en open werkvoorraad is voorbereid
     When de flow voor DASH-H-041 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat maand terugzetten zet elke werkdag van de maand op 0,0, niet alleen één week
@@ -328,7 +328,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-042] Standaardweek vullen na Week terugzetten vult de week weer volgens het werkpatroon
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 7
+    # Aantoonbare Playwright-assertions in deze case: 8
     Given dashboard en open werkvoorraad is voorbereid
     When de flow voor DASH-H-042 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat standaardweek vullen na Week terugzetten vult de week weer volgens het werkpatroon
@@ -336,7 +336,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-043] een vrije dag uit beheer telt als ingevuld en staat niet in het rode blok; een 0 op een werkdag wel
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 10
+    # Aantoonbare Playwright-assertions in deze case: 11
     Given dashboard en open werkvoorraad is voorbereid
     When de flow voor DASH-H-043 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat een vrije dag uit beheer telt als ingevuld en staat niet in het rode blok; een 0 op een werkdag wel

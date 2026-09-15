@@ -2305,6 +2305,10 @@ test('[DASH-H-040] Standaardmaand vullen vult elke werkdag van de maand volgens 
   await loginPage.open();
   await loginPage.loginAsEmployee();
   await expect(page.locator('#period-label')).toHaveText('September 2026');
+  // Een eigen maand: deze case zet uren die naar de server gaan, en de server verwijdert
+  // nooit dagregels. In september vielen [SKIN-H-006] en [SKIN-H-011] daarna om (15 sep).
+  await page.evaluate(key => (window as unknown as { setPeriod: (k: string) => boolean }).setPeriod(key), '2027-06');
+  await expect(page.locator('#period-label')).toHaveText('Juni 2027');
   const herstelUrenstaat = await bewaarUrenstaat(page);
   try {
     const patroon = await page.evaluate(() => {
@@ -2331,6 +2335,10 @@ test('[DASH-H-041] Maand terugzetten zet elke werkdag van de maand op 0,0, niet 
   await loginPage.open();
   await loginPage.loginAsEmployee();
   await expect(page.locator('#period-label')).toHaveText('September 2026');
+  // Een eigen maand: deze case zet uren die naar de server gaan, en de server verwijdert
+  // nooit dagregels. In september vielen [SKIN-H-006] en [SKIN-H-011] daarna om (15 sep).
+  await page.evaluate(key => (window as unknown as { setPeriod: (k: string) => boolean }).setPeriod(key), '2027-07');
+  await expect(page.locator('#period-label')).toHaveText('Juli 2027');
   const herstelUrenstaat = await bewaarUrenstaat(page);
   try {
     const stand = await vulScenario(page, 'terugzetten');
@@ -2353,6 +2361,10 @@ test('[DASH-H-042] Standaardweek vullen na Week terugzetten vult de week weer vo
   await loginPage.open();
   await loginPage.loginAsEmployee();
   await expect(page.locator('#period-label')).toHaveText('September 2026');
+  // Een eigen maand: deze case zet uren die naar de server gaan, en de server verwijdert
+  // nooit dagregels. In september vielen [SKIN-H-006] en [SKIN-H-011] daarna om (15 sep).
+  await page.evaluate(key => (window as unknown as { setPeriod: (k: string) => boolean }).setPeriod(key), '2027-08');
+  await expect(page.locator('#period-label')).toHaveText('Augustus 2027');
   const herstelUrenstaat = await bewaarUrenstaat(page);
   try {
     const stand = await page.evaluate(() => {
@@ -2418,6 +2430,10 @@ test('[DASH-H-043] een vrije dag uit beheer telt als ingevuld en staat niet in h
   await loginPage.open();
   await loginPage.loginAsEmployee();
   await expect(page.locator('#period-label')).toHaveText('September 2026');
+  // Een eigen maand: deze case zet uren die naar de server gaan, en de server verwijdert
+  // nooit dagregels. In september vielen [SKIN-H-006] en [SKIN-H-011] daarna om (15 sep).
+  await page.evaluate(key => (window as unknown as { setPeriod: (k: string) => boolean }).setPeriod(key), '2027-10');
+  await expect(page.locator('#period-label')).toHaveText('Oktober 2027');
   const herstelUrenstaat = await bewaarUrenstaat(page);
   try {
     const stand = await page.evaluate(() => {

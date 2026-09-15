@@ -236,10 +236,10 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 578 Playwri
 - [DASH-H-038] Eerdere maanden in Vandaag opent per maand de juiste route, ook voor een correctie, en blijft leesbaar in donker — Techniek: Toestandsovergang · Assertions: 17
 - [DASH-H-039] het verloop in Vandaag volgt de volgorderegel en is gelijk aan de stappen in Modern — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
 - [DASH-N-032] een hertekening op de achtergrond zet "Hele maand" in Mijn uren niet terug naar één week — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 12
-- [DASH-H-040] Standaardmaand vullen vult elke werkdag van de maand volgens het werkpatroon uit beheer, ook de vrije dag, en laat geen gaten — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
-- [DASH-H-041] Maand terugzetten zet elke werkdag van de maand op 0,0, niet alleen één week — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 4
-- [DASH-H-042] Standaardweek vullen na Week terugzetten vult de week weer volgens het werkpatroon — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 7
-- [DASH-H-043] een vrije dag uit beheer telt als ingevuld en staat niet in het rode blok; een 0 op een werkdag wel — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 10
+- [DASH-H-040] Standaardmaand vullen vult elke werkdag van de maand volgens het werkpatroon uit beheer, ook de vrije dag, en laat geen gaten — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 7
+- [DASH-H-041] Maand terugzetten zet elke werkdag van de maand op 0,0, niet alleen één week — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 5
+- [DASH-H-042] Standaardweek vullen na Week terugzetten vult de week weer volgens het werkpatroon — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 8
+- [DASH-H-043] een vrije dag uit beheer telt als ingevuld en staat niet in het rode blok; een 0 op een werkdag wel — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 11
 - [DASH-H-044] bij een zelf gemailde klanturenstaat zegt het verloop "wacht op Backoffice" en "Volgt na bevestiging", met ongewijzigde standen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
 - [DASH-N-033] geen misleidend bericht aan Backoffice, en zelf gemaild in medewerkertaal terwijl Backoffice zijn eigen term houdt — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [DASH-H-045] de tabbalk van de medewerker heeft Vandaag · Mijn uren · Maanden · Berichten, en Maanden opent Mijn maanden — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 21
