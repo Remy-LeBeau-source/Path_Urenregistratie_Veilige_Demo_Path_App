@@ -95,6 +95,14 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
     Then wordt met Playwright-assertions bevestigd dat de knoppen onder Testfuncties tonen waar je naartoe gaat, niet waar je bent
 
   @negative
+  Scenario: [KLV-N-022] de statuspillen naast de koppen in Instellingen blijven binnen hun kaart op smalle telefoons
+    # Testtechniek: Responsive viewport (320/360/390) + grenswaarden smalle telefoon + lay-outmeting binnen de kaart
+    # Aantoonbare Playwright-assertions in deze case: 1
+    Given vondsten uit de monkey-verkenning op Klassiek is voorbereid
+    When de flow voor KLV-N-022 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat de statuspillen naast de koppen in Instellingen blijven binnen hun kaart op smalle telefoons
+
+  @negative
   Scenario: [KLV-N-011] de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop
     # Testtechniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport
     # Aantoonbare Playwright-assertions in deze case: 5

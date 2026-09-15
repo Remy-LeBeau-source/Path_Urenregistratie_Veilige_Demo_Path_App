@@ -49,6 +49,8 @@ When("naar donker, then zegt de themaknop Licht");
 When("naar Modern, then zegt de vormgevingsknop Klassiek");
 And("terug naar Klassiek en licht: weer Modern en Donker");
 Then("wordt met Playwright-assertions bevestigd dat de knoppen onder Testfuncties tonen waar je naartoe gaat, niet waar je bent");
+When("de flow voor KLV-N-022 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat de statuspillen naast de koppen in Instellingen blijven binnen hun kaart op smalle telefoons");
 Given("een beheerder op Instellingen met drie mailregels in de geschiedenis");
 When("de flow voor KLV-N-011 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop");

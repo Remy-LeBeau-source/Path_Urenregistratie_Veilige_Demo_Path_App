@@ -146,6 +146,7 @@ function techniqueFor(definition, testCase) {
       'KLV-H-014': 'Toestandsovergangtest (Standaardweek vullen) + consistentie tussen schermen (Mijn uren en Vandaag)',
       'KLV-H-015': 'Toestandsovergangtest (N open → Compleet) + grenswaarde (laatste open dag)',
       'KLV-H-016': 'Responsive viewport (390/1280) + toegankelijkheidsinspectie (44px tikvlak) + navigatietest',
+      'KLV-N-022': 'Responsive viewport (320/360/390) + grenswaarden smalle telefoon + lay-outmeting binnen de kaart',
       'KLV-H-021': 'Toestandsovergangtest (licht↔donker, Klassiek↔Modern, heen en terug) + toegankelijkheidsinspectie (geen misleidend aria-pressed)',
       'KLV-H-020':'Beslistabel (stap → knoptekst) + visuele consistentie met de huisstijlknop in licht en donker',
       'KLV-H-019':'Contrastmeting (WCAG 4,5:1) + themacombinaties (licht/donker) × responsive viewport (390/1280)',

@@ -1274,7 +1274,11 @@ html:not([data-skin="new"]) .button-primary:active:not(:disabled) { transform: s
 .team-account-local-notice { display: grid; gap: 4px; margin: 10px 0 0; border-radius: 11px; background: #fff5e6; color: #8a5a12; font-size: 11px; line-height: 1.5; padding: 10px 12px; }
 .team-account-local-notice strong { color: #7a4d0a; }
 .team-account-local-notice .text-button { justify-self: start; margin-top: 2px; color: #7a4d0a; font-weight: 800; text-decoration: underline; }
-.email-template-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.email-template-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 18px; }
+/* Op een smalle telefoon past een lange pil ("Voorbereiding · niet automatisch") niet
+   naast de kop: dan gaat hij eronder en mag hij zelf omlopen (KLV-N-022). */
+.email-template-heading > div { min-width: 0; }
+.email-template-heading > .status-pill { max-width: 100%; white-space: normal; text-align: left; }
 .template-list { display: grid; gap: 10px; margin-top: 18px; }
 .template-item { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(300px, 1.4fr) auto; align-items: center; gap: 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--vlak); padding: 14px; }
 .template-person { display: flex; align-items: center; gap: 11px; min-width: 0; }

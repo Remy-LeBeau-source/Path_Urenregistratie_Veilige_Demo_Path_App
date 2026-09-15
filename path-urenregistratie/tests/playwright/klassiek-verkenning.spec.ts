@@ -454,6 +454,34 @@ test('[KLV-H-021] de knoppen onder Testfuncties tonen waar je naartoe gaat, niet
   });
 });
 
+test('[KLV-N-022] de statuspillen naast de koppen in Instellingen blijven binnen hun kaart op smalle telefoons', async ({ page }) => {
+  // Open vondst van de monkey-verkenning (15 sep): een statuspil naast een kop in
+  // Instellingen stak bij 360px uit. Gemeten 15 sep: "Voorbereiding · niet automatisch"
+  // 18px buiten de kaart bij 360px en 58px bij 320px; "Zelf aanpasbaar" 35px bij 320px.
+  // De kop stond op één regel zonder omloop. KLV-N-006 zag het niet: de kaart knipt af,
+  // dus buiten de schermrand viel niets, maar de tekst was wel afgekapt.
+  test.setTimeout(60_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+  await page.locator('.nav-item[data-view="settings"]').first().evaluate(el => (el as HTMLElement).click());
+  await expect(page.locator('#view-settings')).toHaveClass(/is-active/);
+  for (const breedte of [320, 360, 390]) {
+    await test.step(`Then valt bij ${breedte}px geen pil buiten zijn kop of kaart`, async () => {
+      await page.setViewportSize({ width: breedte, height: 900 });
+      await expect.poll(() => page.evaluate(() => [...document.querySelectorAll('#view-settings .email-template-heading')].flatMap(kop => {
+        const pil = kop.querySelector(':scope > .status-pill');
+        if (!pil || (pil as HTMLElement).offsetParent === null) return [];
+        const kaart = (kop.closest('.panel, section, article') || kop.parentElement)!.getBoundingClientRect();
+        const p = pil.getBoundingClientRect();
+        const k = kop.getBoundingClientRect();
+        const uit = Math.max(Math.round(p.right - k.right), Math.round(p.right - kaart.right));
+        return uit > 0 ? [`"${(pil.textContent || '').trim()}" +${uit}px`] : [];
+      })), { timeout: 2_000, message: `pillen @ ${breedte}px` }).toEqual([]);
+    });
+  }
+});
+
 test('[KLV-N-011] de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop', async ({ page }) => {
   // Zachte vondst monkey beheerkant (15 sep) en rood in release 34950426101: met echte
   // maildata stak een regel van de mailgeschiedenis bij 1024px 38px buiten beeld (grid

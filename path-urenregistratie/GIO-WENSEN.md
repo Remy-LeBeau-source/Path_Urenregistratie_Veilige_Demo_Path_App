@@ -8,15 +8,18 @@ Nieuwste bovenaan per status. Statussen: **open**, **bezig**, **klaar (versie)**
 
 | Datum | Wens / besluit van Gio | Wie | Status |
 |---|---|---|---|
+| 15 sep | **Berichten, ronde 2 (Gio):** gelezen alleen bij openklappen (niet vanzelf), ongelezen ingeklapt met Nieuw, klein knopje Markeer als gelezen, Berichten springt naar het eerste ongelezen bericht, leeg filter Ongelezen valt terug op Alles. | herontwerp | bezig |
+| 15 sep | **Prod-wekker slimmer:** na 10 minuten alleen afbreken als er een nieuwere release achter staat te wachten. Staat er niets meer achter om te deployen, dan blijft de handmatige stap naar productie gewoon open staan tot Gio goedkeurt. | main | bij main |
+| 15 sep | Wisselvallig op mobile-safari: SKIN-H-040. 15 sep 5 van 5 keer groen herhaald, niet te reproduceren; opnieuw bekijken als hij in CI nog eens valt. | herontwerp | in de gaten houden |
 | 15 sep | Oude 0-regels uit de indienbug: geen opschoonscript. PROD is nog niet live (alleen gebruikers gemigreerd) en krijgt bij de livegang een verse migratie/reset met de gerepareerde code (R44 in BESLISTABEL.md; de reset hoort bij de livegangchecklist van Gio). | besluit | vastgelegd |
 | 15 sep | Bel en Berichten blijven allebei: bel = eigen urenstatus, correcties, herinneringen; Berichten = algemene mededelingen. | besluit | vastgelegd |
 | 15 sep | Dialoog met toetsenbord onder "minder beweging": dialoog krimpt niet mee (SKIN-N-008 fixme). Controleren op echte iPhone. | herontwerp | open |
-| 15 sep | Kleine open vondsten: monkey seed 15, statuspil 8px bij 360px in Instellingen. | herontwerp | open |
 
 ## Klaar
 
 | Datum | Wens / besluit | Versie |
 |---|---|---|
+| 15 sep | Statuspil naast een kop in Instellingen stak op smalle telefoons uit (18px bij 360, 58px bij 320). Kop loopt nu om, pil mag over twee regels (KLV-N-022). Monkey seed 15 opnieuw gedraaid (150 stappen): de melding "door iemand anders gewijzigd" komt niet meer terug. CODEX_HANDOFF bijgewerkt t/m 2.0.101. | 2.0.102 |
 | 15 sep | Bel en Berichten slimmer (keuze Gio: slim voorstel): bel van de medewerker alleen over de eigen uren, tik brengt je naar de plek (Mijn uren van die maand, Maanden met die maand open); mededelingen alleen in Berichten, ongelezen open en bovenaan, gelezen en ingetrokken ingeklapt; gelezen vanzelf (tik of 2 s in beeld), geen Markeer-knop, wel Alles gelezen (alleen mededelingen). NOT-H-010 t/m 014, NOT-N-015, smoke. | 2.0.101 |
 | 15 sep | TEST-seed: 10 mededelingen, 6 ingetrokken, 4 ongelezen (main). | main 2.0.100 |
 | 15 sep | Testfunctieknoppen tonen het doel: in licht "Donker", in Klassiek "Modern" en andersom; geen aria-pressed meer (KLV-H-021). | 2.0.99 |

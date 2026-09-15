@@ -70,6 +70,28 @@ Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
   - "Nieuw in de app" in Berichten, alleen TEST/lokaal (`syncEnvironmentChrome`, KLV-H-018). Bij elke versie met iets voor medewerkers bijwerken in index.html.
   - Testisolatie: de server verwijdert nooit dagregels, dus een lokaal herstel (bewaarUrenstaat) ruimt geen serverregels op. De KLV-indiencases draaien daarom in een eigen maand ver vooruit, en DASH-H-050 in november 2027. DASH-H-050 liet in september 8 uur per dag staan, waardoor SKIN-H-006/H-011 daarna omvielen (ook met de oude app.js; ontdekt 15 sep).
   - Besluit R44: oude 0-regels niet migreren; PROD krijgt bij livegang een verse migratie.
+- **2.0.95**: Nieuw in de app (Berichten, alleen TEST/lokaal) met de laatste 10 updates: versielabel, korte kop, één zin, datum. Nooit namen of gevoelige info (KLV-H-018 controleert dat). `set-version.mjs` slaat regels met `class="nieuw-versie"` over; tegenproef in `set-version-check.mjs`. Nieuwe regel bovenaan bij elke versie met iets voor medewerkers, de oudste valt eraf.
+- **2.0.96**: merge main 2.0.95 (ingetrokken mededelingen blijven zichtbaar met label en reden).
+- **2.0.97**: donker vak voor ingevulde uren in Klassiek Mijn uren. `--veld-vlak` was bijna wit met bijna witte cijfers, contrast 1,04:1; KLV-H-019 meet ≥ 4,5 in licht en donker op 390 en 1280. Tooltip "Naar Modern"/"Naar Klassiek".
+- **2.0.98**: knop in Mijn maanden. De class `primary-button` bestond niet; het is nu `.button.button-primary`. De tekst volgt de stap: Uren invullen, Maand indienen, Correctie doorvoeren, Opnieuw indienen, Klanturenstaat aanleveren (`historyMainAction`, KLV-H-020).
+- **2.0.99**: de knoppen onder Testfuncties tonen het doel (in licht "Donker", in Klassiek "Modern"). `aria-pressed` is weg, omdat de tekst het doel noemt (KLV-H-021).
+- **2.0.101** (main 2.0.100, seed 10/6/4, gemerged), bel en Berichten volgens de keuze van Gio:
+  - De bel van de medewerker toont alleen meldingen over de eigen uren (`belMeldingenVoorProfiel`, `isMededelingMelding`). Een klik gaat direct naar de plek (`meldingBestemming`): correctie/herinnering/ingediend naar Mijn uren van die maand; goedgekeurd/factuur naar Maanden met die maand open (`state.historyVerloopOpen`). Beheer ongewijzigd.
+  - Berichten (`renderEmployeeAnnouncementArchive` → `toonBerichtenLijst`/`berichtKaartHtml`): ongelezen open en bovenaan; gelezen en ingetrokken ingeklapt; de reden van intrekken zie je bij openen.
+  - Gelezen gaat vanzelf: tik op de kop (`[data-bericht-toggle]`) of 2 s ≥ 60% in beeld (IntersectionObserver, `BERICHT_LEESTIJD_MS`). Geen Markeer-knop. "Alles gelezen" (`#berichten-alles-gelezen`) stuurt per mededeling `mark_announcement_read`, nooit `mark_all_read`.
+  - Net gelezen berichten blijven open tot je wegnavigeert (`openBerichten`).
+  - Tests: NOT-H-010 t/m 014 en NOT-N-015; smoke bijgewerkt. **Let op:** omdat lezen vanzelf gaat, kan elke case die Berichten opent de ongelezen seed-mededelingen lezen. Cases over lezen gebruiken daarom een nagebootste meldingenlijst; alleen de totalen uit de seed (10 en 6) staan vast.
+- **Testisolatie (werkwijze)**: de server verwijdert nooit dagregels, dus `bewaarUrenstaat` ruimt geen serverregels op. Elke case die uren naar de server stuurt, gebruikt een eigen maand. In gebruik:
+
+  | Cases | Maand |
+  |---|---|
+  | DASH-H-040 / 041 / 042 / 043 | 2027-06 / 07 / 08 / 10 |
+  | DASH-H-050 | 2027-11 |
+  | KLV-H-019 | nu + 7 maanden |
+  | KLV-indiencases | nu + 8 t/m 23 maanden |
+
+  Nieuwe cases kiezen een vrije maand. Verplaatst omdat SKIN-H-006/-011 anders een volle september vonden.
+- **Smoke** (`scripts/smoke-test.mjs`) duurt lokaal 8-10 minuten. Draai hem zonder andere runs ernaast, anders lijkt hij te hangen.
 - Open vondst (15 sep): dialoog met open toetsenbord onder reducedMotion "reduce" (SKIN-H-036). Chromium hield
   de max-height van .modal op 824px (100dvh-20) terwijl --zichtbaar-hoogte 300px was en de juiste regel matchte;
   dialoog 534px boven het scherm, kruisje onbereikbaar. Geprobeerd en teruggedraaid (niet betrouwbaar, wisselend
