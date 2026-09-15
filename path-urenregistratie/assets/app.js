@@ -2663,7 +2663,15 @@ function scheduleDraftTimesheetWrite(suppliedPayload = null) {
         // geserialiseerde write. Dit voorkomt dat bijvoorbeeld Ziekte terugvalt
         // naar 0 nadat Verlof net iets eerder werd opgeslagen.
         const version = Number(serverTimesheet && serverTimesheet.version || 0);
-        if (version > 0) queuedPayload.expected_version = version;
+        if (version > 0) {
+          queuedPayload.expected_version = version;
+          // Ook de lokale urenstaat de nieuwe versie geven. Anders bouwt een
+          // invoer die binnenkomt terwijl de wachtrij op zijn timer staat zijn
+          // payload met de oude versie, en meldt de server "door iemand anders
+          // gewijzigd" terwijl je alleen zelf snel typte (monkey-vondst, KLV-N-001).
+          const wachtRecord = recordFor(Number(payload.employee_id), String(payload.period));
+          if (Number(wachtRecord.serverVersion || 0) < version) wachtRecord.serverVersion = version;
+        }
       } else {
         applyTimesheetApiPayload(Number(payload.employee_id), String(payload.period), serverTimesheet);
         const autosaveStatus = document.querySelector("#hours-autosave-status");
@@ -5150,6 +5158,23 @@ function toggleMonthChoicePanel(trigger) {
   closeMonthChoicePanels(open ? panelId : "");
   panel.hidden = !open;
   trigger.setAttribute("aria-expanded", String(open));
+  if (open) houdPaneelBinnenBeeld(panel);
+}
+
+// Het paneel hangt links onder zijn knop. Staat die knop rechts (de kopkaart op
+// Vandaag vanaf 821px), dan viel het rechts buiten beeld en waren "Maart",
+// "September" en "December" afgekapt en niet te kiezen (monkey-vondst, KLV-N-002).
+// Via de losse translate-eigenschap, zodat de transform die het paneel op de
+// telefoon centreert blijft staan.
+function houdPaneelBinnenBeeld(panel) {
+  panel.style.translate = "";
+  const marge = 8;
+  const vak = panel.getBoundingClientRect();
+  const breedte = document.documentElement.clientWidth;
+  let schuif = 0;
+  if (vak.right > breedte - marge) schuif = breedte - marge - vak.right;
+  if (vak.left + schuif < marge) schuif = marge - vak.left;
+  if (schuif) panel.style.translate = Math.round(schuif) + "px 0";
 }
 
 function applyPeriodControls(monthSelector, yearSelector, customerTimesheet = false) {

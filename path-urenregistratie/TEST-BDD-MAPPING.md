@@ -459,6 +459,8 @@
 | SEC-H-010 | security | security.feature | medewerker die de pagina herlaadt met een beheer-URL in de adresbalk komt terug op het eigen dashboard | Beslissingstabel rollen en autorisatie | 4 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
 | SEC-H-011 | security | security.feature | medewerker die naar Klanturenstaten (beheer) navigeert komt terug op het eigen dashboard | Beslissingstabel rollen en autorisatie | 4 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
 | SEC-H-012 | security | security.feature | een in localStorage naar beheerder gezette rol geeft geen beheerscherm | Beslissingstabel rollen en autorisatie | 6 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
+| KLV-N-002 | ui | klassiek-verkenning.feature | het maandkeuzepaneel valt op geen enkele breedte buiten het scherm | Monkey testing (seeded) + negatieve equivalentieklasse + error guessing | 8 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | het maandkeuzepaneel valt op geen enkele breedte buiten het scherm | Negative | 19 | Actueel |
+| KLV-N-001 | ui | klassiek-verkenning.feature | snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie | Monkey testing (seeded) + concurrency + toestandsovergang | 11 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie | Negative | 19 | Actueel |
 | SKIN-H-001 | ui | skin.feature | de app start standaard in de klassieke vormgeving | End-to-end use-case + visuele contractasserties | 3 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de app start standaard in de klassieke vormgeving | Happy | 19 | Actueel |
 | SKIN-H-002 | ui | skin.feature | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | End-to-end use-case + visuele contractasserties | 6 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | Happy | 19 | Actueel |
 | SKIN-H-003 | ui | skin.feature | terug naar "Klassiek" herstelt de klassieke vormgeving en bewaart die | Herstelbaarheid + toestandsovergang | 5 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | terug naar "Klassiek" herstelt de klassieke vormgeving en bewaart die | Happy | 19 | Actueel |
@@ -572,10 +574,10 @@
 
 ## Totalen
 
-- Playwright executable cases: 550
+- Playwright executable cases: 552
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 551
-- Playwright features: 30
+- Totaal unieke executable cases: 553
+- Playwright features: 31
 - Database features: 1
-- Playwright steps mappings: 30
+- Playwright steps mappings: 31
 - Database steps mappings: 1

@@ -1,0 +1,26 @@
+@regressie
+@ui
+@desktop
+@fase:19
+Feature: Vondsten uit de monkey-verkenning op Klassiek
+
+  # Native Playwright-uitvoering: tests/playwright/klassiek-verkenning.spec.ts
+  # Navigatiemapping: tests/playwright/steps/klassiek-verkenning.steps.ts
+
+  @negative
+  Scenario: [KLV-N-002] het maandkeuzepaneel valt op geen enkele breedte buiten het scherm
+    # Testtechniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given een medewerker in Klassiek
+    And is de maandkeuze op minstens de desktopbreedtes van Mijn uren echt gemeten
+    When de flow voor KLV-N-002 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat het maandkeuzepaneel valt op geen enkele breedte buiten het scherm
+
+  @negative
+  Scenario: [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie
+    # Testtechniek: Monkey testing (seeded) + concurrency + toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given een medewerker op Mijn uren van een open maand
+    And de urenstaat staat al met een versie op de server
+    When de eerste invoer onderweg is en er intussen twee nieuwe invoeren volgen
+    Then slaagt elke opslag en staan alle drie de waarden daarna op de server

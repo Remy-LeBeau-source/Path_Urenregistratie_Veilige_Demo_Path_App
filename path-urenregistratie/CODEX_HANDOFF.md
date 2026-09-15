@@ -2,6 +2,26 @@
 
 Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
 
+## Update Claude Code nacht 14→15 sep — monkey-verkenning Klassiek (2.0.77)
+
+- Nieuw: seeded monkey-verkenner `tests/verkenning/klassiek-monkey.spec.ts` met eigen config
+  `playwright.verkenning.config.ts` (buiten CI-regressie, eigen geïsoleerde DB). Draaien:
+  `MONKEY_SEEDS="1-12" MONKEY_STAPPEN=150 node scripts/run-playwright-e2e.mjs --config=playwright.verkenning.config.ts --project=verkenning-desktop`
+  (of `verkenning-telefoon`). Harde invarianten H1–H8 (JS-fout, 5xx, één actief scherm, geen
+  undefined/NaN/null in beeld, sessie blijft, menu = scherm, titel niet leeg, geen stale-version); logboek per
+  seed in `test-results-verkenning/rapport/`. Tegenproef gedaan (invariant omgedraaid → rood → hersteld).
+- Vondsten omgezet naar vaste cases in `tests/playwright/klassiek-verkenning.spec.ts` (desktop-chromium in CI):
+  - **KLV-N-001** snel achter elkaar uren invullen gaf "Niet gesynchroniseerd: … door iemand anders gewijzigd"
+    (409 stale-version) bij één medewerker. Oorzaak: in `scheduleDraftTimesheetWrite` kreeg bij "A slaagt met B in
+    de wachtrij" alleen B de nieuwe versie, niet `record.serverVersion`; invoer C binnen B's debounce ging met de
+    oude versie. Fix in app.js. Case was rood vóór de fix (echte bug), groen erna.
+  - **KLV-N-002** maandkeuzepaneel op Vandaag bij 821px 21px rechts buiten beeld (maanden afgekapt). Fix:
+    `houdPaneelBinnenBeeld()` schuift het paneel bij openen binnen beeld via `translate`. 27 combinaties scherm×breedte.
+- Impactregressie lokaal groen: 8 autosave-cases (desktop) + 10 maandpaneel-cases desktop + 8 mobile-chrome;
+  smoke v2.0.77 geslaagd.
+- Open (nog niet opgepakt): versielabel "LOKAAL · Versie" overlapt de tab Berichten in de bovenbalk bij 821px;
+  urenvelden accepteren >24 lokaal (server weigert terecht met 400, UX kan beter).
+
 ## Update Claude Code 14 sep, later op de avond — CI-shardtimeout (exit 124) opgelost
 
 - De wachtrij naar main liep vast: shard 6 (commit `d9ed7c31`, run `34887610479`) en shard 7 (commit
@@ -18,9 +38,15 @@ Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
     DB-CRUD, security audit, BDD-pilot, die vóór de E2E-stap lopen).
   - Het bestaande, uitgebreide commentaar over "acht shards, niet meer" (empirisch getest, geen verbetering
     bij twaalf) is intact gelaten — dat blijft de juiste conclusie, alleen de tijdslimiet was te krap.
-- Nog te doen: pushen, een verse CI-run afwachten op zowel deze wijziging als de eerder gefixte
-  branding-/historypil-regressies, en bevestigen dat geen enkele shard nog exit 124 geeft voordat de
-  wachtrij naar main weer doorstroomt.
+- Run `34898857468` met de ruimere timeout: geen exit 124 meer, maar shard 6 wel rood (exit 1) door 20
+  mobile-safari-inloguitvallers. Vergelijking over runs: ook de laatst groene run (`34871247686`, 16:52) had al
+  18 inloguitvallers, gered door retries. Oorzaak: de test klikte terwijl de pagina nog vloeiend scrolde
+  (pointerdown op de knop, pointerup ernaast); de reduced-motion-emulatie lijkt in CI-WebKit niet te gelden.
+- Opgelost door `dd6db2fd` van -a0 (LoginPage.ts: wacht tot de scroll stilstaat, klik dan op het midden)
+  over te nemen als `ca2d051f`. Lokaal `auth.spec.ts` op mobile-safari 17/17 groen.
+- **Resultaat run `34902829940` op `ca2d051f`: 8/8 groen, nul inloguitvallers, traagste shard 17m** (was
+  22-31m). -a0 heeft "klaar" gekregen; de wachtrij naar main kan door. `dd6db2fd` op main is identiek en
+  merget schoon.
 
 ## Update Codex 14 sep 19:40 — 2.0.74 in voorbereiding
 

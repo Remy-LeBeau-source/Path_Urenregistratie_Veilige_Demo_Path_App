@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 550 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 552 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 550 unieke case-ID's
+- Playwright executable cases: 552 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 551 unieke case-ID's
-- Playwright features: 30
+- Totaal executable cases: 553 unieke case-ID's
+- Playwright features: 31
 - Database features: 1
-- Playwright steps mappings: 30
+- Playwright steps mappings: 31
 - Database steps mappings: 1
-- Uitvoeringen: 592
-- Niet-mobile projectuitvoeringen: 508
+- Uitvoeringen: 594
+- Niet-mobile projectuitvoeringen: 510
 - Mobile functionele cases: 42
 - Pixel 7 / Chromium-uitvoeringen: 42
 - iPhone 13 / WebKit-uitvoeringen: 42
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 550 Playwright-functionele cases in totaal 592 resultaten op: 508 + (42 x 2) = 592.
+De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 552 Playwright-functionele cases in totaal 594 resultaten op: 510 + (42 x 2) = 594.
 
 ## Documentatieketen
 
@@ -637,6 +637,15 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 550 Playwri
 - [SEC-H-010] medewerker die de pagina herlaadt met een beheer-URL in de adresbalk komt terug op het eigen dashboard — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [SEC-H-011] medewerker die naar Klanturenstaten (beheer) navigeert komt terug op het eigen dashboard — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [SEC-H-012] een in localStorage naar beheerder gezette rol geeft geen beheerscherm — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
+
+### Vondsten uit de monkey-verkenning op Klassiek
+
+- Feature: `tests/playwright/features/klassiek-verkenning.feature`
+- Source: `tests/playwright/klassiek-verkenning.spec.ts`
+- Cases: 2
+
+- [KLV-N-002] het maandkeuzepaneel valt op geen enkele breedte buiten het scherm — Techniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing · Assertions: 8
+- [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie — Techniek: Monkey testing (seeded) + concurrency + toestandsovergang · Assertions: 11
 
 ### Vormgevingsschakelaar (klassiek / nieuw)
 
