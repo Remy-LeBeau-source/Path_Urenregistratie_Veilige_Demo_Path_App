@@ -77,16 +77,12 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
     And staat het label wel op het Klanturenstaat-scherm
 
   @happy
-  Scenario: [KLV-H-010] op de telefoon zitten de testknoppen van de medewerker achter één testpil, zonder functie te verliezen
+  Scenario: [KLV-H-010] op TEST staat alleen Herstel bovenin; thema, vormgeving en versie staan in het profielmenu
     # Testtechniek: Responsive viewport + toegankelijkheidsinspectie (44px, toetsenbord) + end-to-end use-case
-    # Aantoonbare Playwright-assertions in deze case: 22
-    Given een medewerker in Klassiek op een telefoon van 390px
-    Then staat er één testpil in plaats van losse knoppen
-    When de medewerker de pil opent, then staan alle testknoppen voluit, 44px hoog en binnen beeld
-    And werkt een keuze in het paneel en gaat het paneel daarna dicht
-    And sluit Escape het paneel
-    And staat het versienummer onderaan het profielmenu
-    And blijft desktop ongewijzigd: geen pil, knoppen direct in de menubalk
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given vondsten uit de monkey-verkenning op Klassiek is voorbereid
+    When de flow voor KLV-H-010 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat op TEST staat alleen Herstel bovenin; thema, vormgeving en versie staan in het profielmenu
 
   @negative
   Scenario: [KLV-N-011] de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop

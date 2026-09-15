@@ -56,6 +56,12 @@ Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
   onder de teller op Vandaag telefoon schoof onder reduce 58px over de rand omdat translateX(-50%) alleen in de
   keyframes stond (MOB-H-031, basis-transform); KLV-N-002 en DASH-H-049 wachten nu op het eindbeeld (onder reduce
   wordt een translate- of themawissel pas later meetbaar).
+- **2.0.93** (main 2.0.92 gemerged): testfuncties uit beeld (Gio: "op TEST zoveel mogelijk PROD"). Bovenin alleen
+  Herstel, voluit en leesbaar (medewerker Klassiek: menubalk desktop, topbalk naast profiel op telefoon; beheer: eigen
+  topbalk, 44px op telefoon). Thema, Klassiek/Modern, omgeving en versie in het profielmenu onder "Testfuncties"
+  (#profile-menu-testfuncties, alleen met omgevingsbadge of Herstel, dus nooit op PROD). Testpil verwijderd.
+  plaatsTestknoppen herschreven. KLV-H-010 bewaakt medewerker en beheer op 390/1280; DASH-H-047 bijgewerkt;
+  fixtures/testknoppen.ts opent nu het profielmenu en sluit het na de klik. Impact desktop 59/59, mobile-chrome 53/53.
 - Open vondst (15 sep): dialoog met open toetsenbord onder reducedMotion "reduce" (SKIN-H-036). Chromium hield
   de max-height van .modal op 824px (100dvh-20) terwijl --zichtbaar-hoogte 300px was en de juiste regel matchte;
   dialoog 534px boven het scherm, kruisje onbereikbaar. Geprobeerd en teruggedraaid (niet betrouwbaar, wisselend

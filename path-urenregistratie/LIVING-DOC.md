@@ -244,7 +244,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 564 Playwri
 - [DASH-N-033] geen misleidend bericht aan Backoffice, en zelf gemaild in medewerkertaal terwijl Backoffice zijn eigen term houdt — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [DASH-H-045] de tabbalk van de medewerker heeft Vandaag · Mijn uren · Maanden · Berichten, en Maanden opent Mijn maanden — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 21
 - [DASH-H-046] op telefoon zweeft "Andere rol kiezen" niet over de inhoud; de actie staat in de topbalk — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
-- [DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbalk, en Vandaag begint met de begroeting — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 25
+- [DASH-H-047] bij de medewerker staat alleen Herstel in de balk, de overige testfuncties in het profielmenu, en Vandaag begint met de begroeting — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 28
 - [DASH-H-048] de kop toont de maand als vakjes per week, en een dagvakje opent Mijn uren op die dag — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 19
 - [DASH-H-049] licht Klassiek heeft bij de medewerker één vast veld over de pagina en een doorschijnende menubalk — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [DASH-H-050] zodra de laatste lege week gevuld is, staat Maand indienen ook in de weekweergave — Techniek: Toestandsovergang · Assertions: 7
@@ -654,7 +654,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 564 Playwri
 - [KLV-N-007] elk scherm heeft een paginatitel, ook Klanturenstaten bij de beheerder — Techniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing · Assertions: 5
 - [KLV-N-008] meer dan 24 uur op een dag wordt direct in het vak gemeld en niet naar de server gestuurd — Techniek: Monkey testing (seeded) + grenswaardenanalyse + negatieve equivalentieklasse · Assertions: 9
 - [KLV-N-009] in Klassiek staat het klanturenstaatlabel niet op Mijn uren maar op het eigen Klanturenstaat-scherm — Techniek: Beslissingstabel vormgeving en scherm + regressiebewaking · Assertions: 6
-- [KLV-H-010] op de telefoon zitten de testknoppen van de medewerker achter één testpil, zonder functie te verliezen — Techniek: Responsive viewport + toegankelijkheidsinspectie (44px, toetsenbord) + end-to-end use-case · Assertions: 22
+- [KLV-H-010] op TEST staat alleen Herstel bovenin; thema, vormgeving en versie staan in het profielmenu — Techniek: Responsive viewport + toegankelijkheidsinspectie (44px, toetsenbord) + end-to-end use-case · Assertions: 12
 - [KLV-N-011] de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 3
 - [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie — Techniek: Monkey testing (seeded) + concurrency + toestandsovergang · Assertions: 11
 

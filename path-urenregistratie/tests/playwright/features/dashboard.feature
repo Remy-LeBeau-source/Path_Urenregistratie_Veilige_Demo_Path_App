@@ -379,14 +379,14 @@ Feature: Dashboard en open werkvoorraad
     When de medewerker via de topbalk van rol wisselt, then staat het inlogscherm er
 
   @happy
-  Scenario: [DASH-H-047] de testknoppen staan bij de medewerker in de testomgevingsbalk, en Vandaag begint met de begroeting
+  Scenario: [DASH-H-047] bij de medewerker staat alleen Herstel in de balk, de overige testfuncties in het profielmenu, en Vandaag begint met de begroeting
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 25
+    # Aantoonbare Playwright-assertions in deze case: 28
     Given dashboard en open werkvoorraad is voorbereid
-    Then staan omgeving, versie en beide testknoppen in de balk
+    Then staat alleen Herstel in de balk en staan de schakelaars met omgeving en versie in het profielmenu
     And begint Vandaag met de begroeting, zonder paginatitel; Mijn uren houdt zijn titel
-    When de medewerker naar Modern wisselt, then staan de knoppen weer in de topbalk en is de balk weg
-    And houdt beheer de knoppen in zijn eigen topbalk
+    When de medewerker via het profielmenu naar Modern en terug wisselt, then blijven de schakelaars in het menu
+    And houdt beheer Herstel in zijn eigen topbalk
 
   @happy
   Scenario: [DASH-H-048] de kop toont de maand als vakjes per week, en een dagvakje opent Mijn uren op die dag

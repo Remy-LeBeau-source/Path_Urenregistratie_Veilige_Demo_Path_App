@@ -167,10 +167,10 @@ And("toont Berichten een telbolletje gelijk aan het aantal ongelezen berichten")
 Then("is de zwevende knop weg en staat de topbalkknop er wel");
 And("ligt geen vast gepositioneerde knop over de tabbalk");
 When("de medewerker via de topbalk van rol wisselt, then staat het inlogscherm er");
-Then("staan omgeving, versie en beide testknoppen in de balk");
+Then("staat alleen Herstel in de balk en staan de schakelaars met omgeving en versie in het profielmenu");
 And("begint Vandaag met de begroeting, zonder paginatitel; Mijn uren houdt zijn titel");
-When("de medewerker naar Modern wisselt, then staan de knoppen weer in de topbalk en is de balk weg");
-And("houdt beheer de knoppen in zijn eigen topbalk");
+When("de medewerker via het profielmenu naar Modern en terug wisselt, then blijven de schakelaars in het menu");
+And("houdt beheer Herstel in zijn eigen topbalk");
 Then("heeft elke kalenderdag een vakje met de stand uit dezelfde regel als Mijn uren");
 And("zijn de weekvlakken samen de hele maand, elk zo breed als zijn dagen, met weeknummer en stand");
 And("zegt de regel boven de vakjes wat er op een dag staat zolang de muis erop staat");
