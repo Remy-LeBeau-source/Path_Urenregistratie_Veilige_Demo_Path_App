@@ -69,7 +69,7 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
 
   @negative
   Scenario: [KLV-N-009] in Klassiek staat het klanturenstaatlabel niet op Mijn uren maar op het eigen Klanturenstaat-scherm
-    # Testtechniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing
+    # Testtechniek: Beslissingstabel vormgeving en scherm + regressiebewaking
     # Aantoonbare Playwright-assertions in deze case: 6
     Given een medewerker in Klassiek
     When de medewerker Mijn uren opent
@@ -78,7 +78,7 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
 
   @happy
   Scenario: [KLV-H-010] op de telefoon zitten de testknoppen van de medewerker achter één testpil, zonder functie te verliezen
-    # Testtechniek: Monkey testing (seeded) + negatieve equivalentieklasse + error guessing
+    # Testtechniek: Responsive viewport + toegankelijkheidsinspectie (44px, toetsenbord) + end-to-end use-case
     # Aantoonbare Playwright-assertions in deze case: 22
     Given een medewerker in Klassiek op een telefoon van 390px
     Then staat er één testpil in plaats van losse knoppen

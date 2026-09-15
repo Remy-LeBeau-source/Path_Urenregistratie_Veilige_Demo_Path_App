@@ -138,6 +138,8 @@ function techniqueFor(definition, testCase) {
       'KLV-N-006': 'Monkey testing (seeded) + grenswaardenanalyse + toestandsovergang + responsive viewport',
       'KLV-N-007': 'Monkey testing (seeded) + negatieve equivalentieklasse + error guessing',
       'KLV-N-008': 'Monkey testing (seeded) + grenswaardenanalyse + negatieve equivalentieklasse',
+      'KLV-N-009': 'Beslissingstabel vormgeving en scherm + regressiebewaking',
+      'KLV-H-010': 'Responsive viewport + toegankelijkheidsinspectie (44px, toetsenbord) + end-to-end use-case',
     };
     return perCase[testCase.id] || 'Monkey testing (seeded) + negatieve equivalentieklasse + error guessing';
   }

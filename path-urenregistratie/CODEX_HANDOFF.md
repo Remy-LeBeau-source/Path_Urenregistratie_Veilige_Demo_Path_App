@@ -41,6 +41,16 @@ Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
   teamoverzicht één kolom in dat bereik; mailfilters als flex-wrap op elke breedte. Visueel gecontroleerd.
 - **2.0.81**: **KLV-N-007** "Bekijk klanturenstaten →" op het beheerdashboard opende een scherm met lege
   paginatitel (`pageTitles` miste `customer-timesheet-admin`). Case controleert ook dat elk `.view`-scherm een titel heeft.
+- **2.0.87** (main 2.0.84 en 2.0.86 gemerged): testpil voor de medewerker in Klassiek op telefoon (tot 820px).
+  #testbalk-open ("LOKAAL ▾"/"TEST ▾") opent #testbalk-paneel met Herstel demo, Licht/Donker, Klassiek/Nieuw,
+  voluit en 44px; dicht na een keuze, bij tik ernaast en met Escape (zetTestpil). Versie op telefoon onderaan het
+  profielmenu (#profile-menu-versie). Desktop, beheer en Modern ongewijzigd. **KLV-H-010**. Specs gebruiken nu
+  fixtures/testknoppen.ts (klikTestknop/openTestknoppen/sluitTestknoppen) in plaats van direct op de knoppen te
+  klikken. Bewezen: mobile-chrome volledige suite 234/235 (E2E-H-002 daarna gefixt), tablet skin+a11y 45/45,
+  desktop admin-writes+invoices 54/54. **KLV-N-009** bewaakt dat het klanturenstaatlabel in Klassiek niet op Mijn
+  uren staat (besluit met main: niets weghalen, al verhuisd sinds 2.0.68).
+- Prod-poort: regel Gio 15 sep, niet binnen 10 min goedgekeurd = afwijzen; main bouwde "Promote Prod (wekker)"
+  (2.0.86). Test loopt altijd door.
 - Open vondst: monkey seed 15 (desktop, licht) toont na "Herstel demo"-klik, herladen en snelle klikken nog
   "door iemand anders gewijzigd": de app stuurde expected=7 terwijl de server op 8 stond, en herladen haalde de
   maand niet opnieuw op. Niet deterministisch te reproduceren (gewoon herladen, andere maand, lokaal demoherstel
