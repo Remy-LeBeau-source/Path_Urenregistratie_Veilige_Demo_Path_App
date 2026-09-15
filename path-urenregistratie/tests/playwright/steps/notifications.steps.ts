@@ -50,6 +50,7 @@ Given("Stasjo opent Berichten met ingetrokken voorbeeldmededelingen in de TEST-b
 When("hij het filter Ingetrokken kiest");
 Then("staan alleen ingetrokken berichten er, ingeklapt met label, en geen ervan als ongelezen");
 And("zie je de reden zodra je het bericht openklapt");
+And("steekt de onderste kaart niet buiten de ronde hoeken van het paneel");
 And("staat onder Alles een geldige mededeling niet als ingetrokken");
 When("de flow voor NOT-H-013 wordt uitgevoerd");
 Then("toont de bel alleen de drie meldingen over de medewerker zelf");

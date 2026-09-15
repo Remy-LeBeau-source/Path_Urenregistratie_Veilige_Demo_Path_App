@@ -109,11 +109,12 @@ Feature: Meldingen beheren
   @happy
   Scenario: [NOT-H-012] medewerker ziet ingetrokken mededelingen ingeklapt met label, de reden bij openen, en het filter toont precies die
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 14
+    # Aantoonbare Playwright-assertions in deze case: 16
     Given Stasjo opent Berichten met ingetrokken voorbeeldmededelingen in de TEST-basis
     When hij het filter Ingetrokken kiest
     Then staan alleen ingetrokken berichten er, ingeklapt met label, en geen ervan als ongelezen
     And zie je de reden zodra je het bericht openklapt
+    And steekt de onderste kaart niet buiten de ronde hoeken van het paneel
     And staat onder Alles een geldige mededeling niet als ingetrokken
 
   @happy

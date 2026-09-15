@@ -477,7 +477,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 579 Playwri
 - [NOT-H-010] Herstel zet drie lokale basismeldingen terug en beschermt ze tegen serveroverschrijving — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 15
 - [NOT-H-011] een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen — Techniek: API-contract + equivalentieklasse · Assertions: 22
 - [NOT-N-015] dichtklappen of alleen bekijken leest een ongelezen bericht niet — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
-- [NOT-H-012] medewerker ziet ingetrokken mededelingen ingeklapt met label, de reden bij openen, en het filter toont precies die — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 14
+- [NOT-H-012] medewerker ziet ingetrokken mededelingen ingeklapt met label, de reden bij openen, en het filter toont precies die — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 16
 - [NOT-H-013] een melding in de bel brengt de medewerker direct naar de plek waar iets te doen is — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
 - [NOT-H-014] Alles gelezen in Berichten leest alleen de mededelingen en laat de bel met rust — Techniek: API-contract + equivalentieklasse · Assertions: 8
 

@@ -2247,6 +2247,10 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .bericht-inhoud .announcement-withdrawal-note { margin-top: 0; }
 /* Ronde 2: kop en het kleine knopje "Markeer als gelezen" op één rij; een ongelezen
    bericht is ingeklapt maar valt op door Nieuw en een vette titel. */
+/* De onderste kaart (ingetrokken of onder de muis) heeft een eigen achtergrond met rechte
+   hoeken en stak over de ronde hoeken van het paneel heen (Gio 15 sep, "die hoekjes").
+   Het paneel knipt nu zijn inhoud af; focusranden liggen binnen de kop (outline-offset -2px). */
+#view-employee-announcements .panel:has(> .employee-announcement-list) { overflow: hidden; }
 .bericht-kop-rij { display: flex; align-items: center; }
 .bericht-kop-rij > .bericht-kop { flex: 1 1 auto; min-width: 0; }
 .bericht-markeer { flex: 0 0 auto; min-height: 44px; margin-right: 16px; color: var(--muted); font-size: 12px; font-weight: 600; white-space: nowrap; }

@@ -518,6 +518,25 @@ test.describe('notifications api', () => {
       await expect(borrel.locator('[data-employee-withdrawal-note]')).toContainText('Hij gaat toch door: er is nieuwe taart.');
     });
 
+    await test.step('And steekt de onderste kaart niet buiten de ronde hoeken van het paneel', async () => {
+      // Gio 15 sep ("die hoekjes"): de laatste, ingetrokken kaart had rechte hoeken met een
+      // eigen achtergrond over de afgeronde onderkant van het paneel heen.
+      await page.locator('[data-announcement-archive-filter="all"]').click();
+      const stand = await page.locator('#employee-announcement-list').evaluate(lijst => {
+        const paneel = lijst.closest('.panel') as HTMLElement;
+        const laatste = lijst.querySelector('.employee-announcement-card:last-child') as HTMLElement;
+        const p = getComputedStyle(paneel);
+        return {
+          paneelRond: parseFloat(p.borderBottomLeftRadius) > 0,
+          afgeknipt: p.overflow === 'hidden' || p.overflowX === 'hidden' || p.overflow === 'clip',
+          kaartHeeftAchtergrond: getComputedStyle(laatste).backgroundColor !== 'rgba(0, 0, 0, 0)',
+          kaartTotOnderkant: Math.abs(paneel.getBoundingClientRect().bottom - laatste.getBoundingClientRect().bottom) <= 2,
+        };
+      });
+      expect(stand.paneelRond).toBe(true);
+      if (stand.kaartHeeftAchtergrond && stand.kaartTotOnderkant) expect(stand.afgeknipt, 'het paneel moet de ronde hoeken over de kaart heen bewaren').toBe(true);
+    });
+
     await test.step('And staat onder Alles een geldige mededeling niet als ingetrokken', async () => {
       await page.locator('[data-announcement-archive-filter="all"]').click();
       const geldig = page.locator('#employee-announcement-list .employee-announcement-card').filter({ hasText: 'Planning augustus beschikbaar' });

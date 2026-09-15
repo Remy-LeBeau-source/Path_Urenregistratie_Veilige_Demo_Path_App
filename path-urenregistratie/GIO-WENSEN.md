@@ -18,6 +18,7 @@ Nieuwste bovenaan per status. Statussen: **open**, **bezig**, **klaar (versie)**
 
 | Datum | Wens / besluit | Versie |
 |---|---|---|
+| 15 sep | Berichten: de onderste kaart stak met rechte hoeken over de ronde hoeken van het paneel ("die hoekjes"). Paneel knipt nu af; bewaakt in NOT-H-012. | 2.0.104 |
 | 15 sep | Berichten ronde 2 (Gio): gelezen alleen bij openklappen of het kleine knopje Markeer als gelezen, niets vanzelf; alle berichten ingeklapt, nieuwe met Nieuw en vet bovenaan; Berichten springt naar het eerste ongelezen bericht; leeg filter Ongelezen valt terug op Alles. NOT-H-011, NOT-N-015; smoke zonder fouten. | 2.0.103 |
 | 15 sep | Statuspil naast een kop in Instellingen stak op smalle telefoons uit (18px bij 360, 58px bij 320). Kop loopt nu om, pil mag over twee regels (KLV-N-022). Monkey seed 15 opnieuw gedraaid (150 stappen): de melding "door iemand anders gewijzigd" komt niet meer terug. CODEX_HANDOFF bijgewerkt t/m 2.0.101. | 2.0.102 |
 | 15 sep | Bel en Berichten slimmer (keuze Gio: slim voorstel): bel van de medewerker alleen over de eigen uren, tik brengt je naar de plek (Mijn uren van die maand, Maanden met die maand open); mededelingen alleen in Berichten, ongelezen open en bovenaan, gelezen en ingetrokken ingeklapt; gelezen vanzelf (tik of 2 s in beeld), geen Markeer-knop, wel Alles gelezen (alleen mededelingen). NOT-H-010 t/m 014, NOT-N-015, smoke. | 2.0.101 |
