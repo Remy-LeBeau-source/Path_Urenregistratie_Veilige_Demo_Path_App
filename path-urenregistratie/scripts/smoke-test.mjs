@@ -1396,7 +1396,7 @@ click('[data-announcement-archive-filter="all"]');
 assert(!document.querySelector("#employee-announcement-list").textContent.includes("Correctie:"), "De medewerker mag niet zien dat een mededeling een gecorrigeerde versie is");
 assert(document.querySelector("#employee-announcement-list").textContent.includes("is ingetrokken"), "Een intrekking moet als nieuw bericht bij dezelfde medewerker verschijnen");
 assert(document.querySelector("#employee-announcement-list").textContent.includes("Algemene testmededeling"), "Het medewerkersarchief moet de actuele mededeling tonen");
-assert(document.querySelector("#announcement-unread-filter").textContent.includes("Ongelezen mededelingen"), "Het archief moet duidelijk maken dat dit aantal alleen algemene mededelingen telt");
+assert(document.querySelector("#announcement-unread-filter").textContent.includes("Ongelezen"), "Het archief moet duidelijk maken dat dit aantal alleen algemene mededelingen telt");
 assert(document.querySelector("#employee-announcement-list").textContent.includes("deadline is vrijdag"), "Het medewerkersarchief moet uitsluitend de nieuwste tekst tonen");
 assert(!document.querySelector("#employee-announcement-list").textContent.includes("Dit bericht is voor alle actieve medewerkers"), "Het oude bericht mag nergens in het medewerkersarchief terugkomen");
 assert(!document.querySelector("#employee-announcement-list").textContent.includes("Correctie op") && !document.querySelector("#employee-announcement-list").textContent.includes("Correctie:"), "De medewerker mag geen interne correctiehistorie of correctielabel zien");

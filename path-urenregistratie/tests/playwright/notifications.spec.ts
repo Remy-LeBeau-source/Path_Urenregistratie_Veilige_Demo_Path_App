@@ -348,13 +348,13 @@ test.describe('notifications api', () => {
     });
     // Sinds 15 sep (besluit Gio) staan mededelingen niet meer in de bel van de
     // medewerker maar alleen in Berichten, met een eigen teller op het tabblad.
-    expect(employeeProjection).toEqual({ badge: '0', filter: 'Ongelezen mededelingen · 3', cards: 3 });
+    expect(employeeProjection).toEqual({ badge: '0', filter: 'Ongelezen · 3', cards: 3 });
 
     // Een tik op de kop van een ongelezen bericht telt als gelezen (geen aparte knop).
     await page.locator('#employee-announcement-list .employee-announcement-card.is-unread [data-bericht-toggle]').first().evaluate(element => {
       (element as HTMLButtonElement).click();
     });
-    await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen mededelingen · 2');
+    await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen · 2');
     await expect(page.locator('#employee-berichten-count')).toHaveText('2');
     await expect(page.locator('#employee-announcement-list .employee-announcement-card.is-unread')).toHaveCount(2);
 
@@ -430,13 +430,13 @@ test.describe('notifications api', () => {
 
     await test.step('And blijven ze ongelezen, ook als ze langer in beeld staan', async () => {
       await page.waitForTimeout(3_000);
-      await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen mededelingen · 2');
+      await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen · 2');
       expect(verzonden, 'in beeld staan leest niets').toEqual([]);
     });
 
     await test.step('When de medewerker het eerste bericht openklapt, then is dat bericht gelezen en blijft het open', async () => {
       await kaart('Nieuwe mededeling twee').locator('[data-bericht-toggle]').click();
-      await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen mededelingen · 1');
+      await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen · 1');
       await expect(page.locator('#employee-berichten-count')).toHaveText('1');
       await expect(kaart('Nieuwe mededeling twee')).not.toHaveClass(/is-unread/);
       await expect(kaart('Nieuwe mededeling twee').locator('.bericht-inhoud')).toBeVisible();
@@ -444,12 +444,20 @@ test.describe('notifications api', () => {
 
     await test.step('When de medewerker bij het tweede op Markeer als gelezen tikt, then is het gelezen zonder open te gaan', async () => {
       await kaart('Nieuwe mededeling een').locator('[data-bericht-gelezen]').click();
-      await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen mededelingen · 0');
+      await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen · 0');
       await expect(page.locator('#employee-berichten-count')).toBeHidden();
       await expect(kaart('Nieuwe mededeling een')).not.toHaveClass(/is-unread/);
       await expect(kaart('Nieuwe mededeling een').locator('.bericht-inhoud')).toBeHidden();
       await expect(page.locator('#notification-count'), 'de statusmelding in de bel blijft ongelezen').toHaveText('1');
       expect([...new Set(verzonden.map(body => `${body.action}:${body.announcement_id}`))].sort()).toEqual(['mark_announcement_read:801', 'mark_announcement_read:802']);
+    });
+
+    await test.step('And toont het filter Gelezen precies de drie gelezen berichten, compact met aantal', async () => {
+      await expect(page.locator('#announcement-gelezen-filter')).toHaveText('Gelezen · 3');
+      await page.locator('[data-announcement-archive-filter="gelezen"]').click();
+      await expect(lijst.locator('.employee-announcement-card')).toHaveCount(3);
+      await expect(lijst.locator('.employee-announcement-card.is-unread')).toHaveCount(0);
+      await page.locator('[data-announcement-archive-filter="all"]').click();
     });
 
     await test.step('And valt een leeg filter Ongelezen bij terugkomen terug op Actueel', async () => {
@@ -639,7 +647,7 @@ test.describe('notifications api', () => {
     });
 
     await test.step('Then zijn de mededelingen gelezen en blijft de statusmelding in de bel ongelezen', async () => {
-      await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen mededelingen · 0');
+      await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen · 0');
       await expect(page.locator('#employee-berichten-count')).toBeHidden();
       await expect(page.locator('#berichten-alles-gelezen')).toBeHidden();
       await expect(page.locator('#notification-count')).toHaveText('1');
@@ -678,7 +686,7 @@ test.describe('notifications api', () => {
     const nav = page.locator('#berichten-paginering');
     await test.step('And toont Berichten hooguit 30 berichten, 10 per pagina, de ongelezen vooraan', async () => {
       await page.locator('button[data-view="employee-announcements"]').click();
-      await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen mededelingen · 3');
+      await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen · 3');
       await expect(lijst.locator('.employee-announcement-card')).toHaveCount(30);
       await expect(lijst.locator('.employee-announcement-card:visible')).toHaveCount(10);
       await expect(lijst.locator('.berichten-afgekapt')).toHaveText('Alleen de laatste 30 berichten staan hier.');
@@ -725,7 +733,16 @@ test.describe('notifications api', () => {
       await expect(lijst.locator('.employee-announcement-card.is-withdrawn')).toHaveCount(0);
     });
 
-    await test.step('And tellen de filters op: Actueel + Ingetrokken = Alles', async () => {
+    await test.step('And tellen de filters op: Ongelezen + Gelezen = Actueel, Actueel + Ingetrokken = Alles', async () => {
+      const getal = async (id: string) => Number(((await page.locator(id).textContent()) || '').match(/(\d+)\s*$/)?.[1] ?? NaN);
+      const [actueel, ongelezen, gelezen, ingetrokken, alles] = await Promise.all(['#announcement-actueel-filter', '#announcement-unread-filter', '#announcement-gelezen-filter', '#announcement-withdrawn-filter', '#announcement-all-filter'].map(getal));
+      [actueel, ongelezen, gelezen, ingetrokken, alles].forEach(n => expect(Number.isInteger(n), 'elk filter toont een aantal').toBe(true));
+      expect(ongelezen + gelezen, 'Ongelezen + Gelezen = Actueel').toBe(actueel);
+      expect(actueel + ingetrokken, 'Actueel + Ingetrokken = Alles').toBe(alles);
+      expect(alles).toBe(10);
+      await page.locator('[data-announcement-archive-filter="gelezen"]').click();
+      await expect(lijst.locator('.employee-announcement-card')).toHaveCount(gelezen);
+      await expect(lijst.locator('.employee-announcement-card.is-unread, .employee-announcement-card.is-withdrawn')).toHaveCount(0);
       await page.locator('[data-announcement-archive-filter="withdrawn"]').click();
       await expect(lijst.locator('.employee-announcement-card')).toHaveCount(6);
       await page.locator('[data-announcement-archive-filter="all"]').click();
@@ -733,7 +750,7 @@ test.describe('notifications api', () => {
     });
 
     for (const thema of ['dark', 'light'] as const) {
-      await test.step(`And is een ingetrokken bericht in ${thema} neutraal (geen oranje vlak) en leesbaar (≥ 4,5:1)`, async () => {
+      await test.step(`And is een ingetrokken bericht in ${thema} rustig lavendel (geen oranje vlak) en leesbaar (≥ 4,5:1)`, async () => {
         await page.evaluate(t => {
           const s = (0, eval)('state') as { preferences: Record<string, unknown> };
           s.preferences.theme = t;
@@ -755,14 +772,15 @@ test.describe('notifications api', () => {
           const titel = el.querySelector('h3')!;
           const label = el.querySelector('.status-pill')!;
           const [, , , kaartAlpha = 1] = rgb(getComputedStyle(el).backgroundColor);
-          const labelAchtergrond = rgb(getComputedStyle(label).backgroundColor);
+          
           return {
             titel: contrast(titel) >= 4.5,
             label: contrast(label) >= 4.5,
             geenEigenVlak: getComputedStyle(el).backgroundColor === 'rgba(0, 0, 0, 0)' || kaartAlpha === 0,
-            labelZonderVlak: (labelAchtergrond[3] ?? 1) === 0,
+            // Eigen zachte lavendeltint (--ingetrokken-*), niet het oranje/bruin van een waarschuwing.
+            labelInLavendel: (() => { const proef = document.createElement('span'); proef.style.color = 'var(--ingetrokken-tekst)'; proef.style.backgroundColor = 'var(--ingetrokken-vlak)'; el.append(proef); const p = getComputedStyle(proef); const cs = getComputedStyle(label); const gelijk = cs.color === p.color && cs.backgroundColor === p.backgroundColor; proef.remove(); return gelijk; })(),
           };
-        }), { timeout: 3_000, message: `ingetrokken in ${thema}` }).toEqual({ titel: true, label: true, geenEigenVlak: true, labelZonderVlak: true });
+        }), { timeout: 3_000, message: `ingetrokken in ${thema}` }).toEqual({ titel: true, label: true, geenEigenVlak: true, labelInLavendel: true });
       });
     }
   });

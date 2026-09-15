@@ -1031,7 +1031,7 @@ function loadState() {
     if (!["all", "month"].includes(saved.approvalScope)) saved.approvalScope = "all";
     if (!["actionable", "waiting", "all"].includes(saved.adminTaskFilter)) saved.adminTaskFilter = "all";
     if (!["active", "inactive", "all"].includes(saved.employeeScope)) saved.employeeScope = "active";
-    if (!["actueel", "all", "unread", "withdrawn"].includes(saved.announcementArchiveFilter)) saved.announcementArchiveFilter = "actueel";
+    if (!["actueel", "all", "unread", "gelezen", "withdrawn"].includes(saved.announcementArchiveFilter)) saved.announcementArchiveFilter = "actueel";
     return ensureSeedDataIntegrity(saved, fallback, "local-state");
   } catch {
     return fallback;
@@ -1118,7 +1118,7 @@ function ensureSeedDataIntegrity(candidateState, fallbackState, sourceLabel) {
   restored.approvalScope = ["all", "month"].includes(candidate.approvalScope) ? candidate.approvalScope : restored.approvalScope;
   restored.adminTaskFilter = ["actionable", "waiting", "all"].includes(candidate.adminTaskFilter) ? candidate.adminTaskFilter : restored.adminTaskFilter;
   restored.employeeScope = ["active", "inactive", "all"].includes(candidate.employeeScope) ? candidate.employeeScope : restored.employeeScope;
-  restored.announcementArchiveFilter = ["actueel", "all", "unread", "withdrawn"].includes(candidate.announcementArchiveFilter) ? candidate.announcementArchiveFilter : restored.announcementArchiveFilter;
+  restored.announcementArchiveFilter = ["actueel", "all", "unread", "gelezen", "withdrawn"].includes(candidate.announcementArchiveFilter) ? candidate.announcementArchiveFilter : restored.announcementArchiveFilter;
   restored.hoursWeekScope = typeof candidate.hoursWeekScope === "string" ? candidate.hoursWeekScope : restored.hoursWeekScope;
   restored.hoursWeekScopeTouched = candidate.hoursWeekScopeTouched === true;
   restored.invoiceDetailCollapsed = candidate.invoiceDetailCollapsed === true;
@@ -9196,11 +9196,14 @@ function berichtKaartHtml(bericht) {
 }
 
 function toonBerichtenLijst(list, berichten, unreadCount, tellingen = {}) {
-  document.querySelector("#announcement-unread-filter").textContent = "Ongelezen mededelingen · " + unreadCount;
-  const actueelKnop = document.querySelector("#announcement-actueel-filter");
-  if (actueelKnop) actueelKnop.textContent = "Actueel · " + (tellingen.actueel ?? 0);
-  const ingetrokkenKnop = document.querySelector("#announcement-withdrawn-filter");
-  if (ingetrokkenKnop) ingetrokkenKnop.textContent = "Ingetrokken · " + (tellingen.ingetrokken ?? 0);
+  // Compacte filters met aantallen (Gio 15 sep: "maak compact, moet geen gedoe worden").
+  // Actueel = Ongelezen + Gelezen; Alles = Actueel + Ingetrokken.
+  const zetTeller = (selector, label, aantal) => { const knop = document.querySelector(selector); if (knop) knop.textContent = label + " · " + (aantal ?? 0); };
+  zetTeller("#announcement-actueel-filter", "Actueel", tellingen.actueel);
+  zetTeller("#announcement-unread-filter", "Ongelezen", unreadCount);
+  zetTeller("#announcement-gelezen-filter", "Gelezen", tellingen.gelezen);
+  zetTeller("#announcement-withdrawn-filter", "Ingetrokken", tellingen.ingetrokken);
+  zetTeller("#announcement-all-filter", "Alles", tellingen.alles);
   zetBerichtenTeller(unreadCount);
   const allesGelezen = document.querySelector("#berichten-alles-gelezen");
   if (allesGelezen) allesGelezen.hidden = unreadCount === 0;
@@ -9275,9 +9278,10 @@ function renderEmployeeAnnouncementArchive() {
   if (API_ENABLED && authRuntime.mode === "auth") {
     let announcements = employeeAnnouncementItemsFromNotifications();
     const unreadAnnouncementCount = announcements.filter(item => !item.read).length;
-    const tellingen = { actueel: announcements.filter(item => item.status !== "withdrawn").length, ingetrokken: announcements.filter(item => item.status === "withdrawn").length };
+    const tellingen = { actueel: announcements.filter(item => item.status !== "withdrawn").length, gelezen: announcements.filter(item => item.read && item.status !== "withdrawn").length, ingetrokken: announcements.filter(item => item.status === "withdrawn").length, alles: announcements.length };
     if (state.announcementArchiveFilter === "actueel") announcements = announcements.filter(item => item.status !== "withdrawn");
     if (state.announcementArchiveFilter === "unread") announcements = announcements.filter(houdVast);
+    if (state.announcementArchiveFilter === "gelezen") announcements = announcements.filter(item => item.read && item.status !== "withdrawn");
     if (state.announcementArchiveFilter === "withdrawn") announcements = announcements.filter(item => item.status === "withdrawn");
     toonBerichtenLijst(list, announcements.map(item => ({
       id: item.id, title: item.title, message: item.message, createdAt: item.createdAt, createdBy: item.createdBy,
@@ -9293,10 +9297,11 @@ function renderEmployeeAnnouncementArchive() {
   const metStand = announcements.map(item => ({ item, id: item.id, read: !isAnnouncementUnread(employee.id, item.id) }));
   const unreadAnnouncementCount = metStand.filter(entry => !entry.read).length;
   const isIngetrokken = entry => entry.item.status === "withdrawn" || announcementKind(entry.item) === "withdrawal";
-  const tellingen = { actueel: metStand.filter(entry => !isIngetrokken(entry)).length, ingetrokken: metStand.filter(isIngetrokken).length };
+  const tellingen = { actueel: metStand.filter(entry => !isIngetrokken(entry)).length, gelezen: metStand.filter(entry => entry.read && !isIngetrokken(entry)).length, ingetrokken: metStand.filter(isIngetrokken).length, alles: metStand.length };
   let zichtbaar = metStand;
   if (state.announcementArchiveFilter === "actueel") zichtbaar = zichtbaar.filter(entry => !isIngetrokken(entry));
   if (state.announcementArchiveFilter === "unread") zichtbaar = zichtbaar.filter(houdVast);
+  if (state.announcementArchiveFilter === "gelezen") zichtbaar = zichtbaar.filter(entry => entry.read && !isIngetrokken(entry));
   if (state.announcementArchiveFilter === "withdrawn") zichtbaar = zichtbaar.filter(entry => entry.item.status === "withdrawn" || announcementKind(entry.item) === "withdrawal");
   toonBerichtenLijst(list, zichtbaar.map(({ item, read }) => ({
     id: item.id, title: item.title, message: item.message, createdAt: item.createdAt, createdBy: item.createdBy,
@@ -11912,7 +11917,7 @@ function answerHelpQuestion(question, explicitTopicId) {
 }
 
 // Telbolletje op de tab Berichten (referentie: badge bij Berichten). Dezelfde
-// telling als het filter "Ongelezen mededelingen" op dat scherm.
+// telling als het filter "Ongelezen" op dat scherm.
 function zetBerichtenTeller(aantal) {
   const teller = document.querySelector("#employee-berichten-count");
   if (!teller) return;

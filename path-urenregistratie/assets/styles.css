@@ -7,6 +7,8 @@
   --green-light: #e7f8f3;
   --ink: #172332;
   --muted: #65717f;
+  /* Ingetrokken bericht: zacht lavendel, rustig en leesbaar, los van mint/oranje/rood (Gio 15 sep). */
+  --ingetrokken-tekst: #5a4f99; --ingetrokken-rand: #c9c2ec; --ingetrokken-vlak: #f4f2fc;
   --line: #dfe6e9;
   --surface: #ffffff;
   --background: var(--vlak-zacht);
@@ -2263,12 +2265,13 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 /* Ingetrokken = afgedaan, geen waarschuwing (Gio 15 sep: "de kleur van ingetrokken, wat
    past daar beter"). Het warme oranje met bruine vlakken las als alarm en werd in donker
    modderig. Nu rustig en neutraal: geen eigen achtergrond, een omlijnd grijs label, een
-   gedempte titel, en de reden als citaat met een dun streepje in de lijnkleur. */
+   gedempte titel, en de reden als citaat met een dun streepje. Ronde 2: een eigen zachte
+   lavendeltint (--ingetrokken-*) in plaats van grijs, prettiger om te zien. */
 .employee-announcement-list .employee-announcement-card.is-withdrawn { background: transparent; }
-.status-pill.bericht-label-ingetrokken { border: 1px solid var(--line); background: transparent; color: var(--muted); }
+.status-pill.bericht-label-ingetrokken { border: 1px solid var(--ingetrokken-rand); background: var(--ingetrokken-vlak); color: var(--ingetrokken-tekst); }
 .employee-announcement-card.is-withdrawn .bericht-kop h3 { color: var(--muted); font-weight: 500; }
-.employee-announcement-card.is-withdrawn .announcement-withdrawal-note { border: 0; border-left: 3px solid var(--line); border-radius: 0 8px 8px 0; background: var(--surface-muted); color: var(--ink); }
-.employee-announcement-card.is-withdrawn .announcement-withdrawal-note strong { color: var(--muted); }
+.employee-announcement-card.is-withdrawn .announcement-withdrawal-note { border: 0; border-left: 3px solid var(--ingetrokken-rand); border-radius: 0 8px 8px 0; background: var(--ingetrokken-vlak); color: var(--ink); }
+.employee-announcement-card.is-withdrawn .announcement-withdrawal-note strong { color: var(--ingetrokken-tekst); }
 .employee-announcement-card.is-withdrawn .bericht-inhoud > p { color: var(--muted); }
 .bericht-kop-rij { display: flex; align-items: center; }
 .bericht-kop-rij > .bericht-kop { flex: 1 1 auto; min-width: 0; }
@@ -2382,7 +2385,7 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .help-inline-topics button { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--navy-tekst); cursor: pointer; font-size: 10px; font-weight: 900; padding: 8px 11px; text-align: left; }
 .help-inline-topics button:hover { border-color: var(--mint); background: var(--green-light); }
 
-html[data-theme="dark"] { color-scheme: dark; --ink: #e7eef4; --muted: #b1bfcb; --line: #2a3a4a; --line-zacht: #223243; --surface: #111d2b; --background: #09131f; --green-light: #15352f; --teal: #64d7bd; --mint-dark: #51caae; --warning-bg: #332618; --warning: #efb76f; --shadow: 0 14px 35px rgba(0,0,0,.35);
+html[data-theme="dark"] { color-scheme: dark; --ingetrokken-tekst: #c4bdf2; --ingetrokken-rand: #4d4679; --ingetrokken-vlak: #1c1a33; --ink: #e7eef4; --muted: #b1bfcb; --line: #2a3a4a; --line-zacht: #223243; --surface: #111d2b; --background: #09131f; --green-light: #15352f; --teal: #64d7bd; --mint-dark: #51caae; --warning-bg: #332618; --warning: #efb76f; --shadow: 0 14px 35px rgba(0,0,0,.35);
   /* Schaduwen moeten in het donker dieper en zwarter zijn; dezelfde blauwe
      alfa's als in de lichte modus zijn daar onzichtbaar. */
   --hoogte-kaart: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.28);
