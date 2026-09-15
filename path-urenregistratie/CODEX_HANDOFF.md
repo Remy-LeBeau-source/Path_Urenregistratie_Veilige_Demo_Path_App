@@ -51,6 +51,12 @@ Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
   uren staat (besluit met main: niets weghalen, al verhuisd sinds 2.0.68).
 - Prod-poort: regel Gio 15 sep, niet binnen 10 min goedgekeurd = afwijzen; main bouwde "Promote Prod (wekker)"
   (2.0.86). Test loopt altijd door.
+- Open vondst (15 sep): dialoog met open toetsenbord onder reducedMotion "reduce" (SKIN-H-036). Chromium hield
+  de max-height van .modal op 824px (100dvh-20) terwijl --zichtbaar-hoogte 300px was en de juiste regel matchte;
+  dialoog 534px boven het scherm, kruisje onbereikbaar. Geprobeerd en teruggedraaid (niet betrouwbaar, wisselend
+  rood): scrollen per frame, alleen de scrollende laag scrollen, animation:none onder [data-zichtbaar], inline
+  max-height. Of het op een echte iPhone met Minder beweging gebeurt is niet bewezen. SKIN-H-036 draait nu
+  expliciet met no-preference. Vervolg: op echt iOS-toestel controleren.
 - Open vondst: monkey seed 15 (desktop, licht) toont na "Herstel demo"-klik, herladen en snelle klikken nog
   "door iemand anders gewijzigd": de app stuurde expected=7 terwijl de server op 8 stond, en herladen haalde de
   maand niet opnieuw op. Niet deterministisch te reproduceren (gewoon herladen, andere maand, lokaal demoherstel
