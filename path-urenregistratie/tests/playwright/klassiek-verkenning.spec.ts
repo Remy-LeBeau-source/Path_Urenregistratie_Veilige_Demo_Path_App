@@ -171,6 +171,57 @@ test('[KLV-N-004] een trage opslag die pas na herladen aankomt, blokkeert de vol
   }
 });
 
+test('[KLV-N-005] op geen enkel medewerkerscherm valt inhoud buiten de rechterrand rond de breekpunten', async ({ page }) => {
+  // Zachte vondst seeds 11 en 25: bij 821px stonden een sectielabel, een h3 en een
+  // summary-note 5px voorbij de rechterrand. Net boven een breekpunt klopt de
+  // rekensom van de kolommen niet meer. Wat buiten de rand valt, is afgekapt.
+  // Een bewust horizontaal scrollbare container telt niet mee (die veeg je).
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  await test.step('Given een medewerker in Klassiek', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+  });
+  // Elke breedte vanaf smaller én vanaf breder benaderen: een deel van de indeling
+  // verhuist via JavaScript bij het passeren van een breekpunt (plaatsKopBediening,
+  // plaatsTestknoppen), en de monkey kwam er juist door te schalen.
+  for (const scherm of ['employee-dashboard', 'timesheet', 'historie', 'employee-announcements']) for (const breedte of [390, 720, 721, 820, 821, 1024, 1079, 1080]) for (const vanaf of [360, 1440]) {
+    await test.step(`Then valt er op ${scherm} bij ${breedte}px (vanaf ${vanaf}px) niets buiten de rechterrand`, async () => {
+      await page.setViewportSize({ width: vanaf, height: 900 });
+      await page.locator(`.nav-item[data-view="${scherm}"]:visible`).first().click();
+      await expect(page.locator(`#view-${scherm}`)).toHaveClass(/is-active/);
+      await page.setViewportSize({ width: breedte, height: 900 });
+      await page.waitForTimeout(200);
+      const buiten = await page.evaluate(() => {
+        const rand = document.documentElement.clientWidth;
+        // Binnen beeld gehouden door een ouder: een scroller (veegbaar) of een ouder
+        // die afknipt en zelf binnen de rand eindigt (dan zie je het niet buiten de rand).
+        const binnenGehouden = (el: Element) => {
+          for (let o = el.parentElement; o && o !== document.body; o = o.parentElement) {
+            const ox = getComputedStyle(o).overflowX;
+            if (ox === 'auto' || ox === 'scroll') return true;
+            if ((ox === 'hidden' || ox === 'clip') && o.getBoundingClientRect().right <= rand + 1) return true;
+          }
+          return false;
+        };
+        const gevonden: string[] = [];
+        for (const el of Array.from(document.querySelectorAll<HTMLElement>('.view.is-active *, .sidebar *'))) {
+          const r = el.getBoundingClientRect();
+          if (r.width < 1 || r.height < 1 || r.right <= rand + 1) continue;
+          const cs = getComputedStyle(el);
+          // Decoratie (aria-hidden, zoals de gloed achter de kopkaart) is geen inhoud.
+          if (el.closest('[aria-hidden="true"]')) continue;
+          if (cs.visibility === 'hidden' || cs.position === 'fixed' || el.closest('[hidden]') || binnenGehouden(el)) continue;
+          gevonden.push(`${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''}.${String(el.className).trim().split(/\s+/).slice(0, 2).join('.')} (${Math.round(r.right)}>${rand})`);
+          if (gevonden.length >= 6) break;
+        }
+        return gevonden;
+      });
+      expect(buiten, `${scherm} @ ${breedte}px`).toEqual([]);
+    });
+  }
+});
+
 test('[KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie', async ({ page }) => {
   // Vondst seed 5 (5 handelingen): 9 aanklikken en meteen doortypen gaf een 409
   // stale-version, "door iemand anders gewijzigd", terwijl er maar één

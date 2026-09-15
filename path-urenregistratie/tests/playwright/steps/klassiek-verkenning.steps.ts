@@ -25,6 +25,8 @@ Given("een medewerker op Mijn uren met een urenstaat die al een serverversie hee
 When("een opslag onderweg is, de pagina herlaadt en die opslag pas daarna aankomt");
 And("de medewerker daarna gewoon verder invult");
 Then("wordt die invoer zonder foutmelding opgeslagen en staat hij na nog een herlading op de server");
+When("de flow voor KLV-N-005 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat op geen enkel medewerkerscherm valt inhoud buiten de rechterrand rond de breekpunten");
 Given("een medewerker op Mijn uren van een open maand");
 And("de urenstaat staat al met een versie op de server");
 When("de eerste invoer onderweg is en er intussen twee nieuwe invoeren volgen");

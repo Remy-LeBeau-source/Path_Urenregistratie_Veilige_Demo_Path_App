@@ -34,6 +34,14 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
     Then wordt die invoer zonder foutmelding opgeslagen en staat hij na nog een herlading op de server
 
   @negative
+  Scenario: [KLV-N-005] op geen enkel medewerkerscherm valt inhoud buiten de rechterrand rond de breekpunten
+    # Testtechniek: Monkey testing (seeded) + grenswaardenanalyse + toestandsovergang + responsive viewport
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given een medewerker in Klassiek
+    When de flow voor KLV-N-005 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat op geen enkel medewerkerscherm valt inhoud buiten de rechterrand rond de breekpunten
+
+  @negative
   Scenario: [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie
     # Testtechniek: Monkey testing (seeded) + concurrency + toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 11
