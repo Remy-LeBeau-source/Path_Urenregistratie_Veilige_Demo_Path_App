@@ -5019,3 +5019,59 @@ html:not([data-skin="new"]) body[data-role="employee"] .klantkaart-meer { displa
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-buiten-veld { width: 100%; max-width: 84px; min-height: 38px; border: 1px solid var(--line-zacht); border-radius: 9px; background: var(--surface-muted); color: var(--muted); font: inherit; font-size: 15px; font-weight: 700; text-align: center; padding: 0 2px; cursor: default; }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet td.is-buiten .hours-day-entry::after { content: ""; display: block; height: 24px; }
 }
+
+/* Teambeheer (beheer, Klassiek) tussen 821 en 1023px: het overzicht vraagt twee
+   kolommen van minstens 220 + 360px plus tussenruimte en binnenmarge (652px),
+   maar naast de zijbalk bleef er zo'n 500px over. De accountgroepen stonden daardoor
+   92px buiten beeld (monkey-vondst beheerkant, KLV-N-006). Hier dus één kolom; op
+   brede schermen blijft de verhouding uit het ontwerp staan. */
+@media (min-width: 821px) and (max-width: 1023px) {
+  .team-account-overview,
+  .team-account-groups { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Filters van de mailgeschiedenis (Instellingen, beheer): het grid vroeg minstens
+   240 + 150 + 120px en ging pas onder 760px naar één kolom. In de smallere
+   instellingenkaart stond "Status" en "Per pagina" daardoor tot 148px buiten beeld,
+   ook op 1024 en 1280px (monkey-vondst beheerkant, KLV-N-006). Als flex met wrap
+   passen ze op elke kaartbreedte: wat niet past, schuift naar de volgende regel. */
+.mail-delivery-history-controls { display: flex; flex-wrap: wrap; }
+.mail-delivery-history-controls > label { flex: 1 1 120px; min-width: 0; }
+.mail-delivery-history-controls > .mail-delivery-search { flex: 3 1 240px; }
+/* "Per pagina" (10/25/50) groeit niet mee: op een eigen regel werd het anders een
+   veld over de hele breedte voor een getal van twee cijfers. */
+.mail-delivery-history-controls > label:has(#mail-delivery-page-size) { flex: 0 1 140px; }
+
+
+/* Beheer tussen 821 en 1023px. Vanaf 821px staat de zijbalk van 250px, dus de
+   inhoud is hier even smal als op een tablet onder 820px. De inhoudsindelingen uit
+   het 820px-blok golden daar niet: in Instellingen staken sjablonen, herinnerings-
+   regels en keuzevelden tot 150px buiten beeld (monkey-vondst beheerkant,
+   KLV-N-006). Hier gelden dezelfde indelingen, zonder de navigatieregels (de
+   zijbalk blijft), en niet voor de medewerker: die heeft op deze breedte geen
+   zijbalk maar de menubalk bovenaan, en dus de volle breedte. */
+@media (min-width: 821px) and (max-width: 1023px) {
+  body:not([data-role="employee"]) .hero-card { margin-top: 20px; padding: 28px; }
+  body:not([data-role="employee"]) .workflow-track { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  body:not([data-role="employee"]) .workflow-heading-meta { justify-items: start; text-align: left; }
+  body:not([data-role="employee"]) .dashboard-next-action-card { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  body:not([data-role="employee"]) .dashboard-next-action-side { justify-items: start; text-align: left; }
+  body:not([data-role="employee"]) .dashboard-next-action-side .button, body:not([data-role="employee"]) .dashboard-next-action-side .small-button { width: 100%; }
+  body:not([data-role="employee"]) .dashboard-next-action-side > div { width: 100%; }
+  body:not([data-role="employee"]) .workflow-line { display: none; }
+  body:not([data-role="employee"]) .workflow-step { min-width: 0; }
+  body:not([data-role="employee"]) .assignment-bar { grid-template-columns: 1fr 1fr; }
+  body:not([data-role="employee"]) .assignment-bar > div:first-child { grid-column: 1/-1; }
+  body:not([data-role="employee"]) .reminder-rule { grid-template-columns: 1fr 1fr; }
+  body:not([data-role="employee"]) .reminder-rule .check-row { grid-column: 1/-1; }
+  body:not([data-role="employee"]) .invoice-month-overview-head { grid-template-columns: minmax(0, 1fr); }
+  body:not([data-role="employee"]) .invoice-month-overview-action { justify-items: start; }
+  body:not([data-role="employee"]) .month-batch-card { grid-template-columns: minmax(0, 1fr); }
+  body:not([data-role="employee"]) .month-batch-blockers { grid-column: auto; }
+  body:not([data-role="employee"]) .invoice-status-guide { grid-template-columns: minmax(0, 1fr); }
+  body:not([data-role="employee"]) .employee-grid, body:not([data-role="employee"]) .settings-grid { grid-template-columns: minmax(0, 1fr); }
+  body:not([data-role="employee"]) .settings-rule-list { grid-template-columns: minmax(0, 1fr); }
+  body:not([data-role="employee"]) .settings-card.full-width { grid-column: auto; }
+  body:not([data-role="employee"]) .template-item { grid-template-columns: minmax(0, 1fr) auto; }
+  body:not([data-role="employee"]) .template-subject { grid-column: 1/-1; grid-row: 2; }
+}

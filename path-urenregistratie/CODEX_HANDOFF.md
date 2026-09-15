@@ -30,6 +30,15 @@ Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
   versie ophalen (alleen status draft/correction) en één keer opnieuw opslaan wat op het scherm staat.
   `writeTimesheetToApi` geeft nu `error.code` mee. Monkey: H8 kijkt nu naar wat de medewerker ziet (niet naar een
   409 in het netwerk), en het rapport bevat een netwerklogboek van de urenstaat.
+- **KLV-N-005** (test-only): geen inhoud buiten de rechterrand op de vier medewerkerschermen, elke breedte vanaf
+  smaller én breder benaderd (64 combinaties). Tegenproef gedaan.
+- **2.0.80**: monkey nu ook op de beheerkant (`MONKEY_ROL=beheer`). **KLV-N-006** (84 combinaties beheerscherm ×
+  breedte × richting) vond: Teambeheer-overzicht 92px buiten beeld bij 821px; mailfilters in Instellingen tot 148px
+  buiten beeld (ook op 1024/1280); mailsjablonen en herinneringsregels 150px buiten beeld bij 821px. Oorzaak: vanaf
+  821px staat bij beheer de zijbalk (250px), dus de inhoud is even smal als op een tablet onder 820px, maar de
+  smalle indelingen golden alleen tot 820px. Fix (styles.css, onderaan): de inhoudsindelingen uit het 820px-blok
+  gelden nu ook voor beheer tussen 821-1023px (`body:not([data-role="employee"])`, zonder navigatieregels);
+  teamoverzicht één kolom in dat bereik; mailfilters als flex-wrap op elke breedte. Visueel gecontroleerd.
 - Open vondst: monkey seed 15 (desktop, licht) toont na "Herstel demo"-klik, herladen en snelle klikken nog
   "door iemand anders gewijzigd": de app stuurde expected=7 terwijl de server op 8 stond, en herladen haalde de
   maand niet opnieuw op. Niet deterministisch te reproduceren (gewoon herladen, andere maand, lokaal demoherstel

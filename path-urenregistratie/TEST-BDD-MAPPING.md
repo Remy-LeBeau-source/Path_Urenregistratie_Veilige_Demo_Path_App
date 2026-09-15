@@ -463,6 +463,7 @@
 | KLV-N-003 | ui | klassiek-verkenning.feature | in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte | Monkey testing (seeded) + grenswaardenanalyse + responsive viewport | 3 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte | Negative | 19 | Actueel |
 | KLV-N-004 | ui | klassiek-verkenning.feature | een trage opslag die pas na herladen aankomt, blokkeert de volgende invoer niet | Monkey testing (seeded) + concurrency + herstelbaarheid | 7 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | een trage opslag die pas na herladen aankomt, blokkeert de volgende invoer niet | Negative | 19 | Actueel |
 | KLV-N-005 | ui | klassiek-verkenning.feature | op geen enkel medewerkerscherm valt inhoud buiten de rechterrand rond de breekpunten | Monkey testing (seeded) + grenswaardenanalyse + toestandsovergang + responsive viewport | 2 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | op geen enkel medewerkerscherm valt inhoud buiten de rechterrand rond de breekpunten | Negative | 19 | Actueel |
+| KLV-N-006 | ui | klassiek-verkenning.feature | op geen enkel beheerscherm valt inhoud buiten de rechterrand rond de breekpunten | Monkey testing (seeded) + grenswaardenanalyse + toestandsovergang + responsive viewport | 2 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | op geen enkel beheerscherm valt inhoud buiten de rechterrand rond de breekpunten | Negative | 19 | Actueel |
 | KLV-N-001 | ui | klassiek-verkenning.feature | snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie | Monkey testing (seeded) + concurrency + toestandsovergang | 11 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie | Negative | 19 | Actueel |
 | SKIN-H-001 | ui | skin.feature | de app start standaard in de klassieke vormgeving | End-to-end use-case + visuele contractasserties | 3 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de app start standaard in de klassieke vormgeving | Happy | 19 | Actueel |
 | SKIN-H-002 | ui | skin.feature | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | End-to-end use-case + visuele contractasserties | 6 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | Happy | 19 | Actueel |
@@ -577,9 +578,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 555
+- Playwright executable cases: 556
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 556
+- Totaal unieke executable cases: 557
 - Playwright features: 31
 - Database features: 1
 - Playwright steps mappings: 31

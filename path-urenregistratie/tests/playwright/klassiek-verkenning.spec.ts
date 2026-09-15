@@ -1,4 +1,4 @@
-import { expect, test, type Request } from '@playwright/test';
+import { expect, test, type Page, type Request } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
 import { bewaarUrenstaat } from './fixtures/urenstaatHerstel';
 
@@ -7,6 +7,37 @@ import { bewaarUrenstaat } from './fixtures/urenstaatHerstel';
 // Een monkey vindt; deze cases houden vast. Elke case zet de toestand die de
 // monkey toevallig bereikte doelbewust en deterministisch neer, zodat hij niet
 // op timing of geluk leunt.
+
+// Zichtbare inhoud die voorbij de rechterrand valt, en dus afgekapt is. Gedeeld
+// door KLV-N-005 (medewerker) en KLV-N-006 (beheer): één meting, zodat de twee
+// cases dezelfde garantie geven.
+async function inhoudBuitenRechterrand(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const rand = document.documentElement.clientWidth;
+    // Binnen beeld gehouden door een ouder: een scroller (veegbaar) of een ouder
+    // die afknipt en zelf binnen de rand eindigt (dan zie je het niet buiten de rand).
+    const binnenGehouden = (el: Element) => {
+      for (let o = el.parentElement; o && o !== document.body; o = o.parentElement) {
+        const ox = getComputedStyle(o).overflowX;
+        if (ox === 'auto' || ox === 'scroll') return true;
+        if ((ox === 'hidden' || ox === 'clip') && o.getBoundingClientRect().right <= rand + 1) return true;
+      }
+      return false;
+    };
+    const gevonden: string[] = [];
+    for (const el of Array.from(document.querySelectorAll<HTMLElement>('.view.is-active *, .sidebar *'))) {
+      const r = el.getBoundingClientRect();
+      if (r.width < 1 || r.height < 1 || r.right <= rand + 1) continue;
+      const cs = getComputedStyle(el);
+      // Decoratie (aria-hidden, zoals de gloed achter de kopkaart) is geen inhoud.
+      if (el.closest('[aria-hidden="true"]')) continue;
+      if (cs.visibility === 'hidden' || cs.position === 'fixed' || el.closest('[hidden]') || binnenGehouden(el)) continue;
+      gevonden.push(`${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''}.${String(el.className).trim().split(/\s+/).slice(0, 2).join('.')} (${Math.round(r.right)}>${rand})`);
+      if (gevonden.length >= 6) break;
+    }
+    return gevonden;
+  });
+}
 
 test('[KLV-N-002] het maandkeuzepaneel valt op geen enkele breedte buiten het scherm', async ({ page }) => {
   // Vondst seeds 1 en 12 (paneel buiten de rechterrand). Vastgepind op Vandaag bij
@@ -192,32 +223,31 @@ test('[KLV-N-005] op geen enkel medewerkerscherm valt inhoud buiten de rechterra
       await expect(page.locator(`#view-${scherm}`)).toHaveClass(/is-active/);
       await page.setViewportSize({ width: breedte, height: 900 });
       await page.waitForTimeout(200);
-      const buiten = await page.evaluate(() => {
-        const rand = document.documentElement.clientWidth;
-        // Binnen beeld gehouden door een ouder: een scroller (veegbaar) of een ouder
-        // die afknipt en zelf binnen de rand eindigt (dan zie je het niet buiten de rand).
-        const binnenGehouden = (el: Element) => {
-          for (let o = el.parentElement; o && o !== document.body; o = o.parentElement) {
-            const ox = getComputedStyle(o).overflowX;
-            if (ox === 'auto' || ox === 'scroll') return true;
-            if ((ox === 'hidden' || ox === 'clip') && o.getBoundingClientRect().right <= rand + 1) return true;
-          }
-          return false;
-        };
-        const gevonden: string[] = [];
-        for (const el of Array.from(document.querySelectorAll<HTMLElement>('.view.is-active *, .sidebar *'))) {
-          const r = el.getBoundingClientRect();
-          if (r.width < 1 || r.height < 1 || r.right <= rand + 1) continue;
-          const cs = getComputedStyle(el);
-          // Decoratie (aria-hidden, zoals de gloed achter de kopkaart) is geen inhoud.
-          if (el.closest('[aria-hidden="true"]')) continue;
-          if (cs.visibility === 'hidden' || cs.position === 'fixed' || el.closest('[hidden]') || binnenGehouden(el)) continue;
-          gevonden.push(`${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''}.${String(el.className).trim().split(/\s+/).slice(0, 2).join('.')} (${Math.round(r.right)}>${rand})`);
-          if (gevonden.length >= 6) break;
-        }
-        return gevonden;
-      });
+      const buiten = await inhoudBuitenRechterrand(page);
       expect(buiten, `${scherm} @ ${breedte}px`).toEqual([]);
+    });
+  }
+});
+
+test('[KLV-N-006] op geen enkel beheerscherm valt inhoud buiten de rechterrand rond de breekpunten', async ({ page }) => {
+  // Vondst monkey op de beheerkant (MONKEY_ROL=beheer, seeds 1 en 2): in Teambeheer
+  // stonden de accountgroepen bij 821px 92px buiten beeld, en in Instellingen viel
+  // de keuze "per pagina" van de mailgeschiedenis bij 1024 en 1280px bijna 80px
+  // buiten de rand. Zelfde meting als KLV-N-005, nu voor de Backoffice.
+  test.setTimeout(240_000);
+  const loginPage = new LoginPage(page);
+  await test.step('Given een beheerder in Klassiek', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+  });
+  for (const scherm of ['dashboard', 'approvals', 'invoices', 'employees', 'announcements', 'settings']) for (const breedte of [390, 720, 721, 820, 821, 1024, 1280]) for (const vanaf of [360, 1440]) {
+    await test.step(`Then valt er op ${scherm} bij ${breedte}px (vanaf ${vanaf}px) niets buiten de rechterrand`, async () => {
+      await page.setViewportSize({ width: vanaf, height: 900 });
+      await page.locator(`.nav-item[data-view="${scherm}"]:visible`).first().click();
+      await expect(page.locator(`#view-${scherm}`)).toHaveClass(/is-active/);
+      await page.setViewportSize({ width: breedte, height: 900 });
+      await page.waitForTimeout(250);
+      expect(await inhoudBuitenRechterrand(page), `${scherm} @ ${breedte}px`).toEqual([]);
     });
   }
 });

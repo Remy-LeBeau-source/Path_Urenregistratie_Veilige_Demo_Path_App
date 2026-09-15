@@ -50,6 +50,8 @@ function seedsUitOmgeving(): number[] {
 }
 
 const STAPPEN = Number(process.env.MONKEY_STAPPEN || 120);
+// MONKEY_ROL=beheer verkent de Backoffice-kant in Klassiek; standaard de medewerker.
+const ROL = String(process.env.MONKEY_ROL || 'medewerker').trim().toLowerCase() === 'beheer' ? 'beheer' : 'medewerker';
 
 // Rommelinvoer: equivalentieklassen en grenswaarden die een formulierveld moet
 // verdragen zonder de app te breken.
@@ -111,7 +113,8 @@ async function invarianten(page: Page): Promise<{ hard: string[]; zacht: string[
       const cs = getComputedStyle(el);
       if (cs.visibility === 'hidden' || cs.position === 'fixed' || el.closest('[hidden]')) continue;
       if (inScroller(el)) continue;
-      zacht.push(`buiten rechterrand: ${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''}${el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.') : ''} (${Math.round(r.right)}>${breedte})`);
+      const context = `${document.body.dataset.scherm || '?'}; week=${String(((0, eval)('state') as { hoursWeekScope?: string }).hoursWeekScope || '')}; ouder=${el.parentElement?.className || ''}`;
+      zacht.push(`[${context}] buiten rechterrand: ${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''}${el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.') : ''} (${Math.round(r.right)}>${breedte})`);
       if (zacht.length > 5) break;
     }
     return { hard, zacht };
@@ -150,7 +153,7 @@ async function beschrijf(page: Page, selector: string): Promise<string> {
 }
 
 for (const seed of seedsUitOmgeving()) {
-  test(`[VERK-${seed}] monkey op de medewerker in Klassiek blijft heel (seed ${seed})`, async ({ page }, testInfo) => {
+  test(`[VERK-${ROL === 'beheer' ? 'B' : ''}${seed}] monkey op de ${ROL} in Klassiek blijft heel (seed ${seed})`, async ({ page }, testInfo) => {
     const rnd = prng(seed * 7919 + (testInfo.project.name.includes('telefoon') ? 1 : 0));
     const kies = <T>(lijst: T[]): T => lijst[Math.floor(rnd() * lijst.length)];
     const fouten: string[] = [];
@@ -203,7 +206,7 @@ for (const seed of seedsUitOmgeving()) {
 
     const loginPage = new LoginPage(page);
     await loginPage.open();
-    await loginPage.loginAsEmployee();
+    if (ROL === 'beheer') await loginPage.loginAsAdmin(); else await loginPage.loginAsEmployee();
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
     const thema = seed % 2 === 0 ? 'dark' : 'light';
     await page.evaluate(t => {
@@ -218,8 +221,8 @@ for (const seed of seedsUitOmgeving()) {
       // Niet in outputDir: Playwright maakt die bij elke run leeg.
       const dir = join(process.cwd(), 'verkenning-rapport');
       mkdirSync(dir, { recursive: true });
-      writeFileSync(join(dir, `${testInfo.project.name}-seed-${seed}.json`), JSON.stringify({
-        seed, project: testInfo.project.name, thema, stappen: log.length, fouten, netlog,
+      writeFileSync(join(dir, `${testInfo.project.name}-${ROL}-seed-${seed}.json`), JSON.stringify({
+        seed, rol: ROL, project: testInfo.project.name, thema, stappen: log.length, fouten, netlog,
         zachteBevindingen: Object.fromEntries(zachteBevindingen), log,
       }, null, 2));
     };
@@ -295,7 +298,9 @@ for (const seed of seedsUitOmgeving()) {
             if (await knop.isVisible()) await knop.click({ timeout: 2_000 });
           } else {
             h.soort = 'navigeer-hash';
-            h.waarde = kies(['employee-dashboard', 'timesheet', 'historie', 'employee-announcements', 'customer-timesheet', 'dashboard', 'settings', 'onbekend']);
+            h.waarde = kies(ROL === 'beheer'
+              ? ['dashboard', 'approvals', 'invoices', 'employees', 'announcements', 'settings', 'teamstatus', 'customer-timesheet-admin', 'timesheet', 'employee-dashboard', 'onbekend']
+              : ['employee-dashboard', 'timesheet', 'historie', 'employee-announcements', 'customer-timesheet', 'dashboard', 'settings', 'onbekend']);
             await page.evaluate(v => { window.location.hash = v; }, h.waarde);
           }
         } catch (e) {

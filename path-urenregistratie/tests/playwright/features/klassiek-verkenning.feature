@@ -42,6 +42,14 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
     Then wordt met Playwright-assertions bevestigd dat op geen enkel medewerkerscherm valt inhoud buiten de rechterrand rond de breekpunten
 
   @negative
+  Scenario: [KLV-N-006] op geen enkel beheerscherm valt inhoud buiten de rechterrand rond de breekpunten
+    # Testtechniek: Monkey testing (seeded) + grenswaardenanalyse + toestandsovergang + responsive viewport
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given een beheerder in Klassiek
+    When de flow voor KLV-N-006 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat op geen enkel beheerscherm valt inhoud buiten de rechterrand rond de breekpunten
+
+  @negative
   Scenario: [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie
     # Testtechniek: Monkey testing (seeded) + concurrency + toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 11
