@@ -2,6 +2,66 @@
 
 Vervangt de eerdere versie van dit bestand. Zelfstandig leesbaar.
 
+## Tussenstand Claude Code 15 sep, avond — Berichten, bel en Nieuw in de app (2.0.102 – 2.0.113)
+
+Alle wensen en besluiten van Gio staan in `GIO-WENSEN.md` (open/bezig/klaar met versie). Daar staat altijd de actuele lijst; begin daar.
+
+**Stand bij deze overdracht**
+- Herontwerp is de branch waar Claude Code (herontwerp-sessie) werkt. Main (andere Claude-sessie) haalt herontwerp binnen op main, en de pipeline zet het op TEST.
+- Laatst gepusht en groen: 2.0.112 (81be0b81), staat op main.
+- Lokaal klaar op herontwerp, wordt **2.0.113**:
+  - filter **Gelezen** in Berichten, compacte filters met aantallen;
+  - ingetrokken berichten in zachte **lavendel**;
+  - merge van de seed 15/6/9/5 van main (f9b10a76), met NOT-H-012 en NOT-H-017 op die aantallen.
+- Gio heeft alles wat hij vroeg; er staat niets van hem open behalve de iPhone-controle (SKIN-N-008).
+
+**Werkwijze (vast, van Gio)**
+- Elke fix of wens krijgt een Playwright-case met harde assertions en Given/When/Then.
+- De TMap/ISTQB-techniek staat in `scripts/sync-living-docs.mjs` (techniqueFor); `npm run test:design` controleert dat.
+- Tegenproef: de case draaien tegen `git show HEAD:...` van app.js of styles.css, rood zien, daarna terugzetten.
+- Versie ophogen per bundel met `npm run version:set -- 2.0.x`. Het script slaat regels met `class="nieuw-versie"` over.
+- "Nieuw in de app" (index.html, `#nieuw-in-de-app-lijst`) bijwerken bij elke versie met iets voor medewerkers:
+  - regel bovenaan, met versie, korte kop, één zin en `<time datetime="YYYY-MM-DDTHH:MM">15 sep · 21:11</time>` (commit-tijd);
+  - maximaal 20 regels, de oudste valt eraf;
+  - nooit namen of gevoelige info (KLV-H-018 controleert dat).
+- Gates vóór push: `npm run docs:sync`, `test:design`, `test:bdd:design`, `version:check`, `node scripts/contrast-licht-donker.mjs`, `node scripts/set-version-check.mjs`.
+- Smoke: `node scripts/smoke-test.mjs`. Lokaal duurt hij 8-10 minuten; draai hem alleen en controleer ook `grep -c Uncaught` (moet 0 zijn).
+- Titels van testcases zonder apostrof: `pagina\'s` brak de parser van docs:sync.
+- Testisolatie: de server verwijdert nooit dagregels. Cases die uren naar de server sturen, gebruiken een eigen maand (lijst in de sectie 2.0.101 hieronder). Cases over lezen van berichten gebruiken een nagebootste meldingenlijst.
+- Seed (`database/seed-demo-data.sql`) is van main. Geen puntkomma's in SQL-commentaar of strings: migrate.php knipt op `;`.
+
+**Wat er gebouwd is sinds 2.0.101**
+- **2.0.102**: statuspillen in Instellingen lopen om op smalle telefoons (KLV-N-022). Monkey seed 15 niet meer reproduceerbaar; SKIN-H-040 5/5 groen.
+- **2.0.103**: een bericht telt pas als gelezen na openklappen of via het knopje "Markeer als gelezen" (`[data-bericht-gelezen]`).
+  - Niets gaat meer vanzelf: de IntersectionObserver is weg.
+  - Alle berichten zijn ingeklapt; nieuwe met Nieuw en vet bovenaan.
+  - `springNaarOngelezenBericht()` in showView: naar het eerste ongelezen bericht, `scrollIntoView` met terugval (jsdom kent het niet).
+  - `openBerichten` wordt geleegd als je Berichten verlaat.
+  - Tests: NOT-H-011, NOT-N-015.
+- **2.0.104**: het paneel met de berichtenlijst knipt af, zodat de onderste kaart niet over de ronde hoeken steekt (NOT-H-012).
+- **2.0.109**:
+  - Nieuw in de app heeft 20 updates met tijdstip, 5 per pagina.
+  - Helper `pagineerLijst(sleutel, items, nav, perPagina)` met `lijstPaginas`; de Vorige/Volgende-knoppen hebben `[data-pagina-vorige]`/`[data-pagina-volgende]` in `.lijst-paginering`.
+  - Berichten: hooguit `BERICHTEN_MAXIMUM` 30, `BERICHTEN_PER_PAGINA` 10, ongelezen vooraan. Bel: hooguit 10 met "En nog N" (NOT-H-016).
+  - Startfilter **Actueel** (`state.announcementArchiveFilter` standaard `actueel`; migratie in smoke aangepast).
+  - Ingetrokken zonder oranje (NOT-H-017). KLV-H-018 aangepast.
+- **2.0.112**: merge main (wekker 2.0.106, bel-seed voor alle medewerkers 2.0.108/2.0.111, ERD 2.0.110).
+- **2.0.113** (lokaal, zie boven):
+  - filters Actueel · Ongelezen · Gelezen · Ingetrokken · Alles met aantallen (`zetTeller` in `toonBerichtenLijst`);
+  - Gelezen = gelezen en niet ingetrokken;
+  - tokens `--ingetrokken-tekst/-rand/-vlak` (licht in `:root`, donker in `html[data-theme="dark"]`);
+  - NOT-H-011 controleert het filter Gelezen, NOT-H-017 de optelling (Ongelezen + Gelezen = Actueel, Actueel + Ingetrokken = Alles) en de lavendeltint met contrast ≥ 4,5.
+
+**Belangrijke functies (app.js)**
+- `belMeldingenVoorProfiel`, `isMededelingMelding`, `meldingBestemming`: bel alleen over eigen uren, en de bestemming per soort melding.
+- Berichten: `renderEmployeeAnnouncementArchive` → `toonBerichtenLijst` → `berichtKaartHtml`; `markeerBerichtGelezen`, `markeerAlleBerichtenGelezen` (alleen `mark_announcement_read`, nooit `mark_all_read`).
+- `renderNieuwInDeApp` (wordt aangeroepen vanuit `syncEnvironmentChrome`; alleen TEST en lokaal).
+
+**Open / in de gaten houden**
+- SKIN-N-008 (fixme): dialoog met toetsenbord onder "minder beweging". Controleren op een echte iPhone.
+- MOB-H-024 op mobile-chrome: af en toe een 401 in de console bij het laden net na inloggen (race). Los 3/3 groen.
+- PROD-wekker (main 2.0.106): nog niet bevestigd dat een release zonder nieuwere commit na 10 minuten echt blijft wachten.
+
 ## Update Claude Code nacht 14→15 sep — monkey-verkenning Klassiek (2.0.77)
 
 - Nieuw: seeded monkey-verkenner `tests/verkenning/klassiek-monkey.spec.ts` met eigen config

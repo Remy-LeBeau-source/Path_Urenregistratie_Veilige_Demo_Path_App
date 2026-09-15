@@ -151,7 +151,7 @@ function techniqueFor(definition, testCase) {
       'NOT-H-013': 'Beslistabel (soort melding → bestemming) + navigatietest',
       'NOT-H-014': 'Equivalentieklassen (mededeling vs statusmelding) + API-contractcontrole',
       'NOT-H-016': 'Grenswaardenanalyse (30 berichten, 10 in de bel) + paginering (toestandsovergang per pagina)',
-      'NOT-H-017': 'Equivalentieklassen (actueel/ingetrokken) + contrastmeting in licht en donker',
+      'NOT-H-017': 'Equivalentieklassen (actueel/ongelezen/gelezen/ingetrokken) + optelregel tussen filters + contrastmeting in licht en donker',
       'KLV-N-022': 'Responsive viewport (320/360/390) + grenswaarden smalle telefoon + lay-outmeting binnen de kaart',
       'KLV-H-021': 'Toestandsovergangtest (licht↔donker, Klassiek↔Modern, heen en terug) + toegankelijkheidsinspectie (geen misleidend aria-pressed)',
       'KLV-H-020':'Beslistabel (stap → knoptekst) + visuele consistentie met de huisstijlknop in licht en donker',
