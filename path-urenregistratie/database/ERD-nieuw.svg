@@ -1,0 +1,525 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1914" height="1228" viewBox="0 0 1914 1228" font-family="Segoe UI, Arial">
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#9fb3c8"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1914" height="1228" fill="#f7f9fa"/>
+  <rect x="0" y="0" width="1914" height="6" fill="#12876f"/>
+  <text x="40" y="42" font-size="22" font-weight="700" fill="#0d1b38">Path Consultancy · Database-ERD</text>
+  <text x="40" y="64" font-size="12.5" fill="#5b6670">Automatisch gegenereerd uit database/schema.sql · 20 tabellen · 292 kolommen · 52 foreign keys · gegenereerd 2026-09-15 20:20</text>
+  <text x="40" y="90" font-size="11" fill="#5b6670">PK primary key · FK foreign key · PK/FK gecombineerde sleutel · UQ uniek · "→ tabel.veld" wijst het FK-doel aan; een getekende lijn geldt alleen binnen hetzelfde domein.</text>
+  <text x="40" y="128" font-size="13" font-weight="700" fill="#12876f">Organisatie &amp; identiteit</text>
+  <text x="416" y="128" font-size="13" font-weight="700" fill="#12876f">Opdrachten &amp; routering</text>
+  <text x="792" y="128" font-size="13" font-weight="700" fill="#12876f">Urenregistratie</text>
+  <text x="1168" y="128" font-size="13" font-weight="700" fill="#12876f">Documenten &amp; facturatie</text>
+  <text x="1544" y="128" font-size="13" font-weight="700" fill="#12876f">Communicatie</text>
+  <path d="M 40 364 H 24 V 167 H 40" fill="none" stroke="#9fb3c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M 40 558 H 24 V 313 H 40" fill="none" stroke="#9fb3c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M 40 1068 H 24 V 167 H 40" fill="none" stroke="#9fb3c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M 40 1092 H 24 V 313 H 40" fill="none" stroke="#9fb3c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M 40 704 H 24 V 167 H 40" fill="none" stroke="#9fb3c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M 40 728 H 24 V 313 H 40" fill="none" stroke="#9fb3c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M 416 412 H 400 V 167 H 416" fill="none" stroke="#9fb3c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M 416 436 H 400 V 167 H 416" fill="none" stroke="#9fb3c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M 416 752 H 400 V 313 H 416" fill="none" stroke="#9fb3c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M 416 776 H 400 V 531 H 416" fill="none" stroke="#9fb3c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M 792 436 H 776 V 167 H 792" fill="none" stroke="#9fb3c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M 792 654 H 776 V 385 H 792" fill="none" stroke="#9fb3c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M 792 848 H 776 V 385 H 792" fill="none" stroke="#9fb3c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M 1544 460 H 1528 V 167 H 1544" fill="none" stroke="#9fb3c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M 1544 726 H 1528 V 167 H 1544" fill="none" stroke="#9fb3c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M 1544 944 H 1528 V 167 H 1544" fill="none" stroke="#9fb3c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M 40 898 H 24 V 167 H 40" fill="none" stroke="#9fb3c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M 40 922 H 24 V 313 H 40" fill="none" stroke="#9fb3c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <g>
+  <rect x="40" y="150" width="330" height="116" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="40" y="150" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="40" y="176" width="330" height="8" fill="#12876f"/>
+  <text x="54" y="172" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">companies</text>
+  <text x="358" y="172" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">37 kolommen</text>
+  <rect x="52" y="187" width="24.8" height="16" rx="3" fill="#0d1b38"/>
+  <text x="58" y="199" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK</text>
+  <text x="86.8" y="199" font-family="Consolas, monospace" font-size="11" fill="#20303f">id</text>
+  
+  <rect x="52" y="211" width="24.8" height="16" rx="3" fill="#8a6d1a"/>
+  <text x="58" y="223" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">UQ</text>
+  <text x="86.8" y="223" font-family="Consolas, monospace" font-size="11" fill="#20303f">slug</text>
+  <text x="358" y="224" font-family="Segoe UI, Arial" font-size="10" fill="#8a6d1a" text-anchor="end">uniek</text>
+  <text x="58" y="247" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 35 overige kolommen in SCHEMA.md</text>
+</g>
+<g>
+  <rect x="40" y="296" width="330" height="188" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="40" y="296" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="40" y="322" width="330" height="8" fill="#12876f"/>
+  <text x="54" y="318" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">users</text>
+  <text x="358" y="318" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">13 kolommen</text>
+  <rect x="52" y="333" width="24.8" height="16" rx="3" fill="#0d1b38"/>
+  <text x="58" y="345" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK</text>
+  <text x="86.8" y="345" font-family="Consolas, monospace" font-size="11" fill="#20303f">id</text>
+  
+  <rect x="52" y="357" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="58" y="369" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="86.8" y="369" font-family="Consolas, monospace" font-size="11" fill="#20303f">company_id</text>
+  <text x="358" y="370" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ companies.id</text>
+  <rect x="52" y="381" width="24.8" height="16" rx="3" fill="#8a6d1a"/>
+  <text x="58" y="393" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">UQ</text>
+  <text x="86.8" y="393" font-family="Consolas, monospace" font-size="11" fill="#20303f">google_subject</text>
+  <text x="358" y="394" font-family="Segoe UI, Arial" font-size="10" fill="#8a6d1a" text-anchor="end">uniek</text>
+  <rect x="52" y="405" width="24.8" height="16" rx="3" fill="#8a6d1a"/>
+  <text x="58" y="417" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">UQ</text>
+  <text x="86.8" y="417" font-family="Consolas, monospace" font-size="11" fill="#20303f">email</text>
+  <text x="358" y="418" font-family="Segoe UI, Arial" font-size="10" fill="#8a6d1a" text-anchor="end">uniek</text>
+  <rect x="52" y="429" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="58" y="441" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="86.8" y="441" font-family="Consolas, monospace" font-size="11" fill="#20303f">deactivated_by</text>
+  <text x="358" y="442" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ users.id</text>
+  <text x="58" y="465" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 8 overige kolommen in SCHEMA.md</text>
+</g>
+<g>
+  <rect x="40" y="514" width="330" height="92" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="40" y="514" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="40" y="540" width="330" height="8" fill="#12876f"/>
+  <text x="54" y="536" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">user_preferences</text>
+  <text x="358" y="536" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">8 kolommen</text>
+  <rect x="52" y="551" width="44" height="16" rx="3" fill="#0d1b38"/>
+  <text x="58" y="563" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK/FK</text>
+  <text x="106" y="563" font-family="Consolas, monospace" font-size="11" fill="#20303f">user_id</text>
+  <text x="358" y="564" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ users.id</text>
+  <text x="58" y="587" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 7 overige kolommen in SCHEMA.md</text>
+</g>
+<g>
+  <rect x="40" y="636" width="330" height="164" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="40" y="636" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="40" y="662" width="330" height="8" fill="#12876f"/>
+  <text x="54" y="658" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">employees</text>
+  <text x="358" y="658" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">18 kolommen</text>
+  <rect x="52" y="673" width="24.8" height="16" rx="3" fill="#0d1b38"/>
+  <text x="58" y="685" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK</text>
+  <text x="86.8" y="685" font-family="Consolas, monospace" font-size="11" fill="#20303f">id</text>
+  
+  <rect x="52" y="697" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="58" y="709" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="86.8" y="709" font-family="Consolas, monospace" font-size="11" fill="#20303f">company_id</text>
+  <text x="358" y="710" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ companies.id</text>
+  <rect x="52" y="721" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="58" y="733" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="86.8" y="733" font-family="Consolas, monospace" font-size="11" fill="#20303f">user_id</text>
+  <text x="358" y="734" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ users.id</text>
+  <rect x="52" y="745" width="24.8" height="16" rx="3" fill="#8a6d1a"/>
+  <text x="58" y="757" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">UQ</text>
+  <text x="86.8" y="757" font-family="Consolas, monospace" font-size="11" fill="#20303f">employee_number</text>
+  <text x="358" y="758" font-family="Segoe UI, Arial" font-size="10" fill="#8a6d1a" text-anchor="end">uniek</text>
+  <text x="58" y="781" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 14 overige kolommen in SCHEMA.md</text>
+</g>
+<g>
+  <rect x="40" y="830" width="330" height="140" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="40" y="830" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="40" y="856" width="330" height="8" fill="#12876f"/>
+  <text x="54" y="852" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">audit_log</text>
+  <text x="358" y="852" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">9 kolommen</text>
+  <rect x="52" y="867" width="24.8" height="16" rx="3" fill="#0d1b38"/>
+  <text x="58" y="879" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK</text>
+  <text x="86.8" y="879" font-family="Consolas, monospace" font-size="11" fill="#20303f">id</text>
+  
+  <rect x="52" y="891" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="58" y="903" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="86.8" y="903" font-family="Consolas, monospace" font-size="11" fill="#20303f">company_id</text>
+  <text x="358" y="904" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ companies.id</text>
+  <rect x="52" y="915" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="58" y="927" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="86.8" y="927" font-family="Consolas, monospace" font-size="11" fill="#20303f">actor_user_id</text>
+  <text x="358" y="928" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ users.id</text>
+  <text x="58" y="951" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 6 overige kolommen in SCHEMA.md</text>
+</g>
+<g>
+  <rect x="40" y="1000" width="330" height="188" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="40" y="1000" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="40" y="1026" width="330" height="8" fill="#12876f"/>
+  <text x="54" y="1022" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">reminder_log</text>
+  <text x="358" y="1022" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">6 kolommen</text>
+  <rect x="52" y="1037" width="24.8" height="16" rx="3" fill="#0d1b38"/>
+  <text x="58" y="1049" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK</text>
+  <text x="86.8" y="1049" font-family="Consolas, monospace" font-size="11" fill="#20303f">id</text>
+  
+  <rect x="52" y="1061" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="58" y="1073" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="86.8" y="1073" font-family="Consolas, monospace" font-size="11" fill="#20303f">company_id</text>
+  <text x="358" y="1074" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ companies.id</text>
+  <rect x="52" y="1085" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="58" y="1097" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="86.8" y="1097" font-family="Consolas, monospace" font-size="11" fill="#20303f">user_id</text>
+  <text x="358" y="1098" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ users.id</text>
+  <rect x="52" y="1109" width="24.8" height="16" rx="3" fill="#8a6d1a"/>
+  <text x="58" y="1121" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">UQ</text>
+  <text x="86.8" y="1121" font-family="Consolas, monospace" font-size="11" fill="#20303f">reminder_type</text>
+  <text x="358" y="1122" font-family="Segoe UI, Arial" font-size="10" fill="#8a6d1a" text-anchor="end">uniek</text>
+  <rect x="52" y="1133" width="24.8" height="16" rx="3" fill="#8a6d1a"/>
+  <text x="58" y="1145" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">UQ</text>
+  <text x="86.8" y="1145" font-family="Consolas, monospace" font-size="11" fill="#20303f">period_key</text>
+  <text x="358" y="1146" font-family="Segoe UI, Arial" font-size="10" fill="#8a6d1a" text-anchor="end">uniek</text>
+  <text x="58" y="1169" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 1 overige kolommen in SCHEMA.md</text>
+</g>
+<g>
+  <rect x="416" y="150" width="330" height="116" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="416" y="150" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="416" y="176" width="330" height="8" fill="#12876f"/>
+  <text x="430" y="172" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">counterparties</text>
+  <text x="734" y="172" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">17 kolommen</text>
+  <rect x="428" y="187" width="24.8" height="16" rx="3" fill="#0d1b38"/>
+  <text x="434" y="199" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK</text>
+  <text x="462.8" y="199" font-family="Consolas, monospace" font-size="11" fill="#20303f">id</text>
+  
+  <rect x="428" y="211" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="434" y="223" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="462.8" y="223" font-family="Consolas, monospace" font-size="11" fill="#20303f">company_id</text>
+  <text x="734" y="224" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ companies.id</text>
+  <text x="434" y="247" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 15 overige kolommen in SCHEMA.md</text>
+</g>
+<g>
+  <rect x="416" y="296" width="330" height="188" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="416" y="296" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="416" y="322" width="330" height="8" fill="#12876f"/>
+  <text x="430" y="318" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">assignments</text>
+  <text x="734" y="318" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">32 kolommen</text>
+  <rect x="428" y="333" width="24.8" height="16" rx="3" fill="#0d1b38"/>
+  <text x="434" y="345" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK</text>
+  <text x="462.8" y="345" font-family="Consolas, monospace" font-size="11" fill="#20303f">id</text>
+  
+  <rect x="428" y="357" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="434" y="369" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="462.8" y="369" font-family="Consolas, monospace" font-size="11" fill="#20303f">company_id</text>
+  <text x="734" y="370" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ companies.id</text>
+  <rect x="428" y="381" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="434" y="393" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="462.8" y="393" font-family="Consolas, monospace" font-size="11" fill="#20303f">employee_id</text>
+  <text x="734" y="394" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ employees.id</text>
+  <rect x="428" y="405" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="434" y="417" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="462.8" y="417" font-family="Consolas, monospace" font-size="11" fill="#20303f">client_id</text>
+  <text x="734" y="418" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ counterparties.id</text>
+  <rect x="428" y="429" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="434" y="441" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="462.8" y="441" font-family="Consolas, monospace" font-size="11" fill="#20303f">broker_id</text>
+  <text x="734" y="442" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ counterparties.id</text>
+  <text x="434" y="465" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 27 overige kolommen in SCHEMA.md</text>
+</g>
+<g>
+  <rect x="416" y="514" width="330" height="164" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="416" y="514" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="416" y="540" width="330" height="8" fill="#12876f"/>
+  <text x="430" y="536" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">mail_recipients</text>
+  <text x="734" y="536" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">10 kolommen</text>
+  <rect x="428" y="551" width="24.8" height="16" rx="3" fill="#0d1b38"/>
+  <text x="434" y="563" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK</text>
+  <text x="462.8" y="563" font-family="Consolas, monospace" font-size="11" fill="#20303f">id</text>
+  
+  <rect x="428" y="575" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="434" y="587" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="462.8" y="587" font-family="Consolas, monospace" font-size="11" fill="#20303f">company_id</text>
+  <text x="734" y="588" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ companies.id</text>
+  <rect x="428" y="599" width="24.8" height="16" rx="3" fill="#8a6d1a"/>
+  <text x="434" y="611" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">UQ</text>
+  <text x="462.8" y="611" font-family="Consolas, monospace" font-size="11" fill="#20303f">recipient_key</text>
+  <text x="734" y="612" font-family="Segoe UI, Arial" font-size="10" fill="#8a6d1a" text-anchor="end">uniek</text>
+  <rect x="428" y="623" width="24.8" height="16" rx="3" fill="#8a6d1a"/>
+  <text x="434" y="635" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">UQ</text>
+  <text x="462.8" y="635" font-family="Consolas, monospace" font-size="11" fill="#20303f">email</text>
+  <text x="734" y="636" font-family="Segoe UI, Arial" font-size="10" fill="#8a6d1a" text-anchor="end">uniek</text>
+  <text x="434" y="659" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 6 overige kolommen in SCHEMA.md</text>
+</g>
+<g>
+  <rect x="416" y="708" width="330" height="116" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="416" y="708" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="416" y="734" width="330" height="8" fill="#12876f"/>
+  <text x="430" y="730" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">assignment_mail_routes</text>
+  <text x="734" y="730" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">6 kolommen</text>
+  <rect x="428" y="745" width="44" height="16" rx="3" fill="#0d1b38"/>
+  <text x="434" y="757" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK/FK</text>
+  <text x="482" y="757" font-family="Consolas, monospace" font-size="11" fill="#20303f">assignment_id</text>
+  <text x="734" y="758" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ assignments.id</text>
+  <rect x="428" y="769" width="44" height="16" rx="3" fill="#0d1b38"/>
+  <text x="434" y="781" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK/FK</text>
+  <text x="482" y="781" font-family="Consolas, monospace" font-size="11" fill="#20303f">mail_recipient_id</text>
+  <text x="734" y="782" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ mail_recipients.id</text>
+  <text x="434" y="805" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 4 overige kolommen in SCHEMA.md</text>
+</g>
+<g>
+  <rect x="792" y="150" width="330" height="188" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="792" y="150" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="792" y="176" width="330" height="8" fill="#12876f"/>
+  <text x="806" y="172" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">periods</text>
+  <text x="1110" y="172" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">8 kolommen</text>
+  <rect x="804" y="187" width="24.8" height="16" rx="3" fill="#0d1b38"/>
+  <text x="810" y="199" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK</text>
+  <text x="838.8" y="199" font-family="Consolas, monospace" font-size="11" fill="#20303f">id</text>
+  
+  <rect x="804" y="211" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="810" y="223" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="838.8" y="223" font-family="Consolas, monospace" font-size="11" fill="#20303f">company_id</text>
+  <text x="1110" y="224" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ companies.id</text>
+  <rect x="804" y="235" width="24.8" height="16" rx="3" fill="#8a6d1a"/>
+  <text x="810" y="247" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">UQ</text>
+  <text x="838.8" y="247" font-family="Consolas, monospace" font-size="11" fill="#20303f">year</text>
+  <text x="1110" y="248" font-family="Segoe UI, Arial" font-size="10" fill="#8a6d1a" text-anchor="end">uniek</text>
+  <rect x="804" y="259" width="24.8" height="16" rx="3" fill="#8a6d1a"/>
+  <text x="810" y="271" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">UQ</text>
+  <text x="838.8" y="271" font-family="Consolas, monospace" font-size="11" fill="#20303f">month</text>
+  <text x="1110" y="272" font-family="Segoe UI, Arial" font-size="10" fill="#8a6d1a" text-anchor="end">uniek</text>
+  <rect x="804" y="283" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="810" y="295" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="838.8" y="295" font-family="Consolas, monospace" font-size="11" fill="#20303f">closed_by</text>
+  <text x="1110" y="296" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ users.id</text>
+  <text x="810" y="319" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 3 overige kolommen in SCHEMA.md</text>
+</g>
+<g>
+  <rect x="792" y="368" width="330" height="188" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="792" y="368" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="792" y="394" width="330" height="8" fill="#12876f"/>
+  <text x="806" y="390" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">timesheets</text>
+  <text x="1110" y="390" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">17 kolommen</text>
+  <rect x="804" y="405" width="24.8" height="16" rx="3" fill="#0d1b38"/>
+  <text x="810" y="417" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK</text>
+  <text x="838.8" y="417" font-family="Consolas, monospace" font-size="11" fill="#20303f">id</text>
+  
+  <rect x="804" y="429" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="810" y="441" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="838.8" y="441" font-family="Consolas, monospace" font-size="11" fill="#20303f">period_id</text>
+  <text x="1110" y="442" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ periods.id</text>
+  <rect x="804" y="453" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="810" y="465" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="838.8" y="465" font-family="Consolas, monospace" font-size="11" fill="#20303f">employee_id</text>
+  <text x="1110" y="466" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ employees.id</text>
+  <rect x="804" y="477" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="810" y="489" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="838.8" y="489" font-family="Consolas, monospace" font-size="11" fill="#20303f">assignment_id</text>
+  <text x="1110" y="490" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ assignments.id</text>
+  <rect x="804" y="501" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="810" y="513" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="838.8" y="513" font-family="Consolas, monospace" font-size="11" fill="#20303f">approved_by</text>
+  <text x="1110" y="514" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ users.id</text>
+  <text x="810" y="537" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 12 overige kolommen in SCHEMA.md</text>
+</g>
+<g>
+  <rect x="792" y="586" width="330" height="164" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="792" y="586" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="792" y="612" width="330" height="8" fill="#12876f"/>
+  <text x="806" y="608" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">time_entries</text>
+  <text x="1110" y="608" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">8 kolommen</text>
+  <rect x="804" y="623" width="24.8" height="16" rx="3" fill="#0d1b38"/>
+  <text x="810" y="635" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK</text>
+  <text x="838.8" y="635" font-family="Consolas, monospace" font-size="11" fill="#20303f">id</text>
+  
+  <rect x="804" y="647" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="810" y="659" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="838.8" y="659" font-family="Consolas, monospace" font-size="11" fill="#20303f">timesheet_id</text>
+  <text x="1110" y="660" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ timesheets.id</text>
+  <rect x="804" y="671" width="24.8" height="16" rx="3" fill="#8a6d1a"/>
+  <text x="810" y="683" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">UQ</text>
+  <text x="838.8" y="683" font-family="Consolas, monospace" font-size="11" fill="#20303f">work_date</text>
+  <text x="1110" y="684" font-family="Segoe UI, Arial" font-size="10" fill="#8a6d1a" text-anchor="end">uniek</text>
+  <rect x="804" y="695" width="24.8" height="16" rx="3" fill="#8a6d1a"/>
+  <text x="810" y="707" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">UQ</text>
+  <text x="838.8" y="707" font-family="Consolas, monospace" font-size="11" fill="#20303f">entry_type</text>
+  <text x="1110" y="708" font-family="Segoe UI, Arial" font-size="10" fill="#8a6d1a" text-anchor="end">uniek</text>
+  <text x="810" y="731" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 4 overige kolommen in SCHEMA.md</text>
+</g>
+<g>
+  <rect x="792" y="780" width="330" height="140" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="792" y="780" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="792" y="806" width="330" height="8" fill="#12876f"/>
+  <text x="806" y="802" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">timesheet_corrections</text>
+  <text x="1110" y="802" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">7 kolommen</text>
+  <rect x="804" y="817" width="24.8" height="16" rx="3" fill="#0d1b38"/>
+  <text x="810" y="829" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK</text>
+  <text x="838.8" y="829" font-family="Consolas, monospace" font-size="11" fill="#20303f">id</text>
+  
+  <rect x="804" y="841" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="810" y="853" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="838.8" y="853" font-family="Consolas, monospace" font-size="11" fill="#20303f">timesheet_id</text>
+  <text x="1110" y="854" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ timesheets.id</text>
+  <rect x="804" y="865" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="810" y="877" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="838.8" y="877" font-family="Consolas, monospace" font-size="11" fill="#20303f">requested_by</text>
+  <text x="1110" y="878" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ users.id</text>
+  <text x="810" y="901" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 4 overige kolommen in SCHEMA.md</text>
+</g>
+<g>
+  <rect x="1168" y="150" width="330" height="212" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="1168" y="150" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="1168" y="176" width="330" height="8" fill="#12876f"/>
+  <text x="1182" y="172" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">customer_timesheets</text>
+  <text x="1486" y="172" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">19 kolommen</text>
+  <rect x="1180" y="187" width="24.8" height="16" rx="3" fill="#0d1b38"/>
+  <text x="1186" y="199" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK</text>
+  <text x="1214.8" y="199" font-family="Consolas, monospace" font-size="11" fill="#20303f">id</text>
+  
+  <rect x="1180" y="211" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1186" y="223" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1214.8" y="223" font-family="Consolas, monospace" font-size="11" fill="#20303f">period_id</text>
+  <text x="1486" y="224" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ periods.id</text>
+  <rect x="1180" y="235" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1186" y="247" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1214.8" y="247" font-family="Consolas, monospace" font-size="11" fill="#20303f">employee_id</text>
+  <text x="1486" y="248" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ employees.id</text>
+  <rect x="1180" y="259" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1186" y="271" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1214.8" y="271" font-family="Consolas, monospace" font-size="11" fill="#20303f">assignment_id</text>
+  <text x="1486" y="272" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ assignments.id</text>
+  <rect x="1180" y="283" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1186" y="295" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1214.8" y="295" font-family="Consolas, monospace" font-size="11" fill="#20303f">uploaded_by</text>
+  <text x="1486" y="296" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ users.id</text>
+  <rect x="1180" y="307" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1186" y="319" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1214.8" y="319" font-family="Consolas, monospace" font-size="11" fill="#20303f">reviewed_by</text>
+  <text x="1486" y="320" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ users.id</text>
+  <text x="1186" y="343" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 13 overige kolommen in SCHEMA.md</text>
+</g>
+<g>
+  <rect x="1168" y="392" width="330" height="212" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="1168" y="392" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="1168" y="418" width="330" height="8" fill="#12876f"/>
+  <text x="1182" y="414" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">invoices</text>
+  <text x="1486" y="414" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">20 kolommen</text>
+  <rect x="1180" y="429" width="24.8" height="16" rx="3" fill="#0d1b38"/>
+  <text x="1186" y="441" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK</text>
+  <text x="1214.8" y="441" font-family="Consolas, monospace" font-size="11" fill="#20303f">id</text>
+  
+  <rect x="1180" y="453" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1186" y="465" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1214.8" y="465" font-family="Consolas, monospace" font-size="11" fill="#20303f">company_id</text>
+  <text x="1486" y="466" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ companies.id</text>
+  <rect x="1180" y="477" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1186" y="489" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1214.8" y="489" font-family="Consolas, monospace" font-size="11" fill="#20303f">timesheet_id</text>
+  <text x="1486" y="490" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ timesheets.id</text>
+  <rect x="1180" y="501" width="24.8" height="16" rx="3" fill="#8a6d1a"/>
+  <text x="1186" y="513" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">UQ</text>
+  <text x="1214.8" y="513" font-family="Consolas, monospace" font-size="11" fill="#20303f">invoice_number</text>
+  <text x="1486" y="514" font-family="Segoe UI, Arial" font-size="10" fill="#8a6d1a" text-anchor="end">uniek</text>
+  <rect x="1180" y="525" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1186" y="537" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1214.8" y="537" font-family="Consolas, monospace" font-size="11" fill="#20303f">recipient_id</text>
+  <text x="1486" y="538" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ counterparties.id</text>
+  <rect x="1180" y="549" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1186" y="561" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1214.8" y="561" font-family="Consolas, monospace" font-size="11" fill="#20303f">created_by</text>
+  <text x="1486" y="562" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ users.id</text>
+  <text x="1186" y="585" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 14 overige kolommen in SCHEMA.md</text>
+</g>
+<g>
+  <rect x="1544" y="150" width="330" height="236" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="1544" y="150" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="1544" y="176" width="330" height="8" fill="#12876f"/>
+  <text x="1558" y="172" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">announcements</text>
+  <text x="1862" y="172" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">17 kolommen</text>
+  <rect x="1556" y="187" width="24.8" height="16" rx="3" fill="#0d1b38"/>
+  <text x="1562" y="199" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK</text>
+  <text x="1590.8" y="199" font-family="Consolas, monospace" font-size="11" fill="#20303f">id</text>
+  
+  <rect x="1556" y="211" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1562" y="223" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1590.8" y="223" font-family="Consolas, monospace" font-size="11" fill="#20303f">company_id</text>
+  <text x="1862" y="224" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ companies.id</text>
+  <rect x="1556" y="235" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1562" y="247" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1590.8" y="247" font-family="Consolas, monospace" font-size="11" fill="#20303f">created_by</text>
+  <text x="1862" y="248" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ users.id</text>
+  <rect x="1556" y="259" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1562" y="271" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1590.8" y="271" font-family="Consolas, monospace" font-size="11" fill="#20303f">correction_of_id</text>
+  <text x="1862" y="272" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ announcements.id</text>
+  <rect x="1556" y="283" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1562" y="295" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1590.8" y="295" font-family="Consolas, monospace" font-size="11" fill="#20303f">superseded_by_id</text>
+  <text x="1862" y="296" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ announcements.id</text>
+  <rect x="1556" y="307" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1562" y="319" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1590.8" y="319" font-family="Consolas, monospace" font-size="11" fill="#20303f">withdrawal_of_id</text>
+  <text x="1862" y="320" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ announcements.id</text>
+  <rect x="1556" y="331" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1562" y="343" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1590.8" y="343" font-family="Consolas, monospace" font-size="11" fill="#20303f">withdrawn_by</text>
+  <text x="1862" y="344" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ users.id</text>
+  <text x="1562" y="367" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 10 overige kolommen in SCHEMA.md</text>
+</g>
+<g>
+  <rect x="1544" y="416" width="330" height="116" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="1544" y="416" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="1544" y="442" width="330" height="8" fill="#12876f"/>
+  <text x="1558" y="438" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">announcement_recipients</text>
+  <text x="1862" y="438" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">6 kolommen</text>
+  <rect x="1556" y="453" width="44" height="16" rx="3" fill="#0d1b38"/>
+  <text x="1562" y="465" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK/FK</text>
+  <text x="1610" y="465" font-family="Consolas, monospace" font-size="11" fill="#20303f">announcement_id</text>
+  <text x="1862" y="466" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ announcements.id</text>
+  <rect x="1556" y="477" width="44" height="16" rx="3" fill="#0d1b38"/>
+  <text x="1562" y="489" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK/FK</text>
+  <text x="1610" y="489" font-family="Consolas, monospace" font-size="11" fill="#20303f">user_id</text>
+  <text x="1862" y="490" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ users.id</text>
+  <text x="1562" y="513" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 4 overige kolommen in SCHEMA.md</text>
+</g>
+<g>
+  <rect x="1544" y="562" width="330" height="212" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="1544" y="562" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="1544" y="588" width="330" height="8" fill="#12876f"/>
+  <text x="1558" y="584" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">email_deliveries</text>
+  <text x="1862" y="584" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">23 kolommen</text>
+  <rect x="1556" y="599" width="24.8" height="16" rx="3" fill="#0d1b38"/>
+  <text x="1562" y="611" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK</text>
+  <text x="1590.8" y="611" font-family="Consolas, monospace" font-size="11" fill="#20303f">id</text>
+  
+  <rect x="1556" y="623" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1562" y="635" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1590.8" y="635" font-family="Consolas, monospace" font-size="11" fill="#20303f">user_id</text>
+  <text x="1862" y="636" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ users.id</text>
+  <rect x="1556" y="647" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1562" y="659" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1590.8" y="659" font-family="Consolas, monospace" font-size="11" fill="#20303f">invoice_id</text>
+  <text x="1862" y="660" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ invoices.id</text>
+  <rect x="1556" y="671" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1562" y="683" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1590.8" y="683" font-family="Consolas, monospace" font-size="11" fill="#20303f">timesheet_id</text>
+  <text x="1862" y="684" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ timesheets.id</text>
+  <rect x="1556" y="695" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1562" y="707" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1590.8" y="707" font-family="Consolas, monospace" font-size="11" fill="#20303f">customer_timesheet_id</text>
+  <text x="1862" y="708" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ customer_timesheets.id</text>
+  <rect x="1556" y="719" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1562" y="731" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1590.8" y="731" font-family="Consolas, monospace" font-size="11" fill="#20303f">announcement_id</text>
+  <text x="1862" y="732" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ announcements.id</text>
+  <text x="1562" y="755" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 17 overige kolommen in SCHEMA.md</text>
+</g>
+<g>
+  <rect x="1544" y="804" width="330" height="188" rx="8" fill="#ffffff" stroke="#d7dee2" stroke-width="1.5"/>
+  <rect x="1544" y="804" width="330" height="34" rx="8" fill="#12876f"/>
+  <rect x="1544" y="830" width="330" height="8" fill="#12876f"/>
+  <text x="1558" y="826" font-family="Segoe UI, Arial" font-size="14" font-weight="700" fill="#ffffff">notifications</text>
+  <text x="1862" y="826" font-family="Segoe UI, Arial" font-size="10.5" fill="#dff3ee" text-anchor="end">11 kolommen</text>
+  <rect x="1556" y="841" width="24.8" height="16" rx="3" fill="#0d1b38"/>
+  <text x="1562" y="853" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">PK</text>
+  <text x="1590.8" y="853" font-family="Consolas, monospace" font-size="11" fill="#20303f">id</text>
+  
+  <rect x="1556" y="865" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1562" y="877" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1590.8" y="877" font-family="Consolas, monospace" font-size="11" fill="#20303f">company_id</text>
+  <text x="1862" y="878" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ companies.id</text>
+  <rect x="1556" y="889" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1562" y="901" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1590.8" y="901" font-family="Consolas, monospace" font-size="11" fill="#20303f">user_id</text>
+  <text x="1862" y="902" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ users.id</text>
+  <rect x="1556" y="913" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1562" y="925" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1590.8" y="925" font-family="Consolas, monospace" font-size="11" fill="#20303f">period_id</text>
+  <text x="1862" y="926" font-family="Segoe UI, Arial" font-size="10" fill="#6b7680" text-anchor="end">→ periods.id</text>
+  <rect x="1556" y="937" width="24.8" height="16" rx="3" fill="#2f6fb0"/>
+  <text x="1562" y="949" font-family="Segoe UI, Arial" font-size="9.5" font-weight="700" fill="#ffffff">FK</text>
+  <text x="1590.8" y="949" font-family="Consolas, monospace" font-size="11" fill="#20303f">announcement_id</text>
+  <text x="1862" y="950" font-family="Segoe UI, Arial" font-size="10" fill="#2f6fb0" text-anchor="end">→ announcements.id</text>
+  <text x="1562" y="973" font-family="Segoe UI, Arial" font-style="italic" font-size="10" fill="#8a959c">… 6 overige kolommen in SCHEMA.md</text>
+</g>
+
+</svg>
