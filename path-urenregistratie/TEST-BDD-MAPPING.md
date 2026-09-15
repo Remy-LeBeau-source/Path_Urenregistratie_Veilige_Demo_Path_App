@@ -508,6 +508,7 @@
 | SKIN-H-034 | ui | skin.feature | een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgloed | End-to-end use-case + visuele contractasserties | 3 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgloed | Happy | 19 | Actueel |
 | SKIN-H-035 | ui | skin.feature | op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle breedte | Toestandsovergang | 21 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle breedte | Happy | 19 | Actueel |
 | SKIN-H-036 | ui | skin.feature | een dialoog met open toetsenbord houdt de knoppen, de sluitactie en het typveld in beeld | Toestandsovergang | 7 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | een dialoog met open toetsenbord houdt de knoppen, de sluitactie en het typveld in beeld | Happy | 19 | Actueel |
+| SKIN-N-008 | ui | skin.feature | met "minder beweging" houdt een dialoog met open toetsenbord de knoppen, de sluitactie en het typveld in beeld | Toestandsovergang | 7 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | met "minder beweging" houdt een dialoog met open toetsenbord de knoppen, de sluitactie en het typveld in beeld | Negative | 19 | Actueel |
 | SKIN-H-039 | ui | skin.feature | de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect toont | End-to-end use-case + visuele contractasserties | 2 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect toont | Happy | 19 | Actueel |
 | SKIN-H-040 | ui | skin.feature | het zijbalklogo volgt zijn eigen (donkere) ondergrond, niet een vast contrast met een ander element | Beslissingstabel rollen en autorisatie | 6 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | het zijbalklogo volgt zijn eigen (donkere) ondergrond, niet een vast contrast met een ander element | Happy | 19 | Actueel |
 | TS-REV-API-H-005 | integration | correction-approval-workflow.feature | admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking | Concurrency + toestandsovergang | 70 | timesheets-review-integration.steps.ts | timesheet-review-flow.spec.ts | DB / Integratie | Correctie & Goedkeuring | Correctie en goedkeuring | Happy | 9 | Actueel |
@@ -584,9 +585,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 562
+- Playwright executable cases: 563
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 563
+- Totaal unieke executable cases: 564
 - Playwright features: 31
 - Database features: 1
 - Playwright steps mappings: 31

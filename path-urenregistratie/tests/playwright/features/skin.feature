@@ -343,6 +343,16 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     Then blijven de indienknop, de sluitactie en het typveld binnen dat deel
     And ruimt het sluiten van de dialoog de aanpassing op
 
+  @negative
+  Scenario: [SKIN-N-008] met "minder beweging" houdt een dialoog met open toetsenbord de knoppen, de sluitactie en het typveld in beeld
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given een lange dialoog met onderaan een invoerveld
+    Then passen zonder aanpassing de knoppen niet in 300px -- de uitgangssituatie op iOS
+    When het toetsenbord het zichtbare deel verkleint tot 300px
+    Then blijven de indienknop, de sluitactie en het typveld binnen dat deel
+    And ruimt het sluiten van de dialoog de aanpassing op
+
   @happy
   Scenario: [SKIN-H-039] de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect toont
     # Testtechniek: End-to-end use-case + visuele contractasserties

@@ -46,7 +46,14 @@ export default defineConfig({
     serviceWorkers: 'block',
     // App CSS zeroes out transitions/animations under prefers-reduced-motion; enabling it here removes
     // animation-driven visibility/stability delays (view switches, dropdown panels) from every test.
-    reducedMotion: 'reduce',
+    //
+    // Moet onder contextOptions staan. Tot 15 sep stond `reducedMotion` direct
+    // onder `use`; dat is geen testoptie en Playwright negeerde het stil. Gemeten
+    // op desktop-chromium, mobile-chrome en mobile-safari: matchMedia gaf false en
+    // scroll-behavior bleef smooth, dus alle animaties en de zachte scroll liepen
+    // in elke test. Cases die bewust gedrag zónder voorkeur toetsen, zetten dat
+    // zelf met page.emulateMedia({ reducedMotion: 'no-preference' }).
+    contextOptions: { reducedMotion: 'reduce' },
     extraHTTPHeaders: e2eRunId ? { 'X-Path-E2E-Run-Id': e2eRunId } : undefined,
   },
   reporter: blobReport

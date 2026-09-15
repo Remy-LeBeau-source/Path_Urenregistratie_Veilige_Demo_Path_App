@@ -2505,6 +2505,84 @@ test('[SKIN-H-035] op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vr
 // is "past" niet te onderscheiden van "de dialoog was toevallig al klein".
 test('[SKIN-H-036] een dialoog met open toetsenbord houdt de knoppen, de sluitactie en het typveld in beeld', async ({ page }) => {
   test.setTimeout(120_000);
+  // Bewust zonder bewegingsvoorkeur (15 sep). Zodra reducedMotion in de config echt
+  // gaat werken, stak de dialoog onder "minder beweging" 534px boven het scherm uit:
+  // Chromium hield de max-height op 824px terwijl --zichtbaar-hoogte 300px was. Of
+  // dat op een echte iPhone ook gebeurt is niet bewezen; staat als open vondst in
+  // CODEX_HANDOFF.md. Deze case bewaakt het toetsenbordgedrag zelf.
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  const loginPage = new LoginPage(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+
+  await test.step('Given een lange dialoog met onderaan een invoerveld', async () => {
+    await page.evaluate(() => {
+      const regels = Array.from({ length: 14 }, (_, i) => '<p>Regel ' + (i + 1) + ' van de toelichting die de dialoog lang maakt.</p>').join('');
+      (window as unknown as { showModal: (o: Record<string, unknown>) => void }).showModal({
+        label: 'Controle',
+        title: 'Dialoog met toetsenbord',
+        summary: regels + '<label>Opmerking<input id="toetsenbord-veld" type="text"></label>',
+        confirm: 'Versturen',
+        initialFocus: '#toetsenbord-veld',
+      });
+    });
+    await expect(page.locator('#modal')).toBeVisible();
+  });
+
+  const meet = async () => page.evaluate(() => {
+    const r = (sel: string) => {
+      const el = document.querySelector(sel);
+      return el ? el.getBoundingClientRect() : null;
+    };
+    const scroll = r('#modal-scroll')!;
+    const veld = r('#toetsenbord-veld')!;
+    return {
+      bevestigOnder: r('#modal-confirm')!.bottom,
+      sluitBoven: r('.modal-close')!.top,
+      veldZichtbaar: veld.top >= scroll.top && veld.bottom <= scroll.bottom,
+    };
+  });
+
+  await test.step('Then passen zonder aanpassing de knoppen niet in 300px -- de uitgangssituatie op iOS', async () => {
+    await page.evaluate(() => {
+      (window as unknown as { volgZichtbaarGebiedVoorDialoog: (g: unknown) => void }).volgZichtbaarGebiedVoorDialoog(null);
+    });
+    const zonder = await meet();
+    expect(zonder.bevestigOnder, 'zonder aanpassing hoort de knop voorbij de 300px te vallen, anders bewijst deze case niets').toBeGreaterThan(300);
+  });
+
+  await test.step('When het toetsenbord het zichtbare deel verkleint tot 300px', async () => {
+    await page.evaluate(() => {
+      (window as unknown as { volgZichtbaarGebiedVoorDialoog: (g: unknown) => void })
+        .volgZichtbaarGebiedVoorDialoog({ height: 300, offsetTop: 0 });
+    });
+  });
+
+  await test.step('Then blijven de indienknop, de sluitactie en het typveld binnen dat deel', async () => {
+    const met = await meet();
+    expect(met.bevestigOnder, 'de indienknop hoort boven het toetsenbord te blijven').toBeLessThanOrEqual(300);
+    expect(met.sluitBoven, 'de sluitactie hoort niet achter de browserbalk te vallen').toBeGreaterThanOrEqual(0);
+    expect(met.veldZichtbaar, 'het veld waarin getypt wordt hoort zichtbaar te zijn in de scrollende laag').toBe(true);
+  });
+
+  await test.step('And ruimt het sluiten van de dialoog de aanpassing op', async () => {
+    await page.locator('.modal-close').click();
+    await expect(page.locator('#modal')).toBeHidden();
+    await expect(page.locator('#modal')).not.toHaveAttribute('data-zichtbaar', '');
+  });
+});
+
+test('[SKIN-N-008] met "minder beweging" houdt een dialoog met open toetsenbord de knoppen, de sluitactie en het typveld in beeld', async ({ page }) => {
+  test.setTimeout(120_000);
+  // Zelfde gedrag als [SKIN-H-036], nu met "minder beweging" aan, zoals op een iPhone
+  // met die toegankelijkheidsinstelling. Staat op fixme: onder reduce hield Chromium de
+  // max-height van .modal op 824px terwijl --zichtbaar-hoogte 300px was; de dialoog
+  // stak 534px boven het scherm en het kruisje was onbereikbaar. Vier fixpogingen
+  // waren niet betrouwbaar (15 sep, zie CODEX_HANDOFF.md). Zichtbaar in het rapport
+  // houden tot het op een echt iOS-toestel is uitgezocht en opgelost.
+  test.fixme(true, 'Onder reducedMotion reduce krimpt de dialoog niet mee met het toetsenbord (max-height blijft 824px). Open vondst 15 sep, zie CODEX_HANDOFF.md.');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   const loginPage = new LoginPage(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await loginPage.open();

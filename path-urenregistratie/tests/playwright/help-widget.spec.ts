@@ -198,6 +198,9 @@ test('[HELP-H-002] het paneel opent en sluit met een vloeiende overgang, en mete
   const loginPage = new LoginPage(page);
 
   await test.step('Given de medewerker heeft geen voorkeur voor verminderde beweging ingesteld', async () => {
+    // Expliciet: de config zet reduce voor alle tests (contextOptions), en deze
+    // case toetst juist het gedrag zónder voorkeur.
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
     await loginPage.open();
     await loginPage.loginAsEmployee();
   });
