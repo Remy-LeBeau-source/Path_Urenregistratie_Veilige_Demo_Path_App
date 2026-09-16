@@ -17,7 +17,8 @@ Nieuwste bovenaan per status. Statussen: **open**, **bezig**, **klaar (versie)**
 
 | Datum | Wens / besluit | Versie |
 |---|---|---|
-| 16 sep | Berichten: elk bericht toont ingeklapt ook één regel samenvatting onder de titel, zoals bij Nieuw in de app; verdwijnt zodra je het openklapt. | herontwerp | bezig |
+| 16 sep | Berichten: elk bericht toont ingeklapt één regel samenvatting onder de titel, zoals bij Nieuw in de app; verdwijnt bij openklappen (NOT-H-018, tegenproef rood). | 2.0.116 |
+| 16 sep | MOB-H-024 was wisselvallig (ongeveer 1 op 3 rood, ook op 2.0.113): late 401-ruis van de inlograce landde na het wissen. De case negeert nu alleen die 401-ruis, de rest blijft hard. 5 van 5 groen. | 2.0.116 |
 | 15 sep | Filter Gelezen in Berichten, compact: Actueel · Ongelezen · Gelezen · Ingetrokken · Alles met aantallen; ingetrokken in een zachte lavendeltint in plaats van bruin (NOT-H-011, NOT-H-017). | 2.0.113 |
 | 15 sep | Meer voorbeeldberichten: elke medewerker 15 mededelingen, 6 ingetrokken, 9 actueel, 5 ongelezen, zodat er onder Alles een tweede pagina is. | main 2.0.113-seed |
 | 16 sep | Berichten duidelijker en de belmelding klanturenstaat opent het klanturenstaatscherm met het uploadvak klaar (NOT-H-013 met vier meldingen). | Codex 2.0.115 |
