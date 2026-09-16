@@ -628,9 +628,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 605
+- Playwright executable cases: 606
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 606
+- Totaal unieke executable cases: 607
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32

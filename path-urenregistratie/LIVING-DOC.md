@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 605 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 606 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 605 unieke case-ID's
+- Playwright executable cases: 606 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 606 unieke case-ID's
+- Totaal executable cases: 607 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 657
-- Niet-mobile projectuitvoeringen: 553
+- Uitvoeringen: 658
+- Niet-mobile projectuitvoeringen: 554
 - Mobile functionele cases: 52
 - Pixel 7 / Chromium-uitvoeringen: 52
 - iPhone 13 / WebKit-uitvoeringen: 52
 
-De 52 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 605 Playwright-functionele cases in totaal 657 resultaten op: 553 + (52 x 2) = 657.
+De 52 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 606 Playwright-functionele cases in totaal 658 resultaten op: 554 + (52 x 2) = 658.
 
 ## Documentatieketen
 
