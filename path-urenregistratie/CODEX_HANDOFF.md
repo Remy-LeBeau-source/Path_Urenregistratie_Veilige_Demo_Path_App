@@ -569,3 +569,21 @@ alleen testdekking en verificatie. Onderstaande bevinding is dus vastgelegd, nie
   `klassiek-verkenning.spec.ts`: 25 uur in een dagvak zetten, assert dat
   `#hours-autosave-status` de melding bevat én `aria-live="polite"` heeft. Tegenproef: op de
   huidige opmaak rood op de aria-live-assertie.
+
+### BEV-4 — de reden van intrekken is nergens begrensd (zelfde soort als de contracturen-500)
+
+- Techniek: grenswaardenanalyse langs de kolomgrens, dezelfde aanpak die eerder de 500 op
+  contracturen vond.
+- Waar: `server/api/announcements.php`, `action=withdraw` (r287 e.v. en r286-289 in de
+  intrekking-via-send-route). Er wordt alleen op leeg gecontroleerd, niet op lengte.
+- Kolom: `database/schema.sql` r352, `withdrawal_reason VARCHAR(750)`. Het invoerveld in de app
+  begrenst wél op 750 (`maxlength` bij `#announcement-withdrawal-reason` en
+  `#edit-withdrawn-reason`), de server niet.
+- Gevolg: een reden van 751 tekens via de API loopt tegen de kolom aan. In de strikte modus van
+  MySQL is dat een uitzondering, dus een 500 in plaats van een nette 400 — precies het patroon
+  dat bij contracturen in 2.0.119 is gerepareerd.
+- Voorstel fix (na go-live): `mb_strlen($reason, 'UTF-8') > 750` weigeren met 400
+  `withdrawal-reason-too-long` en de melding "De reden mag maximaal 750 tekens lang zijn."
+- Bijbehorende case: `[ANN-N-008] de reden van intrekken kent dezelfde grens als het invoerveld`
+  in `announcements.spec.ts`: 750 tekens (met accenten) hoort te mogen, 751 hoort een 400 met
+  uitleg te geven, en na de weigering hoort de mededeling nog steeds `sent` te zijn.
