@@ -25,6 +25,7 @@ Nieuwste bovenaan per status. Statussen: **open**, **bezig**, **klaar (versie)**
 
 | Datum | Wens / besluit | Versie |
 |---|---|---|
+| 16 sep | Gemeld door Gio vanaf de iPhone: een gewone PDF werd bij de klanturenstaat geweigerd met "Het gekozen PDF-bestand is beschadigd of ongeldig". Oorzaak: de uploadcontrole zocht op de letterlijke tekst `/Type /Catalog` mét spatie, terwijl een PDF die net zo goed zonder spatie mag schrijven; bestanden van moderne makers vielen daardoor af. Ook de factuurupload gebruikte dezelfde controle. Nu is de spatie optioneel en bij gecomprimeerde objecten (PDF 1.5+) is de xref-stream het structuurbewijs. Nep-PDF's worden nog steeds geweigerd (CTS-API-H-018, tegenproef rood op de oude controle). | 2.0.128 |
 | 16 sep | Intake #45, via de demo-pagina ingediend en door de hele keten gelopen: de Living Doc staat nu op 15 pixels in plaats van 13, in licht en donker. PIPE-H-006 meet de berekende stijl in beide kleurschema's plus de telefoonbreedte; tegenproef gedaan (rood op 13px). | 2.0.127 |
 | 16 sep | Demo-pagina dichter bij de echte tools: elke Jira-kaart toont rechtsonder een avatar van wie hem oppakt (afgeleid uit de kolom Wie in deze lijst), en de Confluence-pagina heeft rechts een inhoudsopgave "Op deze pagina" met ankers naar de secties. | 2.0.126 |
 | 16 sep | Knop op de demo-pagina heet "Start de flow" in plaats van "Doorzetten naar VS Code": zegt wat er gebeurt in plaats van waar het heen gaat. Kop, menu, uitleg en PIPELINE-INTAKE.md meeveranderd; PIPE-H-002 controleert de nieuwe naam. | 2.0.125 |

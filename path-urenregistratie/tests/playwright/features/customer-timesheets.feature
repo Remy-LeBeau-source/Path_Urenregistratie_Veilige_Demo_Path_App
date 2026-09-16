@@ -125,6 +125,15 @@ Feature: Klanturenstaten en documentverwerking
     And cleanup: sessie sluiten voor testisolatie
     Then wordt met Playwright-assertions bevestigd dat employee krijgt 400 bij een te grote klanturenstaat-upload
 
+  @happy
+  Scenario: [CTS-API-H-018] een PDF die zijn woordenboek zonder spaties schrijft wordt gewoon aangenomen
+    # Testtechniek: Equivalentieklassen op de schrijfwijze van een PDF-woordenboek (met en zonder spatie) + negatieve controle dat een nep-PDF geweigerd blijft
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given de medewerker is ingelogd met een maand die nog te vullen is
+    When hij een PDF uploadt die zijn woordenboek compact schrijft, then wordt die aangenomen
+    And blijft een bestand dat alleen op een PDF lijkt geweigerd
+    Then wordt met Playwright-assertions bevestigd dat een PDF die zijn woordenboek zonder spaties schrijft wordt gewoon aangenomen
+
   @negative
   Scenario: [CTS-API-N-009] corrupte of te grote afbeelding en nep-PDF worden geweigerd zonder bestaand concept te vervangen
     # Testtechniek: Negatieve equivalentieklasse + error guessing

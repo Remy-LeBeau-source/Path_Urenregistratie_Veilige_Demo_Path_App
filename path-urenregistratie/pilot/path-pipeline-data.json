@@ -1,7 +1,23 @@
 {
-  "appVersion": "2.0.127",
+  "appVersion": "2.0.128",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "16 sep",
+      "version": "2.0.128",
+      "wish": "Gemeld door Gio vanaf de iPhone: een gewone PDF werd bij de klanturenstaat geweigerd met \"Het gekozen PDF-bestand is beschadigd of ongeldig\". Oorzaak: de uploadcontrole zocht op de letterlijke tekst `/Type /Catalog` mét spatie, terwijl een PDF die net zo goed zonder spatie mag schrijven; bestanden van moderne makers vielen daardoor af. Ook de factuurupload gebruikte dezelfde controle. Nu is de spatie optioneel en bij gecomprimeerde objecten (PDF 1.5+) is de xref-stream het structuurbewijs. Nep-PDF's worden nog steeds geweigerd (CTS-API-H-018, tegenproef rood op de oude controle).",
+      "cases": [
+        {
+          "id": "CTS-API-H-018",
+          "title": "een PDF die zijn woordenboek zonder spaties schrijft wordt gewoon aangenomen",
+          "feature": "tests/playwright/features/customer-timesheets.feature",
+          "technique": "Equivalentieklassen op de schrijfwijze van een PDF-woordenboek (met en zonder spatie) + negatieve controle dat een nep-PDF geweigerd blijft",
+          "assertions": 7,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een PDF die zijn woordenboek zonder spaties schrijft wordt gewoon aangenomen\n  Given de medewerker is ingelogd met een maand die nog te vullen is\n  When hij een PDF uploadt die zijn woordenboek compact schrijft, then wordt die aangenomen\n  And blijft een bestand dat alleen op een PDF lijkt geweigerd\n  Then wordt met Playwright-assertions bevestigd dat een PDF die zijn woordenboek zonder spaties schrijft wordt gewoon aangenomen"
+        }
+      ]
+    },
     {
       "date": "16 sep",
       "version": "2.0.127",
@@ -153,12 +169,6 @@
           "gherkin": "Scenario: Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar\n  Given meldingen beheren is voorbereid\n  When de flow voor NOT-H-017 wordt uitgevoerd\n  Then staat Actueel aan, met alleen berichten die nog gelden\n  And tellen de filters op: Ongelezen + Gelezen = Actueel, Actueel + Ingetrokken = Alles\n  And vat een ingetrokken bericht de reden samen, niet de tekst die niet meer geldt"
         }
       ]
-    },
-    {
-      "date": "16 sep",
-      "version": "main",
-      "wish": "Demo-pagina op TEST is het echte loket geworden: een wens op https://uren-test.pathconsultancy.nl/pilot/path-pipeline.html wordt een GitHub-issue (label pipeline-intake) dat de agent in VS Code oppakt volgens PIPELINE-INTAKE.md (GIO-WENSEN → feature + spec → impactregressie → LIVING-DOC → versie → CI → TEST). De pagina toont de echte laatste 5 opleveringen en 10 Living Doc-regels uit GIO-WENSEN en de feature-bestanden (scripts/pipeline-demo-data.mjs), bewaakt door npm run check. Eigen agent: .claude/agents/pipeline-intake.md, logboek in PIPELINE-INTAKE-PROEF.md.",
-      "cases": []
     }
   ],
   "open": [

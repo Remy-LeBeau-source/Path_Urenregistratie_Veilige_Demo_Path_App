@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 595 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 596 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 595 unieke case-ID's
+- Playwright executable cases: 596 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 596 unieke case-ID's
+- Totaal executable cases: 597 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 644
-- Niet-mobile projectuitvoeringen: 546
+- Uitvoeringen: 645
+- Niet-mobile projectuitvoeringen: 547
 - Mobile functionele cases: 49
 - Pixel 7 / Chromium-uitvoeringen: 49
 - iPhone 13 / WebKit-uitvoeringen: 49
 
-De 49 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 595 Playwright-functionele cases in totaal 644 resultaten op: 546 + (49 x 2) = 644.
+De 49 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 596 Playwright-functionele cases in totaal 645 resultaten op: 547 + (49 x 2) = 645.
 
 ## Documentatieketen
 
@@ -175,7 +175,7 @@ De 49 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 595 Playwri
 
 - Feature: `tests/playwright/features/customer-timesheets.feature`
 - Source: `tests/playwright/customer-timesheet-api.spec.ts`
-- Cases: 20
+- Cases: 21
 
 - [CTS-API-H-012] admin kan een ontbrekende klanturenstaat extern bevestigen en terugzetten — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 15
 - [CTS-API-H-009] brokerroute koppelt de officiële klanturenstaat aan dezelfde medewerker en periode — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
@@ -190,6 +190,7 @@ De 49 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 595 Playwri
 - [CTS-API-H-005] JPG- en PNG-upload worden als inline bekijkbare PDF opgeslagen — Techniek: Equivalentieklassen · Assertions: 34
 - [CTS-API-H-006] medewerker uploadt zichtbaar een afbeelding en kan die na nieuwe login bekijken — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 23
 - [CTS-API-N-008] employee krijgt 400 bij een te grote klanturenstaat-upload — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
+- [CTS-API-H-018] een PDF die zijn woordenboek zonder spaties schrijft wordt gewoon aangenomen — Techniek: Equivalentieklassen op de schrijfwijze van een PDF-woordenboek (met en zonder spatie) + negatieve controle dat een nep-PDF geweigerd blijft · Assertions: 7
 - [CTS-API-N-009] corrupte of te grote afbeelding en nep-PDF worden geweigerd zonder bestaand concept te vervangen — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 15
 - [CTS-API-N-010] bestand van precies 2 MB wordt geaccepteerd, 2 MB + 1 byte wordt geweigerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 9
 - [CTS-API-N-012] een leeg bestand (0 bytes) wordt geweigerd zonder een bestaand concept te vervangen — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8

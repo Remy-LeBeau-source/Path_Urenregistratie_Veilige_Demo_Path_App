@@ -131,6 +131,7 @@
 | CTS-API-H-005 | api | customer-timesheets.feature | JPG- en PNG-upload worden als inline bekijkbare PDF opgeslagen | Equivalentieklassen | 34 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Happy | 10 | Actueel |
 | CTS-API-H-006 | api | customer-timesheets.feature | medewerker uploadt zichtbaar een afbeelding en kan die na nieuwe login bekijken | Beslissingstabel rollen en autorisatie | 23 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Happy | 10 | Actueel |
 | CTS-API-N-008 | api | customer-timesheets.feature | employee krijgt 400 bij een te grote klanturenstaat-upload | Negatieve equivalentieklasse + error guessing | 4 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Negative | 10 | Actueel |
+| CTS-API-H-018 | api | customer-timesheets.feature | een PDF die zijn woordenboek zonder spaties schrijft wordt gewoon aangenomen | Equivalentieklassen op de schrijfwijze van een PDF-woordenboek (met en zonder spatie) + negatieve controle dat een nep-PDF geweigerd blijft | 7 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Happy | 10 | Actueel |
 | CTS-API-N-009 | api | customer-timesheets.feature | corrupte of te grote afbeelding en nep-PDF worden geweigerd zonder bestaand concept te vervangen | Negatieve equivalentieklasse + error guessing | 15 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Negative | 10 | Actueel |
 | CTS-API-N-010 | api | customer-timesheets.feature | bestand van precies 2 MB wordt geaccepteerd, 2 MB + 1 byte wordt geweigerd | Negatieve equivalentieklasse + error guessing | 9 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Negative | 10 | Actueel |
 | CTS-API-N-012 | api | customer-timesheets.feature | een leeg bestand (0 bytes) wordt geweigerd zonder een bestaand concept te vervangen | Negatieve equivalentieklasse + error guessing | 8 | customer-timesheets.steps.ts | customer-timesheet-api.spec.ts | API | Klanturenstaten | Klanturenstaat lifecycle | Negative | 10 | Actueel |
@@ -617,9 +618,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 595
+- Playwright executable cases: 596
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 596
+- Totaal unieke executable cases: 597
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32

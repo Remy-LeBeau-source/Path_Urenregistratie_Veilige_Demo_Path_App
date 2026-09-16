@@ -59,6 +59,10 @@ Then("verschijnt het serverdocument en levert Klanturenstaat bekijken een inline
 And("cleanup: zet de geïsoleerde toekomstcase terug naar ontbrekend en log uit");
 When("de medewerker een PDF van ruim boven de 2 MB-limiet uploadt");
 Then("wordt met Playwright-assertions bevestigd dat employee krijgt 400 bij een te grote klanturenstaat-upload");
+Given("de medewerker is ingelogd met een maand die nog te vullen is");
+When("hij een PDF uploadt die zijn woordenboek compact schrijft, then wordt die aangenomen");
+And("blijft een bestand dat alleen op een PDF lijkt geweigerd");
+Then("wordt met Playwright-assertions bevestigd dat een PDF die zijn woordenboek zonder spaties schrijft wordt gewoon aangenomen");
 Given("de medewerker is ingelogd en de bestaande klanturenstaat is vastgelegd");
 When("de medewerker corrupte bytes met een JPG-bestandsnaam uploadt");
 And("een afbeelding boven de veilige dimensiegrens wordt geweigerd");
