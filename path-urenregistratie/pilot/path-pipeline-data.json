@@ -1,5 +1,5 @@
 {
-  "appVersion": "2.0.121",
+  "appVersion": "2.0.122",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
