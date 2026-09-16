@@ -594,3 +594,20 @@ alleen testdekking en verificatie. Onderstaande bevinding is dus vastgelegd, nie
   `notifications.message` (VARCHAR(500)) wordt met `announcement_truncate($message, 400)`
   afgekapt, en `notifications.title` (VARCHAR(160)) past precies op de titelgrens van 160 die
   sinds 2.0.121 in tekens telt.
+
+### BEV-5 — het uurtarief kent wel een ondergrens, geen bovengrens
+
+- Techniek: grenswaardenanalyse langs de kolomgrens (dezelfde familie als BEV-4).
+- Waar: `server/api/staff.php` r485-487: een negatief tarief wordt netjes op 0 gezet, maar er is
+  geen bovengrens. Kolom: `assignments.hourly_rate DECIMAL(10,2)` (`database/schema.sql` r156),
+  dus alles boven 99.999.999,99 past niet.
+- Gevolg: een tarief daarboven geeft een databasefout (500) in plaats van een nette weigering, en
+  een typefout in een tarief (bijvoorbeeld 8500 in plaats van 85) wordt zonder enige waarschuwing
+  bewaard en rekent door in de facturen.
+- Voorstel fix (na go-live): boven een werkbare grens weigeren met 400 en een melding die het
+  getal noemt. Een grens die past bij de praktijk (bijvoorbeeld 1.000 euro per uur) vangt de
+  typefout af; puur de kolomgrens vangt alleen de serverfout.
+  Dit is een productbesluit over het bedrag: even aan Gio voorleggen.
+- Bijbehorende case: `[ADM-WR-N-009] een onmogelijk uurtarief wordt geweigerd, niet bewaard` in
+  `admin-writes.spec.ts`: net onder de grens hoort te mogen, erboven een 400 met uitleg, en na de
+  weigering hoort het oude tarief nog te staan.
