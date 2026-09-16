@@ -587,3 +587,10 @@ alleen testdekking en verificatie. Onderstaande bevinding is dus vastgelegd, nie
 - Bijbehorende case: `[ANN-N-008] de reden van intrekken kent dezelfde grens als het invoerveld`
   in `announcements.spec.ts`: 750 tekens (met accenten) hoort te mogen, 751 hoort een 400 met
   uitleg te geven, en na de weigering hoort de mededeling nog steeds `sent` te zijn.
+
+  Zelfde veld, zelfde ronde nagelopen: `audience_label` (payloadveld `audience_label`, kolom
+  `VARCHAR(255)` in `database/schema.sql` r350) wordt ook zonder lengtecontrole doorgegeven en
+  hoort in dezelfde fix mee. Wat wél goed staat en dus niet aangeraakt hoeft te worden:
+  `notifications.message` (VARCHAR(500)) wordt met `announcement_truncate($message, 400)`
+  afgekapt, en `notifications.title` (VARCHAR(160)) past precies op de titelgrens van 160 die
+  sinds 2.0.121 in tekens telt.
