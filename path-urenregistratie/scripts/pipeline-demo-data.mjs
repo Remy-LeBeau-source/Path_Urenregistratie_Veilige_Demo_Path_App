@@ -93,6 +93,10 @@ if (process.argv.includes('--check')) {
     process.exit(1);
   }
   console.log('pipeline-demo-data: actueel');
+} else if (fs.existsSync(OUT) && zonderTijd(fs.readFileSync(OUT, 'utf8')) === zonderTijd(json)) {
+  // Inhoudelijk niets veranderd: niet herschrijven, anders geeft elke docs:sync een
+  // diff op alleen het tijdstip en wordt dat ruis in commits.
+  console.log('pipeline-demo-data: actueel, niet herschreven');
 } else {
   fs.writeFileSync(OUT, json);
   console.log(`pipeline-demo-data: ${data.delivered.length} opleveringen, ${data.open.length} open, ${data.delivered.reduce((n, d) => n + d.cases.length, 0)} cases -> pilot/path-pipeline-data.json`);
