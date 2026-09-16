@@ -482,7 +482,7 @@ De 45 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 585 Playwri
 - [NOT-H-013] een melding in de bel brengt de medewerker direct naar de plek waar iets te doen is — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
 - [NOT-H-014] Alles gelezen in Berichten leest alleen de mededelingen en laat de bel met rust — Techniek: API-contract + equivalentieklasse · Assertions: 8
 - [NOT-H-016] bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 10, de bel hooguit 10 — Techniek: Grenswaardenanalyse · Assertions: 18
-- [NOT-H-017] Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 16
+- [NOT-H-017] Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 20
 
 ### Mededelingen versturen, intrekken en verbergen
 

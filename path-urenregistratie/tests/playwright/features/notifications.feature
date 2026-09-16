@@ -156,8 +156,9 @@ Feature: Meldingen beheren
   @happy
   Scenario: [NOT-H-017] Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar
     # Testtechniek: Negatieve equivalentieklasse + error guessing
-    # Aantoonbare Playwright-assertions in deze case: 16
+    # Aantoonbare Playwright-assertions in deze case: 20
     Given meldingen beheren is voorbereid
     When de flow voor NOT-H-017 wordt uitgevoerd
     Then staat Actueel aan, met alleen berichten die nog gelden
     And tellen de filters op: Ongelezen + Gelezen = Actueel, Actueel + Ingetrokken = Alles
+    And vat een ingetrokken bericht de reden samen, niet de tekst die niet meer geldt

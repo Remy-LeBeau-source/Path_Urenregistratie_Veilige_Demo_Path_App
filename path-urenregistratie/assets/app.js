@@ -9185,13 +9185,16 @@ function berichtKaartHtml(bericht) {
   const intrekking = bericht.ingetrokken
     ? '<div class="announcement-withdrawal-note" data-employee-withdrawal-note><strong>Deze mededeling is ingetrokken en geldt niet meer</strong>' + escapeHtml(bericht.reden || "Er is geen reden vastgelegd.") + '</div>'
     : "";
+  // Bij een ingetrokken bericht vat de reden samen, niet de tekst die niet meer geldt
+  // (zelfde gedachte als het label: "Kantoor vandaag gesloten" mag niet als geldig lezen).
+  const samenvatting = berichtSnippet(bericht.ingetrokken ? (bericht.reden || "Deze mededeling geldt niet meer.") : bericht.message);
   const markeer = bericht.unread
     ? '<button class="text-button bericht-markeer" type="button" data-bericht-gelezen="' + bericht.id + '" aria-label="' + escapeHtml("Markeer " + bericht.title + " als gelezen") + '">Markeer als gelezen</button>'
     : "";
   return '<article class="employee-announcement-card' + (bericht.unread ? " is-unread" : "") + (bericht.ingetrokken ? " is-withdrawn" : "") + (open ? " is-open" : " is-dicht") + '" data-bericht-id="' + bericht.id + '">'
     + '<div class="bericht-kop-rij">'
       + '<button class="bericht-kop" type="button" data-bericht-toggle="' + bericht.id + '" aria-expanded="' + (open ? "true" : "false") + '" aria-controls="' + inhoudId + '">'
-        + '<span class="bericht-kop-tekst">' + label + '<h3>' + escapeHtml(bericht.title) + '</h3><small class="bericht-snippet">' + escapeHtml(berichtSnippet(bericht.message)) + '</small></span>'
+        + '<span class="bericht-kop-tekst">' + label + '<h3>' + escapeHtml(bericht.title) + '</h3>' + (samenvatting ? '<small class="bericht-snippet">' + escapeHtml(samenvatting) + '</small>' : "") + '</span>'
         + '<small>' + escapeHtml(bericht.createdAt) + '</small>'
         + '<span class="bericht-chevron" aria-hidden="true"></span>'
       + '</button>'
