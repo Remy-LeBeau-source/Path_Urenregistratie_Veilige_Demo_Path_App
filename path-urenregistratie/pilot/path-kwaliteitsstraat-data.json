@@ -1,11 +1,11 @@
 {
-  "appVersion": "2.0.139",
-  "generatedAt": "2026-09-16T20:38:52.368Z",
+  "appVersion": "2.0.140",
+  "generatedAt": "2026-09-16T20:41:22.784Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
       "date": "16 sep",
-      "version": "2.0.139",
+      "version": "2.0.140",
       "wish": "Besluit Gio: elke versie krijgt voortaan zonder uitzondering een regel in \"Nieuw in de app\", ook een versie die alleen Backoffice, de kwaliteitsstraat-demo of de testset raakt. De acht ontbrekende versies (2.0.130 t/m 2.0.138) zijn met terugwerkende kracht aangevuld, terug naar twintig regels. PIPELINE-INTAKE.md bijgewerkt.",
       "cases": []
     },
