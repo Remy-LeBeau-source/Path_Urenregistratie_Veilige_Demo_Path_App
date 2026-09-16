@@ -862,7 +862,12 @@ test('[KLV-H-018] Berichten toont "Nieuw in de app" met de laatste 20 updates en
     expect([...versies].sort((a, b) => alsGetal(b) - alsGetal(a)), 'nieuwste bovenaan').toEqual(versies);
     const appVersie = (await page.locator('#profile-menu-versie').textContent() || '').match(/\d+\.\d+\.\d+/)?.[0] ?? '';
     expect(appVersie, 'versie van de app').not.toBe('');
-    expect(alsGetal(versies[0]), `nieuwste notitie ${versies[0]} ≤ app ${appVersie}`).toBeLessThanOrEqual(alsGetal(appVersie));
+    // Strikt gelijk, niet "hooguit gelijk": Gio's besluit (16 sep) is dat élke versie
+    // zonder uitzondering een regel krijgt. Een "≤"-controle liet precies toe wat er
+    // twee keer misging: pushen zonder de regel toe te voegen, want de oudere notitie
+    // bleef altijd "niet hoger dan" de nieuwe versie en de test bleef groen. Nu moet de
+    // bovenste regel exact de huidige versie zijn, anders faalt dit meteen.
+    expect(alsGetal(versies[0]), `nieuwste notitie ${versies[0]} moet exact de appversie ${appVersie} zijn`).toBe(alsGetal(appVersie));
     const tijden = await regels.locator('time').evaluateAll(els => els.map(el => ({ datetime: el.getAttribute('datetime') || '', tekst: (el.textContent || '').trim() })));
     for (const tijd of tijden) {
       expect(tijd.datetime).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
