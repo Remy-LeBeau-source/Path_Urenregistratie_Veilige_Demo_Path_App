@@ -25,8 +25,8 @@ Feature: Organisatie-instellingen beheren
 
   @happy
   Scenario: [ADM-WR-H-001] admin kan company/settings server-led opslaan
-    # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 6
+    # Testtechniek: Equivalentieklassen over alle Instellingen-velden (identiteit, merkkleuren, betaaltermijn, vier herinneringssoorten) met van de huidige waarde afwijkende testwaarden, elk teruggecontroleerd op de server
+    # Aantoonbare Playwright-assertions in deze case: 21
     Given organisatie-instellingen beheren is voorbereid
     When de flow voor ADM-WR-H-001 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat admin kan company/settings server-led opslaan

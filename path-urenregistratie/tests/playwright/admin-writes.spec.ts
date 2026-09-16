@@ -166,14 +166,22 @@ test.describe('admin write endpoints', () => {
     const company = beforeBody.companies[0];
 
     const uniqueSuffix = Date.now().toString().slice(-6);
+    // Dekkingsronde: dit was de enige case die company/settings server-led opsloeg,
+    // maar bijna elk veld werd alleen wéér met de HUIDIGE waarde teruggestuurd (dus
+    // een kapotte kolomschrijving zou hier niet zijn opgevallen) en het formulier
+    // controleerde na afloop alleen trade_name en invoice_name_display. Merkkleuren,
+    // betaaltermijn en de vier herinneringssoorten (weekly/month-end/overdue/
+    // approval) gingen wél de deur uit, maar nooit terugcontroleren of ze ook echt
+    // op de server bleven staan. Nu allemaal een eigen, van de huidige waarde
+    // afwijkende testwaarde, en allemaal teruggecontroleerd.
     const savePayload = {
       settings: {
         organizationName: `Path Test ${uniqueSuffix}`,
         appName: 'Uren & Facturatie',
         supportName: 'Backoffice',
         supportEmail: 'backoffice@pathconsultancy.nl',
-        brandPrimary: '#0d1b38',
-        brandAccent: '#3abd9d',
+        brandPrimary: '#1a2b3c',
+        brandAccent: '#4d5e6f',
         companyName: company.legal_name,
         invoiceNameDisplay: company.invoice_name_display || 'trade_and_legal',
         kvk: company.chamber_of_commerce_number || '12345678',
@@ -183,10 +191,19 @@ test.describe('admin write endpoints', () => {
         postalCity: [company.postal_code || '1234 AB', company.city || 'Rotterdam'].join(' '),
         phone: company.invoice_phone || '0646328286',
         invoiceEmail: company.invoice_email || 'backoffice@pathconsultancy.nl',
-        paymentTerm: Number(company.payment_term_days || 30),
+        paymentTerm: Number(company.payment_term_days) === 21 ? 45 : 21,
         customerTimesheetReminderEnabled: true,
-        customerTimesheetReminderTime: '15:00',
-        customerTimesheetOverdueWorkdays: 2,
+        customerTimesheetReminderTime: '16:45',
+        customerTimesheetOverdueWorkdays: 3,
+        weeklyReminderEnabled: true,
+        weeklyReminderDay: 'wednesday',
+        weeklyReminderTime: '13:15',
+        monthEndReminderEnabled: true,
+        monthEndReminderTime: '17:30',
+        overdueReminderEnabled: true,
+        overdueReminderTime: '08:20',
+        approvalReminderEnabled: true,
+        approvalReminderTime: '11:05',
       },
       mailRecipients: beforeBody.mail_recipients,
     };
@@ -201,6 +218,21 @@ test.describe('admin write endpoints', () => {
     const afterCompany = afterBody.companies[0];
     expect(afterCompany.trade_name).toBe(`Path Test ${uniqueSuffix}`);
     expect(afterCompany.invoice_name_display).toBe(company.invoice_name_display || 'trade_and_legal');
+    expect(String(afterCompany.brand_primary).toLowerCase(), 'merkkleur primair hoort bewaard te blijven').toBe('#1a2b3c');
+    expect(String(afterCompany.brand_accent).toLowerCase(), 'merkkleur accent hoort bewaard te blijven').toBe('#4d5e6f');
+    expect(Number(afterCompany.payment_term_days), 'betaaltermijn hoort bewaard te blijven').toBe(savePayload.settings.paymentTerm);
+    expect(Number(afterCompany.customer_timesheet_reminder_enabled)).toBe(1);
+    expect(String(afterCompany.customer_timesheet_reminder_time).slice(0, 5)).toBe('16:45');
+    expect(Number(afterCompany.customer_timesheet_overdue_workdays)).toBe(3);
+    expect(Number(afterCompany.weekly_reminder_enabled)).toBe(1);
+    expect(Number(afterCompany.weekly_reminder_day), 'weekdag hoort als ISO-getal bewaard te blijven (woensdag = 3)').toBe(3);
+    expect(String(afterCompany.weekly_reminder_time).slice(0, 5)).toBe('13:15');
+    expect(Number(afterCompany.month_end_reminder_enabled)).toBe(1);
+    expect(String(afterCompany.month_end_reminder_time).slice(0, 5)).toBe('17:30');
+    expect(Number(afterCompany.overdue_reminder_enabled)).toBe(1);
+    expect(String(afterCompany.overdue_reminder_time).slice(0, 5)).toBe('08:20');
+    expect(Number(afterCompany.approval_reminder_enabled)).toBe(1);
+    expect(String(afterCompany.approval_reminder_time).slice(0, 5)).toBe('11:05');
 
     await authApi.logout();
     await ctx.dispose();

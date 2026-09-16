@@ -51,7 +51,7 @@ De 53 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 609 Playwri
 
 - [ADM-WR-H-019] latere startdatum vraagt bevestiging en vermeldt dat historie bewaard blijft — Techniek: API-contract + equivalentieklasse · Assertions: 9
 - [ADM-WR-H-020] server berekent echte historische impact vóór een latere startdatum wordt opgeslagen — Techniek: API-contract + equivalentieklasse · Assertions: 12
-- [ADM-WR-H-001] admin kan company/settings server-led opslaan — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
+- [ADM-WR-H-001] admin kan company/settings server-led opslaan — Techniek: Equivalentieklassen over alle Instellingen-velden (identiteit, merkkleuren, betaaltermijn, vier herinneringssoorten) met van de huidige waarde afwijkende testwaarden, elk teruggecontroleerd op de server · Assertions: 21
 - [ADM-WR-H-002] admin kan beheerder server-led aanmaken en wijzigen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 - [ADM-WR-H-014] een eigen tekst per ontvanger wordt bewaard en een leeg veld blijft erven — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [ADM-WR-H-013] onderwerp en begeleidende tekst van een opdracht blijven bewaard — Techniek: API-contract + equivalentieklasse · Assertions: 5
