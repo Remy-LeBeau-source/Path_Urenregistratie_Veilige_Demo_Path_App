@@ -514,3 +514,30 @@ button, summary { -webkit-tap-highlight-color: transparent; }
 .doc-toc a { display: block; padding: 4px 0; color: var(--muted); font-size: 13px; text-decoration: none; line-height: 1.4; }
 .doc-toc a:hover { color: var(--confluence); text-decoration: underline; }
 @media (max-width: 1100px) { .conf-doc-layout { grid-template-columns: minmax(0, 1fr); } .doc-toc { display: none; } }
+/* Keuzelijst met verbeteringen die wij al zien (basisregel Gio, 16 sep) */
+.keuzelijst { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 12px; border: 1px dashed var(--line-strong); border-radius: 3px; background: var(--surface-2); }
+.keuzelijst-kop { margin: 0; color: var(--ink); font-size: 12px; font-weight: 600; }
+.keuzelijst-kop small { display: block; margin-top: 2px; color: var(--subtle); font-weight: 400; }
+.keuzelijst-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.keuzelijst-chip { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 5px 9px 5px 6px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit; font-size: 12px; line-height: 1.3; text-align: left; cursor: pointer; }
+.keuzelijst-chip:hover { border-color: var(--jira); }
+.keuzelijst-chip:focus-visible { outline: 2px solid var(--jira); outline-offset: 2px; }
+.keuzelijst-chip[aria-pressed="true"] { border-color: var(--green); background: var(--green-soft); color: var(--green); }
+.keuzelijst-bol { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--surface-3); color: var(--muted); font-size: 12px; font-weight: 700; }
+.keuzelijst-chip[aria-pressed="true"] .keuzelijst-bol { background: var(--green); color: #fff; }
+.keuzelijst-waarom { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.keuzelijst-los { margin-left: 6px; padding: 0; border: 0; background: none; color: var(--jira); font: inherit; font-size: 12px; text-decoration: underline; cursor: pointer; }
+
+/* Slepen binnen Te doen: handvat, doelmarkering en toetsenbordknoppen */
+[data-ticket-list="todo"] .ticket-card { cursor: grab; }
+[data-ticket-list="todo"] .ticket-card.is-sleept { opacity: .55; cursor: grabbing; }
+[data-ticket-list="todo"] .ticket-card.is-doel { box-shadow: 0 -2px 0 0 var(--jira), var(--shadow-card); }
+.sleep-handvat { float: right; margin: -2px -4px 0 6px; color: var(--subtle); font-size: 12px; letter-spacing: -2px; user-select: none; }
+.verplaats-knoppen { display: inline-flex; gap: 2px; margin-left: auto; }
+.verplaats-knoppen button { width: 22px; height: 22px; padding: 0; border: 1px solid var(--line); border-radius: 3px; background: var(--surface-2); color: var(--muted); font-size: 10px; cursor: pointer; }
+.verplaats-knoppen button:hover, .verplaats-knoppen button:focus-visible { border-color: var(--jira); color: var(--ink); outline: 0; }
+.verplaats-knoppen button:disabled { opacity: .35; cursor: default; }
+
+/* Versie in de voet, zoals de urenapp; bovenin de versheid van wat je ziet */
+.demo-footer .demo-versie { margin-left: auto; color: var(--subtle); font-family: var(--mono); font-size: 11px; white-space: nowrap; }
+.feed-version b { color: var(--green); font-weight: 600; }

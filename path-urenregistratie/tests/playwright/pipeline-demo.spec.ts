@@ -55,7 +55,9 @@ test.describe('Path Pipeline TEST-demo', () => {
       feed = await feedVanServer(page);
       expect(feed.delivered.length, 'GIO-WENSEN "Klaar" levert opleveringen').toBeGreaterThanOrEqual(5);
       await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
-      await expect(page.locator('[data-feed-version]')).toContainText(`projectstand app ${feed.appVersion}`);
+      // Bovenin de versheid van de stand; het versienummer staat in de voettekst (wens Gio, 16 sep).
+      await expect(page.locator('[data-feed-version]')).toContainText('Bijgewerkt');
+      await expect(page.locator('footer [data-demo-versie]')).toContainText(`versie ${feed.appVersion}`);
     });
 
     await test.step('When de pagina is geladen, staan de vier fasen en de laatste tien echte opleveringen op het bord', async () => {
@@ -278,6 +280,78 @@ test.describe('Path Pipeline TEST-demo', () => {
       });
       expect(opTest).toContain('wishes');
       expect(opTest).not.toContain('bestaat alleen op TEST');
+    });
+  });
+
+  test('[PIPE-H-007] de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet', async ({ page }) => {
+    // Beslistabel op de keuzelijst (kiezen vult voor, zelf typen blijft mogelijk, loslaten
+    // maakt vrij) + toestandsovergang op de volgorde in Te doen (slepen en toetsenbord,
+    // blijft na herladen) + inhoudscontrole van de versheidsregel en de voettekst.
+    // Basisregel van Gio, 16 sep: verbeteringen die wij al zien staan in GIO-WENSEN.md
+    // onder "Nice to have" en het formulier toont ze; slepen mag alleen binnen Te doen.
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    // De Confluence-pagina heeft zelf ook koppen als Stakeholdervraag: velden binnen het formulier zoeken.
+    const formulier = page.locator('[data-ticket-form]');
+    await page.goto('/pilot/path-pipeline.html');
+    await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
+    const feed = await page.request.get('/pilot/path-pipeline-data.json').then((r) => r.json()) as {
+      appVersion: string; generatedAt: string; niceToHave: Array<{ improvement: string; why: string }>;
+    };
+    expect(feed.niceToHave.length, 'GIO-WENSEN "Nice to have" levert de keuzelijst').toBeGreaterThan(0);
+
+    await test.step('Given de keuzelijst toont de nice-to-haves uit GIO-WENSEN', async () => {
+      const chips = page.locator('[data-keuzelijst] [data-keuze]:not([data-keuze="-1"])');
+      await expect(chips).toHaveCount(feed.niceToHave.length);
+      await expect(chips.first()).toContainText(feed.niceToHave[0].improvement.slice(0, 30));
+      await expect(chips.first()).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    await test.step('When de PO een verbetering kiest, then staan samenvatting en waarde ingevuld en blijft het criterium aan hem', async () => {
+      await page.locator('[data-keuzelijst] [data-keuze="0"]').click();
+      await expect(page.locator('[data-keuzelijst] [data-keuze="0"]')).toHaveAttribute('aria-pressed', 'true');
+      await expect(formulier.getByLabel('Samenvatting')).toHaveValue(feed.niceToHave[0].improvement.slice(0, 90));
+      await expect(formulier.getByLabel('Gewenste waarde')).toHaveValue(feed.niceToHave[0].why.slice(0, 140));
+      await expect(formulier.getByLabel('Acceptatiecriterium')).toHaveValue('');
+      await expect(formulier.getByLabel('Acceptatiecriterium')).toBeFocused();
+      await expect(page.locator('[data-gherkin-preview]')).toContainText(feed.niceToHave[0].improvement.slice(0, 30));
+    });
+
+    await test.step('And zelf typen blijft mogelijk: aanpassen maakt de keuze niet ongedaan, loslaten wel', async () => {
+      await formulier.getByLabel('Samenvatting').fill('Eigen formulering van dezelfde verbetering');
+      await expect(page.locator('[data-keuzelijst] [data-keuze="0"]')).toHaveAttribute('aria-pressed', 'true');
+      await page.locator('[data-keuzelijst] [data-keuze="-1"]').click();
+      await expect(page.locator('[data-keuzelijst] [data-keuze="0"]')).toHaveAttribute('aria-pressed', 'false');
+      await expect(formulier.getByLabel('Samenvatting'), 'loslaten wist niet wat de PO zelf typte').toHaveValue('Eigen formulering van dezelfde verbetering');
+    });
+
+    await test.step('And het type heet Onderhoud, niet Chore', async () => {
+      const opties = await formulier.getByLabel('Type').locator('option').allTextContents();
+      expect(opties).toContain('Onderhoud');
+      expect(opties.join(' ')).not.toMatch(/chore/i);
+    });
+
+    await test.step('And de volgorde in Te doen is met het toetsenbord te wijzigen en blijft na herladen', async () => {
+      await page.getByRole('tab', { name: /Backlog/ }).click();
+      const kaarten = page.locator('[data-ticket-list="todo"] .ticket-card');
+      expect(await kaarten.count(), 'minstens twee open wensen om te ordenen').toBeGreaterThanOrEqual(2);
+      const eerste = await kaarten.nth(0).getAttribute('data-ticket');
+      const tweede = await kaarten.nth(1).getAttribute('data-ticket');
+      await kaarten.nth(1).locator('[data-verplaats="-1"]').click();
+      await expect(kaarten.nth(0)).toHaveAttribute('data-ticket', tweede!);
+      await expect(kaarten.nth(1)).toHaveAttribute('data-ticket', eerste!);
+      await page.reload();
+      await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
+      await page.getByRole('tab', { name: /Backlog/ }).click();
+      await expect(page.locator('[data-ticket-list="todo"] .ticket-card').nth(0)).toHaveAttribute('data-ticket', tweede!);
+      // Slepen is er alleen binnen Te doen; Opgeleverd kent geen handvat en geen knoppen.
+      await expect(page.locator('[data-ticket-list="done"] [data-verplaats]')).toHaveCount(0);
+      await expect(page.locator('[data-ticket-list="done"] .ticket-card[draggable="true"]')).toHaveCount(0);
+    });
+
+    await test.step('And bovenin staat hoe vers de stand is en de versie staat in de voet zoals in de urenapp', async () => {
+      await expect(page.locator('[data-feed-version]')).toContainText('Bijgewerkt');
+      await expect(page.locator('[data-feed-version]')).not.toContainText('projectstand app');
+      await expect(page.locator('footer .demo-versie')).toContainText(feed.appVersion);
     });
   });
 

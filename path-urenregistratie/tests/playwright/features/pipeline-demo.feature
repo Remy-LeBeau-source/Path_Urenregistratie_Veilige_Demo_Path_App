@@ -11,7 +11,7 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
   @happy
   Scenario: [PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin
     # Testtechniek: Datagedreven vergelijking (pagina versus pilot/path-pipeline-data.json) + traceerbaarheid over drie projecties
-    # Aantoonbare Playwright-assertions in deze case: 27
+    # Aantoonbare Playwright-assertions in deze case: 28
     Given de zelfstandige TEST-only pipelinepagina met de echte projectstand
     When de pagina is geladen, staan de vier fasen en de laatste tien echte opleveringen op het bord
     And Kennisbank en Testbeheer projecteren dezelfde echte cases en de Living Doc toont hooguit tien
@@ -37,6 +37,18 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
     When er onvolledige, onleesbare, te grote en verkeerd geadresseerde verzoeken binnenkomen
     Then staat er van al die pogingen niets in de wachtrij en lekt er geen IP-kenmerk
     And op een productieomgeving bestaat de wachtrij helemaal niet
+
+  @happy
+  Scenario: [PIPE-H-007] de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet
+    # Testtechniek: Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst
+    # Aantoonbare Playwright-assertions in deze case: 26
+    Given de keuzelijst toont de nice-to-haves uit GIO-WENSEN
+    When de PO een verbetering kiest, then staan samenvatting en waarde ingevuld en blijft het criterium aan hem
+    And zelf typen blijft mogelijk: aanpassen maakt de keuze niet ongedaan, loslaten wel
+    And het type heet Onderhoud, niet Chore
+    And de volgorde in Te doen is met het toetsenbord te wijzigen en blijft na herladen
+    And bovenin staat hoe vers de stand is en de versie staat in de voet zoals in de urenapp
+    Then wordt met Playwright-assertions bevestigd dat de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet
 
   @happy
   Scenario: [PIPE-H-004] zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes

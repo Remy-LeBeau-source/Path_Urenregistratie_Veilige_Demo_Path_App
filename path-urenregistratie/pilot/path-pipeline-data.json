@@ -1,7 +1,65 @@
 {
-  "appVersion": "2.0.134",
+  "appVersion": "2.0.135",
+  "generatedAt": "2026-09-16T17:56:56.633Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "16 sep",
+      "version": "2.0.135",
+      "wish": "Keuzelijst in het wensenloket (basisregel Gio): verbeteringen die wij zelf zien staan in dit bestand onder \"Nice to have\" en het formulier toont ze als klikbare chips met het waarom erbij. Kiezen vult Samenvatting en Gewenste waarde voor en zet de cursor in het acceptatiecriterium; aanpassen mag altijd en \"Zelf typen\" maakt de keuze los zonder iets te wissen (PIPE-H-007, tegenproef rood op de oude pagina).",
+      "cases": [
+        {
+          "id": "PIPE-H-007",
+          "title": "de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst",
+          "assertions": 26,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet\n  Given de keuzelijst toont de nice-to-haves uit GIO-WENSEN\n  When de PO een verbetering kiest, then staan samenvatting en waarde ingevuld en blijft het criterium aan hem\n  And zelf typen blijft mogelijk: aanpassen maakt de keuze niet ongedaan, loslaten wel\n  And het type heet Onderhoud, niet Chore\n  And de volgorde in Te doen is met het toetsenbord te wijzigen en blijft na herladen\n  And bovenin staat hoe vers de stand is en de versie staat in de voet zoals in de urenapp\n  Then wordt met Playwright-assertions bevestigd dat de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet"
+        }
+      ]
+    },
+    {
+      "date": "16 sep",
+      "version": "2.0.135",
+      "wish": "Kaarten op het demobord: slepen binnen Te doen (met handvat, en ▲▼ voor het toetsenbord), volgorde blijft na F5; niet tussen kolommen. In uitvoering vult zich vanaf nu op de echte stand, want wie een wens oppakt zet hem hier op bezig (werkafspraak) (PIPE-H-007).",
+      "cases": [
+        {
+          "id": "PIPE-H-007",
+          "title": "de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst",
+          "assertions": 26,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet\n  Given de keuzelijst toont de nice-to-haves uit GIO-WENSEN\n  When de PO een verbetering kiest, then staan samenvatting en waarde ingevuld en blijft het criterium aan hem\n  And zelf typen blijft mogelijk: aanpassen maakt de keuze niet ongedaan, loslaten wel\n  And het type heet Onderhoud, niet Chore\n  And de volgorde in Te doen is met het toetsenbord te wijzigen en blijft na herladen\n  And bovenin staat hoe vers de stand is en de versie staat in de voet zoals in de urenapp\n  Then wordt met Playwright-assertions bevestigd dat de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet"
+        }
+      ]
+    },
+    {
+      "date": "16 sep",
+      "version": "2.0.135",
+      "wish": "Versienummer naar de voettekst zoals in de urenapp; bovenin staat nu \"Bijgewerkt <datum en tijd>\" zodat je ziet hoe vers de stand is. Het type \"Chore\" heet voor de PO \"Onderhoud\" (PIPE-H-007, PIPE-H-001 aangepast).",
+      "cases": [
+        {
+          "id": "PIPE-H-007",
+          "title": "de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst",
+          "assertions": 26,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet\n  Given de keuzelijst toont de nice-to-haves uit GIO-WENSEN\n  When de PO een verbetering kiest, then staan samenvatting en waarde ingevuld en blijft het criterium aan hem\n  And zelf typen blijft mogelijk: aanpassen maakt de keuze niet ongedaan, loslaten wel\n  And het type heet Onderhoud, niet Chore\n  And de volgorde in Te doen is met het toetsenbord te wijzigen en blijft na herladen\n  And bovenin staat hoe vers de stand is en de versie staat in de voet zoals in de urenapp\n  Then wordt met Playwright-assertions bevestigd dat de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet"
+        },
+        {
+          "id": "PIPE-H-001",
+          "title": "de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Datagedreven vergelijking (pagina versus pilot/path-pipeline-data.json) + traceerbaarheid over drie projecties",
+          "assertions": 28,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin\n  Given de zelfstandige TEST-only pipelinepagina met de echte projectstand\n  When de pagina is geladen, staan de vier fasen en de laatste tien echte opleveringen op het bord\n  And Kennisbank en Testbeheer projecteren dezelfde echte cases en de Living Doc toont hooguit tien\n  Then wordt met Playwright-assertions bevestigd dat de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin"
+        }
+      ]
+    },
     {
       "date": "16 sep",
       "version": "2.0.134",
@@ -35,114 +93,94 @@
     },
     {
       "date": "16 sep",
-      "version": "2.0.132",
-      "wish": "Gat in het testherstel gedicht, gevonden bij het uitzoeken van een rode CI-run: `reminder_log` was de enige tabel met een verwijzing naar een andere tabel die bij het herstel van de basisgegevens niet werd leeggemaakt (hij kwam er later bij, migratie 031). Een test die zelf een medewerker aanmaakt waarvoor daarna een herinnering wordt gelogd, liet daardoor een regel achter die naar een verdwenen gebruiker wees. Gemeten: zonder de fix blijft er na het herstel precies 1 zo'n regel staan, met de fix 0. Eerlijk erbij: dit is bewijs van het gat, niet van de oorzaak van CI-run 35118175923. Die run viel op dezelfde meting om, maar de tegenproef discrimineerde niet -- dezelfde specs slaagden lokaal zowel met als zonder de fix. Blijft CI rood op deze assertie, dan ligt de oorzaak ergens anders.",
+      "version": "2.0.134",
+      "wish": "Volgorde en rol op de kwaliteitsstraat: je landt in Confluence (daar werkt de PO), de zijbalk en tabs volgen de keten Confluence, Jira, Zephyr, en het wensformulier staat in de Confluence-kolom met op het Jira-bord alleen een wegwijzer.",
       "cases": []
     },
     {
       "date": "16 sep",
-      "version": "werkwijze",
-      "wish": "Werkwijze, vastgelegd na een misser: \"Nieuw in de app\" hoort bij elke versie waar een medewerker iets van merkt te worden bijgewerkt, ook door main. De versies 2.0.121 t/m 2.0.129 ontbraken; Gio merkte dat zelf op. Staat nu als verplichte stap 5b in PIPELINE-INTAKE.md, inclusief de regels van KLV-H-018 (max 20 regels, geen namen of bedragen).",
+      "version": "2.0.130",
+      "wish": "Dubbele dagregels voor dezelfde datum worden geweigerd met uitleg. Ze werden eerder geaccepteerd, waarna het maandtotaal de som bewaarde (2 x 8 = 16) en de dagen er maar één (8); dat verschil was daarna niet meer te herstellen (TS-API-N-014, tegenproef rood).",
       "cases": [
         {
-          "id": "KLV-H-018",
-          "title": "Berichten toont \"Nieuw in de app\" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD",
-          "feature": "tests/playwright/features/klassiek-verkenning.feature",
-          "technique": "Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie) + inhoudscontrole (geen namen of gevoelige gegevens) + responsive viewport",
-          "assertions": 28,
+          "id": "TS-API-N-014",
+          "title": "dezelfde dag twee keer in één opslag wordt geweigerd en laat de maand ongemoeid",
+          "feature": "tests/playwright/features/time-registration.feature",
+          "technique": "Equivalentieklasse op de vorm van de payload (dubbele datum) + consistentiecontrole tussen maandtotaal en dagregels",
+          "assertions": 9,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: Berichten toont \"Nieuw in de app\" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD\n  Given vondsten uit de monkey-verkenning op Klassiek is voorbereid\n  When de flow voor KLV-H-018 wordt uitgevoerd\n  Then staan er lokaal/op TEST 20 updates met datum en tijdstip, nieuwste eerst\n  And staan er 5 per pagina met Vorige en Volgende, tot en met de laatste pagina\n  And staat geen naam of gevoelig gegeven in de teksten\n  And op de PROD-host is het blok weg"
+          "gherkin": "Scenario: dezelfde dag twee keer in één opslag wordt geweigerd en laat de maand ongemoeid\n  Given de medewerker is ingelogd met een eigen maand\n  When hij dezelfde dag twee keer meestuurt, then weigert de server dat met uitleg\n  And blijft het maandtotaal gelijk aan de som van de dagen\n  And wordt dezelfde maand met enkele dagregels wél gewoon bewaard\n  Then wordt met Playwright-assertions bevestigd dat dezelfde dag twee keer in één opslag wordt geweigerd en laat de maand ongemoeid"
         }
       ]
     },
     {
       "date": "16 sep",
-      "version": "2.0.129",
-      "wish": "Een geweigerde urenwijziging wordt nu ook door een schermlezer gemeld. De melding \"Niet opgeslagen: een dag kan maximaal 24 uur hebben\" stond in een veld zonder aria-live, dus hulpsoftware bleef stil bij precies de mededeling die je wel wilt horen. A11Y-H-007 met tegenproef (rood zonder het attribuut).",
+      "version": "2.0.130",
+      "wish": "Bovengrens op het uurtarief van 1.000 euro per uur, gekozen door Gio. Een typefout als 8500 in plaats van 85 werd eerder zonder enige waarschuwing bewaard en rekende door in elke factuur; een extreem getal gaf een serverfout (ADM-WR-N-009, tegenproef rood).",
       "cases": [
         {
-          "id": "A11Y-H-007",
-          "title": "een niet-opgeslagen urenwijziging wordt ook door een schermlezer gemeld",
-          "feature": "tests/playwright/features/accessibility.feature",
-          "technique": "Toegankelijkheidsinspectie + toetsenbord-use-case",
-          "assertions": 3,
+          "id": "ADM-WR-N-009",
+          "title": "een onmogelijk uurtarief wordt geweigerd en het oude tarief blijft staan",
+          "feature": "tests/playwright/features/organization-settings.feature",
+          "technique": "Grenswaardenanalyse op het uurtarief (op de grens, erboven, typefout) + persistentiecontrole",
+          "assertions": 8,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: een niet-opgeslagen urenwijziging wordt ook door een schermlezer gemeld\n  Given de medewerker is ingelogd op Mijn uren\n  When de flow voor A11Y-H-007 wordt uitgevoerd\n  Then meldt het statusveld zijn wijzigingen aan hulpsoftware\n  And hetzelfde geldt voor de uitleg onder het urenraster"
+          "gherkin": "Scenario: een onmogelijk uurtarief wordt geweigerd en het oude tarief blijft staan\n  Given een medewerker met een gewoon tarief op de grens\n  When er één euro boven de grens wordt opgeslagen, then weigert de server dat met uitleg\n  And wordt ook een typefout als 8500 geweigerd in plaats van stil bewaard\n  And staat het eerder bewaarde tarief er nog ongewijzigd\n  Then wordt met Playwright-assertions bevestigd dat een onmogelijk uurtarief wordt geweigerd en het oude tarief blijft staan"
         }
       ]
     },
     {
       "date": "16 sep",
-      "version": "2.0.128",
-      "wish": "Gemeld door Gio vanaf de iPhone: een gewone PDF werd bij de klanturenstaat geweigerd met \"Het gekozen PDF-bestand is beschadigd of ongeldig\". Oorzaak: de uploadcontrole zocht op de letterlijke tekst `/Type /Catalog` mét spatie, terwijl een PDF die net zo goed zonder spatie mag schrijven; bestanden van moderne makers vielen daardoor af. Ook de factuurupload gebruikte dezelfde controle. Nu is de spatie optioneel en bij gecomprimeerde objecten (PDF 1.5+) is de xref-stream het structuurbewijs. Nep-PDF's worden nog steeds geweigerd (CTS-API-H-018, tegenproef rood op de oude controle).",
+      "version": "2.0.130",
+      "wish": "Lengtegrens op de reden van intrekken (750 tekens) en op de omschrijving van de ontvangers (255), gelijk aan het invoerveld en de kolom. Te lang gaf eerder een serverfout in plaats van een nette melding (ANN-N-008, tegenproef rood).",
       "cases": [
         {
-          "id": "CTS-API-H-018",
-          "title": "een PDF die zijn woordenboek zonder spaties schrijft wordt gewoon aangenomen",
-          "feature": "tests/playwright/features/customer-timesheets.feature",
-          "technique": "Equivalentieklassen op de schrijfwijze van een PDF-woordenboek (met en zonder spatie) + negatieve controle dat een nep-PDF geweigerd blijft",
-          "assertions": 7,
+          "id": "ANN-N-008",
+          "title": "de reden van intrekken kent dezelfde grens als het invoerveld en de kolom",
+          "feature": "tests/playwright/features/announcements.feature",
+          "technique": "Grenswaardenanalyse langs de kolomgrens (750 tekens, met accenten) + controle dat een geweigerde intrekking niets verandert",
+          "assertions": 8,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: een PDF die zijn woordenboek zonder spaties schrijft wordt gewoon aangenomen\n  Given de medewerker is ingelogd met een maand die nog te vullen is\n  When hij een PDF uploadt die zijn woordenboek compact schrijft, then wordt die aangenomen\n  And blijft een bestand dat alleen op een PDF lijkt geweigerd\n  Then wordt met Playwright-assertions bevestigd dat een PDF die zijn woordenboek zonder spaties schrijft wordt gewoon aangenomen"
+          "gherkin": "Scenario: de reden van intrekken kent dezelfde grens als het invoerveld en de kolom\n  Given een verzonden mededeling\n  When de reden één teken te lang is, then wordt die geweigerd met uitleg\n  And blijft de mededeling daardoor gewoon verzonden staan\n  And wordt precies 750 tekens wél geaccepteerd, ook met accenten\n  Then wordt met Playwright-assertions bevestigd dat de reden van intrekken kent dezelfde grens als het invoerveld en de kolom"
         }
       ]
     },
     {
       "date": "16 sep",
-      "version": "2.0.127",
-      "wish": "Intake #45, via de demo-pagina ingediend en door de hele keten gelopen: de Living Doc staat nu op 15 pixels in plaats van 13, in licht en donker. PIPE-H-006 meet de berekende stijl in beide kleurschema's plus de telefoonbreedte; tegenproef gedaan (rood op 13px).",
+      "version": "2.0.130",
+      "wish": "Een ingetrokken mededeling blijft ongelezen tot de medewerker hem opent. Eerder zette het intrekken die melding zelf op gelezen, waardoor een bericht dat nooit geopend was stil uit de teller verdween; dat botst met de regel dat niets vanzelf verdwijnt. Uitzondering: gaat er een vervangend bericht uit, dan mag de oude wel op gelezen, want het nieuws staat dan in dat nieuwe bericht (ANN-N-009, tegenproef rood).",
       "cases": [
         {
-          "id": "PIPE-H-006",
-          "title": "de Living Doc leest op vijftien pixels, in licht en in donker",
-          "feature": "tests/playwright/features/pipeline-demo.feature",
-          "technique": "Meting van berekende stijl in licht en donker + responsive viewport (intake #45)",
-          "assertions": 5,
+          "id": "ANN-N-009",
+          "title": "een ingetrokken mededeling blijft ongelezen tot de medewerker hem opent",
+          "feature": "tests/playwright/features/announcements.feature",
+          "technique": "Beslistabel (handeling x brontoestand) op wanneer een bericht als gelezen telt",
+          "assertions": 4,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de Living Doc leest op vijftien pixels, in licht en in donker\n  Given de Living Doc in de Kennisbank\n  When de flow voor PIPE-H-006 wordt uitgevoerd\n  Then blijft de regel ook op een telefoon binnen beeld"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.126",
-      "wish": "Demo-pagina dichter bij de echte tools: elke Jira-kaart toont rechtsonder een avatar van wie hem oppakt (afgeleid uit de kolom Wie in deze lijst), en de Confluence-pagina heeft rechts een inhoudsopgave \"Op deze pagina\" met ankers naar de secties.",
-      "cases": []
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.125",
-      "wish": "Knop op de demo-pagina heet \"Start de flow\" in plaats van \"Doorzetten naar VS Code\": zegt wat er gebeurt in plaats van waar het heen gaat. Kop, menu, uitleg en PIPELINE-INTAKE.md meeveranderd; PIPE-H-002 controleert de nieuwe naam.",
-      "cases": [
-        {
-          "id": "PIPE-H-002",
-          "title": "opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub",
-          "feature": "tests/playwright/features/pipeline-demo.feature",
-          "technique": "Toestandsovergangtest (aangenomen → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van het wachtrij-antwoord + negatieve controle dat GitHub niet meer wordt benaderd",
-          "assertions": 42,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub\n  Given de pagina opent in Confluence, want daar begint de keten\n  And vanaf het Jira-bord wijst een knop terug naar het loket\n  And een nieuwe wens met acceptatiecriterium\n  When de flow wordt gestart, gaat de wens naar de eigen wachtrij en niet naar GitHub\n  Then meldt de pagina dat hij is aangenomen en staat hij op het bord, ook na herladen\n  And een tweede bezoeker met een schone browser ziet dezelfde wens, want de wachtrij staat op de server\n  And een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.124",
-      "wish": "Een medewerker mag het uurtarief niet zien (wens Gio). Het scherm toonde het al niet, maar de server stuurde tarief en btw-percentage van de eigen opdracht wel mee bij het inloggen, en niet tonen is geen afscherming. Beide velden gaan nu niet meer naar een medewerker; beheer krijgt ze ongewijzigd voor de facturen. ROLE-N-007 met tegenproef (rood op de oude servercode).",
-      "cases": [
-        {
-          "id": "ROLE-N-007",
-          "title": "de medewerker krijgt het uurtarief en btw-percentage van zijn opdracht niet mee, de beheerder wel",
-          "feature": "tests/playwright/features/roles-authorization.feature",
-          "technique": "Beslissingstabel rollen en autorisatie",
-          "assertions": 12,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: de medewerker krijgt het uurtarief en btw-percentage van zijn opdracht niet mee, de beheerder wel\n  Given de medewerker is ingelogd\n  When hij zijn eigen opdracht ophaalt\n  Then staan tarief en btw er niet in, ook niet als lege waarde\n  And de rest van zijn opdracht blijft gewoon bruikbaar\n  And de beheerder krijgt ze wel, want daar worden de facturen mee gemaakt"
+          "gherkin": "Scenario: een ingetrokken mededeling blijft ongelezen tot de medewerker hem opent\n  Given een verzonden mededeling met een ongelezen melding\n  When de beheerder hem intrekt, then blijft de melding ongelezen\n  And cleanup: de testmededeling wordt bij de medewerker verborgen\n  Then wordt met Playwright-assertions bevestigd dat een ingetrokken mededeling blijft ongelezen tot de medewerker hem opent"
         }
       ]
     }
   ],
   "open": [
+    {
+      "date": "16 sep",
+      "wish": "Werkafspraak (uit de kaartenwens): de kolom In uitvoering op het demobord vult zich alleen als een wens in deze lijst op bezig staat. Wie een wens oppakt, zet hem hier op bezig en pusht dat; bij oplevering verhuist hij naar Klaar met versie. Zonder die discipline beweegt er niets, hoe goed het bord ook is.",
+      "who": "werkwijze",
+      "status": "vastgelegd"
+    },
+    {
+      "date": "16 sep",
+      "wish": "Wens Gio (naam en versie): hernoem de demo-pagina alvast naar een eigen naam, blijvend binnen pilot/: pilot/path-kwaliteitsstraat.html, met \"Path Kwaliteitsstraat\" als titel (die kop stond er al en vond Gio mooi). Zet het versienummer onderaan in de voettekst, net zoals de urenapp dat doet, in plaats van de losse regel \"projectstand app 2.0.x\" bovenaan. Let op: een hernoeming raakt ook de PIPE-testcases, PIPELINE-INTAKE.md, de demodata-generator en de uitrolcontrole, dus in één hand houden.",
+      "who": "herontwerp, na de push van main",
+      "status": "open"
+    },
+    {
+      "date": "16 sep",
+      "wish": "Route vastgelegd (besluit Gio): de kwaliteitsstraat wordt eerst echt operationeel voor ons eigen proces -- Gio dient wensen in via Confluence, wij voeren uit, alles traceerbaar. Inloggen is nu expliciet geen prioriteit: voorlopig een openbare pagina op TEST, later kijken we naar inloggen. Voorwaarde die daarbij hoort: zolang hij openbaar is horen er geen persoonsgegevens en geen klantgegevens in. Wil Gio hem later ook live, dan verhuist hij uit pilot/ (die map gaat per contract nooit naar PROD) naar een eigen map met een eigen naam -- niet Jira of Confluence, want dat zijn merknamen van Atlassian; \"Path Kwaliteitsstraat\" staat al als kop op de pagina. Pas op dat moment komt inloggen en eigen opslag met geschiedenis en back-up aan de orde.",
+      "who": "main",
+      "status": "route"
+    },
     {
       "date": "16 sep",
       "wish": "CI-risico, nog niet opgelost: shard 8 van de tien testshards draait structureel 17-18 minuten terwijl de afbreeklimiet 22 minuten is; de snelste shards doen 2-5 minuten. Gemeten over drie releases (35023441673, 35035388985, 35043135123), zowel bij Validate als bij Promote Test. Oorzaak is de inhoud, niet het aantal: de zware integratiespecs (urenregistratie schrijven, correcties, beveiliging, rollen, teambeheer) vallen samen in één shard. Eerder is ditzelfde voor dashboard.spec.ts opgelost door dat bestand te splitsen. Nog te doen: opnieuw verdelen of splitsen, anders valt een release ooit om op de tijdslimiet.",
@@ -151,27 +189,36 @@
     },
     {
       "date": "16 sep",
-      "wish": "Eigen vondst, nog niet gefixt (productiecode bevroren tot de go-live): twee dagregels voor dezelfde datum in één opslag worden geaccepteerd. Het maandtotaal bewaart de som (2 x 8 = 16), de dagen bewaren er maar één (8), en dat verschil blijft staan. Fix en testcase TS-API-N-014 liggen klaar in CODEX_HANDOFF.md (BEV-1).",
+      "wish": "Uitgezocht (TW-2): SKIN-H-029 valt alleen op deze machine om, op WebKit onder Windows, en is groen in CI en op mobiel Chrome. Met metingen uitgesloten: het voorkeurenvenster, het thema, de vormgeving, de viewport en de installatiebanner; er ligt nooit iets over de knop. Het blijft hangen in het naar-beeld-scrollen van de browser zelf. Vervolg: die klik ongevoelig maken voor dat scrollen.",
       "who": "herontwerp",
       "status": "open, na go-live"
+    }
+  ],
+  "niceToHave": [
+    {
+      "date": "16 sep",
+      "improvement": "Op het demobord per kaart tonen hoe lang een wens al open staat",
+      "why": "Een PO ziet dan meteen wat blijft liggen zonder de datum te hoeven lezen."
     },
     {
       "date": "16 sep",
-      "wish": "Eigen vondst in de testset zelf: SKIN-H-029 slaagt op deze machine nooit (drie van de drie keer rood op mobile-safari), maar is in CI groen. Tegenproef met de schermbestanden van 2.0.96 laat zien dat dit al van vóór het herontwerp is; het is WebKit op Windows tegenover WebKit op Linux. Uitzoeken of overslaan met reden (TW-2 in CODEX_HANDOFF.md).",
-      "who": "herontwerp",
-      "status": "open, na go-live"
+      "improvement": "In Berichten een filter op afzender (Backoffice, systeem)",
+      "why": "Bij meer dan tien berichten wordt zoeken op wie het stuurde sneller dan scrollen."
     },
     {
       "date": "16 sep",
-      "wish": "Eigen vondst in de testset zelf: een paar cases leunen op de gezaaide urenstaat, dus wie lokaal de hele suite in één keer draait krijgt rood op cases die niets mankeren (E2E-H-018, SKIN-H-035). In CI valt het niet op omdat die in aparte shards met een eigen database draaien. Oplossing is dezelfde als eerder bij de dashboardcases: elke schrijvende case maakt zijn eigen maand aan (TW-1 in CODEX_HANDOFF.md).",
-      "who": "herontwerp",
-      "status": "open, na go-live"
+      "improvement": "Bij een geweigerde invoer in Mijn uren de foutmelding naast het veld tonen, niet alleen in de statusregel",
+      "why": "De regel staat onderaan; op een telefoon staat het veld buiten beeld als de melding komt."
     },
     {
       "date": "16 sep",
-      "wish": "Eigen vondst plus vraag aan Gio: het uurtarief heeft geen bovengrens. Een typefout (8500 in plaats van 85) wordt zonder waarschuwing bewaard en rekent door in de facturen; een extreem getal geeft een serverfout. Welke bovengrens is realistisch, bijvoorbeeld 1.000 euro per uur? Case ADM-WR-N-009 ligt klaar (BEV-5 in CODEX_HANDOFF.md).",
-      "who": "Gio + herontwerp",
-      "status": "open, na go-live"
+      "improvement": "Testset: elke schrijvende case zijn eigen maand geven (TW-1)",
+      "why": "Dan is een lokale volledige regressie weer een geldige meting in plaats van ruis."
+    },
+    {
+      "date": "16 sep",
+      "improvement": "De vijf E2E-cases die op de gezaaide urenstaat leunen loskoppelen van de seed",
+      "why": "Zelfde reden; nu valt de groep om zodra een andere spec eerder liep."
     }
   ]
 }

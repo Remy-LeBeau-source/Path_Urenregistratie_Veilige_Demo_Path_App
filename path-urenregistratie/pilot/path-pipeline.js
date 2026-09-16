@@ -108,8 +108,8 @@
 
   applyTheme(huidigeTheme());
 
-  var feed = { delivered: [], open: [], appVersion: '', loaded: false };
-  var ui = { view: 'backlog', query: '', type: 'all', source: 'all', status: 'all', sort: '', sortDir: 'asc', expandAll: false, docKey: '', fixedDoc: '', detail: '' };
+  var feed = { delivered: [], open: [], niceToHave: [], appVersion: '', generatedAt: '', loaded: false };
+  var ui = { view: 'backlog', query: '', type: 'all', source: 'all', status: 'all', sort: '', sortDir: 'asc', expandAll: false, docKey: '', fixedDoc: '', detail: '', keuze: -1 };
 
   function initialState() {
     return { schemaVersion: 3, sequence: 198, customTickets: [], customTests: [], livingDoc: [], activePhase: 0, activeTicket: '' };
@@ -243,7 +243,7 @@
     var done = local.filter(function (t) { return t.status === 'done'; }).concat(deliveredTickets()).slice(0, BOARD_DONE_CAP);
     var open = openTickets();
     return {
-      todo: local.filter(function (t) { return t.status === 'todo' || t.status === 'ingediend'; }).concat(open.filter(function (t) { return t.status === 'todo'; })).filter(matchesFilters),
+      todo: sorteerOpVolgorde(local.filter(function (t) { return t.status === 'todo' || t.status === 'ingediend'; }).concat(open.filter(function (t) { return t.status === 'todo'; }))).filter(matchesFilters),
       doing: local.filter(function (t) { return t.status === 'doing'; }).concat(open.filter(function (t) { return t.status === 'doing'; })).filter(matchesFilters),
       done: done.filter(matchesFilters)
     };
@@ -316,8 +316,13 @@
     if (ticket.version && ticket.source === 'feed') meta += '<span class="version-chip">' + escapeHtml(ticket.version) + '</span>';
     if (ticket.platform) meta += '<span>' + escapeHtml(ticket.platform) + '</span>';
     if (ticket.who && ticket.status !== 'done') meta += '<span>' + escapeHtml(ticket.who) + '</span>';
-    return '<article class="ticket-card' + (ticket.status === 'doing' && isLocal ? ' is-running' : '') + '" data-ticket="' + escapeHtml(ticket.key) + '" data-source="' + escapeHtml(isLocal ? 'local' : ticket.source) + '">' +
+    // Alleen in Te doen mag de volgorde veranderen (slepen of ▲▼); een kaart tussen
+    // kolommen verplaatsen zou een stand tonen die de keten niet kent.
+    var inTeDoen = ticket.status === 'todo' || ticket.status === 'ingediend';
+    return '<article class="ticket-card' + (ticket.status === 'doing' && isLocal ? ' is-running' : '') + '" data-ticket="' + escapeHtml(ticket.key) + '" data-source="' + escapeHtml(isLocal ? 'local' : ticket.source) + '"' + (inTeDoen ? ' draggable="true"' : '') + '>' +
+      (inTeDoen ? '<span class="sleep-handvat" aria-hidden="true" title="Sleep om de volgorde te wijzigen">⋮⋮</span>' : '') +
       '<button type="button" class="card-open" data-open-ticket="' + escapeHtml(ticket.key) + '"><h4>' + escapeHtml(ticket.title) + '</h4></button>' +
+      (inTeDoen ? '<span class="verplaats-knoppen"><button type="button" data-verplaats="-1" aria-label="Omhoog in Te doen">▲</button><button type="button" data-verplaats="1" aria-label="Omlaag in Te doen">▼</button></span>' : '') +
       '<div class="ticket-card-foot">' +
         '<i class="issue-icon ' + escapeHtml(ticket.type) + '" aria-hidden="true">' + iconFor(ticket.type) + '</i>' +
         '<code class="issue-key">' + escapeHtml(ticket.key) + '</code>' +
@@ -341,6 +346,7 @@
       var count = $('[data-count="' + column + '"]');
       if (count) count.textContent = String(columns[column].length);
     });
+    koppelSlepen();
     var total = columns.todo.length + columns.doing.length + columns.done.length;
     var badge = $('[data-backlog-count]');
     if (badge) badge.textContent = String(total);
@@ -552,7 +558,11 @@
 
     var form = $('[data-ticket-form]');
     if (form) Array.prototype.forEach.call(form.elements, function (control) { control.disabled = Boolean(state.activeTicket); });
-    setText('[data-feed-version]', feed.loaded ? 'projectstand app ' + feed.appVersion : 'voorbeelddata (feed niet geladen)');
+    // Bovenin hoe vers de stand is (daar heeft een PO iets aan); het versienummer zelf
+    // staat in de voettekst, zoals in de urenapp.
+    setText('[data-feed-version]', feed.loaded ? 'Bijgewerkt ' + versheidLabel(feed.generatedAt) : 'voorbeelddata (feed niet geladen)');
+    setText('[data-demo-versie]', feed.loaded ? 'versie ' + feed.appVersion : 'versie onbekend');
+    renderKeuzelijst();
   }
 
   function renderFilterSummary() {
@@ -637,7 +647,7 @@
     setText('[data-detail-title]', ticket.title);
     $('[data-detail-pills]').innerHTML = statusLabel(ticket) + (ticket.platform ? '<span class="status-pill open">' + escapeHtml(ticket.platform) + '</span>' : '');
     var fields = [
-      ['Type', { feature: 'Feature', bug: 'Bug', chore: 'Chore', ci: 'CI/CD' }[ticket.type] || ticket.type],
+      ['Type', { feature: 'Feature', bug: 'Bug', chore: 'Onderhoud', ci: 'CI/CD' }[ticket.type] || ticket.type],
       ['Bron', isLocal ? 'Eigen demo-wens (lokaal bewaard)' : 'Echte projectstand (GIO-WENSEN.md)'],
       ['Versie', ticket.version || '—'],
       ['Datum', ticket.date || '—'],
@@ -808,6 +818,8 @@
     render();
     if (form) {
       form.reset();
+      ui.keuze = -1;
+      renderKeuzelijst();
       updateGherkinPreview();
     }
   }
@@ -892,10 +904,159 @@
     }
   }
 
+  // ===================== Keuzelijst: verbeteringen die wij al zien =====================
+  // Basisregel van Gio (16 sep): het formulier toont de nice-to-haves uit GIO-WENSEN.md
+  // als keuzelijst. Kiezen vult de velden voor; vrij typen blijft altijd mogelijk. Haakt
+  // aan op [data-ticket-form] waar dat ook staat, zodat een verhuizing van het formulier
+  // deze code niet raakt.
+  function renderKeuzelijst() {
+    var form = $('[data-ticket-form]');
+    if (!form) return;
+    var vak = form.querySelector('[data-keuzelijst]');
+    if (!vak) {
+      vak = document.createElement('div');
+      vak.className = 'keuzelijst';
+      vak.setAttribute('data-keuzelijst', '');
+      form.insertBefore(vak, form.firstElementChild);
+    }
+    var lijst = feed.loaded ? (feed.niceToHave || []) : [];
+    if (!lijst.length) { vak.hidden = true; return; }
+    vak.hidden = false;
+    var gekozen = ui.keuze;
+    var html = '<p class="keuzelijst-kop">Verbeteringen die wij al zien <small>kies er een, of typ zelf hieronder</small></p>' +
+      '<div class="keuzelijst-chips" role="group" aria-label="Voorgestelde verbeteringen">';
+    lijst.forEach(function (item, index) {
+      var actief = gekozen === index;
+      html += '<button type="button" class="keuzelijst-chip" data-keuze="' + index + '" aria-pressed="' + actief + '" title="' + escapeHtml(item.why) + '">' +
+        '<span class="keuzelijst-bol" aria-hidden="true">' + (actief ? '✓' : '+') + '</span>' + escapeHtml(item.improvement) + '</button>';
+    });
+    html += '</div>';
+    if (gekozen !== -1 && lijst[gekozen]) {
+      html += '<p class="keuzelijst-waarom"><b>Waarom:</b> ' + escapeHtml(lijst[gekozen].why) +
+        ' <button type="button" class="keuzelijst-los" data-keuze="-1">Zelf typen</button></p>';
+    }
+    vak.innerHTML = html;
+  }
+
+  function kiesVerbetering(index) {
+    var form = $('[data-ticket-form]');
+    var lijst = feed.niceToHave || [];
+    ui.keuze = index;
+    if (form && index !== -1 && lijst[index]) {
+      var item = lijst[index];
+      var titel = form.querySelector('[name="title"]');
+      var doel = form.querySelector('[name="goal"]');
+      var criterium = form.querySelector('[name="criterion"]');
+      if (titel) titel.value = item.improvement.slice(0, Number(titel.getAttribute('maxlength') || 90));
+      if (doel) doel.value = item.why.slice(0, Number(doel.getAttribute('maxlength') || 140));
+      updateGherkinPreview();
+      // Het acceptatiecriterium blijft van de PO: daar hoort de cursor.
+      if (criterium && !criterium.value.trim()) criterium.focus();
+      toast('Voorgevuld — pas aan wat je wilt en vul het acceptatiecriterium in');
+    }
+    // "Zelf typen" maakt de keuze los, maar wist niets wat de PO al typte.
+    renderKeuzelijst();
+  }
+
+  function versheidLabel(iso) {
+    var datum = iso ? new Date(iso) : null;
+    if (!datum || isNaN(datum.getTime())) return 'onbekend';
+    try {
+      return new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(datum);
+    } catch (_error) {
+      return datum.toLocaleString();
+    }
+  }
+
+  // ===================== Slepen binnen Te doen =====================
+  // Alleen de volgorde binnen Te doen, nooit tussen kolommen: een kaart die je naar
+  // Opgeleverd sleept zou een oplevering tonen die nooit gebeurd is. De volgorde is per
+  // bezoeker (localStorage), zoals de rest van deze demo; ▲▼ is de toetsenbordroute.
+  var ORDER_KEY = 'path-pipeline-volgorde-v1';
+  function volgordeLezen() {
+    try { return JSON.parse(localStorage.getItem(ORDER_KEY) || '[]'); } catch (_error) { return []; }
+  }
+  function volgordeBewaren(sleutels) {
+    try { localStorage.setItem(ORDER_KEY, JSON.stringify(sleutels)); } catch (_error) { /* geen opslag */ }
+  }
+  function sorteerOpVolgorde(tickets) {
+    var volgorde = volgordeLezen();
+    if (!volgorde.length) return tickets;
+    var rang = {};
+    volgorde.forEach(function (key, i) { rang[key] = i; });
+    return tickets.slice().sort(function (a, b) {
+      var ra = a.key in rang ? rang[a.key] : Number.MAX_SAFE_INTEGER;
+      var rb = b.key in rang ? rang[b.key] : Number.MAX_SAFE_INTEGER;
+      return ra - rb;
+    });
+  }
+  function huidigeTeDoenVolgorde() {
+    return $$('[data-ticket-list="todo"] .ticket-card').map(function (el) { return el.getAttribute('data-ticket'); });
+  }
+  function verplaatsInTeDoen(key, richting) {
+    var sleutels = huidigeTeDoenVolgorde();
+    var i = sleutels.indexOf(key);
+    var j = i + richting;
+    if (i < 0 || j < 0 || j >= sleutels.length) return;
+    sleutels.splice(i, 1);
+    sleutels.splice(j, 0, key);
+    volgordeBewaren(sleutels);
+    renderBoard();
+    var knop = $('[data-ticket-list="todo"] .ticket-card[data-ticket="' + key + '"] [data-verplaats="' + richting + '"]');
+    if (knop) knop.focus();
+  }
+  function koppelSlepen() {
+    var lijst = $('[data-ticket-list="todo"]');
+    if (!lijst || lijst.getAttribute('data-sleep-gekoppeld')) return;
+    lijst.setAttribute('data-sleep-gekoppeld', '1');
+    var gesleept = '';
+    lijst.addEventListener('dragstart', function (event) {
+      var kaart = event.target instanceof Element ? event.target.closest('.ticket-card') : null;
+      if (!kaart) return;
+      gesleept = kaart.getAttribute('data-ticket');
+      kaart.classList.add('is-sleept');
+      if (event.dataTransfer) { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', gesleept); }
+    });
+    lijst.addEventListener('dragend', function () {
+      gesleept = '';
+      $$('.ticket-card.is-sleept, .ticket-card.is-doel').forEach(function (el) { el.classList.remove('is-sleept', 'is-doel'); });
+    });
+    lijst.addEventListener('dragover', function (event) {
+      if (!gesleept) return;
+      event.preventDefault();
+      var doel = event.target instanceof Element ? event.target.closest('.ticket-card') : null;
+      $$('.ticket-card.is-doel').forEach(function (el) { el.classList.remove('is-doel'); });
+      if (doel && doel.getAttribute('data-ticket') !== gesleept) doel.classList.add('is-doel');
+    });
+    lijst.addEventListener('drop', function (event) {
+      if (!gesleept) return;
+      event.preventDefault();
+      var doel = event.target instanceof Element ? event.target.closest('.ticket-card') : null;
+      var sleutels = huidigeTeDoenVolgorde();
+      var van = sleutels.indexOf(gesleept);
+      var naar = doel ? sleutels.indexOf(doel.getAttribute('data-ticket')) : sleutels.length - 1;
+      if (van < 0 || naar < 0 || van === naar) return;
+      sleutels.splice(van, 1);
+      sleutels.splice(naar, 0, gesleept);
+      volgordeBewaren(sleutels);
+      renderBoard();
+      toast('Volgorde in Te doen aangepast');
+    });
+  }
+
   // ===================== Klikafhandeling =====================
   document.addEventListener('click', function (event) {
     var target = event.target instanceof Element ? event.target : null;
     if (!target) return;
+
+    var keuze = target.closest('[data-keuze]');
+    if (keuze) { kiesVerbetering(Number(keuze.getAttribute('data-keuze'))); return; }
+    var verplaats = target.closest('[data-verplaats]');
+    if (verplaats) {
+      var kaartVan = verplaats.closest('.ticket-card');
+      if (kaartVan) verplaatsInTeDoen(kaartVan.getAttribute('data-ticket'), Number(verplaats.getAttribute('data-verplaats')));
+      return;
+    }
 
     var panelToggle = target.closest('[data-panel-toggle]');
     if (panelToggle) {
@@ -1090,7 +1251,7 @@
       if (!response.ok) throw new Error('feed ' + response.status);
       return response.json();
     }).then(function (json) {
-      feed = { delivered: json.delivered || [], open: json.open || [], appVersion: json.appVersion || '', loaded: true };
+      feed = { delivered: json.delivered || [], open: json.open || [], niceToHave: json.niceToHave || [], appVersion: json.appVersion || '', generatedAt: json.generatedAt || '', loaded: true };
       document.body.setAttribute('data-feed', 'loaded');
       render();
       applyHash();

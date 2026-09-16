@@ -12,6 +12,9 @@ const OUT = path.join(root, 'pilot', 'path-pipeline-data.json');
 const CASE_ID = /\b[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-[HN]-\d{3}\b/g;
 const MAX_DELIVERED = 10;
 const MAX_OPEN = 5;
+// Basisregel van Gio (16 sep): verbeteringen die wij zelf zien staan in GIO-WENSEN.md
+// onder "Nice to have" en het wensformulier toont ze als keuzelijst.
+const MAX_NICE_TO_HAVE = 8;
 
 // Feature-bestanden en MD's wisselen tussen LF en CRLF: altijd normaliseren,
 // anders laat een trailing \r de Scenario-regex stilletjes mislukken.
@@ -71,14 +74,21 @@ function build() {
     };
   });
   const open = tableRows(wishes, 'Open en bezig').slice(0, MAX_OPEN).map(([date, wish, who, status]) => ({ date, wish, who, status }));
-  return { appVersion: pkg.version, source: 'GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md', delivered, open };
+  const niceToHave = tableRows(wishes, 'Nice to have').slice(0, MAX_NICE_TO_HAVE).map(([date, improvement, why]) => ({ date, improvement, why }));
+  // generatedAt vertelt de pagina hoe vers de stand is; een PO heeft daar meer aan dan
+  // aan een kaal versienummer bovenin (het nummer zelf staat in de voettekst).
+  return { appVersion: pkg.version, generatedAt: new Date().toISOString(), source: 'GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md', delivered, open, niceToHave };
 }
+
+// De tijd verandert bij elke bouw; de controle vergelijkt daarom zonder dat veld,
+// anders is de poort altijd rood en zou elke run het bestand opnieuw schrijven.
+const zonderTijd = (tekst) => tekst.replace(/\n  "generatedAt": "[^"]*",?/, '');
 
 const data = build();
 const json = `${JSON.stringify(data, null, 2)}\n`;
 if (process.argv.includes('--check')) {
   const current = fs.existsSync(OUT) ? fs.readFileSync(OUT, 'utf8') : '';
-  if (current !== json) {
+  if (zonderTijd(current) !== zonderTijd(json)) {
     console.error('pilot/path-pipeline-data.json loopt achter op GIO-WENSEN.md of de feature-bestanden. Draai: npm run pipeline:data');
     process.exit(1);
   }
