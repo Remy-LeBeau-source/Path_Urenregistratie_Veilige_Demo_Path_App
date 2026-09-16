@@ -963,6 +963,61 @@ test('[DASH-H-012] GUI-smoke scheidt werkacties van medewerkers- en beheerdersac
   });
 });
 
+test('[DASH-H-052] de maandtotalen boven de werkvoorraad blijven gelijk als de gebruiker wisselt tussen Backoffice en medewerkers', async ({ page }) => {
+  // Wens van Gio (16 sep, via het wensenloket): "Maandtotalen blijven gelijk na
+  // filterwissel" -- "de gebruiker wisselt tussen Backoffice en medewerkers".
+  // #hero-task-months en #hero-task-owners tonen de rekensom over ALLE open acties
+  // (renderDashboardActions() in app.js); de knoppen #hero-backoffice-filter en
+  // #hero-employee-filter wijzigen alleen state.adminTaskFilter en het paneel
+  // eronder (renderAdminTaskQueue()), niet die twee regels. Equivalentieklassen op
+  // de eigenaarfilter (Backoffice/medewerkers/geen), met de rekensom bovenaan als
+  // vaste referentie die door geen van de drie klassen geraakt mag worden.
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given het dashboard met een gevulde werkvoorraad over meerdere maanden', async () => {
+    await loginPage.open();
+    await loginPage.loginAsAdmin();
+    await expect(page.locator('#hero-task-total')).not.toHaveText(/laden/i, { timeout: 15_000 });
+    await expect(page.locator('#hero-task-months')).not.toHaveText('');
+  });
+
+  const rekensom = await page.locator('#hero-task-months').textContent();
+  const eigenaarsom = await page.locator('#hero-task-owners').textContent();
+  expect(rekensom, 'de vaste baseline hoort meerdere maanden te tonen').toContain('+');
+
+  await test.step('When de gebruiker naar "bij Backoffice" wisselt, then blijven de maandtotalen bovenaan ongewijzigd', async () => {
+    await page.locator('#hero-backoffice-filter').click();
+    await expect(page.locator('[data-admin-task-filter="actionable"]')).toHaveClass(/is-active/);
+    await expect(page.locator('#hero-task-months')).toHaveText(rekensom!);
+    await expect(page.locator('#hero-task-owners')).toHaveText(eigenaarsom!);
+  });
+
+  await test.step('And blijven ze ook ongewijzigd na "wacht op medewerkers"', async () => {
+    await page.locator('#hero-employee-filter').click();
+    await expect(page.locator('[data-admin-task-filter="waiting"]')).toHaveClass(/is-active/);
+    await expect(page.locator('#hero-task-months')).toHaveText(rekensom!);
+    await expect(page.locator('#hero-task-owners')).toHaveText(eigenaarsom!);
+  });
+
+  await test.step('And blijven ze ongewijzigd zodra de gebruiker terug naar "Alle acties" wisselt', async () => {
+    await page.locator('[data-admin-task-filter="all"]').click();
+    await expect(page.locator('[data-admin-task-filter="all"]')).toHaveClass(/is-active/);
+    await expect(page.locator('#hero-task-months')).toHaveText(rekensom!);
+    await expect(page.locator('#hero-task-owners')).toHaveText(eigenaarsom!);
+  });
+
+  await test.step('And blijft de maandtegelverdeling eronder alleen zichtbaar bij "Alle acties", nooit met een afwijkend getal', async () => {
+    // renderAdminTaskMonthChips() verbergt de tegels bewust bij een actief filter
+    // (anders zou een tweede, gefilterde telling naast de rekensom staan). Deze
+    // stap bewijst dat "verborgen" ook echt betekent: geen tweede getal ergens
+    // zichtbaar dat van de rekensom afwijkt.
+    await page.locator('#hero-backoffice-filter').click();
+    await expect(page.locator('#admin-task-months')).toBeHidden();
+    await page.locator('[data-admin-task-filter="all"]').click();
+    await expect(page.locator('#admin-task-months')).toBeVisible();
+  });
+});
+
 test('[DASH-H-013] dashboardmodules tonen compacte documenten, procesfasen en teamacties', async ({ page }) => {
   const loginPage = new LoginPage(page);
 

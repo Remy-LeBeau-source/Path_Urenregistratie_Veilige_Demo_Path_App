@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 604 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 605 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 604 unieke case-ID's
+- Playwright executable cases: 605 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 605 unieke case-ID's
+- Totaal executable cases: 606 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 656
-- Niet-mobile projectuitvoeringen: 552
+- Uitvoeringen: 657
+- Niet-mobile projectuitvoeringen: 553
 - Mobile functionele cases: 52
 - Pixel 7 / Chromium-uitvoeringen: 52
 - iPhone 13 / WebKit-uitvoeringen: 52
 
-De 52 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 604 Playwright-functionele cases in totaal 656 resultaten op: 552 + (52 x 2) = 656.
+De 52 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 605 Playwright-functionele cases in totaal 657 resultaten op: 553 + (52 x 2) = 657.
 
 ## Documentatieketen
 
@@ -205,7 +205,7 @@ De 52 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 604 Playwri
 
 - Feature: `tests/playwright/features/dashboard.feature`
 - Source: `tests/playwright/dashboard*.spec.ts`
-- Cases: 67
+- Cases: 68
 
 - [DASH-H-002] employee dashboard opent zonder console errors — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 1
 - [DASH-H-025] "Mijn maanden" toont één statuspil per maand en geen losse klanturenstaat-kolom — Techniek: Toestandsovergang · Assertions: 9
@@ -264,6 +264,7 @@ De 52 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 604 Playwri
 - [DASH-N-012] afgeronde verzendcontrole blijft na F5 weg, ongeacht het beginaantal — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
 - [DASH-N-040] een facturenantwoord van vóór "Herstel demo" vult de cache niet alsnog, en blokkeert de verzendcontrole niet — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [DASH-H-012] GUI-smoke scheidt werkacties van medewerkers- en beheerdersaccounts — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 35
+- [DASH-H-052] de maandtotalen boven de werkvoorraad blijven gelijk als de gebruiker wisselt tussen Backoffice en medewerkers — Techniek: Equivalentieklassen op de eigenaarfilter (Backoffice/medewerkers/alle) + regressie op stabiele maandtotalen · Assertions: 14
 - [DASH-H-013] dashboardmodules tonen compacte documenten, procesfasen en teamacties — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 16
 - [DASH-N-017] beheerderdashboard toont een laadtoestand tot de eerste werkvoorraad-sync — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 7
 - [DASH-H-017] serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels — Techniek: Equivalentieklassen · Assertions: 30

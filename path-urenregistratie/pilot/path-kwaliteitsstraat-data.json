@@ -1,8 +1,40 @@
 {
-  "appVersion": "2.0.137",
-  "generatedAt": "2026-09-16T19:04:54.919Z",
+  "appVersion": "2.0.138",
+  "generatedAt": "2026-09-16T19:17:05.514Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "16 sep",
+      "version": "2.0.138",
+      "wish": "Bevestigd en vastgelegd met een regressiecase (wens Gio via het wensenloket, PATH-200, issue #46): de maandtotalen boven de werkvoorraad (#hero-task-months, #hero-task-owners) blijven ongewijzigd als de gebruiker wisselt tussen de filters \"bij Backoffice\" en \"wacht op medewerkers\" -- dat klopte al, maar stond nog niet vast met een assertie (DASH-H-052, tegenproef rood).",
+      "cases": [
+        {
+          "id": "DASH-H-052",
+          "title": "de maandtotalen boven de werkvoorraad blijven gelijk als de gebruiker wisselt tussen Backoffice en medewerkers",
+          "feature": "tests/playwright/features/dashboard.feature",
+          "technique": "Equivalentieklassen op de eigenaarfilter (Backoffice/medewerkers/alle) + regressie op stabiele maandtotalen",
+          "assertions": 14,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de maandtotalen boven de werkvoorraad blijven gelijk als de gebruiker wisselt tussen Backoffice en medewerkers\n  Given het dashboard met een gevulde werkvoorraad over meerdere maanden\n  When de flow voor DASH-H-052 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de maandtotalen boven de werkvoorraad blijven gelijk als de gebruiker wisselt tussen Backoffice en medewerkers"
+        }
+      ]
+    },
+    {
+      "date": "16 sep",
+      "version": "2.0.137",
+      "wish": "Fix op eigen fout: de hernoeming in 2.0.136 was zelf kapot. In de werkboom stonden de titel, de CSS-link en de script-tag al goed op pilot/path-kwaliteitsstraat.html, maar bij het committen zijn die drie regels nooit gestaged (git add miste dit bestand) -- de commit bevatte dus nog de oude, niet meer bestaande path-pipeline.css/.js. Resultaat: een kale, ongestylede pagina zodra 2.0.136 op TEST komt. Gio zag dit meteen via de herontwerp-sessie, nog voor uitrol. Gecorrigeerd en de staging nu wel compleet. PIPE-N-003 uitgebreid: telt echt mislukte eigen netwerkverzoeken (css/js/data) in plaats van alleen DOM-structuur, want dat laatste had dit lek gemist. Tegenproef tweemaal gedaan: alleen css/js-verwijzingen kapot -> rood op precies die twee regels; hersteld -> groen.",
+      "cases": [
+        {
+          "id": "PIPE-N-003",
+          "title": "de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Regressiecontrole na hernoeming: oude URL blijft bereikbaar en verwijst door (meta-refresh) naar de nieuwe naam",
+          "assertions": 3,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de flow voor PIPE-N-003 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt"
+        }
+      ]
+    },
     {
       "date": "16 sep",
       "version": "2.0.136",
@@ -126,38 +158,6 @@
           "assertions": 9,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: dezelfde dag twee keer in één opslag wordt geweigerd en laat de maand ongemoeid\n  Given de medewerker is ingelogd met een eigen maand\n  When hij dezelfde dag twee keer meestuurt, then weigert de server dat met uitleg\n  And blijft het maandtotaal gelijk aan de som van de dagen\n  And wordt dezelfde maand met enkele dagregels wél gewoon bewaard\n  Then wordt met Playwright-assertions bevestigd dat dezelfde dag twee keer in één opslag wordt geweigerd en laat de maand ongemoeid"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.130",
-      "wish": "Bovengrens op het uurtarief van 1.000 euro per uur, gekozen door Gio. Een typefout als 8500 in plaats van 85 werd eerder zonder enige waarschuwing bewaard en rekende door in elke factuur; een extreem getal gaf een serverfout (ADM-WR-N-009, tegenproef rood).",
-      "cases": [
-        {
-          "id": "ADM-WR-N-009",
-          "title": "een onmogelijk uurtarief wordt geweigerd en het oude tarief blijft staan",
-          "feature": "tests/playwright/features/organization-settings.feature",
-          "technique": "Grenswaardenanalyse op het uurtarief (op de grens, erboven, typefout) + persistentiecontrole",
-          "assertions": 8,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: een onmogelijk uurtarief wordt geweigerd en het oude tarief blijft staan\n  Given een medewerker met een gewoon tarief op de grens\n  When er één euro boven de grens wordt opgeslagen, then weigert de server dat met uitleg\n  And wordt ook een typefout als 8500 geweigerd in plaats van stil bewaard\n  And staat het eerder bewaarde tarief er nog ongewijzigd\n  Then wordt met Playwright-assertions bevestigd dat een onmogelijk uurtarief wordt geweigerd en het oude tarief blijft staan"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.130",
-      "wish": "Lengtegrens op de reden van intrekken (750 tekens) en op de omschrijving van de ontvangers (255), gelijk aan het invoerveld en de kolom. Te lang gaf eerder een serverfout in plaats van een nette melding (ANN-N-008, tegenproef rood).",
-      "cases": [
-        {
-          "id": "ANN-N-008",
-          "title": "de reden van intrekken kent dezelfde grens als het invoerveld en de kolom",
-          "feature": "tests/playwright/features/announcements.feature",
-          "technique": "Grenswaardenanalyse langs de kolomgrens (750 tekens, met accenten) + controle dat een geweigerde intrekking niets verandert",
-          "assertions": 8,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: de reden van intrekken kent dezelfde grens als het invoerveld en de kolom\n  Given een verzonden mededeling\n  When de reden één teken te lang is, then wordt die geweigerd met uitleg\n  And blijft de mededeling daardoor gewoon verzonden staan\n  And wordt precies 750 tekens wél geaccepteerd, ook met accenten\n  Then wordt met Playwright-assertions bevestigd dat de reden van intrekken kent dezelfde grens als het invoerveld en de kolom"
         }
       ]
     }

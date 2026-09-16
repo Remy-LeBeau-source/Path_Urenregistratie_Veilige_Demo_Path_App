@@ -527,6 +527,14 @@ Feature: Dashboard en open werkvoorraad
     And Dashboard opent bovenaan terwijl eigenaarbolletjes gericht naar hun werkvoorraad springen
 
   @happy
+  Scenario: [DASH-H-052] de maandtotalen boven de werkvoorraad blijven gelijk als de gebruiker wisselt tussen Backoffice en medewerkers
+    # Testtechniek: Equivalentieklassen op de eigenaarfilter (Backoffice/medewerkers/alle) + regressie op stabiele maandtotalen
+    # Aantoonbare Playwright-assertions in deze case: 14
+    Given het dashboard met een gevulde werkvoorraad over meerdere maanden
+    When de flow voor DASH-H-052 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat de maandtotalen boven de werkvoorraad blijven gelijk als de gebruiker wisselt tussen Backoffice en medewerkers
+
+  @happy
   Scenario: [DASH-H-013] dashboardmodules tonen compacte documenten, procesfasen en teamacties
     # Testtechniek: End-to-end use-case + visuele contractasserties
     # Aantoonbare Playwright-assertions in deze case: 16

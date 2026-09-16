@@ -198,6 +198,7 @@
 | DASH-N-012 | ui | dashboard.feature | afgeronde verzendcontrole blijft na F5 weg, ongeacht het beginaantal | Beslissingstabel rollen en autorisatie | 13 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | afgeronde verzendcontrole blijft na F5 weg, ongeacht het beginaantal | Negative | 15 | Actueel |
 | DASH-N-040 | ui | dashboard.feature | een facturenantwoord van vóór "Herstel demo" vult de cache niet alsnog, en blokkeert de verzendcontrole niet | Beslissingstabel rollen en autorisatie | 7 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | een facturenantwoord van vóór "Herstel demo" vult de cache niet alsnog, en blokkeert de verzendcontrole niet | Negative | 15 | Actueel |
 | DASH-H-012 | ui | dashboard.feature | GUI-smoke scheidt werkacties van medewerkers- en beheerdersaccounts | Beslissingstabel rollen en autorisatie | 35 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | GUI-smoke scheidt werkacties van medewerkers- en beheerdersaccounts | Happy | 15 | Actueel |
+| DASH-H-052 | ui | dashboard.feature | de maandtotalen boven de werkvoorraad blijven gelijk als de gebruiker wisselt tussen Backoffice en medewerkers | Equivalentieklassen op de eigenaarfilter (Backoffice/medewerkers/alle) + regressie op stabiele maandtotalen | 14 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | de maandtotalen boven de werkvoorraad blijven gelijk als de gebruiker wisselt tussen Backoffice en medewerkers | Happy | 15 | Actueel |
 | DASH-H-013 | ui | dashboard.feature | dashboardmodules tonen compacte documenten, procesfasen en teamacties | End-to-end use-case + visuele contractasserties | 16 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | dashboardmodules tonen compacte documenten, procesfasen en teamacties | Happy | 15 | Actueel |
 | DASH-N-017 | ui | dashboard.feature | beheerderdashboard toont een laadtoestand tot de eerste werkvoorraad-sync | Negatieve equivalentieklasse + error guessing | 7 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | beheerderdashboard toont een laadtoestand tot de eerste werkvoorraad-sync | Negative | 15 | Actueel |
 | DASH-H-017 | ui | dashboard.feature | serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels | Equivalentieklassen | 30 | dashboard.steps.ts | dashboard*.spec.ts | UI Desktop | Dashboard | serverwerkvoorraad hydrateert volledig en blijft stabiel bij maand- en filterwissels | Happy | 15 | Actueel |
@@ -626,9 +627,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 604
+- Playwright executable cases: 605
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 605
+- Totaal unieke executable cases: 606
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
