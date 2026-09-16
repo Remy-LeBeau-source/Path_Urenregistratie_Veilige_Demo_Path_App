@@ -7,7 +7,7 @@ wens door de molen gaat, zodat elke agent hem hetzelfde oppakt.
 
 ## 1. Intake (de pagina)
 
-- "Doorzetten naar VS Code" maakt een voorgevuld GitHub-issue met label `pipeline-intake`
+- "Start de flow" maakt een voorgevuld GitHub-issue met label `pipeline-intake`
   (titel `PATH-nnn <wens>`, body met stakeholder, gewenste waarde, acceptatiecriterium en Gherkin).
   Gio klikt zelf op "Submit new issue" — de pagina bevat geen sleutels.
 - Op de pagina staat de wens intussen in "Te doen" met "Wacht op VS Code".

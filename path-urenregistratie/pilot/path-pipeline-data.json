@@ -1,7 +1,61 @@
 {
-  "appVersion": "2.0.123",
+  "appVersion": "2.0.127",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "16 sep",
+      "version": "2.0.127",
+      "wish": "Intake #45, via de demo-pagina ingediend en door de hele keten gelopen: de Living Doc staat nu op 15 pixels in plaats van 13, in licht en donker. PIPE-H-006 meet de berekende stijl in beide kleurschema's plus de telefoonbreedte; tegenproef gedaan (rood op 13px).",
+      "cases": [
+        {
+          "id": "PIPE-H-006",
+          "title": "de Living Doc leest op vijftien pixels, in licht en in donker",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Meting van berekende stijl in licht en donker + responsive viewport (intake #45)",
+          "assertions": 5,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de Living Doc leest op vijftien pixels, in licht en in donker\n  Given de Living Doc in de Kennisbank\n  When de flow voor PIPE-H-006 wordt uitgevoerd\n  Then blijft de regel ook op een telefoon binnen beeld"
+        }
+      ]
+    },
+    {
+      "date": "16 sep",
+      "version": "2.0.126",
+      "wish": "Demo-pagina dichter bij de echte tools: elke Jira-kaart toont rechtsonder een avatar van wie hem oppakt (afgeleid uit de kolom Wie in deze lijst), en de Confluence-pagina heeft rechts een inhoudsopgave \"Op deze pagina\" met ankers naar de secties.",
+      "cases": []
+    },
+    {
+      "date": "16 sep",
+      "version": "2.0.125",
+      "wish": "Knop op de demo-pagina heet \"Start de flow\" in plaats van \"Doorzetten naar VS Code\": zegt wat er gebeurt in plaats van waar het heen gaat. Kop, menu, uitleg en PIPELINE-INTAKE.md meeveranderd; PIPE-H-002 controleert de nieuwe naam.",
+      "cases": [
+        {
+          "id": "PIPE-H-002",
+          "title": "een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Toestandsovergangtest (ingediend → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van de issue-URL",
+          "assertions": 30,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden\n  Given een nieuwe wens met acceptatiecriterium\n  When de flow wordt gestart\n  Then staat de wens op het bord als wachtend op VS Code, ook na herladen\n  And een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc"
+        }
+      ]
+    },
+    {
+      "date": "16 sep",
+      "version": "2.0.124",
+      "wish": "Een medewerker mag het uurtarief niet zien (wens Gio). Het scherm toonde het al niet, maar de server stuurde tarief en btw-percentage van de eigen opdracht wel mee bij het inloggen, en niet tonen is geen afscherming. Beide velden gaan nu niet meer naar een medewerker; beheer krijgt ze ongewijzigd voor de facturen. ROLE-N-007 met tegenproef (rood op de oude servercode).",
+      "cases": [
+        {
+          "id": "ROLE-N-007",
+          "title": "de medewerker krijgt het uurtarief en btw-percentage van zijn opdracht niet mee, de beheerder wel",
+          "feature": "tests/playwright/features/roles-authorization.feature",
+          "technique": "Beslissingstabel rollen en autorisatie",
+          "assertions": 12,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de medewerker krijgt het uurtarief en btw-percentage van zijn opdracht niet mee, de beheerder wel\n  Given de medewerker is ingelogd\n  When hij zijn eigen opdracht ophaalt\n  Then staan tarief en btw er niet in, ook niet als lege waarde\n  And de rest van zijn opdracht blijft gewoon bruikbaar\n  And de beheerder krijgt ze wel, want daar worden de facturen mee gemaakt"
+        }
+      ]
+    },
     {
       "date": "16 sep",
       "version": "2.0.121",
@@ -105,70 +159,6 @@
       "version": "main",
       "wish": "Demo-pagina op TEST is het echte loket geworden: een wens op https://uren-test.pathconsultancy.nl/pilot/path-pipeline.html wordt een GitHub-issue (label pipeline-intake) dat de agent in VS Code oppakt volgens PIPELINE-INTAKE.md (GIO-WENSEN → feature + spec → impactregressie → LIVING-DOC → versie → CI → TEST). De pagina toont de echte laatste 5 opleveringen en 10 Living Doc-regels uit GIO-WENSEN en de feature-bestanden (scripts/pipeline-demo-data.mjs), bewaakt door npm run check. Eigen agent: .claude/agents/pipeline-intake.md, logboek in PIPELINE-INTAKE-PROEF.md.",
       "cases": []
-    },
-    {
-      "date": "16 sep",
-      "version": "main",
-      "wish": "Intake #44: Jira, Confluence en Zephyr Scale 1-op-1 in opmaak zoals we ze kennen — productbalk die meewisselt, projectzijbalk, bord met kolommen en kaarten, Confluence-pagina met FO/TO, Zephyr met mappenboom en sorteerbare tabel; geen merklogo's. Alles bedienbaar: zoeken, filteren op type en bron, detailpaneel, sorteren, filteren op status, deeplinks (PIPE-H-004).",
-      "cases": [
-        {
-          "id": "PIPE-H-004",
-          "title": "zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes",
-          "feature": "tests/playwright/features/pipeline-demo.feature",
-          "technique": "Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole",
-          "assertions": 24,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes\n  Given de pipelinepagina met de echte projectstand\n  When er wordt gezocht, gefilterd, gesorteerd en een kaart wordt geopend\n  Then tonen bord, kennisbank en testbeheer telkens de bijbehorende selectie"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "main",
-      "wish": "Intake-proef #43: Confluence-tekst in de demo op het Atlassian-lettertype, 16px met regelhoogte 24px, ook in donker (PIPE-H-003, tegenproef rood op de oude opmaak). Eerste wens die de hele keten van pagina tot TEST doorliep.",
-      "cases": [
-        {
-          "id": "PIPE-H-003",
-          "title": "de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker",
-          "feature": "tests/playwright/features/pipeline-demo.feature",
-          "technique": "Meting van berekende stijl (computed style) in licht en donker kleurschema",
-          "assertions": 5,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker\n  Given de Kennisbank van de pipelinepagina\n  When de flow voor PIPE-H-003 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.116",
-      "wish": "Berichten: elk bericht toont ingeklapt één regel samenvatting onder de titel, zoals bij Nieuw in de app; verdwijnt bij openklappen (NOT-H-018, tegenproef rood).",
-      "cases": [
-        {
-          "id": "NOT-H-018",
-          "title": "een ingeklapt bericht toont een korte samenvatting onder de titel, die verdwijnt zodra je het openklapt",
-          "feature": "tests/playwright/features/notifications.feature",
-          "technique": "API-contract + equivalentieklasse",
-          "assertions": 8,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: een ingeklapt bericht toont een korte samenvatting onder de titel, die verdwijnt zodra je het openklapt\n  Given meldingen beheren is voorbereid\n  Then toont een lang bericht ingeklapt een afgekapte samenvatting van de eigen tekst\n  And toont een kort bericht zijn volledige tekst als samenvatting, zonder afkapping\n  When het bericht wordt opengeklapt, then verdwijnt de samenvatting"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.116",
-      "wish": "MOB-H-024 was wisselvallig (ongeveer 1 op 3 rood, ook op 2.0.113): late 401-ruis van de inlograce landde na het wissen. De case negeert nu alleen die 401-ruis, de rest blijft hard. 5 van 5 groen.",
-      "cases": [
-        {
-          "id": "MOB-H-024",
-          "title": "een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert",
-          "feature": "tests/playwright/features/mobile.feature",
-          "technique": "Responsive viewport + end-to-end use-case",
-          "assertions": 7,
-          "platform": "mobile",
-          "gherkin": "Scenario: een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert\n  Given een medewerker logt op de telefoon voor het eerst in en de sync-afronding valt in de race\n  When de hydratie-afronding één keer klapt op de hertekening\n  Then staat er nergens meer een laadtekst en is het dashboard bruikbaar"
-        }
-      ]
     }
   ],
   "open": [

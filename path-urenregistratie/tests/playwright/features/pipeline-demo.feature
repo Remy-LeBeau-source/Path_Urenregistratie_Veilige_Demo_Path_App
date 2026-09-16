@@ -20,9 +20,9 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
   @happy
   Scenario: [PIPE-H-002] een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden
     # Testtechniek: Toestandsovergangtest (ingediend → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van de issue-URL
-    # Aantoonbare Playwright-assertions in deze case: 29
+    # Aantoonbare Playwright-assertions in deze case: 30
     Given een nieuwe wens met acceptatiecriterium
-    When de wens wordt doorgezet naar VS Code
+    When de flow wordt gestart
     Then staat de wens op het bord als wachtend op VS Code, ook na herladen
     And een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc
 
@@ -58,3 +58,11 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
     When de Kennisbank op de telefoon wordt geopend
     Then toont de Living Doc precies tien regels, lokaal vóór echt, en bewaart hij er tien
     And de pagina heeft geen horizontale overflow of gedeelde appcode
+
+  @happy
+  Scenario: [PIPE-H-006] de Living Doc leest op vijftien pixels, in licht en in donker
+    # Testtechniek: Meting van berekende stijl in licht en donker + responsive viewport (intake #45)
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given de Living Doc in de Kennisbank
+    When de flow voor PIPE-H-006 wordt uitgevoerd
+    Then blijft de regel ook op een telefoon binnen beeld

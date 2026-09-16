@@ -94,11 +94,12 @@ test.describe('Path Pipeline TEST-demo', () => {
       await page.getByLabel('Acceptatiecriterium').fill('de gebruiker wisselt tussen Backoffice en medewerkers');
     });
 
-    await test.step('When de wens wordt doorgezet naar VS Code', async () => {
+    await test.step('When de flow wordt gestart', async () => {
       const [popup] = await Promise.all([
         context.waitForEvent('page'),
-        page.getByRole('button', { name: 'Doorzetten naar VS Code' }).click(),
+        page.locator('[data-ticket-form] button[type="submit"]').click(),
       ]);
+      await expect(page.locator('[data-ticket-form] button[type="submit"]')).toContainText('Start de flow');
       const url = new URL(popup.url());
       expect(url.origin + url.pathname).toBe('https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App/issues/new');
       expect(url.searchParams.get('title')).toBe('PATH-198 Maandtotalen blijven gelijk na filterwissel');
@@ -338,6 +339,38 @@ test.describe('Path Pipeline TEST-demo', () => {
       await expect(page.locator('script[src*="assets/app.js"], link[href*="assets/styles.css"]')).toHaveCount(0);
       await expect(page.locator('footer')).toContainText('geen koppeling met een bestaand Jira-, Confluence- of Zephyr-account');
       await expect(page.locator('footer')).toContainText('GitHub-issue');
+    });
+  });
+
+  test('[PIPE-H-006] de Living Doc leest op vijftien pixels, in licht en in donker', async ({ page }) => {
+    // Intake #45 van Gio via de demo-pagina: de regels moeten ook op een
+    // telefoon goed leesbaar zijn. Dertien pixels was te klein. Deze case meet
+    // de berekende stijl in beide kleurschema's, zodat een latere opmaakronde
+    // het niet ongemerkt terugdraait.
+    await test.step('Given de Living Doc in de Kennisbank', async () => {
+      await page.goto('/pilot/path-pipeline.html');
+      await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
+      await page.getByRole('tab', { name: /Kennisbank/ }).click();
+      await expect(page.locator('[data-living-doc] li').first()).toBeVisible();
+    });
+
+    for (const schema of ['light', 'dark'] as const) {
+      await test.step(`When de tekst in ${schema === 'light' ? 'licht' : 'donker'} wordt gemeten, staat hij op vijftien pixels`, async () => {
+        await page.emulateMedia({ colorScheme: schema });
+        const regel = await page.evaluate(() => {
+          const stijl = getComputedStyle(document.querySelector('[data-living-doc] li p')!);
+          return { grootte: stijl.fontSize, hoogte: stijl.lineHeight };
+        });
+        expect(regel.grootte, 'de tekst van een Living Doc-regel').toBe('15px');
+      });
+    }
+
+    await test.step('Then blijft de regel ook op een telefoon binnen beeld', async () => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.emulateMedia({ colorScheme: 'light' });
+      const breedte = await page.evaluate(() => ({ document: document.documentElement.scrollWidth, viewport: window.innerWidth }));
+      expect(breedte.document).toBeLessThanOrEqual(breedte.viewport + 1);
+      await expect(page.locator('[data-living-doc] li').first()).toBeVisible();
     });
   });
 });

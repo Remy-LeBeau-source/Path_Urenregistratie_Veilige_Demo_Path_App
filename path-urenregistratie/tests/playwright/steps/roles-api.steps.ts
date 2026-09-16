@@ -34,3 +34,7 @@ Then("blijft de eigen huidige maand wel bereikbaar");
 Given("een ingelogde medewerker met zijn eigen lopende maand");
 When("hij de beheerdersacties op zijn eigen urenstaat rechtstreeks aanroept");
 Then("blijft zijn eigen medewerkersactie op dezelfde endpoints wel toegestaan");
+When("hij zijn eigen opdracht ophaalt");
+Then("staan tarief en btw er niet in, ook niet als lege waarde");
+And("de rest van zijn opdracht blijft gewoon bruikbaar");
+And("de beheerder krijgt ze wel, want daar worden de facturen mee gemaakt");

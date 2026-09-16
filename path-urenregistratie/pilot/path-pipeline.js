@@ -157,6 +157,14 @@
     });
   }
 
+  function toegewezen(ticket) {
+    var wie = String(ticket.who || (ticket.source === 'feed' ? 'main' : 'Gio')).toLowerCase();
+    if (wie.indexOf('herontwerp') >= 0) return { naam: 'Herontwerp', initialen: 'HW' };
+    if (wie.indexOf('gio') >= 0) return { naam: 'Gio', initialen: 'GM' };
+    if (wie.indexOf('besluit') >= 0) return { naam: 'Besluit', initialen: 'BO' };
+    return { naam: 'Main', initialen: 'MA' };
+  }
+
   function iconFor(type) { return { bug: '!', feature: '◆', chore: '●', ci: '↯' }[type] || '◆'; }
 
   // Een kale URL midden in een kop leest slecht; alleen het domein is genoeg.
@@ -314,6 +322,7 @@
         '<code class="issue-key">' + escapeHtml(ticket.key) + '</code>' +
         statusLabel(ticket) +
         (meta ? '<span class="ticket-meta">' + meta + '</span>' : '') +
+        '<span class="card-avatar" title="' + escapeHtml(toegewezen(ticket).naam) + '">' + escapeHtml(toegewezen(ticket).initialen) + '</span>' +
       '</div>' +
       (ticket.gherkin ? '<details class="gherkin"' + (ui.expandAll ? ' open' : '') + '><summary>Gherkin</summary><pre>' + escapeHtml(ticket.gherkin) + '</pre></details>' : '') +
       (ticket.status === 'ingediend' ? '<div class="ticket-card-foot"><a class="issue-link" href="' + escapeHtml(issueSearchUrl()) + '" target="_blank" rel="noopener">Bekijk issue op GitHub ↗</a></div>' : '') +
@@ -530,8 +539,8 @@
       title.textContent = waiting[0].key + ' is doorgezet naar VS Code';
       status.textContent = 'De wens staat als GitHub-issue klaar (label ' + INTAKE_LABEL + '). In VS Code maakt de agent nu het feature-bestand en de Playwright-case, draait de impactregressie en werkt de Living Doc bij; na CI verschijnt de oplevering hier vanzelf bij "Opgeleverd".';
     } else {
-      title.textContent = 'Klaar om een wens door te zetten';
-      status.textContent = 'Vul rechts één wens in. Die gaat als GitHub-issue naar VS Code, waar de agent de testcase maakt, de regressie draait en de Living Doc bijwerkt — tot en met TEST.';
+      title.textContent = 'Klaar om de flow te starten';
+      status.textContent = 'Vul rechts één wens in en klik "Start de flow". Die gaat als GitHub-issue naar VS Code, waar de agent de testcase maakt, de regressie draait en de Living Doc bijwerkt — tot en met TEST.';
     }
 
     $$('[data-checkpoint]').forEach(function (checkpoint) {

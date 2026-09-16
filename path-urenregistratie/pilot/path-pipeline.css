@@ -400,7 +400,8 @@ button, summary { -webkit-tap-highlight-color: transparent; }
 .living-doc li:last-child { border-bottom: 0; }
 .living-doc li.is-new { background: var(--green-soft); border-radius: 3px; }
 .living-doc code { color: var(--confluence); font-family: var(--mono); font-size: 11.5px; font-weight: 600; }
-.living-doc p { margin: 0; font-size: 13px; line-height: 1.5; }
+/* Intake #45: vijftien pixels in plaats van dertien, zodat de regels ook op een telefoon leesbaar blijven. */
+.living-doc p { margin: 0; font-size: 15px; line-height: 1.55; }
 .living-doc time { color: var(--subtle); font-size: 11px; white-space: nowrap; }
 
 /* ===================== Zephyr Scale ===================== */
@@ -486,3 +487,16 @@ button, summary { -webkit-tap-highlight-color: transparent; }
   .living-doc time { grid-row: 1; justify-self: start; }
   .workspace { padding: 14px 14px 30px; }
 }
+
+/* Jira toont op elke kaart rechtsonder wie hem oppakt. */
+.card-avatar { width: 24px; height: 24px; margin-left: auto; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--zephyr); color: #fff; font-size: 9.5px; font-weight: 700; letter-spacing: .02em; }
+.ticket-card-foot .ticket-meta { margin-left: 0; }
+.ticket-card-foot .ticket-meta + .card-avatar { margin-left: auto; }
+
+/* Confluence zet rechts van het document een inhoudsopgave. */
+.conf-doc-layout { display: grid; grid-template-columns: minmax(0, 1fr) 190px; gap: 28px; align-items: start; }
+.doc-toc { position: sticky; top: 76px; padding-left: 16px; border-left: 1px solid var(--line); }
+.doc-toc p { margin: 0 0 8px; color: var(--subtle); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.doc-toc a { display: block; padding: 4px 0; color: var(--muted); font-size: 13px; text-decoration: none; line-height: 1.4; }
+.doc-toc a:hover { color: var(--confluence); text-decoration: underline; }
+@media (max-width: 1100px) { .conf-doc-layout { grid-template-columns: minmax(0, 1fr); } .doc-toc { display: none; } }
