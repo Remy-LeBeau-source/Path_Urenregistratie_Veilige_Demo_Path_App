@@ -503,3 +503,29 @@ Bron: gui r377-420 (markup) en r1194-1270 (`maanden`-logica); DESIGN-BESLUITEN.
 - Donker thema is deze ronde niet herontworpen, alleen de menubalk loopt mee.
 - Afwijking `--muted` i.p.v. `--line` voor dagen buiten de maand is door Gio goedgekeurd en in de referentie
   overgenomen.
+
+## Bevindingen uit de nachtronde (16 sep, nog NIET gefixt — productiecode bevroren tot go-live)
+
+Afgesproken met de main-sessie: vóór de mogelijke go-live geen wijzigingen meer in productiecode,
+alleen testdekking en verificatie. Onderstaande bevinding is dus vastgelegd, niet opgelost.
+
+### BEV-1 — twee dagregels voor dezelfde datum in één opslag laten maand en dagen uit elkaar lopen
+
+- Techniek: equivalentieklassen + foutgok op de vorm van de payload (niet op de waarden).
+- Waar: `server/api/timesheets.php`, `timesheet_normalize_day_entries()` (r270-375) en
+  `timesheet_write_entries()` (r427 e.v.).
+- Wat er misgaat: de normalisatie controleert per dagregel datum, werkdag, 0-24 uur en lengte,
+  en eist daarna dat de som van de dagregels gelijk is aan `billable_hours`. Dubbele datums worden
+  niet geweigerd. Bij het wegschrijven is de upsert `ON DUPLICATE KEY UPDATE hours = VALUES(hours)`,
+  dus van twee regels voor dezelfde dag blijft alleen de laatste staan.
+- Gevolg: een payload met 2 x 8 uur op dezelfde dag en `billableHours: 16` wordt geaccepteerd;
+  de maandkolom `billable_hours` bewaart 16, maar `time_entries` bewaart 8. Lezen gebruikt twee
+  bronnen (`timesheet_day_entries()` voor de dagen, de timesheetrij voor het totaal), dus het
+  verschil blijft bestaan en is voor de medewerker niet zichtbaar te herstellen.
+- Voorstel fix (na go-live): in `timesheet_normalize_day_entries()` een dubbele `work_date`
+  weigeren met 400 `invalid-payload` en de melding "Elke dag mag maar één keer in de opslag staan."
+- Bijbehorende case (schrijven zodra de fix mag; eerst rood op de huidige code laten zien):
+  `[TS-API-N-014] dezelfde dag twee keer in één opslag wordt geweigerd` in
+  `tests/playwright/timesheet-write.spec.ts`, eigen toekomstige maand, assertions:
+  status 400, `error === 'invalid-payload'`, en na een `read` dat het maandtotaal en de som van de
+  dagregels gelijk zijn.
