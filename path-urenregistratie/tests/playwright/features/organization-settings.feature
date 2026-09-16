@@ -163,6 +163,16 @@ Feature: Organisatie-instellingen beheren
     Then blijft Instellingen actief in plaats van terug te vallen op Dashboard
 
   @negative
+  Scenario: [ADM-WR-N-009] een onmogelijk uurtarief wordt geweigerd en het oude tarief blijft staan
+    # Testtechniek: Grenswaardenanalyse op het uurtarief (op de grens, erboven, typefout) + persistentiecontrole
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given een medewerker met een gewoon tarief op de grens
+    When er één euro boven de grens wordt opgeslagen, then weigert de server dat met uitleg
+    And wordt ook een typefout als 8500 geweigerd in plaats van stil bewaard
+    And staat het eerder bewaarde tarief er nog ongewijzigd
+    Then wordt met Playwright-assertions bevestigd dat een onmogelijk uurtarief wordt geweigerd en het oude tarief blijft staan
+
+  @negative
   Scenario: [ADM-WR-N-008] lengtegrenzen tellen tekens, niet bytes: een naam vol accenten mag tot de volle lengte
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 6

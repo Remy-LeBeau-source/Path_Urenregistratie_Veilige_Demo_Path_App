@@ -183,6 +183,10 @@ function techniqueFor(definition, testCase) {
   }
   if (['SAFE-H-012', 'SAFE-H-014', 'PWD-H-006'].includes(testCase.id)) return 'Beslissingstabel + equivalentieklassen + toestandsovergang';
   if (testCase.id === 'PWD-N-018') return 'Grenswaardenanalyse (vijfde poging mag, zesde niet) + contractcontrole van de Retry-After-koptekst';
+  if (testCase.id === 'TS-API-N-014') return 'Equivalentieklasse op de vorm van de payload (dubbele datum) + consistentiecontrole tussen maandtotaal en dagregels';
+  if (testCase.id === 'ANN-N-008') return 'Grenswaardenanalyse langs de kolomgrens (750 tekens, met accenten) + controle dat een geweigerde intrekking niets verandert';
+  if (testCase.id === 'ANN-N-009') return 'Beslistabel (handeling x brontoestand) op wanneer een bericht als gelezen telt';
+  if (testCase.id === 'ADM-WR-N-009') return 'Grenswaardenanalyse op het uurtarief (op de grens, erboven, typefout) + persistentiecontrole';
   if (testCase.id === 'CTS-API-H-018') return 'Equivalentieklassen op de schrijfwijze van een PDF-woordenboek (met en zonder spatie) + negatieve controle dat een nep-PDF geweigerd blijft';
   if (testCase.id === 'SAFE-H-009') return 'Equivalentieklassen + toestandsovergang';
   if (testCase.id === 'SAFE-H-011') return 'Toestandsovergang + foutinjectie + beslissingstabel';

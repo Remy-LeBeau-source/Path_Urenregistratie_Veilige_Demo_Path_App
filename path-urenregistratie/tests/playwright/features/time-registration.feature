@@ -65,6 +65,16 @@ Feature: Urenregistratie verwerken
     Then wordt met Playwright-assertions bevestigd dat ongeldige payload geeft 400
 
   @negative
+  Scenario: [TS-API-N-014] dezelfde dag twee keer in één opslag wordt geweigerd en laat de maand ongemoeid
+    # Testtechniek: Equivalentieklasse op de vorm van de payload (dubbele datum) + consistentiecontrole tussen maandtotaal en dagregels
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given de medewerker is ingelogd met een eigen maand
+    When hij dezelfde dag twee keer meestuurt, then weigert de server dat met uitleg
+    And blijft het maandtotaal gelijk aan de som van de dagen
+    And wordt dezelfde maand met enkele dagregels wél gewoon bewaard
+    Then wordt met Playwright-assertions bevestigd dat dezelfde dag twee keer in één opslag wordt geweigerd en laat de maand ongemoeid
+
+  @negative
   Scenario: [TS-API-N-013] elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 5

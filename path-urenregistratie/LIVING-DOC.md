@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 597 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 601 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 597 unieke case-ID's
+- Playwright executable cases: 601 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 598 unieke case-ID's
+- Totaal executable cases: 602 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 646
-- Niet-mobile projectuitvoeringen: 548
+- Uitvoeringen: 650
+- Niet-mobile projectuitvoeringen: 552
 - Mobile functionele cases: 49
 - Pixel 7 / Chromium-uitvoeringen: 49
 - iPhone 13 / WebKit-uitvoeringen: 49
 
-De 49 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 597 Playwright-functionele cases in totaal 646 resultaten op: 548 + (49 x 2) = 646.
+De 49 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 601 Playwright-functionele cases in totaal 650 resultaten op: 552 + (49 x 2) = 650.
 
 ## Documentatieketen
 
@@ -47,7 +47,7 @@ De 49 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 597 Playwri
 
 - Feature: `tests/playwright/features/organization-settings.feature`
 - Source: `tests/playwright/admin-writes.spec.ts`
-- Cases: 30
+- Cases: 31
 
 - [ADM-WR-H-019] latere startdatum vraagt bevestiging en vermeldt dat historie bewaard blijft — Techniek: API-contract + equivalentieklasse · Assertions: 9
 - [ADM-WR-H-020] server berekent echte historische impact vóór een latere startdatum wordt opgeslagen — Techniek: API-contract + equivalentieklasse · Assertions: 12
@@ -68,6 +68,7 @@ De 49 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 597 Playwri
 - [ADM-WR-H-009] goedkeuringsloop volgt logische maand/medewerker-volgorde — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [ADM-WR-H-010] server-led aangemaakte beheerder en medewerker overleven een echte paginaherlading — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [ADM-WR-H-011] een echte paginaherlading blijft op het geopende scherm i.p.v. terug te springen naar Dashboard — Techniek: API-contract + equivalentieklasse · Assertions: 5
+- [ADM-WR-N-009] een onmogelijk uurtarief wordt geweigerd en het oude tarief blijft staan — Techniek: Grenswaardenanalyse op het uurtarief (op de grens, erboven, typefout) + persistentiecontrole · Assertions: 8
 - [ADM-WR-N-008] lengtegrenzen tellen tekens, niet bytes: een naam vol accenten mag tot de volle lengte — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [ADM-WR-N-005] een al bestaande naam blokkeert of waarschuwt niet: alleen het e-mailadres moet uniek zijn — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
 - [ADM-WR-N-006] dubbele naam is toegestaan, maar een al gebruikt e-mailadres wordt hard geblokkeerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
@@ -491,7 +492,7 @@ De 49 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 597 Playwri
 
 - Feature: `tests/playwright/features/announcements.feature`
 - Source: `tests/playwright/announcements.spec.ts`
-- Cases: 10
+- Cases: 12
 
 - [ANN-H-001] beheerder verstuurt een mededeling aan een gekozen medewerker — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [ANN-H-002] een concept blijft intern en kan daarna definitief worden verwijderd — Techniek: API-contract + equivalentieklasse · Assertions: 7
@@ -501,6 +502,8 @@ De 49 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 597 Playwri
 - [ANN-H-009] een via het scherm gekozen medewerker wordt ook bij de server als die medewerker bewaard — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [ANN-N-004] intrekken zonder reden wordt geweigerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
 - [ANN-N-005] verzenden zonder titel, bericht of ontvanger wordt geweigerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
+- [ANN-N-008] de reden van intrekken kent dezelfde grens als het invoerveld en de kolom — Techniek: Grenswaardenanalyse langs de kolomgrens (750 tekens, met accenten) + controle dat een geweigerde intrekking niets verandert · Assertions: 8
+- [ANN-N-009] een ingetrokken mededeling blijft ongelezen tot de medewerker hem opent — Techniek: Beslistabel (handeling x brontoestand) op wanneer een bericht als gelezen telt · Assertions: 4
 - [ANN-N-007] de lengtegrens telt tekens zoals het invoerveld, ook met accenten en emoji, en legt uit wat er mis is — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
 - [ANN-N-006] een medewerker kan zelf geen mededeling versturen en anoniem is alles dicht — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
 
@@ -777,7 +780,7 @@ De 49 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 597 Playwri
 
 - Feature: `tests/playwright/features/time-registration.feature`
 - Source: `tests/playwright/timesheet-write.spec.ts`
-- Cases: 8
+- Cases: 9
 
 - [TS-API-H-001] employee save draft, read back, submit; daarna zit de urenstaat op slot — Techniek: API-contract + equivalentieklasse · Assertions: 32
 - [TS-API-H-017] een opslag die een bewuste 0-uur-dag van een niet-actieve week weglaat, wist die dag niet uit de database — Techniek: API-contract + equivalentieklasse · Assertions: 12
@@ -785,6 +788,7 @@ De 49 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 597 Playwri
 - [TS-API-N-011] write zonder csrf geeft 403 — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [TS-API-N-003] write zonder sessie geeft 401 — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [TS-API-N-004] ongeldige payload geeft 400 — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
+- [TS-API-N-014] dezelfde dag twee keer in één opslag wordt geweigerd en laat de maand ongemoeid — Techniek: Equivalentieklasse op de vorm van de payload (dubbele datum) + consistentiecontrole tussen maandtotaal en dagregels · Assertions: 9
 - [TS-API-N-013] elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
 - [TS-API-N-012] een tweede schrijfactie met een verouderde versie wordt geweigerd en verandert niets in de database — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 12
 

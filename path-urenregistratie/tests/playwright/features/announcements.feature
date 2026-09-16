@@ -76,6 +76,25 @@ Feature: Mededelingen versturen, intrekken en verbergen
     Then wordt elk ontbrekend verplicht veld afzonderlijk gemeld
 
   @negative
+  Scenario: [ANN-N-008] de reden van intrekken kent dezelfde grens als het invoerveld en de kolom
+    # Testtechniek: Grenswaardenanalyse langs de kolomgrens (750 tekens, met accenten) + controle dat een geweigerde intrekking niets verandert
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given een verzonden mededeling
+    When de reden één teken te lang is, then wordt die geweigerd met uitleg
+    And blijft de mededeling daardoor gewoon verzonden staan
+    And wordt precies 750 tekens wél geaccepteerd, ook met accenten
+    Then wordt met Playwright-assertions bevestigd dat de reden van intrekken kent dezelfde grens als het invoerveld en de kolom
+
+  @negative
+  Scenario: [ANN-N-009] een ingetrokken mededeling blijft ongelezen tot de medewerker hem opent
+    # Testtechniek: Beslistabel (handeling x brontoestand) op wanneer een bericht als gelezen telt
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given een verzonden mededeling met een ongelezen melding
+    When de beheerder hem intrekt, then blijft de melding ongelezen
+    And cleanup: de testmededeling wordt bij de medewerker verborgen
+    Then wordt met Playwright-assertions bevestigd dat een ingetrokken mededeling blijft ongelezen tot de medewerker hem opent
+
+  @negative
   Scenario: [ANN-N-007] de lengtegrens telt tekens zoals het invoerveld, ook met accenten en emoji, en legt uit wat er mis is
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 8

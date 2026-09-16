@@ -1,7 +1,71 @@
 {
-  "appVersion": "2.0.129",
+  "appVersion": "2.0.130",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "16 sep",
+      "version": "2.0.130",
+      "wish": "Dubbele dagregels voor dezelfde datum worden geweigerd met uitleg. Ze werden eerder geaccepteerd, waarna het maandtotaal de som bewaarde (2 x 8 = 16) en de dagen er maar één (8); dat verschil was daarna niet meer te herstellen (TS-API-N-014, tegenproef rood).",
+      "cases": [
+        {
+          "id": "TS-API-N-014",
+          "title": "dezelfde dag twee keer in één opslag wordt geweigerd en laat de maand ongemoeid",
+          "feature": "tests/playwright/features/time-registration.feature",
+          "technique": "Equivalentieklasse op de vorm van de payload (dubbele datum) + consistentiecontrole tussen maandtotaal en dagregels",
+          "assertions": 9,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: dezelfde dag twee keer in één opslag wordt geweigerd en laat de maand ongemoeid\n  Given de medewerker is ingelogd met een eigen maand\n  When hij dezelfde dag twee keer meestuurt, then weigert de server dat met uitleg\n  And blijft het maandtotaal gelijk aan de som van de dagen\n  And wordt dezelfde maand met enkele dagregels wél gewoon bewaard\n  Then wordt met Playwright-assertions bevestigd dat dezelfde dag twee keer in één opslag wordt geweigerd en laat de maand ongemoeid"
+        }
+      ]
+    },
+    {
+      "date": "16 sep",
+      "version": "2.0.130",
+      "wish": "Bovengrens op het uurtarief van 1.000 euro per uur, gekozen door Gio. Een typefout als 8500 in plaats van 85 werd eerder zonder enige waarschuwing bewaard en rekende door in elke factuur; een extreem getal gaf een serverfout (ADM-WR-N-009, tegenproef rood).",
+      "cases": [
+        {
+          "id": "ADM-WR-N-009",
+          "title": "een onmogelijk uurtarief wordt geweigerd en het oude tarief blijft staan",
+          "feature": "tests/playwright/features/organization-settings.feature",
+          "technique": "Grenswaardenanalyse op het uurtarief (op de grens, erboven, typefout) + persistentiecontrole",
+          "assertions": 8,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een onmogelijk uurtarief wordt geweigerd en het oude tarief blijft staan\n  Given een medewerker met een gewoon tarief op de grens\n  When er één euro boven de grens wordt opgeslagen, then weigert de server dat met uitleg\n  And wordt ook een typefout als 8500 geweigerd in plaats van stil bewaard\n  And staat het eerder bewaarde tarief er nog ongewijzigd\n  Then wordt met Playwright-assertions bevestigd dat een onmogelijk uurtarief wordt geweigerd en het oude tarief blijft staan"
+        }
+      ]
+    },
+    {
+      "date": "16 sep",
+      "version": "2.0.130",
+      "wish": "Lengtegrens op de reden van intrekken (750 tekens) en op de omschrijving van de ontvangers (255), gelijk aan het invoerveld en de kolom. Te lang gaf eerder een serverfout in plaats van een nette melding (ANN-N-008, tegenproef rood).",
+      "cases": [
+        {
+          "id": "ANN-N-008",
+          "title": "de reden van intrekken kent dezelfde grens als het invoerveld en de kolom",
+          "feature": "tests/playwright/features/announcements.feature",
+          "technique": "Grenswaardenanalyse langs de kolomgrens (750 tekens, met accenten) + controle dat een geweigerde intrekking niets verandert",
+          "assertions": 8,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de reden van intrekken kent dezelfde grens als het invoerveld en de kolom\n  Given een verzonden mededeling\n  When de reden één teken te lang is, then wordt die geweigerd met uitleg\n  And blijft de mededeling daardoor gewoon verzonden staan\n  And wordt precies 750 tekens wél geaccepteerd, ook met accenten\n  Then wordt met Playwright-assertions bevestigd dat de reden van intrekken kent dezelfde grens als het invoerveld en de kolom"
+        }
+      ]
+    },
+    {
+      "date": "16 sep",
+      "version": "2.0.130",
+      "wish": "Een ingetrokken mededeling blijft ongelezen tot de medewerker hem opent. Eerder zette het intrekken die melding zelf op gelezen, waardoor een bericht dat nooit geopend was stil uit de teller verdween; dat botst met de regel dat niets vanzelf verdwijnt. Uitzondering: gaat er een vervangend bericht uit, dan mag de oude wel op gelezen, want het nieuws staat dan in dat nieuwe bericht (ANN-N-009, tegenproef rood).",
+      "cases": [
+        {
+          "id": "ANN-N-009",
+          "title": "een ingetrokken mededeling blijft ongelezen tot de medewerker hem opent",
+          "feature": "tests/playwright/features/announcements.feature",
+          "technique": "Beslistabel (handeling x brontoestand) op wanneer een bericht als gelezen telt",
+          "assertions": 4,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een ingetrokken mededeling blijft ongelezen tot de medewerker hem opent\n  Given een verzonden mededeling met een ongelezen melding\n  When de beheerder hem intrekt, then blijft de melding ongelezen\n  And cleanup: de testmededeling wordt bij de medewerker verborgen\n  Then wordt met Playwright-assertions bevestigd dat een ingetrokken mededeling blijft ongelezen tot de medewerker hem opent"
+        }
+      ]
+    },
     {
       "date": "16 sep",
       "version": "2.0.129",
@@ -87,88 +151,6 @@
           "gherkin": "Scenario: de medewerker krijgt het uurtarief en btw-percentage van zijn opdracht niet mee, de beheerder wel\n  Given de medewerker is ingelogd\n  When hij zijn eigen opdracht ophaalt\n  Then staan tarief en btw er niet in, ook niet als lege waarde\n  And de rest van zijn opdracht blijft gewoon bruikbaar\n  And de beheerder krijgt ze wel, want daar worden de facturen mee gemaakt"
         }
       ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.121",
-      "wish": "Eigen vondst (grenswaarden met accenten en emoji): de lengtecontroles op de server telden bytes in plaats van tekens. Een onderwerp of naam van 160 tekens met accenten werd geweigerd terwijl het invoerveld en de kolom hem toelaten, en de fout bevatte geen uitleg. Nu tekens tellen in announcements, staff, settings, mail-recipients, customer-timesheets en timesheets, met een duidelijke melding (ANN-N-007, ADM-WR-N-008).",
-      "cases": [
-        {
-          "id": "ANN-N-007",
-          "title": "de lengtegrens telt tekens zoals het invoerveld, ook met accenten en emoji, en legt uit wat er mis is",
-          "feature": "tests/playwright/features/announcements.feature",
-          "technique": "Negatieve equivalentieklasse + error guessing",
-          "assertions": 8,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: de lengtegrens telt tekens zoals het invoerveld, ook met accenten en emoji, en legt uit wat er mis is\n  Given mededelingen versturen, intrekken en verbergen is voorbereid\n  When de flow voor ANN-N-007 wordt uitgevoerd\n  Then wordt precies de grens geaccepteerd, ook als elk teken meer dan één byte is\n  And wordt één teken te veel geweigerd, met een melding die zegt wat er mis is\n  And cleanup: de verstuurde testmededeling wordt ingetrokken en bij medewerkers verborgen"
-        },
-        {
-          "id": "ADM-WR-N-008",
-          "title": "lengtegrenzen tellen tekens, niet bytes: een naam vol accenten mag tot de volle lengte",
-          "feature": "tests/playwright/features/organization-settings.feature",
-          "technique": "Negatieve equivalentieklasse + error guessing",
-          "assertions": 6,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: lengtegrenzen tellen tekens, niet bytes: een naam vol accenten mag tot de volle lengte\n  Given organisatie-instellingen beheren is voorbereid\n  When een medewerker met 160 tekens in de naam wordt opgeslagen\n  Then wordt de naam volledig bewaard, zonder afkappen"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.120",
-      "wish": "Verboden statusovergangen afgedekt: goedkeuren of correctie vragen op een concept, twee keer goedkeuren, opnieuw indienen van een goedgekeurde maand (TS-REV-API-N-002).",
-      "cases": [
-        {
-          "id": "TS-REV-API-N-002",
-          "title": "elke verboden statusovergang wordt geweigerd en laat de urenstaat ongemoeid",
-          "feature": "tests/playwright/features/correction-approval-workflow.feature",
-          "technique": "Toestandsovergang",
-          "assertions": 19,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: elke verboden statusovergang wordt geweigerd en laat de urenstaat ongemoeid\n  Given een concept van een medewerker in een eigen periode\n  When de beheerder een concept probeert goed te keuren of te laten corrigeren, then weigert de server beide\n  And blijft goedkeuren geweigerd zodra de maand al is goedgekeurd\n  And mag de medewerker een goedgekeurde maand niet opnieuw indienen of als concept overschrijven\n  Then wordt met Playwright-assertions bevestigd dat elke verboden statusovergang wordt geweigerd en laat de urenstaat ongemoeid"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.119",
-      "wish": "Eigen vondst (grenswaardenanalyse): verlof en ziekte hadden geen bovengrens, niet in het scherm, niet in de app en niet op de server. Een typefout (800 in plaats van 8) werd gewoon opgeslagen. Nu begrensd op het aantal dagen van de maand maal 24, met dezelfde melding als bij meer dan 24 uur per dag (KLV-N-023, TS-API-N-013).",
-      "cases": [
-        {
-          "id": "KLV-N-023",
-          "title": "verlof en ziekte accepteren geen onmogelijk aantal uren en gaan dan niet naar de server",
-          "feature": "tests/playwright/features/klassiek-verkenning.feature",
-          "technique": "Grenswaardenanalyse (maandmaximum voor verlof en ziekte) + foutafhandeling zonder serverfout",
-          "assertions": 13,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: verlof en ziekte accepteren geen onmogelijk aantal uren en gaan dan niet naar de server\n  Given vondsten uit de monkey-verkenning op Klassiek is voorbereid\n  And geldt dezelfde grens voor Ziekte\n  When de flow voor KLV-N-023 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat verlof en ziekte accepteren geen onmogelijk aantal uren en gaan dan niet naar de server"
-        },
-        {
-          "id": "TS-API-N-013",
-          "title": "elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database",
-          "feature": "tests/playwright/features/time-registration.feature",
-          "technique": "Negatieve equivalentieklasse + error guessing",
-          "assertions": 5,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database\n  Given een ingelogde medewerker met een schrijfbare periode\n  When elke ongeldige dagregel wordt verstuurd\n  Then bestaat er nog geen urenstaat voor die periode"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.119",
-      "wish": "Eigen vondst: contracturen waren helemaal niet begrensd; een te groot getal gaf een 500-serverfout in plaats van een nette weigering. Nu dezelfde maandgrens, ook voor declarabele uren (TS-API-N-013).",
-      "cases": [
-        {
-          "id": "TS-API-N-013",
-          "title": "elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database",
-          "feature": "tests/playwright/features/time-registration.feature",
-          "technique": "Negatieve equivalentieklasse + error guessing",
-          "assertions": 5,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database\n  Given een ingelogde medewerker met een schrijfbare periode\n  When elke ongeldige dagregel wordt verstuurd\n  Then bestaat er nog geen urenstaat voor die periode"
-        }
-      ]
     }
   ],
   "open": [
@@ -177,12 +159,6 @@
       "wish": "CI-risico, nog niet opgelost: shard 8 van de tien testshards draait structureel 17-18 minuten terwijl de afbreeklimiet 22 minuten is; de snelste shards doen 2-5 minuten. Gemeten over drie releases (35023441673, 35035388985, 35043135123), zowel bij Validate als bij Promote Test. Oorzaak is de inhoud, niet het aantal: de zware integratiespecs (urenregistratie schrijven, correcties, beveiliging, rollen, teambeheer) vallen samen in één shard. Eerder is ditzelfde voor dashboard.spec.ts opgelost door dat bestand te splitsen. Nog te doen: opnieuw verdelen of splitsen, anders valt een release ooit om op de tijdslimiet.",
       "who": "main",
       "status": "open"
-    },
-    {
-      "date": "16 sep",
-      "wish": "Eigen vondst, nog niet gefixt (productiecode bevroren tot de go-live): twee dagregels voor dezelfde datum in één opslag worden geaccepteerd. Het maandtotaal bewaart de som (2 x 8 = 16), de dagen bewaren er maar één (8), en dat verschil blijft staan. Fix en testcase TS-API-N-014 liggen klaar in CODEX_HANDOFF.md (BEV-1).",
-      "who": "herontwerp",
-      "status": "open, na go-live"
     },
     {
       "date": "16 sep",
@@ -197,10 +173,16 @@
       "status": "open, na go-live"
     },
     {
-      "date": "16 sep",
-      "wish": "Eigen vondst plus vraag aan Gio: het uurtarief heeft geen bovengrens. Een typefout (8500 in plaats van 85) wordt zonder waarschuwing bewaard en rekent door in de facturen; een extreem getal geeft een serverfout. Welke bovengrens is realistisch, bijvoorbeeld 1.000 euro per uur? Case ADM-WR-N-009 ligt klaar (BEV-5 in CODEX_HANDOFF.md).",
-      "who": "Gio + herontwerp",
-      "status": "open, na go-live"
+      "date": "15 sep",
+      "wish": "Wisselvallig op mobile-safari: SKIN-H-040. 15 sep 5 van 5 keer groen herhaald, niet te reproduceren; opnieuw bekijken als hij in CI nog eens valt.",
+      "who": "herontwerp",
+      "status": "in de gaten houden"
+    },
+    {
+      "date": "15 sep",
+      "wish": "Oude 0-regels uit de indienbug: geen opschoonscript. PROD is nog niet live (alleen gebruikers gemigreerd) en krijgt bij de livegang een verse migratie/reset met de gerepareerde code (R44 in BESLISTABEL.md; de reset hoort bij de livegangchecklist van Gio).",
+      "who": "besluit",
+      "status": "vastgelegd"
     }
   ]
 }
