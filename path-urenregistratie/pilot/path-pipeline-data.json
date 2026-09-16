@@ -1,7 +1,23 @@
 {
-  "appVersion": "2.0.129",
+  "appVersion": "2.0.131",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "16 sep",
+      "version": "werkwijze",
+      "wish": "Werkwijze, vastgelegd na een misser: \"Nieuw in de app\" hoort bij elke versie waar een medewerker iets van merkt te worden bijgewerkt, ook door main. De versies 2.0.121 t/m 2.0.129 ontbraken; Gio merkte dat zelf op. Staat nu als verplichte stap 5b in PIPELINE-INTAKE.md, inclusief de regels van KLV-H-018 (max 20 regels, geen namen of bedragen).",
+      "cases": [
+        {
+          "id": "KLV-H-018",
+          "title": "Berichten toont \"Nieuw in de app\" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD",
+          "feature": "tests/playwright/features/klassiek-verkenning.feature",
+          "technique": "Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie) + inhoudscontrole (geen namen of gevoelige gegevens) + responsive viewport",
+          "assertions": 28,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: Berichten toont \"Nieuw in de app\" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD\n  Given vondsten uit de monkey-verkenning op Klassiek is voorbereid\n  When de flow voor KLV-H-018 wordt uitgevoerd\n  Then staan er lokaal/op TEST 20 updates met datum en tijdstip, nieuwste eerst\n  And staan er 5 per pagina met Vorige en Volgende, tot en met de laatste pagina\n  And staat geen naam of gevoelig gegeven in de teksten\n  And op de PROD-host is het blok weg"
+        }
+      ]
+    },
     {
       "date": "16 sep",
       "version": "2.0.129",
@@ -143,22 +159,6 @@
           "platform": "desktop-chromium",
           "gherkin": "Scenario: verlof en ziekte accepteren geen onmogelijk aantal uren en gaan dan niet naar de server\n  Given vondsten uit de monkey-verkenning op Klassiek is voorbereid\n  And geldt dezelfde grens voor Ziekte\n  When de flow voor KLV-N-023 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat verlof en ziekte accepteren geen onmogelijk aantal uren en gaan dan niet naar de server"
         },
-        {
-          "id": "TS-API-N-013",
-          "title": "elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database",
-          "feature": "tests/playwright/features/time-registration.feature",
-          "technique": "Negatieve equivalentieklasse + error guessing",
-          "assertions": 5,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database\n  Given een ingelogde medewerker met een schrijfbare periode\n  When elke ongeldige dagregel wordt verstuurd\n  Then bestaat er nog geen urenstaat voor die periode"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.119",
-      "wish": "Eigen vondst: contracturen waren helemaal niet begrensd; een te groot getal gaf een 500-serverfout in plaats van een nette weigering. Nu dezelfde maandgrens, ook voor declarabele uren (TS-API-N-013).",
-      "cases": [
         {
           "id": "TS-API-N-013",
           "title": "elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database",
