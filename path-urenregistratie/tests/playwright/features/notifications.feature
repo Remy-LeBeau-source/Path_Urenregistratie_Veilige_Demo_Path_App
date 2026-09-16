@@ -87,6 +87,15 @@ Feature: Meldingen beheren
     Then wordt met Playwright-assertions bevestigd dat herstel zet drie lokale basismeldingen terug en beschermt ze tegen serveroverschrijving
 
   @happy
+  Scenario: [NOT-H-018] een ingeklapt bericht toont een korte samenvatting onder de titel, die verdwijnt zodra je het openklapt
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given meldingen beheren is voorbereid
+    Then toont een lang bericht ingeklapt een afgekapte samenvatting van de eigen tekst
+    And toont een kort bericht zijn volledige tekst als samenvatting, zonder afkapping
+    When het bericht wordt opengeklapt, then verdwijnt de samenvatting
+
+  @happy
   Scenario: [NOT-H-011] een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen
     # Testtechniek: API-contract + equivalentieklasse
     # Aantoonbare Playwright-assertions in deze case: 25

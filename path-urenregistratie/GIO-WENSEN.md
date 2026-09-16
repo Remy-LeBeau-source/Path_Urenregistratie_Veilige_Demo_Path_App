@@ -8,8 +8,6 @@ Nieuwste bovenaan per status. Statussen: **open**, **bezig**, **klaar (versie)**
 
 | Datum | Wens / besluit van Gio | Wie | Status |
 |---|---|---|---|
-| 15 sep | **Filter Gelezen in Berichten**, compact: Actueel · Ongelezen · Gelezen · Ingetrokken · Alles met korte labels en aantallen. (Bruin bij ingetrokken was nog 2.0.108; grijs komt met 2.0.112.) | herontwerp | bezig |
-| 15 sep | **Meer voorbeeldberichten voor alle medewerkers:** 15 mededelingen per medewerker (Stasjo, Marc, Brian, Shawn), waarvan 6 ingetrokken en 5 ongelezen, zodat onder Alles ook een tweede pagina te testen is. Nu: Stasjo 10/6/4, de rest 7 met 1 ongelezen. | main | bij main |
 | 15 sep | Wisselvallig op mobile-safari: SKIN-H-040. 15 sep 5 van 5 keer groen herhaald, niet te reproduceren; opnieuw bekijken als hij in CI nog eens valt. | herontwerp | in de gaten houden |
 | 15 sep | Oude 0-regels uit de indienbug: geen opschoonscript. PROD is nog niet live (alleen gebruikers gemigreerd) en krijgt bij de livegang een verse migratie/reset met de gerepareerde code (R44 in BESLISTABEL.md; de reset hoort bij de livegangchecklist van Gio). | besluit | vastgelegd |
 | 15 sep | Bel en Berichten blijven allebei: bel = eigen urenstatus, correcties, herinneringen; Berichten = algemene mededelingen. | besluit | vastgelegd |
@@ -19,6 +17,10 @@ Nieuwste bovenaan per status. Statussen: **open**, **bezig**, **klaar (versie)**
 
 | Datum | Wens / besluit | Versie |
 |---|---|---|
+| 16 sep | Berichten: elk bericht toont ingeklapt ook één regel samenvatting onder de titel, zoals bij Nieuw in de app; verdwijnt zodra je het openklapt. | herontwerp | bezig |
+| 15 sep | Filter Gelezen in Berichten, compact: Actueel · Ongelezen · Gelezen · Ingetrokken · Alles met aantallen; ingetrokken in een zachte lavendeltint in plaats van bruin (NOT-H-011, NOT-H-017). | 2.0.113 |
+| 15 sep | Meer voorbeeldberichten: elke medewerker 15 mededelingen, 6 ingetrokken, 9 actueel, 5 ongelezen, zodat er onder Alles een tweede pagina is. | main 2.0.113-seed |
+| 16 sep | Berichten duidelijker en de belmelding klanturenstaat opent het klanturenstaatscherm met het uploadvak klaar (NOT-H-013 met vier meldingen). | Codex 2.0.115 |
 | 15 sep | Werkwijze stokje: één agent per branch tegelijk (wie "aan zet" staat bovenaan CODEX_HANDOFF.md). Overdragen = alles gepusht + CI-uitkomst + stokje bijwerken; overnemen = fetch, schone werkmap, log lezen. Versienummer altijd hoogste op origin + 1. Aanleiding: dubbel 2.0.69, afgebroken CI 2.0.73 en achtergebleven commit toen Codex en Claude tegelijk werkten (14 sep). | werkwijze |
 | 16 sep | Mededelingen-seed op TEST: elke medewerker (Stasjo/Marc/Brian/Shawn) krijgt nu dezelfde 15 mededelingen, 6 ingetrokken, 9 actueel, 5 ongelezen — zodat "Alles" een tweede pagina toont (10 per pagina). Vijf nieuwe mededelingen toegevoegd en de drie bestaande die eerst alleen Stasjo zag, nu voor alle vier. Geverifieerd met een query op de lokale testdatabase (15/6/9/5 klopt voor alle vier). Herontwerp werkt NOT-H-012/NOT-H-017 hierop bij. | main (seed-only, geen versiebump) |
 | 16 sep | Interactieve demo van de werkwijze uit Gio's eigen procesplaatje (Jira+Confluence → Zephyr → Playwright/Cypress/API → CI/CD), als los Claude-Artifact "Path Pipeline": https://claude.ai/code/artifact/724f13a3-819e-4e55-8462-abf73b8236ec — geen deel van de repo, geen appfunctie, dus geen MASTERCHECKLIST/BESLISTABEL-entry; alleen hier en in main-sessiegeheugen vastgelegd. Drie tabbladen (Backlog/Kennisbank/Testbeheer) delen live data via de artifact-db; een ticket doorlopen laat 'm zichtbaar door alle vier fases lopen en schrijft een regel in de Living Doc (hard begrensd op de laatste 10, net als "Nieuw in de app"). Gezaaid met vijf echte opleveringen uit dit project (PATH-196/194/197/188/191), elk met het volledige Gherkin-scenario. Blijft privé tot Gio 'm zelf deelt; main werkt 'm bij op verzoek. | artifact (geen versie) |

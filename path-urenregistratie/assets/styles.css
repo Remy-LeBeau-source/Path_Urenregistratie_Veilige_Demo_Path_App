@@ -2242,6 +2242,10 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .bericht-kop-tekst .status-pill { flex: 0 0 auto; }
 .employee-announcement-card .bericht-kop h3 { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .employee-announcement-card.is-dicht .bericht-kop h3 { font-size: 15px; font-weight: 600; }
+/* Eén regel samenvatting onder de titel, ingeklapt (Gio 15 sep: "verzin bij melding ook
+   zoals bij Nieuw in de app"). Open staat de volledige tekst al eronder, dus dan weg. */
+.bericht-snippet { display: block; width: 100%; margin-top: 2px; overflow: hidden; color: var(--muted); font-size: 12px; font-weight: 400; white-space: nowrap; text-overflow: ellipsis; }
+.employee-announcement-card.is-open .bericht-snippet { display: none; }
 .bericht-kop > small { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .bericht-chevron { width: 8px; height: 8px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(-45deg); transition: transform .16s ease; justify-self: end; }
 .bericht-kop[aria-expanded="true"] .bericht-chevron { transform: rotate(45deg); }

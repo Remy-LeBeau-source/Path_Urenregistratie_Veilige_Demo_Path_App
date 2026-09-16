@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 581 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 585 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 581 unieke case-ID's
+- Playwright executable cases: 585 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 582 unieke case-ID's
-- Playwright features: 31
+- Totaal executable cases: 586 unieke case-ID's
+- Playwright features: 32
 - Database features: 1
-- Playwright steps mappings: 31
+- Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 623
-- Niet-mobile projectuitvoeringen: 539
-- Mobile functionele cases: 42
-- Pixel 7 / Chromium-uitvoeringen: 42
-- iPhone 13 / WebKit-uitvoeringen: 42
+- Uitvoeringen: 630
+- Niet-mobile projectuitvoeringen: 540
+- Mobile functionele cases: 45
+- Pixel 7 / Chromium-uitvoeringen: 45
+- iPhone 13 / WebKit-uitvoeringen: 45
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 581 Playwright-functionele cases in totaal 623 resultaten op: 539 + (42 x 2) = 623.
+De 45 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 585 Playwright-functionele cases in totaal 630 resultaten op: 540 + (45 x 2) = 630.
 
 ## Documentatieketen
 
@@ -463,7 +463,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 581 Playwri
 
 - Feature: `tests/playwright/features/notifications.feature`
 - Source: `tests/playwright/notifications.spec.ts`
-- Cases: 17
+- Cases: 18
 
 - [NOT-H-001] ingelogde gebruiker kan notificaties ophalen — Techniek: API-contract + equivalentieklasse · Assertions: 5
 - [NOT-H-002] mark_all_read werkt zonder fouten — Techniek: Toestandsovergang · Assertions: 8
@@ -475,6 +475,7 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 581 Playwri
 - [NOT-H-008] mark_read voor onbekende melding wijzigt nul records — Techniek: Grenswaardenanalyse · Assertions: 2
 - [NOT-H-009] alles gelezen wist teller en een oudere response kan deze niet herstellen — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 9
 - [NOT-H-010] Herstel zet drie lokale basismeldingen terug en beschermt ze tegen serveroverschrijving — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 15
+- [NOT-H-018] een ingeklapt bericht toont een korte samenvatting onder de titel, die verdwijnt zodra je het openklapt — Techniek: API-contract + equivalentieklasse · Assertions: 8
 - [NOT-H-011] een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen — Techniek: API-contract + equivalentieklasse · Assertions: 25
 - [NOT-N-015] dichtklappen of alleen bekijken leest een ongelezen bericht niet — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
 - [NOT-H-012] medewerker ziet ingetrokken mededelingen ingeklapt met label, de reden bij openen, en het filter toont precies die — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 16
@@ -549,6 +550,16 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 581 Playwri
 - [PILOT-H-005] Backoffice-pilot: verhaalpaneel toont de vier story-kaarten met statuspillen en de vervolgknop — Techniek: Toestandsovergang · Assertions: 6
 - [PILOT-N-001] elke pilot-URL toont alleen de onderdelen van zijn eigen rol — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [PILOT-N-002] beide pilots blijven zonder horizontale overflow op telefoon — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
+
+### Interactieve Path Pipeline als zelfstandige TEST-demo
+
+- Feature: `tests/playwright/features/pipeline-demo.feature`
+- Source: `tests/playwright/pipeline-demo.spec.ts`
+- Cases: 3
+
+- [PIPE-H-001] de demo verbindt backlog, kennisbank en testbeheer met vijf echte opleveringen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 18
+- [PIPE-H-002] een nieuw ticket loopt door vier fasen naar Zephyr en de Living Doc — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 24
+- [PIPE-N-001] de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 
 ### Maandperiodes beheren
 

@@ -353,6 +353,7 @@
 | NOT-H-008 | api | notifications.feature | mark_read voor onbekende melding wijzigt nul records | Grenswaardenanalyse | 2 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | mark_read voor onbekende melding wijzigt nul records | Happy | 15 | Actueel |
 | NOT-H-009 | api | notifications.feature | alles gelezen wist teller en een oudere response kan deze niet herstellen | Herstelbaarheid + toestandsovergang | 9 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | alles gelezen wist teller en een oudere response kan deze niet herstellen | Happy | 15 | Actueel |
 | NOT-H-010 | api | notifications.feature | Herstel zet drie lokale basismeldingen terug en beschermt ze tegen serveroverschrijving | Herstelbaarheid + toestandsovergang | 15 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | Herstel zet drie lokale basismeldingen terug en beschermt ze tegen serveroverschrijving | Happy | 15 | Actueel |
+| NOT-H-018 | api | notifications.feature | een ingeklapt bericht toont een korte samenvatting onder de titel, die verdwijnt zodra je het openklapt | API-contract + equivalentieklasse | 8 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | een ingeklapt bericht toont een korte samenvatting onder de titel, die verdwijnt zodra je het openklapt | Happy | 15 | Actueel |
 | NOT-H-011 | api | notifications.feature | een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen | API-contract + equivalentieklasse | 25 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen | Happy | 15 | Actueel |
 | NOT-N-015 | api | notifications.feature | dichtklappen of alleen bekijken leest een ongelezen bericht niet | Negatieve equivalentieklasse + error guessing | 5 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | dichtklappen of alleen bekijken leest een ongelezen bericht niet | Negative | 15 | Actueel |
 | NOT-H-012 | api | notifications.feature | medewerker ziet ingetrokken mededelingen ingeklapt met label, de reden bij openen, en het filter toont precies die | Beslissingstabel rollen en autorisatie | 16 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | medewerker ziet ingetrokken mededelingen ingeklapt met label, de reden bij openen, en het filter toont precies die | Happy | 15 | Actueel |
@@ -406,6 +407,9 @@
 | PILOT-H-005 | ui | pilot-page.feature | Backoffice-pilot: verhaalpaneel toont de vier story-kaarten met statuspillen en de vervolgknop | Toestandsovergang | 6 | pilot-page.steps.ts | pilot-page.spec.ts | UI Desktop | 1919 Pilot | Backoffice-pilot: verhaalpaneel toont de vier story-kaarten met statuspillen en de vervolgknop | Happy | 18 | Actueel |
 | PILOT-N-001 | ui | pilot-page.feature | elke pilot-URL toont alleen de onderdelen van zijn eigen rol | Beslissingstabel rollen en autorisatie | 5 | pilot-page.steps.ts | pilot-page.spec.ts | UI Desktop | 1919 Pilot | elke pilot-URL toont alleen de onderdelen van zijn eigen rol | Negative | 18 | Actueel |
 | PILOT-N-002 | ui | pilot-page.feature | beide pilots blijven zonder horizontale overflow op telefoon | Negatieve equivalentieklasse + error guessing | 4 | pilot-page.steps.ts | pilot-page.spec.ts | UI Desktop | 1919 Pilot | beide pilots blijven zonder horizontale overflow op telefoon | Negative | 18 | Actueel |
+| PIPE-H-001 | ui | pipeline-demo.feature | de demo verbindt backlog, kennisbank en testbeheer met vijf echte opleveringen | End-to-end use-case + visuele contractasserties | 18 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Pipeline Demo | de demo verbindt backlog, kennisbank en testbeheer met vijf echte opleveringen | Happy | 18 | Actueel |
+| PIPE-H-002 | ui | pipeline-demo.feature | een nieuw ticket loopt door vier fasen naar Zephyr en de Living Doc | End-to-end use-case + visuele contractasserties | 24 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Pipeline Demo | een nieuw ticket loopt door vier fasen naar Zephyr en de Living Doc | Happy | 18 | Actueel |
+| PIPE-N-001 | ui | pipeline-demo.feature | de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon | Negatieve equivalentieklasse + error guessing | 6 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Pipeline Demo | de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon | Negative | 18 | Actueel |
 | PER-H-001 | api | period-management.feature | admin kan periodes ophalen met overzicht | Beslissingstabel rollen en autorisatie | 6 | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | admin kan periodes ophalen met overzicht | Happy | 15 | Actueel |
 | PER-H-002 | api | period-management.feature | admin kan periode sluiten en heropenen | Beslissingstabel rollen en autorisatie | 9 | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | admin kan periode sluiten en heropenen | Happy | 15 | Actueel |
 | PER-N-003 | api | period-management.feature | anonieme gebruiker krijgt 401 op periods | Beslissingstabel rollen en autorisatie | 1 | period-management.steps.ts | period-management.spec.ts | API | Periodebeheer | anonieme gebruiker krijgt 401 op periods | Negative | 15 | Actueel |
@@ -603,10 +607,10 @@
 
 ## Totalen
 
-- Playwright executable cases: 581
+- Playwright executable cases: 585
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 582
-- Playwright features: 31
+- Totaal unieke executable cases: 586
+- Playwright features: 32
 - Database features: 1
-- Playwright steps mappings: 31
+- Playwright steps mappings: 32
 - Database steps mappings: 1

@@ -9166,6 +9166,16 @@ function renderNieuwInDeApp() {
 // label Nieuw en telt pas als gelezen als je het openklapt of op het kleine knopje
 // "Markeer als gelezen" tikt. Er gaat niets vanzelf: eerder telde 2 seconden in beeld als
 // gelezen, en op de telefoon verdwenen dan alle nieuwe berichten tegelijk (Gio 15 sep).
+// Eén regel samenvatting onder de titel, zoals bij "Nieuw in de app" (Gio 15 sep): ook
+// ingeklapt zie je meteen waar het bericht over gaat, niet alleen de titel en de datum.
+function berichtSnippet(tekst, max = 90) {
+  const vlak = String(tekst || "").replace(/\s+/g, " ").trim();
+  if (vlak.length <= max) return vlak;
+  const afgekapt = vlak.slice(0, max);
+  const laatsteSpatie = afgekapt.lastIndexOf(" ");
+  return (laatsteSpatie > 40 ? afgekapt.slice(0, laatsteSpatie) : afgekapt) + "…";
+}
+
 function berichtKaartHtml(bericht) {
   const open = openBerichten.has(bericht.id);
   const inhoudId = "bericht-inhoud-" + bericht.id;
@@ -9181,7 +9191,7 @@ function berichtKaartHtml(bericht) {
   return '<article class="employee-announcement-card' + (bericht.unread ? " is-unread" : "") + (bericht.ingetrokken ? " is-withdrawn" : "") + (open ? " is-open" : " is-dicht") + '" data-bericht-id="' + bericht.id + '">'
     + '<div class="bericht-kop-rij">'
       + '<button class="bericht-kop" type="button" data-bericht-toggle="' + bericht.id + '" aria-expanded="' + (open ? "true" : "false") + '" aria-controls="' + inhoudId + '">'
-        + '<span class="bericht-kop-tekst">' + label + '<h3>' + escapeHtml(bericht.title) + '</h3></span>'
+        + '<span class="bericht-kop-tekst">' + label + '<h3>' + escapeHtml(bericht.title) + '</h3><small class="bericht-snippet">' + escapeHtml(berichtSnippet(bericht.message)) + '</small></span>'
         + '<small>' + escapeHtml(bericht.createdAt) + '</small>'
         + '<span class="bericht-chevron" aria-hidden="true"></span>'
       + '</button>'
