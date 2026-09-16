@@ -389,6 +389,54 @@ test.describe('notifications api', () => {
   // het kleine knopje "Markeer als gelezen" tikt. Er gaat niets vanzelf (eerder: 2 seconden
   // in beeld, waardoor op de telefoon alle nieuwe berichten tegelijk verdwenen). Berichten
   // opent bij het eerste ongelezen bericht; een leeg filter Ongelezen valt terug op Alles.
+  // Gio 16 sep: "verzin bij melding ook zoals bij Nieuw in de app" -- ingeklapt zie je meteen
+  // waar het bericht over gaat, niet alleen de titel en de datum, net als bij de kop + korte
+  // zin van "Nieuw in de app". De regel verdwijnt zodra je het bericht openklapt: dan staat de
+  // volledige tekst er al onder.
+  test('[NOT-H-018] een ingeklapt bericht toont een korte samenvatting onder de titel, die verdwijnt zodra je het openklapt', async ({ page }) => {
+    const langeTekst = 'Vanwege een geplande brandoefening sluit het kantoor vandaag om 16:00 uur precies, dus rond op tijd af en neem je jas mee naar huis.';
+    const korteTekst = 'Kort bericht.';
+    const verzonden = await nagebootsteBerichten(page, [
+      { id: 9501, notification_type: 'announcement', announcement_id: 951, title: 'Lang bericht', read: true },
+      { id: 9502, notification_type: 'announcement', announcement_id: 952, title: 'Kort bericht', read: true },
+    ]);
+    void verzonden;
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.route('**/server/api/notifications.php*', async route => {
+      if (route.request().method() !== 'GET') return route.continue();
+      const items = [
+        { id: 9501, notification_type: 'announcement', announcement_id: 951, title: 'Lang bericht', message: langeTekst, read: true, period_id: null, period_key: null, target_route: 'employee-announcements', read_at: '2026-08-20 09:05:00', created_at: '2026-08-20 09:00:00' },
+        { id: 9502, notification_type: 'announcement', announcement_id: 952, title: 'Kort bericht', message: korteTekst, read: true, period_id: null, period_key: null, target_route: 'employee-announcements', read_at: '2026-08-20 09:05:00', created_at: '2026-08-19 09:00:00' },
+      ];
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, count: items.length, unread_count: 0, items }) });
+    });
+    await page.evaluate(() => { void (window as unknown as { refreshNotificationsReadApi: (force: boolean) => Promise<unknown> }).refreshNotificationsReadApi(true); });
+    await page.locator('button[data-view="employee-announcements"]').click();
+    const langKaart = page.locator('#employee-announcement-list .employee-announcement-card').filter({ hasText: 'Lang bericht' });
+    const kortKaart = page.locator('#employee-announcement-list .employee-announcement-card').filter({ hasText: 'Kort bericht' });
+
+    await test.step('Then toont een lang bericht ingeklapt een afgekapte samenvatting van de eigen tekst', async () => {
+      const snippet = (await langKaart.locator('.bericht-snippet').textContent() || '').trim();
+      expect(snippet.length, 'de samenvatting hoort korter te zijn dan de volledige tekst').toBeLessThan(langeTekst.length);
+      expect(snippet.length).toBeGreaterThan(20);
+      expect(langeTekst.startsWith(snippet.replace(/…$/, '').trim()), 'de samenvatting hoort het begin van het bericht te zijn').toBe(true);
+      expect(snippet.endsWith('…'), 'een afgekapte samenvatting eindigt met een weglatingsteken').toBe(true);
+    });
+
+    await test.step('And toont een kort bericht zijn volledige tekst als samenvatting, zonder afkapping', async () => {
+      await expect(kortKaart.locator('.bericht-snippet')).toHaveText(korteTekst);
+    });
+
+    await test.step('When het bericht wordt opengeklapt, then verdwijnt de samenvatting', async () => {
+      await langKaart.locator('[data-bericht-toggle]').click();
+      await expect(langKaart.locator('.bericht-snippet')).toBeHidden();
+      await expect(langKaart.locator('.bericht-inhoud')).toBeVisible();
+      await expect(langKaart.locator('.bericht-inhoud')).toContainText(langeTekst);
+    });
+  });
+
   test('[NOT-H-011] een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 700 });
     const verzonden = await nagebootsteBerichten(page, [
@@ -564,6 +612,7 @@ test.describe('notifications api', () => {
       { id: 9101, notification_type: 'correction_required', title: 'Correctie gevraagd juli', period_key: '2026-07', target_route: 'employee-dashboard' },
       { id: 9102, notification_type: 'timesheet_approved', title: 'Uren juni goedgekeurd', period_key: '2026-06', target_route: 'employee-dashboard' },
       { id: 9103, notification_type: 'timesheet_reminder', title: 'Dien augustus in', period_key: '2026-08', target_route: 'employee-dashboard' },
+      { id: 9105, notification_type: 'customer_timesheet_reminder', title: 'Klanturenstaat nog aanleveren', period_key: '2026-08', target_route: 'employee-dashboard' },
       { id: 9104, notification_type: 'announcement', title: 'Mededeling hoort niet in de bel', period_key: null, target_route: 'employee-announcements', announcement_id: 1 },
     ];
     const gelezen = new Set<number>();
@@ -583,9 +632,9 @@ test.describe('notifications api', () => {
     await page.evaluate(() => { void (window as unknown as { refreshNotificationsReadApi: (force: boolean) => Promise<unknown> }).refreshNotificationsReadApi(true); });
 
     await test.step('Then toont de bel alleen de drie meldingen over de medewerker zelf', async () => {
-      await expect(page.locator('#notification-count')).toHaveText('3');
+      await expect(page.locator('#notification-count')).toHaveText('4');
       await page.locator('#notification-button').click();
-      await expect(page.locator('#notification-list .notification-item')).toHaveCount(3);
+      await expect(page.locator('#notification-list .notification-item')).toHaveCount(4);
       await expect(page.locator('#notification-list')).not.toContainText('Mededeling hoort niet in de bel');
     });
 
@@ -593,6 +642,7 @@ test.describe('notifications api', () => {
       { titel: 'Correctie gevraagd juli', scherm: 'timesheet', maand: '2026-07' },
       { titel: 'Uren juni goedgekeurd', scherm: 'historie', maand: '2026-06', extra: 'maand opengeklapt' },
       { titel: 'Dien augustus in', scherm: 'timesheet', maand: '2026-08' },
+      { titel: 'Klanturenstaat nog aanleveren', scherm: 'customer-timesheet', maand: '2026-08', extra: 'uploadveld gefocust' },
     ];
     for (const doel of bestemmingen) {
       await test.step(`When "${doel.titel}" wordt aangeklikt, then staat ${doel.scherm} van ${doel.maand} open${doel.extra ? ' (' + doel.extra + ')' : ''}`, async () => {
@@ -603,9 +653,14 @@ test.describe('notifications api', () => {
         if (doel.scherm === 'historie') {
           await expect(page.locator(`#employee-history-verloop-${doel.maand}`)).toBeVisible();
         }
+        if (doel.scherm === 'customer-timesheet') {
+          await expect(page.locator('#customer-timesheet-upload-panel')).toBeVisible();
+          await expect(page.locator('#customer-timesheet-period')).toHaveValue(doel.maand);
+          await expect(page.locator('#customer-timesheet-file')).toBeFocused();
+        }
       });
     }
-    expect([...gelezen].sort(), 'elke aangeklikte melding telt als gelezen').toEqual([9101, 9102, 9103]);
+    expect([...gelezen].sort(), 'elke aangeklikte melding telt als gelezen').toEqual([9101, 9102, 9103, 9105]);
   });
 
   test('[NOT-H-014] Alles gelezen in Berichten leest alleen de mededelingen en laat de bel met rust', async ({ page }) => {
@@ -762,7 +817,12 @@ test.describe('notifications api', () => {
         await expect(page.locator('html')).toHaveAttribute('data-theme', thema);
         const kaart = lijst.locator('.employee-announcement-card.is-withdrawn').first();
         await expect.poll(() => kaart.evaluate(el => {
-          const rgb = (t: string) => (t.match(/[\d.]+/g) || []).map(Number);
+          // color-mix() kan als "color(srgb 0.98 0.97 0.99)" serialiseren (0-1) in plaats van
+          // "rgb(...)" (0-255) -- afhankelijk van de browser. Beide naar 0-255 normaliseren.
+          const rgb = (t: string) => {
+            const getallen = (t.match(/[\d.]+/g) || []).map(Number);
+            return t.trim().startsWith('color(') ? getallen.map(g => g * 255) : getallen;
+          };
           const lum = ([r, g, b]: number[]) => { const k = (c: number) => { const v = c / 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * k(r) + 0.7152 * k(g) + 0.0722 * k(b); };
           const achtergrond = (n: Element) => {
             const lagen: number[][] = [];
@@ -774,16 +834,19 @@ test.describe('notifications api', () => {
           const contrast = (n: Element) => { const [h, l] = [lum(rgb(getComputedStyle(n).color)), lum(achtergrond(n))].sort((x, y) => y - x); return (h + 0.05) / (l + 0.05); };
           const titel = el.querySelector('h3')!;
           const label = el.querySelector('.status-pill')!;
-          const [, , , kaartAlpha = 1] = rgb(getComputedStyle(el).backgroundColor);
-          
+          const kaartKleur = rgb(getComputedStyle(el).backgroundColor);
+          // De kaart mag een eigen (subtiele) achtergrond hebben, zolang die uit de lavendeltint
+          // komt en niet meer het oude oranje/bruin van een waarschuwing is.
+          const geelOranje = kaartKleur[0] > kaartKleur[2] + 15;
+
           return {
             titel: contrast(titel) >= 4.5,
             label: contrast(label) >= 4.5,
-            geenEigenVlak: getComputedStyle(el).backgroundColor === 'rgba(0, 0, 0, 0)' || kaartAlpha === 0,
+            geenOranjeVlak: !geelOranje,
             // Eigen zachte lavendeltint (--ingetrokken-*), niet het oranje/bruin van een waarschuwing.
             labelInLavendel: (() => { const proef = document.createElement('span'); proef.style.color = 'var(--ingetrokken-tekst)'; proef.style.backgroundColor = 'var(--ingetrokken-vlak)'; el.append(proef); const p = getComputedStyle(proef); const cs = getComputedStyle(label); const gelijk = cs.color === p.color && cs.backgroundColor === p.backgroundColor; proef.remove(); return gelijk; })(),
           };
-        }), { timeout: 3_000, message: `ingetrokken in ${thema}` }).toEqual({ titel: true, label: true, geenEigenVlak: true, labelInLavendel: true });
+        }), { timeout: 3_000, message: `ingetrokken in ${thema}` }).toEqual({ titel: true, label: true, geenOranjeVlak: true, labelInLavendel: true });
       });
     }
   });

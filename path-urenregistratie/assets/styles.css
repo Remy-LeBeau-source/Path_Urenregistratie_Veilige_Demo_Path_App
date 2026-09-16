@@ -2219,7 +2219,8 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .invoice-brand-footer strong { color: var(--mint); }
 .announcement-withdrawal-note { border: 1px solid color-mix(in srgb, var(--warning) 32%, var(--line)); border-radius: 10px; background: var(--warning-bg); color: var(--warning-tekst); font-size: 10px; line-height: 1.55; margin: 13px 0; padding: 11px 12px; }
 .announcement-withdrawal-note strong { display: block; margin-bottom: 3px; }
-.announcement-archive-filter { width: fit-content; margin: 0 0 16px; }
+.announcement-archive-filter { width: fit-content; margin: 0 0 16px; padding: 4px; background: color-mix(in srgb, var(--surface) 84%, var(--mint) 8%); border: 1px solid var(--line); box-shadow: 0 12px 28px rgba(13,27,56,.06); }
+#view-employee-announcements .view-heading p { max-width: 64ch; }
 .employee-announcement-list { display: grid; }
 .employee-announcement-card { border-top: 1px solid var(--line); padding: 20px 24px; }
 .employee-announcement-card:first-child { border-top: 0; }
@@ -2241,6 +2242,10 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .bericht-kop-tekst .status-pill { flex: 0 0 auto; }
 .employee-announcement-card .bericht-kop h3 { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .employee-announcement-card.is-dicht .bericht-kop h3 { font-size: 15px; font-weight: 600; }
+/* Eén regel samenvatting onder de titel, ingeklapt (Gio 15 sep: "verzin bij melding ook
+   zoals bij Nieuw in de app"). Open staat de volledige tekst al eronder, dus dan weg. */
+.bericht-snippet { display: block; width: 100%; margin-top: 2px; overflow: hidden; color: var(--muted); font-size: 12px; font-weight: 400; white-space: nowrap; text-overflow: ellipsis; }
+.employee-announcement-card.is-open .bericht-snippet { display: none; }
 .bericht-kop > small { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .bericht-chevron { width: 8px; height: 8px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(-45deg); transition: transform .16s ease; justify-self: end; }
 .bericht-kop[aria-expanded="true"] .bericht-chevron { transform: rotate(45deg); }
@@ -2252,7 +2257,7 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 /* De onderste kaart (ingetrokken of onder de muis) heeft een eigen achtergrond met rechte
    hoeken en stak over de ronde hoeken van het paneel heen (Gio 15 sep, "die hoekjes").
    Het paneel knipt nu zijn inhoud af; focusranden liggen binnen de kop (outline-offset -2px). */
-#view-employee-announcements .panel:has(> .employee-announcement-list) { overflow: hidden; }
+#view-employee-announcements .panel:has(> .employee-announcement-list) { overflow: hidden; border-color: color-mix(in srgb, var(--line) 74%, var(--mint) 26%); box-shadow: 0 18px 42px rgba(13,27,56,.08); }
 /* Vorige/Volgende onder lange lijsten (Nieuw in de app, Berichten). De stand staat in het
    midden in tabelcijfers, zodat "6–10 van 20" niet verspringt. */
 .lijst-paginering { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line-zacht); padding: 12px 24px 16px; }
@@ -2267,12 +2272,15 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
    modderig. Nu rustig en neutraal: geen eigen achtergrond, een omlijnd grijs label, een
    gedempte titel, en de reden als citaat met een dun streepje. Ronde 2: een eigen zachte
    lavendeltint (--ingetrokken-*) in plaats van grijs, prettiger om te zien. */
-.employee-announcement-list .employee-announcement-card.is-withdrawn { background: transparent; }
+.employee-announcement-list .employee-announcement-card { background: color-mix(in srgb, var(--surface) 94%, var(--mint) 6%); }
+.employee-announcement-list .employee-announcement-card:nth-child(even) { background: color-mix(in srgb, var(--surface) 98%, var(--mint) 2%); }
+.employee-announcement-list .employee-announcement-card.is-open { background: color-mix(in srgb, var(--surface) 88%, var(--mint) 12%); }
+.employee-announcement-list .employee-announcement-card.is-withdrawn { background: color-mix(in srgb, var(--ingetrokken-vlak) 42%, var(--surface)); }
 .status-pill.bericht-label-ingetrokken { border: 1px solid var(--ingetrokken-rand); background: var(--ingetrokken-vlak); color: var(--ingetrokken-tekst); }
-.employee-announcement-card.is-withdrawn .bericht-kop h3 { color: var(--muted); font-weight: 500; }
+.employee-announcement-card.is-withdrawn .bericht-kop h3 { color: var(--ink); font-weight: 650; }
 .employee-announcement-card.is-withdrawn .announcement-withdrawal-note { border: 0; border-left: 3px solid var(--ingetrokken-rand); border-radius: 0 8px 8px 0; background: var(--ingetrokken-vlak); color: var(--ink); }
 .employee-announcement-card.is-withdrawn .announcement-withdrawal-note strong { color: var(--ingetrokken-tekst); }
-.employee-announcement-card.is-withdrawn .bericht-inhoud > p { color: var(--muted); }
+.employee-announcement-card.is-withdrawn .bericht-inhoud > p { color: var(--ink); }
 .bericht-kop-rij { display: flex; align-items: center; }
 .bericht-kop-rij > .bericht-kop { flex: 1 1 auto; min-width: 0; }
 .bericht-markeer { flex: 0 0 auto; min-height: 44px; margin-right: 16px; color: var(--muted); font-size: 12px; font-weight: 600; white-space: nowrap; }
@@ -2280,6 +2288,12 @@ html[data-theme="dark"] .mail-delivery-history-item[data-mail-delivery-status="f
 .employee-announcement-card.is-unread.is-dicht .bericht-kop h3 { font-weight: 800; }
 .berichten-kop-acties { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px 14px; text-align: right; }
 .berichten-kop-acties small { color: var(--muted); }
+html[data-theme="dark"] .announcement-archive-filter { background: color-mix(in srgb, var(--surface) 88%, var(--mint) 5%); box-shadow: 0 18px 44px rgba(0,0,0,.22); }
+html[data-theme="dark"] #view-employee-announcements .panel:has(> .employee-announcement-list) { border-color: color-mix(in srgb, var(--line) 72%, var(--mint) 28%); box-shadow: 0 18px 44px rgba(0,0,0,.28); }
+html[data-theme="dark"] .employee-announcement-list .employee-announcement-card { background: color-mix(in srgb, var(--surface) 88%, var(--mint) 8%); }
+html[data-theme="dark"] .employee-announcement-list .employee-announcement-card:nth-child(even) { background: color-mix(in srgb, var(--surface) 94%, var(--mint) 3%); }
+html[data-theme="dark"] .employee-announcement-list .employee-announcement-card.is-open { background: color-mix(in srgb, var(--surface) 78%, var(--mint) 12%); }
+html[data-theme="dark"] .employee-announcement-list .employee-announcement-card.is-withdrawn { background: color-mix(in srgb, var(--ingetrokken-vlak) 52%, var(--surface)); }
 @media (prefers-reduced-motion: reduce) { .bericht-chevron { transition: none; } }
 @media (max-width: 720px) {
   .bericht-kop { grid-template-columns: minmax(0, 1fr) 12px; padding: 14px 16px; }
