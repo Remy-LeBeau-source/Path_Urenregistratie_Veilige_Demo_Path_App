@@ -159,8 +159,15 @@
 
   function iconFor(type) { return { bug: '!', feature: '◆', chore: '●', ci: '↯' }[type] || '◆'; }
 
+  // Een kale URL midden in een kop leest slecht; alleen het domein is genoeg.
+  function zonderLinks(text) {
+    return String(text).replace(/https?:\/\/(\S+)/g, function (_geheel, rest) {
+      return rest.split('/')[0].replace(/[),.]+$/, '');
+    });
+  }
+
   function shorten(text, max) {
-    var clean = String(text).replace(/\s+/g, ' ').trim();
+    var clean = zonderLinks(text).replace(/\s+/g, ' ').trim();
     if (clean.length <= max) return clean;
     var cut = clean.slice(0, max);
     return cut.slice(0, Math.max(cut.lastIndexOf(' '), max - 20)) + '…';
@@ -435,10 +442,10 @@
       ? cases.map(function (c) { return c.id + ' — ' + (c.technique || 'techniek n.t.b.') + (c.assertions ? ' · ' + c.assertions + ' assertions' : '') + (c.feature ? '\n' + c.feature : ''); }).join('\n\n')
       : 'Voor deze oplevering is geen aparte Playwright-case vastgelegd in GIO-WENSEN (werkwijze, seed of documentatie).';
     return {
-      leftLabel: 'WENS VAN GIO (GIO-WENSEN.MD)', leftTitle: ticket.date + ' · ' + ticket.version, leftText: ticket.wish || ticket.title,
+      leftLabel: 'WENS VAN GIO (GIO-WENSEN.MD)', leftTitle: ticket.date + ' · ' + ticket.version, leftText: zonderLinks(ticket.wish || ticket.title),
       rightLabel: 'BEWIJS', rightTitle: cases.length ? cases.length + ' Playwright-case' + (cases.length === 1 ? '' : 's') : 'Geen aparte case',
       rightText: cases.length ? cases.map(function (c) { return c.id + ': ' + c.title; }).join(' · ') : 'Vastgelegd als werkwijze of data, zonder eigen testcase.',
-      fo: ticket.wish || ticket.title, to: caseLines,
+      fo: zonderLinks(ticket.wish || ticket.title), to: caseLines,
       criterion: cases.length ? cases[0].title : ticket.title,
       gherkin: ticket.gherkin || 'Geen Gherkin: deze oplevering heeft geen eigen Playwright-case.',
       author: 'Bron: GIO-WENSEN.md · tests/playwright/features · LIVING-DOC.md',

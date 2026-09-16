@@ -66,6 +66,8 @@ test.describe('Path Pipeline TEST-demo', () => {
       await expect(page.locator('[data-doc-gherkin]')).toContainText(eersteMetCase.cases[0].gherkin.split('\n')[0]);
       await expect(page.locator('[data-living-doc] li')).toHaveCount(Math.min(10, feed!.delivered.length));
       await expect(page.locator('[data-living-doc] li').first()).toContainText(verwachteSleutels(feed!)[0]);
+      // Een wens mag een link bevatten, maar in de leesbare projectie hoort geen kale URL.
+      await expect(page.locator('[data-doc-page]')).not.toContainText('https://');
 
       await page.getByRole('tab', { name: /Testbeheer/ }).click();
       const verwachtAantal = Math.min(12, uniekeCases.size);
@@ -327,6 +329,12 @@ test.describe('Path Pipeline TEST-demo', () => {
           .map(item => `${item.element}.${String(item.className)} [${Math.round(item.rect.left)}, ${Math.round(item.rect.right)}]`),
       }));
       expect(breedte.document, `Elementen buiten beeld: ${breedte.buitenBeeld.join(', ')}`).toBeLessThanOrEqual(breedte.viewport + 1);
+      // Alle drie de werkruimtes moeten op een telefoon zichtbaar naast elkaar passen.
+      const tabs = await page.evaluate(() => Array.from(document.querySelectorAll('[role="tab"]'))
+        .map((tab) => ({ naam: (tab.textContent || '').replace(/\s+/g, ' ').trim(), rechts: Math.round(tab.getBoundingClientRect().right) })));
+      expect(tabs).toHaveLength(3);
+      const buitenBeeld = tabs.filter((tab) => tab.rechts > 391);
+      expect(buitenBeeld, `Tabbladen buiten beeld: ${buitenBeeld.map((t) => t.naam).join(', ')}`).toEqual([]);
       await expect(page.locator('script[src*="assets/app.js"], link[href*="assets/styles.css"]')).toHaveCount(0);
       await expect(page.locator('footer')).toContainText('geen koppeling met een bestaand Jira-, Confluence- of Zephyr-account');
       await expect(page.locator('footer')).toContainText('GitHub-issue');
