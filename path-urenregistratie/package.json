@@ -1,6 +1,6 @@
 {
   "name": "path-urenregistratie",
-  "version": "2.0.121",
+  "version": "2.0.122",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -53,7 +53,7 @@
     "allure:generate": "allure generate allure-results --clean -o allure-report",
     "allure:open": "allure open allure-report",
     "allure:serve": "allure serve allure-results",
-    "docs:sync": "node scripts/sync-living-docs.mjs",
+    "docs:sync": "node scripts/sync-living-docs.mjs && node scripts/pipeline-demo-data.mjs",
     "erd": "node scripts/generate-erd.mjs",
     "docs:bundle": "node scripts/build-live-doc-bundle.mjs",
     "docs:refresh": "npm run docs:sync && npm run test:e2e && npm run allure:generate && npm run docs:bundle",
