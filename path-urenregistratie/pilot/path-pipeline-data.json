@@ -153,12 +153,6 @@
   ],
   "open": [
     {
-      "date": "16 sep",
-      "wish": "Donkere modus op de demo-pagina ook zelf kunnen kiezen (licht / donker / systeem) in plaats van alleen de systeeminstelling volgen.",
-      "who": "main",
-      "status": "open"
-    },
-    {
       "date": "15 sep",
       "wish": "Wisselvallig op mobile-safari: SKIN-H-040. 15 sep 5 van 5 keer groen herhaald, niet te reproduceren; opnieuw bekijken als hij in CI nog eens valt.",
       "who": "herontwerp",
