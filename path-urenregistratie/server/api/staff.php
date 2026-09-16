@@ -486,6 +486,18 @@ if ($action === 'upsert_employee') {
     if ($rate < 0) {
         $rate = 0;
     }
+    // Bovengrens, gekozen door Gio op 16 sep: 1.000 euro per uur. Een negatief tarief
+    // werd al afgevangen, maar naar boven was er niets. Een typefout (8500 in plaats
+    // van 85) werd daardoor zonder één waarschuwing bewaard en rekende door in elke
+    // factuur, en een extreem getal paste niet in hourly_rate DECIMAL(10,2), wat een
+    // serverfout gaf in plaats van een nette weigering.
+    if ($rate > 1000) {
+        auth_send_json([
+            'ok' => false,
+            'error' => 'rate-too-high',
+            'message' => 'Het uurtarief kan maximaal 1.000 euro per uur zijn. Controleer of er een cijfer te veel staat.',
+        ], 400);
+    }
 
     $employeeDbUserId = (int)($employee['dbUserId'] ?? 0);
     $employeeDbId = (int)($employee['dbEmployeeId'] ?? 0);

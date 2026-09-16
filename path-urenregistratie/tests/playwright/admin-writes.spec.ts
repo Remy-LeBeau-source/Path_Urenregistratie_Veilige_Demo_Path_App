@@ -1118,6 +1118,73 @@ Uren: {uren} uur.`;
     await loginPage.logout();
   });
 
+  test('[ADM-WR-N-009] een onmogelijk uurtarief wordt geweigerd en het oude tarief blijft staan', async () => {
+    // Grenswaardenanalyse op het uurtarief. Een negatief tarief werd al op 0 gezet, maar
+    // naar boven was er niets: een typefout als 8500 in plaats van 85 werd zonder enige
+    // waarschuwing bewaard en rekende door in elke factuur, en een extreem getal paste niet
+    // in hourly_rate DECIMAL(10,2), wat een serverfout gaf. Grens gekozen door Gio op
+    // 16 sep: 1.000 euro per uur.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    const unique = Date.now().toString().slice(-7);
+    const email = `tarief-grens-${unique}@example.invalid`;
+
+    const bewaar = (tarief: number) => postJson(ctx, '/server/api/staff.php', {
+      action: 'upsert_employee',
+      sendInvitation: false,
+      employee: {
+        name: `Tarief Medewerker ${unique}`,
+        email,
+        role: 'Tester',
+        startDate: '2026-08-01',
+        active: false,
+        weeklyHours: 36,
+        rate: tarief,
+      },
+      mailRecipients: [],
+    });
+
+    // Het tarief staat bij de opdracht, niet bij de medewerker, en bootstrap.employees
+    // kent geen e-mailveld: koppelen gaat dus via de naam naar employees.id en daarna
+    // naar de opdracht van die medewerker.
+    const bewaardTarief = async () => {
+      const bootstrap = await (await ctx.get('/server/api/bootstrap.php')).json();
+      const medewerker = (bootstrap.employees as Array<{ id: number; full_name?: string }>)
+        .find(item => String(item.full_name || '').trim() === `Tarief Medewerker ${unique}`);
+      if (!medewerker) return null;
+      const opdracht = (bootstrap.assignments as Array<{ employee_id: number; hourly_rate?: number | string }>)
+        .find(item => Number(item.employee_id) === Number(medewerker.id));
+      return opdracht ? Number(opdracht.hourly_rate) : null;
+    };
+
+    await test.step('Given een medewerker met een gewoon tarief op de grens', async () => {
+      const opDeGrens = await bewaar(1000);
+      expect(opDeGrens.status, `1.000 euro hoort te mogen: ${JSON.stringify(opDeGrens.body).slice(0, 200)}`).toBe(200);
+      expect(await bewaardTarief()).toBe(1000);
+    });
+
+    await test.step('When er één euro boven de grens wordt opgeslagen, then weigert de server dat met uitleg', async () => {
+      const teHoog = await bewaar(1000.01);
+      expect(teHoog.status).toBe(400);
+      expect(teHoog.body.error).toBe('rate-too-high');
+      expect(String(teHoog.body.message || ''), 'de melding hoort te wijzen op een cijfer te veel').toMatch(/1\.000 euro/);
+    });
+
+    await test.step('And wordt ook een typefout als 8500 geweigerd in plaats van stil bewaard', async () => {
+      const typefout = await bewaar(8500);
+      expect(typefout.status).toBe(400);
+      expect(typefout.body.error).toBe('rate-too-high');
+    });
+
+    await test.step('And staat het eerder bewaarde tarief er nog ongewijzigd', async () => {
+      expect(await bewaardTarief(), 'een geweigerde opslag mag niets veranderd hebben').toBe(1000);
+    });
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
   test('[ADM-WR-N-008] lengtegrenzen tellen tekens, niet bytes: een naam vol accenten mag tot de volle lengte', async () => {
     // Grenswaardenanalyse met niet-ASCII invoer. De tekstvalidatie op de server telde bytes
     // (strlen), terwijl de kolommen (utf8mb4 VARCHAR) en de invoervelden tekens tellen. Een

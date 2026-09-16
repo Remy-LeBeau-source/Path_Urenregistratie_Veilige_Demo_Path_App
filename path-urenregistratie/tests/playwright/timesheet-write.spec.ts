@@ -363,6 +363,64 @@ test.describe('timesheet write api', () => {
     });
   });
 
+  test('[TS-API-N-014] dezelfde dag twee keer in één opslag wordt geweigerd en laat de maand ongemoeid', async ({ request }) => {
+    // Equivalentieklasse op de vórm van de payload in plaats van op de waarden: twee
+    // dagregels voor dezelfde datum. De server controleerde elke regel op zichzelf
+    // (datum, werkdag, 0-24 uur) en daarna of de som gelijk was aan het maandtotaal,
+    // maar niet of een dag dubbel voorkwam. Het wegschrijven gebruikt een upsert per
+    // dag, dus van 2 x 8 uur bleef er 8 staan terwijl het maandtotaal 16 bewaarde. Dat
+    // verschil was daarna niet meer te herstellen, want de dagen en het totaal komen
+    // uit twee verschillende bronnen (16 sep).
+    const authApi = new AuthApi(request);
+    const timesheetApi = new TimesheetApi(request);
+    let period = '';
+
+    await test.step('Given de medewerker is ingelogd met een eigen maand', async () => {
+      const login = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(login.user.role).toBe('employee');
+      period = await findWritablePeriod(timesheetApi);
+    });
+
+    await test.step('When hij dezelfde dag twee keer meestuurt, then weigert de server dat met uitleg', async () => {
+      const dubbel = await timesheetApi.write({
+        action: 'save_draft', period,
+        contractualHours: 160, billableHours: 16, leaveHours: 0, sicknessHours: 0,
+        dayEntries: [
+          { workDate: `${period}-01`, hours: 8, description: 'Eerste regel' },
+          { workDate: `${period}-01`, hours: 8, description: 'Tweede regel voor dezelfde dag' },
+        ],
+      });
+
+      expect(dubbel.status).toBe(400);
+      expect(dubbel.body.error).toBe('invalid-payload');
+      expect(String(dubbel.body.message || ''), 'de melding hoort te zeggen wat er mis is').toMatch(/één keer/);
+    });
+
+    await test.step('And blijft het maandtotaal gelijk aan de som van de dagen', async () => {
+      const gelezen = await timesheetApi.read(period);
+      expect(gelezen.status).toBe(200);
+      const dagen = (gelezen.body?.day_entries || []) as Array<{ work_date: string; hours: number }>;
+      const somVanDeDagen = dagen.reduce((totaal, dag) => totaal + Number(dag.hours || 0), 0);
+      const maandTotaal = Number(gelezen.body?.timesheet?.billable_hours || 0);
+      expect(Math.round(somVanDeDagen * 100) / 100,
+        'de dagen en het maandtotaal horen hetzelfde te vertellen').toBe(Math.round(maandTotaal * 100) / 100);
+      const datums = dagen.map(dag => dag.work_date);
+      expect(new Set(datums).size, 'geen enkele dag hoort dubbel te staan').toBe(datums.length);
+    });
+
+    await test.step('And wordt dezelfde maand met enkele dagregels wél gewoon bewaard', async () => {
+      const goed = await timesheetApi.write({
+        action: 'save_draft', period,
+        contractualHours: 160, billableHours: 16, leaveHours: 0, sicknessHours: 0,
+        dayEntries: buildDayEntries(period, 8, 8),
+      });
+      expect(goed.status, 'een gewone opslag mag hier niet door geraakt worden').toBe(200);
+      expect(goed.body.timesheet.status).toBe('draft');
+    });
+
+    await authApi.logout();
+  });
+
   test('[TS-API-N-013] elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database', async ({ request }) => {
     const authApi = new AuthApi(request);
     const timesheetApi = new TimesheetApi(request);

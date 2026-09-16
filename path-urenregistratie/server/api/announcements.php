@@ -210,6 +210,15 @@ if ($action === 'send' || $action === 'save_draft') {
     if (mb_strlen($message, 'UTF-8') > 1500) {
         auth_send_json(['ok' => false, 'error' => 'message-too-long', 'message' => 'Het bericht kan maximaal 1500 tekens lang zijn.'], 400);
     }
+    // audience_label gaat onbewerkt naar een VARCHAR(255) en had geen enkele controle.
+    if (mb_strlen($audienceLabel, 'UTF-8') > 255) {
+        auth_send_json(['ok' => false, 'error' => 'audience-label-too-long', 'message' => 'De omschrijving van de ontvangers kan maximaal 255 tekens lang zijn.'], 400);
+    }
+    // De reden bij een intrekking die met een vervangend bericht meekomt, kent dezelfde
+    // grens als de losse intrekking hieronder.
+    if (mb_strlen(trim((string)($payload['withdrawal_reason'] ?? '')), 'UTF-8') > 750) {
+        auth_send_json(['ok' => false, 'error' => 'withdrawal-reason-too-long', 'message' => 'De reden mag maximaal 750 tekens lang zijn.'], 400);
+    }
 
     // Resolve recipients from correction source when correction_of_id is set
     if ($correctionOfId !== null && empty($recipientIds)) {
@@ -287,6 +296,12 @@ if ($action === 'send' || $action === 'save_draft') {
             $reason = trim((string)($payload['withdrawal_reason'] ?? ''));
             $pdo->prepare("UPDATE announcements SET status = 'withdrawn', withdrawal_reason = :reason, withdrawn_by = :uid, withdrawn_at = CURRENT_TIMESTAMP WHERE id = :old_id AND company_id = :cid")
                 ->execute([':reason' => $reason, ':uid' => $userId, ':old_id' => $withdrawalOfId, ':cid' => $companyId]);
+            // Hier mag de oude melding wél op gelezen: er gaat een vervangend bericht
+            // uit dat de medewerker als ongelezen in zijn lijst krijgt, dus het nieuws
+            // gaat niet verloren en twee ongelezen regels over hetzelfde onderwerp
+            // zouden alleen maar verwarren.
+            $pdo->prepare("UPDATE notifications SET read_at = CURRENT_TIMESTAMP WHERE announcement_id = :aid AND company_id = :cid AND read_at IS NULL")
+                ->execute([':aid' => $withdrawalOfId, ':cid' => $companyId]);
         }
 
         // Insert notifications for each recipient when sending
@@ -332,6 +347,17 @@ if ($action === 'withdraw') {
     if ($reason === '') {
         auth_send_json(['ok' => false, 'error' => 'missing-withdrawal-reason', 'message' => 'Reden voor intrekken is verplicht.'], 400);
     }
+    // Zelfde grens als het invoerveld (maxlength 750) en als de kolom
+    // withdrawal_reason VARCHAR(750). Zonder deze controle liep een langere reden
+    // tegen de kolom aan en werd dat een serverfout in plaats van een nette melding
+    // (16 sep, zelfde soort als de contracturen in 2.0.119).
+    if (mb_strlen($reason, 'UTF-8') > 750) {
+        auth_send_json([
+            'ok' => false,
+            'error' => 'withdrawal-reason-too-long',
+            'message' => 'De reden mag maximaal 750 tekens lang zijn.',
+        ], 400);
+    }
 
     $stmt = $pdo->prepare("SELECT id, status FROM announcements WHERE id = :id AND company_id = :cid");
     $stmt->execute([':id' => $announcementId, ':cid' => $companyId]);
@@ -347,9 +373,13 @@ if ($action === 'withdraw') {
     $pdo->prepare("UPDATE announcements SET status = 'withdrawn', withdrawal_reason = :reason, withdrawn_by = :uid, withdrawn_at = CURRENT_TIMESTAMP WHERE id = :id AND company_id = :cid")
         ->execute([':reason' => $reason, ':uid' => $userId, ':id' => $announcementId, ':cid' => $companyId]);
 
-    // Mark existing recipient notifications as read/withdrawn
-    $pdo->prepare("UPDATE notifications SET read_at = CURRENT_TIMESTAMP WHERE announcement_id = :aid AND company_id = :cid AND read_at IS NULL")
-        ->execute([':aid' => $announcementId, ':cid' => $companyId]);
+    // De melding blijft bewust ongelezen. Eerder zette het intrekken hem hier zelf op
+    // gelezen, waardoor een mededeling die de medewerker nog nooit geopend had stil uit
+    // zijn ongelezen-teller verdween -- terwijl de regel is dat niets vanzelf verdwijnt
+    // (besluit 16 sep). De kaart toont ingeklapt de reden van intrekken, dus openen kost
+    // één tik en de teller blijft eerlijk. Gaat er wél een vervangend bericht uit, dan
+    // staat het nieuws in dat nieuwe bericht en wordt de oude melding daar op gelezen
+    // gezet (zie de withdrawal_of_id-tak hierboven).
 
     auth_send_json(['ok' => true, 'action' => 'withdraw', 'updated' => 1]);
 }

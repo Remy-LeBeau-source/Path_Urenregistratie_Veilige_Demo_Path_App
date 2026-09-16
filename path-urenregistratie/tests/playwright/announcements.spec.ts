@@ -492,6 +492,113 @@ test.describe('announcements api', () => {
     await ctx.dispose();
   });
 
+  test('[ANN-N-008] de reden van intrekken kent dezelfde grens als het invoerveld en de kolom', async () => {
+    // Grenswaardenanalyse langs de kolomgrens, dezelfde aanpak die eerder de serverfout op
+    // contracturen vond. Het invoerveld begrenst de reden op 750 tekens en de kolom
+    // withdrawal_reason is VARCHAR(750), maar de server controleerde alleen of de reden
+    // niet leeg was. Eén teken te veel liep daardoor tegen de database aan in plaats van
+    // tegen een nette melding (16 sep).
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    const recipientId = await firstEmployeeUserId(ctx);
+    let announcementId = 0;
+
+    await test.step('Given een verzonden mededeling', async () => {
+      const verstuurd = await postAnnouncement(ctx, {
+        action: 'send', title: 'Testmededeling voor de grens van de intrekreden',
+        message: 'Deze mededeling bestaat om de lengtegrens van de reden te toetsen.',
+        recipient_user_ids: [recipientId],
+      });
+      expect(verstuurd.status).toBe(200);
+      announcementId = Number(verstuurd.body.announcement_id ?? verstuurd.body.id ?? 0);
+      expect(announcementId).toBeGreaterThan(0);
+    });
+
+    await test.step('When de reden één teken te lang is, then wordt die geweigerd met uitleg', async () => {
+      const teLang = await postAnnouncement(ctx, {
+        action: 'withdraw', announcement_id: announcementId, withdrawal_reason: 'é'.repeat(751),
+      });
+      expect(teLang.status).toBe(400);
+      expect(teLang.body.error).toBe('withdrawal-reason-too-long');
+      expect(String(teLang.body.message || '')).toMatch(/750 tekens/);
+    });
+
+    await test.step('And blijft de mededeling daardoor gewoon verzonden staan', async () => {
+      const lijst = await (await ctx.get('/server/api/announcements.php')).json();
+      const rij = (lijst.items as Array<{ id: number; status: string }>).find(item => Number(item.id) === announcementId);
+      expect(rij?.status, 'een geweigerde intrekking mag niets veranderd hebben').toBe('sent');
+    });
+
+    await test.step('And wordt precies 750 tekens wél geaccepteerd, ook met accenten', async () => {
+      const opDeGrens = 'é'.repeat(750);
+      expect([...opDeGrens].length).toBe(750);
+      const ingetrokken = await postAnnouncement(ctx, {
+        action: 'withdraw', announcement_id: announcementId, withdrawal_reason: opDeGrens,
+      });
+      expect(ingetrokken.status, `750 tekens hoort te mogen: ${JSON.stringify(ingetrokken.body).slice(0, 160)}`).toBe(200);
+      await postAnnouncement(ctx, { action: 'hide', announcement_id: announcementId });
+    });
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
+  test('[ANN-N-009] een ingetrokken mededeling blijft ongelezen tot de medewerker hem opent', async () => {
+    // Beslistabel op de vraag wanneer een bericht als gelezen telt. Het intrekken zette de
+    // bijbehorende melding zelf op gelezen, waardoor een mededeling die de medewerker nog
+    // nooit geopend had stil uit zijn ongelezen-teller verdween. Dat botst met de regel dat
+    // niets vanzelf verdwijnt (besluit Gio 16 sep). Uitzondering blijft de intrekking die met
+    // een vervangend bericht meekomt: dan staat het nieuws in dat nieuwe bericht.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    const recipientId = await standardEmployeeUserId(ctx);
+    let announcementId = 0;
+
+    // De melding hoort bij de medewerker, niet bij de beheerder, dus die teller is
+    // alleen te zien met de sessie van de medewerker zelf.
+    const ongelezenBijMedewerker = async (id: number) => {
+      const eigenCtx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+      const eigenAuth = new AuthApi(eigenCtx);
+      await eigenAuth.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      const lijst = await (await eigenCtx.get('/server/api/notifications.php?limit=100')).json();
+      const aantal = (lijst.items as Array<{ announcement_id?: number | null; read?: boolean }>)
+        .filter(item => Number(item.announcement_id || 0) === id && item.read === false).length;
+      await eigenAuth.logout();
+      await eigenCtx.dispose();
+      return aantal;
+    };
+
+    await test.step('Given een verzonden mededeling met een ongelezen melding', async () => {
+      const verstuurd = await postAnnouncement(ctx, {
+        action: 'send', title: 'Testmededeling die wordt ingetrokken zonder vervanging',
+        message: 'Deze mededeling toetst of intrekken de melding zelf op gelezen zet.',
+        recipient_user_ids: [recipientId],
+      });
+      expect(verstuurd.status).toBe(200);
+      announcementId = Number(verstuurd.body.announcement_id ?? verstuurd.body.id ?? 0);
+      expect(announcementId).toBeGreaterThan(0);
+    });
+
+    await test.step('When de beheerder hem intrekt, then blijft de melding ongelezen', async () => {
+      const ingetrokken = await postAnnouncement(ctx, {
+        action: 'withdraw', announcement_id: announcementId,
+        withdrawal_reason: 'Deze mededeling geldt niet meer.',
+      });
+      expect(ingetrokken.status).toBe(200);
+      expect(await ongelezenBijMedewerker(announcementId),
+        'intrekken hoort de melding niet zelf op gelezen te zetten').toBeGreaterThan(0);
+    });
+
+    await test.step('And cleanup: de testmededeling wordt bij de medewerker verborgen', async () => {
+      await postAnnouncement(ctx, { action: 'hide', announcement_id: announcementId });
+    });
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
   test('[ANN-N-007] de lengtegrens telt tekens zoals het invoerveld, ook met accenten en emoji, en legt uit wat er mis is', async () => {
     // Grenswaardenanalyse op de lengte. Het invoerveld in de app begrenst op 160 tekens
     // (onderwerp) en 1500 tekens (bericht) via maxlength, maar de server telde met strlen()

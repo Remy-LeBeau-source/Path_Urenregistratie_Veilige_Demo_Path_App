@@ -269,6 +269,7 @@ function timesheet_parse_day_entries(array $payload, int $year, int $month, floa
 
     $normalized = [];
     $sumHours = 0.0;
+    $gezieneDagen = [];
 
     foreach ($payload['day_entries'] as $index => $entry) {
         if (!is_array($entry)) {
@@ -355,6 +356,21 @@ function timesheet_parse_day_entries(array $payload, int $year, int $month, floa
                 'message' => 'De toelichting bij een dagregel mag maximaal 200 tekens lang zijn.',
             ], 400);
         }
+
+        // Dezelfde dag twee keer in één opslag mag niet. De optelling hieronder telde
+        // beide regels mee, maar het wegschrijven gebruikt een upsert op
+        // (timesheet_id, work_date, entry_type): van twee regels voor dezelfde dag
+        // bleef alleen de laatste staan. Het maandtotaal bewaarde dan 16 uur terwijl
+        // de dagen er 8 bewaarden, en dat verschil was daarna niet meer te herstellen
+        // (16 sep, gevonden met een equivalentieklasse op de vórm van de payload).
+        if (isset($gezieneDagen[$workDate])) {
+            auth_send_json([
+                'ok' => false,
+                'error' => 'invalid-payload',
+                'message' => 'Elke dag mag maar één keer in de opslag staan.',
+            ], 400);
+        }
+        $gezieneDagen[$workDate] = true;
 
         $normalized[] = [
             'work_date' => $workDate,
