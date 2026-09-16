@@ -704,3 +704,24 @@ conclusie aan hangt. In CI is dit project op dezelfde stand groen.
   overslaan met een uitgesproken reden, zoals bij andere WebKit-eigenaardigheden) hoort op de lijst
   na de go-live.
 - Werkmap is na de tegenproef teruggezet; `git status` was schoon.
+
+#### TW-2 nader onderzocht (16 sep) — het ligt niet aan de app, en niet aan wat we dachten
+
+Onderzocht met een tijdelijk proefbestand dat op elk punt mat wat er op de knop
+`#quick-skin-toggle` ligt (`document.elementFromPoint` op het midden van de knop), plus of de
+klik landt. Uitgesloten, elk met een meting en niet met een vermoeden:
+- **Niet het voorkeurenvenster.** Openen en annuleren laat niets achter: direct erna is de knop
+  gewoon aanklikbaar en de klik landt.
+- **Niet het thema.** Ook met donker via Voorkeuren gezet landt de klik.
+- **Niet de vormgeving of de viewport.** In Modern, na de hele rotatiereeks tot 1280x800 op een
+  telefoonprofiel, landt de klik nog steeds.
+- **Niet de installatiebanner.** Die staat er soms (`body.toont-installatieaanbod`), maar boven de
+  knop ligt in geen enkele meting iets anders dan de knop zelf.
+- **Wel de browser.** Dezelfde case op `mobile-chrome` is groen (1 passed in 9,7 s). Alleen
+  WebKit onder Windows blijft hangen, en dan in de fase "scrolling into view if needed": Playwright
+  noemt de knop zichtbaar, actief en stabiel en begint de klik, maar die komt niet aan.
+Conclusie: een eigenaardigheid van WebKit onder Windows in het scrollen-naar-beeld, niet van de
+app en niet van de case-inhoud. In CI (WebKit op Linux) is de case groen.
+Vervolg, na de go-live: de klik in die stap ongevoelig maken voor dat scrollen (bijvoorbeeld eerst
+zelf naar beeld scrollen en dan klikken) en bewijzen dat de case daarmee op beide platforms
+hetzelfde meet. Het proefbestand is na het onderzoek verwijderd.
