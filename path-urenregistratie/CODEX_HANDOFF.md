@@ -628,3 +628,25 @@ alleen testdekking en verificatie. Onderstaande bevinding is dus vastgelegd, nie
   onder de lopende regressie weghalen. Pas pushen nadat hij groen is.
 - Open bevindingen: BEV-1 tot en met BEV-5 hierboven, plus de te verifiëren val van E2E-H-018.
   Alle vijf staan ook op GIO-WENSEN.md, met per stuk de voorgestelde fix en de bijbehorende case.
+
+### TW-1 — de suite is niet volgorde-onafhankelijk; CI verbergt dat door te sharden
+
+- Techniek: testware-analyse op testonafhankelijkheid (ISTQB), met de volledige per-project
+  regressie als proef: elk project een verse database, alle cases achter elkaar in één run.
+- Waarneming op desktop-chromium (525 cases): drie vallen die in CI groen zijn.
+  - `E2E-H-018` — de urenstaat bleef `draft` in plaats van `approved`.
+  - `SKIN-H-035` — `#view-approvals .approval-actions` bestond niet: er stond niets meer klaar
+    om goed te keuren.
+  - `KLV-H-018` — linkermarge van -9 pixels bij 390px (waarschijnlijk de zichtbare schuifbalk van
+    Chromium op Windows; apart te herhalen, staat los van de twee hierboven).
+- Gemeenschappelijke oorzaak van de eerste twee: ze leunen op de gezaaide demo-urenstaat die
+  "klaar om in te dienen" of "ingediend" is. Een eerdere case in dezelfde run keurt die goed of
+  dient hem in, en dan vindt de latere case niets meer. In CI vallen ze in verschillende shards,
+  elk met een eigen database, dus daar valt het niet op.
+- Waarom dit telt: de suite is daardoor alleen betrouwbaar in de vorm waarin CI hem draait. Wie
+  lokaal een volledige regressie doet, krijgt rood op cases die niets mankeren, en dat maakt echte
+  fouten moeilijker te zien — precies wat we deze nacht meemaakten.
+- Voorstel (na go-live, testware, geen productiecode): dezelfde aanpak als bij DASH-H-040 t/m -043
+  en DASH-H-050, die hierom al naar een eigen maand zijn verhuisd: elke schrijvende case maakt zijn
+  eigen urenstaat in een eigen maand aan in plaats van de gezaaide te gebruiken. Begin met
+  E2E-H-018 en SKIN-H-035.
