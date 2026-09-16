@@ -543,3 +543,15 @@ alleen testdekking en verificatie. Onderstaande bevinding is dus vastgelegd, nie
 - Rest van dit bestand ongemoeid; de scheiding en de bevoegdheden in announcements.php zijn
   nagelopen (bedrijfsscope, alleen beheerder mag schrijven, CSRF verplicht, status bewaakt) en
   daar is niets op aan te merken.
+
+### Te verifiëren na de regressie — E2E-H-018 viel om in de verse-database-run
+
+- `tests/playwright/business-workflows-attachments.spec.ts:47` [E2E-H-018] stopte op
+  "de urenstaat hoort goedgekeurd te zijn": status bleef `draft` in plaats van `approved`.
+- Opgetreden in de per-project regressie (desktop-chromium, verse database), test 78 van 525.
+  In CI is deze case op dezelfde commit groen, dus eerst apart herhalen voordat er een
+  conclusie aan hangt.
+- Waar te kijken als hij apart ook rood is: de case vult één dag met 8 uur, klikt
+  `[data-hours-week-scope="all"]` en dient in. Sinds de nieuwe indienlogica (maand indienen mag
+  pas als elke werkdag bewust is ingevuld) kan die POST een concept-opslag zijn geworden in
+  plaats van een indiening. Dan hoort de case de maand eerst volledig te vullen.
