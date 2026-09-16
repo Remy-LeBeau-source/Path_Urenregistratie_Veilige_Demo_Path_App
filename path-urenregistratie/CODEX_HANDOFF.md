@@ -529,3 +529,17 @@ alleen testdekking en verificatie. Onderstaande bevinding is dus vastgelegd, nie
   `tests/playwright/timesheet-write.spec.ts`, eigen toekomstige maand, assertions:
   status 400, `error === 'invalid-payload'`, en na een `read` dat het maandtotaal en de som van de
   dagregels gelijk zijn.
+
+### BEV-2 — intrekken zet de melding zelf op gelezen (vraag voor Gio, geen fout)
+
+- Techniek: beslistabel op "wanneer wordt een bericht gelezen?" (handeling x brontoestand).
+- Waar: `server/api/announcements.php`, `action=withdraw` (r351): alle openstaande notificaties bij
+  die mededeling krijgen `read_at`.
+- Waarom het opvalt: Gio's regel is dat berichten niet vanzelf als gelezen mogen verdwijnen. Bij
+  intrekken gebeurt dat op de server wél. In de lijst blijft de mededeling zichtbaar onder het
+  filter "Ingetrokken", dus hij verdwijnt niet; hij telt alleen niet meer mee als ongelezen.
+- Voorstel: zo laten, maar aan Gio voorleggen. Wil hij dat een ingetrokken bericht ongelezen blijft
+  tot de medewerker het opent, dan vervalt die UPDATE en moet NOT-H-01x daarop worden uitgebreid.
+- Rest van dit bestand ongemoeid; de scheiding en de bevoegdheden in announcements.php zijn
+  nagelopen (bedrijfsscope, alleen beheerder mag schrijven, CSRF verplicht, status bewaakt) en
+  daar is niets op aan te merken.
