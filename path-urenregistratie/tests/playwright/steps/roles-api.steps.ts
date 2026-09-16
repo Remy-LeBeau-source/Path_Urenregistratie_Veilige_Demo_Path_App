@@ -38,3 +38,8 @@ When("hij zijn eigen opdracht ophaalt");
 Then("staan tarief en btw er niet in, ook niet als lege waarde");
 And("de rest van zijn opdracht blijft gewoon bruikbaar");
 And("de beheerder krijgt ze wel, want daar worden de facturen mee gemaakt");
+Given("de beheerder ziet het hele bedrijf (referentiemeting)");
+When("de medewerker inlogt en zijn eigen opdracht ophaalt");
+Then("staan er alleen de klant en tussenpersoon van zijn eigen opdracht in counterparties");
+And("staan er alleen mailroutes van zijn eigen opdracht, niet van collega-opdrachten");
+And("zijn eigen klant- en tussenpersoonnaam blijven wel gewoon bruikbaar voor het scherm");

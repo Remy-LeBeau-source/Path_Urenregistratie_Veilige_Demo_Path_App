@@ -620,7 +620,7 @@ De 52 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 605 Playwri
 
 - Feature: `tests/playwright/features/roles-authorization.feature`
 - Source: `tests/playwright/roles-api.spec.ts`
-- Cases: 7
+- Cases: 8
 
 - [ROLE-N-003] zonder sessie geeft protected API 401 — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
 - [ROLE-H-001] admin ziet volledige data — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
@@ -629,6 +629,7 @@ De 52 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 605 Playwri
 - [ROLE-N-005] medewerker kan maanden voor de startdatum en na de huidige maand ook niet via de API openen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [ROLE-N-006] beheerder-only acties op gedeelde endpoints weigeren ook op de eigen urenstaat — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [ROLE-N-007] de medewerker krijgt het uurtarief en btw-percentage van zijn opdracht niet mee, de beheerder wel — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
+- [ROLE-N-008] de medewerker ziet alleen de klant/tussenpersoon en mailroutering van zijn eigen opdracht, niet die van een collega — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 
 ### Authenticatie- en API-beveiliging
 

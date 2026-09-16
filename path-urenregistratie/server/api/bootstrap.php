@@ -73,17 +73,50 @@ try {
         }
     }
 
-    $counterpartiesStmt = $pdo->prepare(
-        'SELECT id, company_id, type, legal_name, trade_name, invoice_address_line, invoice_postal_code, invoice_city, invoice_email, active
+    // Zelfde principe als bij hourly_rate/vat_percentage hierboven: een medewerker
+    // ziet op zijn scherm alleen de klant en tussenpersoon van zijn eigen opdracht,
+    // maar zonder deze filter kreeg zijn browser de klant- en tussenpersoongegevens
+    // van het hele bedrijf mee -- ook van collega's, ook zonder dat een scherm dat
+    // ooit toont. Gevonden bij het nalopen van deze query na de eerdere fix.
+    $eigenTegenpartijIds = [];
+    if ($isEmployee && $employee) {
+        foreach ($assignments as $assignment) {
+            foreach (['client_id', 'broker_id'] as $veld) {
+                $waarde = (int)($assignment[$veld] ?? 0);
+                if ($waarde > 0) {
+                    $eigenTegenpartijIds[] = $waarde;
+                }
+            }
+        }
+        $eigenTegenpartijIds = array_values(array_unique($eigenTegenpartijIds));
+    }
+
+    $counterpartiesSql = 'SELECT id, company_id, type, legal_name, trade_name, invoice_address_line, invoice_postal_code, invoice_city, invoice_email, active
          FROM counterparties
-         WHERE company_id = :company_id
-         ORDER BY id'
-    );
-    $counterpartiesStmt->execute([':company_id' => $companyId]);
+         WHERE company_id = :company_id';
+    $counterpartiesParams = [':company_id' => $companyId];
+    if ($isEmployee) {
+        if ($eigenTegenpartijIds) {
+            $placeholders = [];
+            foreach ($eigenTegenpartijIds as $index => $id) {
+                $key = ':cp' . $index;
+                $placeholders[] = $key;
+                $counterpartiesParams[$key] = $id;
+            }
+            $counterpartiesSql .= ' AND id IN (' . implode(',', $placeholders) . ')';
+        } else {
+            // Geen opdracht (of een opdracht zonder klant/tussenpersoon): niets tonen
+            // in plaats van de query weg te laten, anders komt de WHERE-clause zonder
+            // IN(...) uit en levert hij alsnog het hele bedrijf op.
+            $counterpartiesSql .= ' AND 1 = 0';
+        }
+    }
+    $counterpartiesSql .= ' ORDER BY id';
+    $counterpartiesStmt = $pdo->prepare($counterpartiesSql);
+    $counterpartiesStmt->execute($counterpartiesParams);
     $counterparties = $counterpartiesStmt->fetchAll();
 
-    $assignmentMailRoutesStmt = $pdo->prepare(
-        'SELECT
+    $assignmentMailRoutesSql = 'SELECT
             amr.assignment_id,
             amr.mail_recipient_id,
             amr.enabled,
@@ -94,10 +127,31 @@ try {
             mr.display_name
          FROM assignment_mail_routes amr
          JOIN mail_recipients mr ON mr.id = amr.mail_recipient_id
-         WHERE mr.company_id = :company_id
-         ORDER BY amr.assignment_id, amr.mail_recipient_id'
-    );
-    $assignmentMailRoutesStmt->execute([':company_id' => $companyId]);
+         WHERE mr.company_id = :company_id';
+    $assignmentMailRoutesParams = [':company_id' => $companyId];
+    // Zelfde gat als bij counterparties hierboven: de mailroutering (welke
+    // ontvanger, welk factuursjabloon) van ELKE opdracht in het bedrijf ging naar
+    // elke ingelogde medewerker, in plaats van alleen die van zijn eigen opdracht.
+    if ($isEmployee) {
+        $eigenOpdrachtIds = array_values(array_unique(array_map(
+            static fn (array $a): int => (int)($a['id'] ?? 0),
+            $assignments
+        )));
+        if ($eigenOpdrachtIds) {
+            $placeholders = [];
+            foreach ($eigenOpdrachtIds as $index => $id) {
+                $key = ':aid' . $index;
+                $placeholders[] = $key;
+                $assignmentMailRoutesParams[$key] = $id;
+            }
+            $assignmentMailRoutesSql .= ' AND amr.assignment_id IN (' . implode(',', $placeholders) . ')';
+        } else {
+            $assignmentMailRoutesSql .= ' AND 1 = 0';
+        }
+    }
+    $assignmentMailRoutesSql .= ' ORDER BY amr.assignment_id, amr.mail_recipient_id';
+    $assignmentMailRoutesStmt = $pdo->prepare($assignmentMailRoutesSql);
+    $assignmentMailRoutesStmt->execute($assignmentMailRoutesParams);
     $assignmentMailRoutes = $assignmentMailRoutesStmt->fetchAll();
 
     $mailRecipients = [];

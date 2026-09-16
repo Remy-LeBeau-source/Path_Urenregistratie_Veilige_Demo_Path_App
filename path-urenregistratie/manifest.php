@@ -35,6 +35,15 @@ $naming = [
         'name' => 'Path Uren — DEV',
         'short_name' => 'Path DEV',
     ],
+    // 'acc' staat al bedraad in de release-pijplijn (release-pipeline.yml, environment
+    // acc) maar heeft nu nog geen eigen server met een ingevulde secret, dus dit pad is
+    // momenteel niet te bereiken. Toch alvast benoemd: zonder deze regel zou een latere
+    // echte acc-uitrol stilzwijgend de productienaam tonen op een geïnstalleerde app,
+    // precies het probleem waar dit bestand voor bestaat.
+    'acc' => [
+        'name' => 'Path Uren — ACCEPTATIE',
+        'short_name' => 'Path ACC',
+    ],
 ];
 $pick = $naming[$environment] ?? [
     'name' => 'Path Uren & Facturatie',
