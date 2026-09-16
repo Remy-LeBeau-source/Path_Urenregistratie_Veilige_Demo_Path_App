@@ -186,6 +186,12 @@
     },
     {
       "date": "16 sep",
+      "wish": "Eigen vondst in de testset zelf: SKIN-H-029 slaagt op deze machine nooit (drie van de drie keer rood op mobile-safari), maar is in CI groen. Tegenproef met de schermbestanden van 2.0.96 laat zien dat dit al van vóór het herontwerp is; het is WebKit op Windows tegenover WebKit op Linux. Uitzoeken of overslaan met reden (TW-2 in CODEX_HANDOFF.md).",
+      "who": "herontwerp",
+      "status": "open, na go-live"
+    },
+    {
+      "date": "16 sep",
       "wish": "Eigen vondst in de testset zelf: een paar cases leunen op de gezaaide urenstaat, dus wie lokaal de hele suite in één keer draait krijgt rood op cases die niets mankeren (E2E-H-018, SKIN-H-035). In CI valt het niet op omdat die in aparte shards met een eigen database draaien. Oplossing is dezelfde als eerder bij de dashboardcases: elke schrijvende case maakt zijn eigen maand aan (TW-1 in CODEX_HANDOFF.md).",
       "who": "herontwerp",
       "status": "open, na go-live"
@@ -194,12 +200,6 @@
       "date": "16 sep",
       "wish": "Eigen vondst plus vraag aan Gio: het uurtarief heeft geen bovengrens. Een typefout (8500 in plaats van 85) wordt zonder waarschuwing bewaard en rekent door in de facturen; een extreem getal geeft een serverfout. Welke bovengrens is realistisch, bijvoorbeeld 1.000 euro per uur? Case ADM-WR-N-009 ligt klaar (BEV-5 in CODEX_HANDOFF.md).",
       "who": "Gio + herontwerp",
-      "status": "open, na go-live"
-    },
-    {
-      "date": "16 sep",
-      "wish": "Eigen vondst, nog niet gefixt (bevroren tot go-live): de reden van intrekken en het publiekslabel bij een mededeling worden op de server niet op lengte gecontroleerd, terwijl de kolommen 750 en 255 tekens zijn. Te lang betekent een serverfout in plaats van een nette melding, hetzelfde patroon als de contracturen-500 van 2.0.119. Case ANN-N-008 ligt klaar (BEV-4 in CODEX_HANDOFF.md).",
-      "who": "herontwerp",
       "status": "open, na go-live"
     }
   ]
