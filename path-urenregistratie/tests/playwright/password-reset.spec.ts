@@ -351,6 +351,47 @@ test.describe('password reset api', () => {
     await ctx.dispose();
   });
 
+  test('[PWD-N-010] de vijfde mislukte poging mag nog, de zesde wordt geweigerd met een wachttijd', async () => {
+    // Grenswaardenanalyse op de inlogrem. PWD-N-007 dekt alleen de kant erboven (de zesde poging
+    // krijgt 429). De grens zelf, de vijfde poging die nog gewoon als mislukte inlog hoort te
+    // eindigen, was niet vastgelegd; een rem die per ongeluk op 4 gaat staan zou dus niemand opvallen.
+    // Tegelijk legt deze case de Retry-After-koptekst vast: zonder wachttijd weet de app niet
+    // wanneer het weer mag.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    // Eigen adres per run, zodat deze case de rem van een andere case niet meetelt.
+    const adres = `rem-grens-${Date.now().toString().slice(-7)}@example.invalid`;
+
+    await test.step('Given vier mislukte inlogpogingen', async () => {
+      for (let poging = 1; poging <= 4; poging++) {
+        const res = await postAuth(ctx, '/server/auth/login.php', { email: adres, password: 'fout-wachtwoord' });
+        expect(res.status, `poging ${poging} hoort een gewone afwijzing te zijn`).toBe(401);
+      }
+    });
+
+    await test.step('When de vijfde poging volgt, then is het nog steeds een gewone afwijzing', async () => {
+      const res = await postAuth(ctx, '/server/auth/login.php', { email: adres, password: 'fout-wachtwoord' });
+      expect(res.status, 'precies op de grens hoort de rem nog niet te knijpen').toBe(401);
+      expect(res.body.error).toBe('invalid-credentials');
+    });
+
+    await test.step('And wordt de zesde geweigerd met 429 en een wachttijd', async () => {
+      const csrf = await getCSRF(ctx);
+      const response = await ctx.post('/server/auth/login.php', {
+        data: { email: adres, password: 'fout-wachtwoord' },
+        headers: { 'X-CSRF-Token': csrf },
+      });
+      expect(response.status()).toBe(429);
+      const body = await response.json();
+      expect(body.error).toBe('too-many-attempts');
+      const wachttijd = Number(response.headers()['retry-after'] || 0);
+      expect(wachttijd, 'Retry-After hoort een bruikbare wachttijd te bevatten').toBeGreaterThan(0);
+      expect(wachttijd).toBeLessThanOrEqual(900);
+      expect(Number(body.retry_after_seconds || 0)).toBe(wachttijd);
+    });
+
+    await ctx.dispose();
+  });
+
   test('[PWD-N-008] request-reset weigert GET', async () => {
     const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
     const response = await ctx.get('/server/auth/request-reset.php');
