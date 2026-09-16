@@ -157,6 +157,14 @@
     });
   }
 
+  function toegewezen(ticket) {
+    var wie = String(ticket.who || (ticket.source === 'feed' ? 'main' : 'Gio')).toLowerCase();
+    if (wie.indexOf('herontwerp') >= 0) return { naam: 'Herontwerp', initialen: 'HW' };
+    if (wie.indexOf('gio') >= 0) return { naam: 'Gio', initialen: 'GM' };
+    if (wie.indexOf('besluit') >= 0) return { naam: 'Besluit', initialen: 'BO' };
+    return { naam: 'Main', initialen: 'MA' };
+  }
+
   function iconFor(type) { return { bug: '!', feature: '◆', chore: '●', ci: '↯' }[type] || '◆'; }
 
   // Een kale URL midden in een kop leest slecht; alleen het domein is genoeg.
@@ -314,6 +322,7 @@
         '<code class="issue-key">' + escapeHtml(ticket.key) + '</code>' +
         statusLabel(ticket) +
         (meta ? '<span class="ticket-meta">' + meta + '</span>' : '') +
+        '<span class="card-avatar" title="' + escapeHtml(toegewezen(ticket).naam) + '">' + escapeHtml(toegewezen(ticket).initialen) + '</span>' +
       '</div>' +
       (ticket.gherkin ? '<details class="gherkin"' + (ui.expandAll ? ' open' : '') + '><summary>Gherkin</summary><pre>' + escapeHtml(ticket.gherkin) + '</pre></details>' : '') +
       (ticket.status === 'ingediend' ? '<div class="ticket-card-foot"><a class="issue-link" href="' + escapeHtml(issueSearchUrl()) + '" target="_blank" rel="noopener">Bekijk issue op GitHub ↗</a></div>' : '') +

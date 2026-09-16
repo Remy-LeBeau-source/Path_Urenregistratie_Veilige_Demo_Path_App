@@ -20,7 +20,7 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
   @happy
   Scenario: [PIPE-H-002] een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden
     # Testtechniek: Toestandsovergangtest (ingediend → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van de issue-URL
-    # Aantoonbare Playwright-assertions in deze case: 29
+    # Aantoonbare Playwright-assertions in deze case: 30
     Given een nieuwe wens met acceptatiecriterium
     When de flow wordt gestart
     Then staat de wens op het bord als wachtend op VS Code, ook na herladen

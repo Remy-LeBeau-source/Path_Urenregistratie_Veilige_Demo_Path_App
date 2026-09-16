@@ -97,8 +97,9 @@ test.describe('Path Pipeline TEST-demo', () => {
     await test.step('When de flow wordt gestart', async () => {
       const [popup] = await Promise.all([
         context.waitForEvent('page'),
-        page.getByRole('button', { name: 'Start de flow' }).click(),
+        page.locator('[data-ticket-form] button[type="submit"]').click(),
       ]);
+      await expect(page.locator('[data-ticket-form] button[type="submit"]')).toContainText('Start de flow');
       const url = new URL(popup.url());
       expect(url.origin + url.pathname).toBe('https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App/issues/new');
       expect(url.searchParams.get('title')).toBe('PATH-198 Maandtotalen blijven gelijk na filterwissel');

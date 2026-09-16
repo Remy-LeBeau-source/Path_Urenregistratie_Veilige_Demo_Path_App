@@ -688,7 +688,7 @@ De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 594 Playwri
 - Cases: 6
 
 - [PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin — Techniek: Datagedreven vergelijking (pagina versus pilot/path-pipeline-data.json) + traceerbaarheid over drie projecties · Assertions: 27
-- [PIPE-H-002] een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden — Techniek: Toestandsovergangtest (ingediend → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van de issue-URL · Assertions: 29
+- [PIPE-H-002] een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden — Techniek: Toestandsovergangtest (ingediend → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van de issue-URL · Assertions: 30
 - [PIPE-H-004] zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes — Techniek: Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole · Assertions: 24
 - [PIPE-H-003] de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker — Techniek: Meting van berekende stijl (computed style) in licht en donker kleurschema · Assertions: 5
 - [PIPE-H-005] de weergaveknop kiest licht, donker of systeem en onthoudt die keuze — Techniek: Toestandsovergang over drie weergavestanden + meting van berekende stijl + persistentie na herladen · Assertions: 13

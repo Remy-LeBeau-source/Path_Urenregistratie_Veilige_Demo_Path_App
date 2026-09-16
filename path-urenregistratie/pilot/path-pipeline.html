@@ -264,24 +264,36 @@
             </span>
           </div>
           <div class="traceability-chain" data-doc-trace></div>
-          <section class="analysis-grid">
+          <div class="conf-doc-layout">
+          <div>
+          <section class="analysis-grid" id="doc-analyse">
             <div class="analysis-card stakeholder-card"><p class="product-label confluence" data-doc-left-label>STAKEHOLDERVRAAG</p><h3 data-doc-stakeholder></h3><p data-doc-question></p></div>
             <div class="analysis-card story-card"><p class="product-label jira" data-doc-right-label>USER STORY</p><h3 data-doc-story-title></h3><p data-doc-story></p></div>
           </section>
-          <section class="doc-section design-section">
+          <section class="doc-section design-section" id="doc-fo">
             <div class="design-heading"><span>FO</span><div><p class="product-label confluence">FUNCTIONEEL ONTWERP</p><h3>Wat moet de gebruiker kunnen?</h3></div></div>
             <p data-doc-fo></p>
           </section>
-          <section class="doc-section design-section">
+          <section class="doc-section design-section" id="doc-to">
             <div class="design-heading technical"><span>TO</span><div><p class="product-label zephyr">TECHNISCH ONTWERP</p><h3>Hoe wordt dit aantoonbaar gebouwd?</h3></div></div>
             <p data-doc-to></p>
           </section>
-          <section class="doc-section acceptance-section">
+          <section class="doc-section acceptance-section" id="doc-acceptatie">
             <p class="product-label jira">ACCEPTATIECRITERIUM &amp; TESTBASIS</p>
             <h3>Voorwaarde voor oplevering</h3>
             <blockquote data-doc-criterion></blockquote>
             <details class="gherkin" open><summary>Afgeleid Gherkin-scenario</summary><pre data-doc-gherkin></pre></details>
           </section>
+          </div>
+          <nav class="doc-toc" aria-label="Op deze pagina">
+            <p>Op deze pagina</p>
+            <a href="#doc-analyse">Stakeholdervraag en user story</a>
+            <a href="#doc-fo">Functioneel ontwerp</a>
+            <a href="#doc-to">Technisch ontwerp</a>
+            <a href="#doc-acceptatie">Acceptatiecriterium</a>
+            <a href="#living-doc">Living Doc</a>
+          </nav>
+          </div>
           <section class="living-doc" id="living-doc" aria-labelledby="living-doc-heading">
             <div class="section-head compact">
               <div><p class="product-label confluence">LEVENDE DOCUMENTATIE</p><h3 id="living-doc-heading">Living Doc</h3></div>

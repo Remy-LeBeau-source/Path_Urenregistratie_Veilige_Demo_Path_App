@@ -1,7 +1,13 @@
 {
-  "appVersion": "2.0.125",
+  "appVersion": "2.0.126",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "16 sep",
+      "version": "2.0.126",
+      "wish": "Demo-pagina dichter bij de echte tools: elke Jira-kaart toont rechtsonder een avatar van wie hem oppakt (afgeleid uit de kolom Wie in deze lijst), en de Confluence-pagina heeft rechts een inhoudsopgave \"Op deze pagina\" met ankers naar de secties.",
+      "cases": []
+    },
     {
       "date": "16 sep",
       "version": "2.0.125",
@@ -12,7 +18,7 @@
           "title": "een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden",
           "feature": "tests/playwright/features/pipeline-demo.feature",
           "technique": "Toestandsovergangtest (ingediend → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van de issue-URL",
-          "assertions": 29,
+          "assertions": 30,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden\n  Given een nieuwe wens met acceptatiecriterium\n  When de flow wordt gestart\n  Then staat de wens op het bord als wachtend op VS Code, ook na herladen\n  And een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc"
         }
@@ -151,22 +157,6 @@
           "assertions": 24,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes\n  Given de pipelinepagina met de echte projectstand\n  When er wordt gezocht, gefilterd, gesorteerd en een kaart wordt geopend\n  Then tonen bord, kennisbank en testbeheer telkens de bijbehorende selectie"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "main",
-      "wish": "Intake-proef #43: Confluence-tekst in de demo op het Atlassian-lettertype, 16px met regelhoogte 24px, ook in donker (PIPE-H-003, tegenproef rood op de oude opmaak). Eerste wens die de hele keten van pagina tot TEST doorliep.",
-      "cases": [
-        {
-          "id": "PIPE-H-003",
-          "title": "de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker",
-          "feature": "tests/playwright/features/pipeline-demo.feature",
-          "technique": "Meting van berekende stijl (computed style) in licht en donker kleurschema",
-          "assertions": 5,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker\n  Given de Kennisbank van de pipelinepagina\n  When de flow voor PIPE-H-003 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker"
         }
       ]
     }
