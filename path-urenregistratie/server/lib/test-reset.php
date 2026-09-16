@@ -680,7 +680,19 @@ function test_reset_shared_baseline(PDO $pdo, array $config, string $actorEmail)
         // teardown leaves a row behind, and the e2eIsolation fingerprint check
         // drifts on this table. Clearing it is the isolation intent -- an override
         // is opt-in and rebuilt only when a test explicitly saves one.
-        foreach (['password_reset_tokens', 'auth_login_audit', 'mail_channel_templates'] as $table) {
+        // reminder_log is de enige tabel met een foreign key die de demoseed niet
+        // leegmaakt: hij kwam er later bij (migratie 031) en is nooit aan de
+        // TRUNCATE-lijst toegevoegd. Hij verwijst naar users en companies, en die
+        // worden hier wel geleegd en opnieuw gevuld. Een test die een eigen
+        // medewerker aanmaakt waarvoor daarna een herinnering wordt gelogd, laat
+        // dus een regel achter die naar een verdwenen gebruiker wijst. Gemeten op
+        // 16 sep: zonder deze regel blijft er na het herstel precies 1 weesrij
+        // staan, met deze regel 0. LET OP voor wie dit later leest: dat is het
+        // bewijs van het gat, niet van de oorzaak van CI-run 35118175923. Die run
+        // meldde ook 1 weesrij, maar de tegenproef discrimineerde niet -- dezelfde
+        // specs slaagden lokaal zowel met als zonder deze regel. Blijft CI rood op
+        // dezelfde assertie, zoek dan verder in plaats van hier te stoppen.
+        foreach (['password_reset_tokens', 'auth_login_audit', 'mail_channel_templates', 'reminder_log'] as $table) {
             $pdo->exec('DELETE FROM ' . $table);
         }
         // app_state is a transient browser-state blob that server/api.php creates
