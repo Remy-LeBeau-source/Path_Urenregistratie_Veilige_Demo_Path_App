@@ -1,5 +1,5 @@
 {
-  "appVersion": "2.0.122",
+  "appVersion": "2.0.123",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
@@ -186,21 +186,21 @@
     },
     {
       "date": "16 sep",
-      "wish": "Eigen vondst, nog niet gefixt (bevroren tot go-live): de melding \"Niet opgeslagen: een dag kan maximaal 24 uur hebben\" staat in een element zonder aria-live, dus een schermlezer meldt niet dat de invoer geweigerd is. Fix is één attribuut, case KLV-N-024 ligt klaar (BEV-3 in CODEX_HANDOFF.md).",
+      "wish": "Eigen vondst in de testset zelf: een paar cases leunen op de gezaaide urenstaat, dus wie lokaal de hele suite in één keer draait krijgt rood op cases die niets mankeren (E2E-H-018, SKIN-H-035). In CI valt het niet op omdat die in aparte shards met een eigen database draaien. Oplossing is dezelfde als eerder bij de dashboardcases: elke schrijvende case maakt zijn eigen maand aan (TW-1 in CODEX_HANDOFF.md).",
       "who": "herontwerp",
       "status": "open, na go-live"
     },
     {
       "date": "16 sep",
-      "wish": "Vraag aan Gio: bij het intrekken van een mededeling zet de server de bijbehorende melding zelf op gelezen. Het bericht verdwijnt niet (het staat onder Ingetrokken), maar telt niet meer als ongelezen. Zo laten of moet het ongelezen blijven tot je het opent? (BEV-2 in CODEX_HANDOFF.md)",
-      "who": "Gio",
-      "status": "open"
+      "wish": "Eigen vondst plus vraag aan Gio: het uurtarief heeft geen bovengrens. Een typefout (8500 in plaats van 85) wordt zonder waarschuwing bewaard en rekent door in de facturen; een extreem getal geeft een serverfout. Welke bovengrens is realistisch, bijvoorbeeld 1.000 euro per uur? Case ADM-WR-N-009 ligt klaar (BEV-5 in CODEX_HANDOFF.md).",
+      "who": "Gio + herontwerp",
+      "status": "open, na go-live"
     },
     {
-      "date": "15 sep",
-      "wish": "Wisselvallig op mobile-safari: SKIN-H-040. 15 sep 5 van 5 keer groen herhaald, niet te reproduceren; opnieuw bekijken als hij in CI nog eens valt.",
+      "date": "16 sep",
+      "wish": "Eigen vondst, nog niet gefixt (bevroren tot go-live): de reden van intrekken en het publiekslabel bij een mededeling worden op de server niet op lengte gecontroleerd, terwijl de kolommen 750 en 255 tekens zijn. Te lang betekent een serverfout in plaats van een nette melding, hetzelfde patroon als de contracturen-500 van 2.0.119. Case ANN-N-008 ligt klaar (BEV-4 in CODEX_HANDOFF.md).",
       "who": "herontwerp",
-      "status": "in de gaten houden"
+      "status": "open, na go-live"
     }
   ]
 }
