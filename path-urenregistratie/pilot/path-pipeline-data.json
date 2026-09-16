@@ -162,7 +162,7 @@
     },
     {
       "date": "16 sep",
-      "wish": "Eigen vondst in de testset zelf: SKIN-H-029 slaagt op deze machine nooit (drie van de drie keer rood op mobile-safari), maar is in CI groen. Tegenproef met de schermbestanden van 2.0.96 laat zien dat dit al van vóór het herontwerp is; het is WebKit op Windows tegenover WebKit op Linux. Uitzoeken of overslaan met reden (TW-2 in CODEX_HANDOFF.md).",
+      "wish": "Uitgezocht (TW-2): SKIN-H-029 valt alleen op deze machine om, op WebKit onder Windows, en is groen in CI en op mobiel Chrome. Met metingen uitgesloten: het voorkeurenvenster, het thema, de vormgeving, de viewport en de installatiebanner; er ligt nooit iets over de knop. Het blijft hangen in het naar-beeld-scrollen van de browser zelf. Vervolg: die klik ongevoelig maken voor dat scrollen.",
       "who": "herontwerp",
       "status": "open, na go-live"
     },
