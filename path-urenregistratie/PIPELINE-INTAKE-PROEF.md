@@ -38,3 +38,29 @@ Legenda per stap: tijdstip · wat · bewijs (commit, run-id, URL).
 - Opgemerkt onderweg: de release van 2.0.117 staat op "cancelled" zonder gestarte jobs. Dat is geen fout maar de wachtrij: GitHub houdt hooguit één wachtende run per concurrency-groep, en 2.0.118 kwam ertussen. Alles van 2.0.117 zit in 2.0.118.
 - De stap naar productie is onaangeroerd gebleven en blijft een handmatige keuze van Gio.
 - 04:05 · Visuele controle op de live TEST-pagina (telefoon licht en donker, desktop donker) leverde twee vondsten op: het derde tabblad viel op 390px buiten beeld, en een kale URL uit GIO-WENSEN kwam ongefilterd in een Confluence-kop terecht. Beide opgelost in 2.0.119 en vastgelegd met assertions in PIPE-N-001 (alle drie de tabbladen binnen beeld) en PIPE-H-001 (geen kale URL in de leesbare projectie). Zes van zes groen.
+
+## Verificatie voor de livegang (16 sep, nacht)
+
+Gio gaat mogelijk live en vroeg om een regressie en een impactregressie op wat main oplevert. Afgestemd met de herontwerp-sessie: zij draaien de volledige suite op hun branch (waar main in is gemerged), main draait de volledige suite in CI, en ik doe hier de impactset en de veiligheidscontroles.
+
+**Wat main oplevert, raakt geen productiecode.** Diff sinds 02be7367 (2.0.116): alles in `pilot/`, de tests en de documentatie. Daarbuiten alleen versienummers in index.html, smoke-test.mjs en auth.spec.ts.
+
+**Aangetoond dat de demo niet op PROD kan komen.** `scripts/deploy-production-transip.sh` bouwt het archief met `git archive ... -- . ':(exclude)pilot'` en breekt daarna af als er toch een pilot-bestand in zit ("Production archive unexpectedly contains TEST-only pilot pages"). De TEST-uitrol doet dat bewust niet, want daar hoort de demo juist wel.
+
+**Lokaal groen op 2.0.119, elk op een eigen poort en database zodat de parallelle suite geen last had:**
+- Impactset (pipeline-demo + auth, want de versiewijziging raakt die): 23 van 23.
+- Volledige smoke-test: geslaagd, geen uncaught errors.
+- Productieveiligheid en beveiliging (production-safety + security): 44 van 44. Daarin onder meer: geen plaintext demo-wachtwoorden in de frontend, demo-migraties standaard uit op productie, productieguards in health.php, install.php en migrate.php, writes zonder CSRF geblokkeerd, en een in localStorage vervalste rol geeft geen beheerscherm.
+- Poorten: version:check, test:design, test:bdd:design, contrast en de feedcontrole.
+
+**Let op bij het aanhouden van de releasewachtrij:** pushen terwijl er een release loopt, annuleert de wachtende run en stelt de TEST-uitrol uit. Tijdens deze nacht is daarom bewust gewacht met verder pushen tot de lopende run klaar was.
+
+## Wat er gebeurt als Gio op de productieknop drukt (nagelezen 16 sep, nacht)
+
+Het pad is nog nooit gelopen, dus nagelezen in `scripts/deploy-production-remote.sh` en `server/scripts/normalize-production-golive-baseline.php`:
+
+1. **Eenmalig go-live-pad.** Omdat productie nog op 0.x draait, ziet het script de eerste 1.x-uitrol als nulmeting: eerst een databaseback-up, dan de database naar de afgesproken go-live-baseline (alle medewerkers starten in de go-live-maand, operationele tabellen leeg), dan een strenge read-only controle. Dit is precies de "verse migratie/reset bij de livegang" uit besluit R44.
+2. **Die nulmeting weigert bij echte data.** Staat er al operationele data (urenstaten, dagregels) of een onverwacht account, dan stopt hij. Hij vereist bovendien `--confirm=NORMALIZE_PRODUCTION_GOLIVE_BASELINE` en draait alles in één transactie met een controle achteraf; bij twijfel volgt rollback.
+3. **Daarna migraties en opnieuw een preflight**, beide fail-closed.
+4. **Omschakeling met terugval.** De draaiende versie gaat eerst naar een rollback-map. Faalt daarna de publieke live-controle (index met het juiste versienummer, app.js, styles.css en een gezonde health.php), dan zet het script automatisch de vorige versie terug.
+5. **PROD krijgt nooit `pilot/`**: het archief sluit die map uit en de uitrol breekt af als er toch zo'n bestand in zit.
