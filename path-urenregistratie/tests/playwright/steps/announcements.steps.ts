@@ -57,3 +57,5 @@ And("cleanup: de verstuurde testmededeling wordt ingetrokken en bij medewerkers 
 When("de flow voor ANN-N-006 wordt uitgevoerd");
 Then("krijgt een anonieme aanroep 401");
 And("een ingelogde medewerker mag zelf niets versturen");
+When("de flow voor ANN-N-010 wordt uitgevoerd");
+Then("weigert de server een bericht met beide referenties tegelijk");

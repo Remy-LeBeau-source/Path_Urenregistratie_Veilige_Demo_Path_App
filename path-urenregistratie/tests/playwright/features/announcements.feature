@@ -112,3 +112,11 @@ Feature: Mededelingen versturen, intrekken en verbergen
     When de flow voor ANN-N-006 wordt uitgevoerd
     Then krijgt een anonieme aanroep 401
     And een ingelogde medewerker mag zelf niets versturen
+
+  @negative
+  Scenario: [ANN-N-010] een bericht kan niet tegelijk correctie en intrekking van iets anders zijn
+    # Testtechniek: Decision-table-analyse (combinatie van twee onderling uitsluitende referentievelden) + negatieve equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given mededelingen versturen, intrekken en verbergen is voorbereid
+    When de flow voor ANN-N-010 wordt uitgevoerd
+    Then weigert de server een bericht met beide referenties tegelijk

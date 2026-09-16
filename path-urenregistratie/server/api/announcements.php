@@ -182,6 +182,19 @@ if ($action === 'send' || $action === 'save_draft') {
         ? (int)$payload['correction_of_id'] : null;
     $withdrawalOfId = isset($payload['withdrawal_of_id']) && is_numeric($payload['withdrawal_of_id'])
         ? (int)$payload['withdrawal_of_id'] : null;
+    // Het scherm biedt nooit allebei tegelijk aan (corrigeren en intrekken zijn losse
+    // knoppen op losse berichten), maar de server nam de combinatie zonder klagen aan:
+    // kind werd dan 'withdrawal', terwijl correction_of_id ook gewoon werd opgeslagen
+    // en de ontvangerslijst van CORRECTIE werd overgenomen (de withdrawal-tak sloeg
+    // over omdat recipientIds dan al gevuld was) -- een innerlijk tegenstrijdige rij.
+    // Gevonden bij decision-table-analyse (16 sep, kritische controleronde).
+    if ($correctionOfId !== null && $withdrawalOfId !== null) {
+        auth_send_json([
+            'ok' => false,
+            'error' => 'ambiguous-reference',
+            'message' => 'Een bericht kan niet tegelijk een correctie en een intrekking van een ander bericht zijn.',
+        ], 400);
+    }
     $kind = $withdrawalOfId ? 'withdrawal' : ($correctionOfId ? 'correction' : 'standard');
     $status = $action === 'send' ? 'sent' : 'draft';
 
