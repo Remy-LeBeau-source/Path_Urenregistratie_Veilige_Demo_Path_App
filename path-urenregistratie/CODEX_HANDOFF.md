@@ -686,3 +686,21 @@ assertie over gedrag: `E2E-N-021` (klik op "Hele maand" haalde de 15 seconden ni
 wel gevonden) en `SKIN-H-029` (de case liep over de 45 seconden). WebKit is lokaal het traagste
 project en draaide hier terwijl de machine ook andere runs deed; apart herhalen voordat hier een
 conclusie aan hangt. In CI is dit project op dezelfde stand groen.
+
+### TW-2 — SKIN-H-029 slaagt nooit op deze machine, wel in CI (WebKit op Windows)
+
+- Waarneming: `SKIN-H-029` (niet-opgeslagen uren overleven rotatie, thema, modal, designwissel en
+  browser-back) valt op `mobile-safari` in isolatie drie van de drie keer. De klik op
+  `#quick-skin-toggle` blijft hangen: Playwright meldt dat de knop zichtbaar, actief en stabiel
+  is en begint de klik, maar die komt niet aan binnen de 45 seconden.
+- Tegenproef gedaan (16 sep): met de schermbestanden van 2.0.96 erin, dus van vóór de wijziging
+  aan die knop, valt de case net zo goed om. Het herontwerp is dus niet de oorzaak; dit stond er
+  al.
+- In CI is dezelfde case groen (mobile-safari draait daar skin.spec.ts; run 35059386742 en
+  35066607615 waren volledig groen). Verschil is de omgeving: WebKit op Windows tegenover WebKit
+  op Linux.
+- Waarom dit telt: een case die lokaal nooit slaagt maakt een lokale controle minder waard — je
+  went eraan dat er iets rood staat. Uitzoeken wat die klik op Windows tegenhoudt (of de case daar
+  overslaan met een uitgesproken reden, zoals bij andere WebKit-eigenaardigheden) hoort op de lijst
+  na de go-live.
+- Werkmap is na de tegenproef teruggezet; `git status` was schoon.
