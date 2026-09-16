@@ -475,7 +475,12 @@ button, summary { -webkit-tap-highlight-color: transparent; }
   .create-button { padding: 0 10px; font-size: 0; }
   .create-button::before { content: "＋ Wens"; font-size: 13px; font-weight: 600; }
   .product-bar { gap: 6px; padding: 0 6px; }
+  /* Drie tabbladen moeten op 390px naast elkaar passen, anders valt Zephyr weg. */
   .workspace-tabs { position: sticky; top: 56px; z-index: 20; background: var(--canvas); }
+  .workspace-tabs button { flex: 1; justify-content: center; gap: 5px; padding: 8px 4px 10px; }
+  .workspace-tabs button > span:first-child, .workspace-tabs small { display: none; }
+  .workspace-tabs button > span:nth-child(2) { font-size: 13px; }
+  .workspace-tabs b { min-width: 18px; padding: 1px 4px; font-size: 11px; }
   .drop-panel, .drop-panel.wide { left: 8px; right: 8px; width: auto; }
   .living-doc li { grid-template-columns: minmax(0, 1fr); }
   .living-doc time { grid-row: 1; justify-self: start; }

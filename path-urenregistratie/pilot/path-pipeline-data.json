@@ -1,5 +1,5 @@
 {
-  "appVersion": "2.0.118",
+  "appVersion": "2.0.119",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
@@ -129,7 +129,7 @@
           "title": "de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin",
           "feature": "tests/playwright/features/pipeline-demo.feature",
           "technique": "Datagedreven vergelijking (pagina versus pilot/path-pipeline-data.json) + traceerbaarheid over drie projecties",
-          "assertions": 26,
+          "assertions": 27,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin\n  Given de zelfstandige TEST-only pipelinepagina met de echte projectstand\n  When de pagina is geladen, staan de vier fasen en de laatste vijf echte opleveringen op het bord\n  And Kennisbank en Testbeheer projecteren dezelfde echte cases en de Living Doc toont hooguit tien\n  Then wordt met Playwright-assertions bevestigd dat de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin"
         },
@@ -138,7 +138,7 @@
           "title": "de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon",
           "feature": "tests/playwright/features/pipeline-demo.feature",
           "technique": "Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole",
-          "assertions": 9,
+          "assertions": 11,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de Kennisbank op de telefoon wordt geopend\n  Then toont de Living Doc precies tien regels, lokaal vóór echt, en bewaart hij er tien\n  And de pagina heeft geen horizontale overflow of gedeelde appcode"
         }
@@ -152,12 +152,6 @@
     }
   ],
   "open": [
-    {
-      "date": "16 sep",
-      "wish": "Donkere modus op de demo-pagina ook zelf kunnen kiezen (licht / donker / systeem) in plaats van alleen de systeeminstelling volgen.",
-      "who": "main",
-      "status": "open"
-    },
     {
       "date": "15 sep",
       "wish": "Wisselvallig op mobile-safari: SKIN-H-040. 15 sep 5 van 5 keer groen herhaald, niet te reproduceren; opnieuw bekijken als hij in CI nog eens valt.",

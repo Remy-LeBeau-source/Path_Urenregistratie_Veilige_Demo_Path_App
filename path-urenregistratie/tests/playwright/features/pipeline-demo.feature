@@ -11,7 +11,7 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
   @happy
   Scenario: [PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin
     # Testtechniek: Datagedreven vergelijking (pagina versus pilot/path-pipeline-data.json) + traceerbaarheid over drie projecties
-    # Aantoonbare Playwright-assertions in deze case: 26
+    # Aantoonbare Playwright-assertions in deze case: 27
     Given de zelfstandige TEST-only pipelinepagina met de echte projectstand
     When de pagina is geladen, staan de vier fasen en de laatste vijf echte opleveringen op het bord
     And Kennisbank en Testbeheer projecteren dezelfde echte cases en de Living Doc toont hooguit tien
@@ -53,7 +53,7 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
   @negative
   Scenario: [PIPE-N-001] de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon
     # Testtechniek: Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole
-    # Aantoonbare Playwright-assertions in deze case: 9
+    # Aantoonbare Playwright-assertions in deze case: 11
     Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid
     When de Kennisbank op de telefoon wordt geopend
     Then toont de Living Doc precies tien regels, lokaal vóór echt, en bewaart hij er tien
