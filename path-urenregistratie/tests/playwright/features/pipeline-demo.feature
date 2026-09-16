@@ -59,6 +59,18 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
     Then wordt met Playwright-assertions bevestigd dat de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet
 
   @happy
+  Scenario: [PIPE-H-008] het loket stelt zelf een testbaar acceptatiecriterium voor, zonder externe aanroep
+    # Testtechniek: Beslistabel op het criterium-voorstel (leeg/getal/status/generiek geeft elk een ander Then) + negatieve controle op een extern netwerkverzoek
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given Samenvatting en Gewenste waarde nog leeg zijn, then vraagt de knop erom in te vullen
+    When beide velden gevuld zijn en op voorstellen wordt geklikt, then komt er een testbaar criterium
+    And blijft het voorstel aanpasbaar: zelf typen overschrijft het gewoon
+    And geeft een getal in het criterium een concreet Then over dat getal
+    And geeft een bekend statuswoord een concreet Then over die status
+    And gaat er voor dit alles geen enkel verzoek naar een externe dienst
+    Then wordt met Playwright-assertions bevestigd dat het loket stelt zelf een testbaar acceptatiecriterium voor, zonder externe aanroep
+
+  @happy
   Scenario: [PIPE-H-004] zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes
     # Testtechniek: Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole
     # Aantoonbare Playwright-assertions in deze case: 24

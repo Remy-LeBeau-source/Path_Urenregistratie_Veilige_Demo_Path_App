@@ -397,6 +397,60 @@ test.describe('Path Pipeline TEST-demo', () => {
     });
   });
 
+  test('[PIPE-H-008] het loket stelt zelf een testbaar acceptatiecriterium voor, zonder externe aanroep', async ({ page }) => {
+    // Beslistabel op het criterium-voorstel (leeg -> hint, gevuld -> voorstel, getal/status/
+    // generiek -> ander "Then") + negatieve controle dat er geen netwerkverzoek naar buiten
+    // gaat (besluit Gio, 16 sep: deterministisch sjabloon, geen live AI-aanroep vanaf een
+    // publieke pagina, dus geen sleutel nodig).
+    let externVerzoek = false;
+    page.on('request', (req) => {
+      const url = req.url();
+      if (!url.startsWith('http://localhost') && !url.includes('127.0.0.1') && !url.includes('fonts.g')) externVerzoek = true;
+    });
+    const formulier = page.locator('[data-ticket-form]');
+    await page.goto('/pilot/path-kwaliteitsstraat.html');
+    await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
+
+    await test.step('Given Samenvatting en Gewenste waarde nog leeg zijn, then vraagt de knop erom in te vullen', async () => {
+      await page.locator('[data-suggest-criterion]').click();
+      await expect(page.locator('[data-suggest-criterion-hint]')).toBeVisible();
+      await expect(formulier.getByLabel('Acceptatiecriterium')).toHaveValue('');
+    });
+
+    await test.step('When beide velden gevuld zijn en op voorstellen wordt geklikt, then komt er een testbaar criterium', async () => {
+      await formulier.getByLabel('Samenvatting').fill('Maandtotalen blijven gelijk na filterwissel');
+      await formulier.getByLabel('Stakeholder').selectOption('Backoffice');
+      await formulier.getByLabel('Gewenste waarde').fill('Backoffice altijd dezelfde betrouwbare maandtotalen ziet');
+      await page.locator('[data-suggest-criterion]').click();
+      await expect(page.locator('[data-suggest-criterion-hint]')).toBeHidden();
+      const criterium = await formulier.getByLabel('Acceptatiecriterium').inputValue();
+      expect(criterium, 'het voorstel hoort de eigen woorden van de PO te hergebruiken').toContain('maandtotalen blijven gelijk na filterwissel');
+      expect(criterium).toContain('Backoffice');
+      const gherkin = await page.locator('[data-gherkin-preview]').textContent();
+      expect(gherkin, 'het Then hoort de belofte uit de titel te bevatten, niet een lege standaardzin').toContain('blijft aantoonbaar dat maandtotalen blijven gelijk na filterwissel');
+      expect(gherkin).not.toContain('is de uitkomst zichtbaar en automatisch gecontroleerd');
+    });
+
+    await test.step('And blijft het voorstel aanpasbaar: zelf typen overschrijft het gewoon', async () => {
+      await formulier.getByLabel('Acceptatiecriterium').fill('Eigen tekst van de PO');
+      await expect(formulier.getByLabel('Acceptatiecriterium')).toHaveValue('Eigen tekst van de PO');
+    });
+
+    await test.step('And geeft een getal in het criterium een concreet Then over dat getal', async () => {
+      await formulier.getByLabel('Acceptatiecriterium').fill('het totaal 42 uur blijft staan');
+      await expect(page.locator('[data-gherkin-preview]')).toContainText('blijft het getal 42 exact kloppen');
+    });
+
+    await test.step('And geeft een bekend statuswoord een concreet Then over die status', async () => {
+      await formulier.getByLabel('Acceptatiecriterium').fill('de mededeling wordt ingetrokken');
+      await expect(page.locator('[data-gherkin-preview]')).toContainText('toont de status "ingetrokken" correct');
+    });
+
+    await test.step('And gaat er voor dit alles geen enkel verzoek naar een externe dienst', async () => {
+      expect(externVerzoek, 'een deterministisch sjabloon hoort geen netwerkverzoek te maken').toBe(false);
+    });
+  });
+
   test('[PIPE-H-004] zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes', async ({ page }) => {
     let feed: Feed;
     await test.step('Given de pipelinepagina met de echte projectstand', async () => {

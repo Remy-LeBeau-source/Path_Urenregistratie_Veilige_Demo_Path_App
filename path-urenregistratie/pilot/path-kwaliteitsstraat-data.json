@@ -1,8 +1,24 @@
 {
-  "appVersion": "2.0.141",
-  "generatedAt": "2026-09-16T21:48:26.674Z",
+  "appVersion": "2.0.142",
+  "generatedAt": "2026-09-16T22:09:48.631Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "17 sep",
+      "version": "2.0.142",
+      "wish": "Wensenloket stelt zelf een testbaar acceptatiecriterium voor zodra Samenvatting en Gewenste waarde zijn ingevuld (deterministisch sjabloon, geen externe aanroep). Een getal of een bekend statuswoord in het criterium geeft een concreet \"Then\" in het Gherkin-voorbeeld; anders wordt de titel als concrete belofte gebruikt in plaats van een lege standaardzin (PIPE-H-008, tegenproef rood op de oude pagina).",
+      "cases": [
+        {
+          "id": "PIPE-H-008",
+          "title": "het loket stelt zelf een testbaar acceptatiecriterium voor, zonder externe aanroep",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Beslistabel op het criterium-voorstel (leeg/getal/status/generiek geeft elk een ander Then) + negatieve controle op een extern netwerkverzoek",
+          "assertions": 12,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: het loket stelt zelf een testbaar acceptatiecriterium voor, zonder externe aanroep\n  Given Samenvatting en Gewenste waarde nog leeg zijn, then vraagt de knop erom in te vullen\n  When beide velden gevuld zijn en op voorstellen wordt geklikt, then komt er een testbaar criterium\n  And blijft het voorstel aanpasbaar: zelf typen overschrijft het gewoon\n  And geeft een getal in het criterium een concreet Then over dat getal\n  And geeft een bekend statuswoord een concreet Then over die status\n  And gaat er voor dit alles geen enkel verzoek naar een externe dienst\n  Then wordt met Playwright-assertions bevestigd dat het loket stelt zelf een testbaar acceptatiecriterium voor, zonder externe aanroep"
+        }
+      ]
+    },
     {
       "date": "16 sep",
       "version": "2.0.141",
@@ -134,31 +150,6 @@
           "assertions": 26,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet\n  Given de keuzelijst toont de nice-to-haves uit GIO-WENSEN\n  When de PO een verbetering kiest, then staan samenvatting en waarde ingevuld en blijft het criterium aan hem\n  And zelf typen blijft mogelijk: aanpassen maakt de keuze niet ongedaan, loslaten wel\n  And het type heet Onderhoud, niet Chore\n  And de volgorde in Te doen is met het toetsenbord te wijzigen en blijft na herladen\n  And bovenin staat hoe vers de stand is en de versie staat in de voet zoals in de urenapp\n  Then wordt met Playwright-assertions bevestigd dat de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.135",
-      "wish": "Versienummer naar de voettekst zoals in de urenapp; bovenin staat nu \"Bijgewerkt <datum en tijd>\" zodat je ziet hoe vers de stand is. Het type \"Chore\" heet voor de PO \"Onderhoud\" (PIPE-H-007, PIPE-H-001 aangepast).",
-      "cases": [
-        {
-          "id": "PIPE-H-007",
-          "title": "de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet",
-          "feature": "tests/playwright/features/pipeline-demo.feature",
-          "technique": "Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst",
-          "assertions": 26,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet\n  Given de keuzelijst toont de nice-to-haves uit GIO-WENSEN\n  When de PO een verbetering kiest, then staan samenvatting en waarde ingevuld en blijft het criterium aan hem\n  And zelf typen blijft mogelijk: aanpassen maakt de keuze niet ongedaan, loslaten wel\n  And het type heet Onderhoud, niet Chore\n  And de volgorde in Te doen is met het toetsenbord te wijzigen en blijft na herladen\n  And bovenin staat hoe vers de stand is en de versie staat in de voet zoals in de urenapp\n  Then wordt met Playwright-assertions bevestigd dat de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet"
-        },
-        {
-          "id": "PIPE-H-001",
-          "title": "de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin",
-          "feature": "tests/playwright/features/pipeline-demo.feature",
-          "technique": "Datagedreven vergelijking (pagina versus pilot/path-kwaliteitsstraat-data.json) + traceerbaarheid over drie projecties",
-          "assertions": 28,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin\n  Given de zelfstandige TEST-only pipelinepagina met de echte projectstand\n  When de pagina is geladen, staan de vier fasen en de laatste tien echte opleveringen op het bord\n  And Kennisbank en Testbeheer projecteren dezelfde echte cases en de Living Doc toont hooguit tien\n  Then wordt met Playwright-assertions bevestigd dat de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin"
         }
       ]
     }

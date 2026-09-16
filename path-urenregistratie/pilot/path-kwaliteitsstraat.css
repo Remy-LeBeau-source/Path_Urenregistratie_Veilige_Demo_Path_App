@@ -352,6 +352,8 @@ button, summary { -webkit-tap-highlight-color: transparent; }
 .form-route li { position: relative; color: var(--muted); font-size: 11px; }
 .form-route li:not(:last-child)::after { content: "→"; position: absolute; left: calc(100% + 4px); color: var(--line-strong); }
 .form-feedback { min-height: 18px; margin: 12px 0 0; color: var(--green); font-size: 12px; line-height: 1.5; }
+.form-hint { margin: 4px 0 0; color: var(--muted); font-size: 11.5px; line-height: 1.4; }
+[data-suggest-criterion] { align-self: flex-start; margin-top: -4px; }
 .form-feedback a { color: var(--jira); font-weight: 600; }
 .form-feedback.is-blocked { color: var(--amber); }
 

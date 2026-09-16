@@ -723,8 +723,53 @@
     return REPO_URL + '/issues?q=' + encodeURIComponent('is:issue label:' + INTAKE_LABEL + ' sort:created-desc');
   }
 
+  // Het "Then" mag niet voor elke wens dezelfde lege zin worden ("is de uitkomst
+  // zichtbaar en automatisch gecontroleerd") -- main wees er terecht op dat zo'n
+  // vast zinnetje niet helpt bij het schrijven van de latere Playwright-assertion.
+  // Daarom eerst zoeken naar iets concreets dat de PO zelf al typte: een getal, een
+  // bekend statuswoord, en anders het criterium zelf als kern van de bewering.
+  var STATUSWOORDEN = ['open', 'gesloten', 'goedgekeurd', 'afgekeurd', 'ingediend', 'aangenomen',
+    'opgepakt', 'opgeleverd', 'actief', 'inactief', 'gelezen', 'ongelezen', 'bezig', 'klaar',
+    'geweigerd', 'geaccepteerd', 'ingetrokken', 'verwijderd'];
+
+  function thenClauseVoor(criterion, title) {
+    var tekst = String(criterion || '').trim();
+    var getal = tekst.match(/\d+([.,]\d+)?/);
+    if (getal) return 'blijft het getal ' + getal[0] + ' exact kloppen, niet afgerond of veranderd';
+    for (var i = 0; i < STATUSWOORDEN.length; i += 1) {
+      if (new RegExp('\\b' + STATUSWOORDEN[i] + '\\b', 'i').test(tekst)) {
+        return 'toont de status "' + STATUSWOORDEN[i] + '" correct, niet een andere status';
+      }
+    }
+    // Geen getal en geen bekend statuswoord: de titel herhalen (de belofte, niet de
+    // trigger) is concreter dan een vaste zin, en anders dan de When-regel hierboven
+    // -- die is namelijk het criterium zelf, dus die niet ook nog als Then herhalen.
+    var titelKern = String(title || '').trim().replace(/\.$/, '');
+    if (titelKern) return 'blijft aantoonbaar dat ' + titelKern.charAt(0).toLowerCase() + titelKern.slice(1);
+    if (!tekst) return 'is de uitkomst zichtbaar en automatisch gecontroleerd';
+    var kern = tekst.replace(/\.$/, '');
+    return 'is aantoonbaar dat ' + kern.charAt(0).toLowerCase() + kern.slice(1) + ' klopt';
+  }
+
   function gherkinVoor(title, criterion) {
-    return 'Scenario: ' + (title || 'Nieuwe wens') + '\n  Given een gebruiker de nieuwe werkwijze gebruikt\n  When ' + (criterion || 'de wens is doorgevoerd') + '\n  Then is de uitkomst zichtbaar en automatisch gecontroleerd';
+    return 'Scenario: ' + (title || 'Nieuwe wens') + '\n  Given een gebruiker de nieuwe werkwijze gebruikt\n  When ' + (criterion || 'de wens is doorgevoerd') + '\n  Then ' + thenClauseVoor(criterion, title);
+  }
+
+  // Deterministisch sjabloon voor het acceptatiecriterium zelf (besluit Gio, 16 sep):
+  // geen live AI-aanroep vanaf een publieke pagina, dus geen sleutel nodig. Het
+  // sjabloon verzint geen nieuwe werkwoorden bij vrije tekst (dat gaat al snel fout
+  // in het Nederlands); het hergebruikt woordelijk wat de PO zelf al typte in
+  // Samenvatting en Gewenste waarde, zodat de zin altijd grammaticaal veilig is en
+  // een concreet startpunt geeft dat de PO met één klik overneemt of aanpast.
+  function criteriumVoorstel(title, goal, stakeholder) {
+    var titelKern = String(title || '').trim().replace(/\.$/, '');
+    var doelKern = String(goal || '').trim().replace(/\.$/, '');
+    if (!titelKern || !doelKern) return '';
+    var wie = String(stakeholder || 'de gebruiker').trim() || 'de gebruiker';
+    var voorstel = wie + ' kan aantonen dat ' + titelKern.charAt(0).toLowerCase() + titelKern.slice(1) +
+      ', zodat ' + doelKern.charAt(0).toLowerCase() + doelKern.slice(1) + '.';
+    var max = 220;
+    return voorstel.length > max ? voorstel.slice(0, max - 1).trimEnd() + '…' : voorstel;
   }
 
   function issueUrlFor(ticket) {
@@ -1143,6 +1188,28 @@
       return;
     }
 
+    if (target.closest('[data-suggest-criterion]')) {
+      var invoerForm = $('[data-ticket-form]');
+      if (!invoerForm) return;
+      var data = new FormData(invoerForm);
+      var titelVeld = String(data.get('title') || '').trim();
+      var doelVeld = String(data.get('goal') || '').trim();
+      var hint = $('[data-suggest-criterion-hint]');
+      if (!titelVeld || !doelVeld) {
+        if (hint) hint.hidden = false;
+        return;
+      }
+      if (hint) hint.hidden = true;
+      var voorstel = criteriumVoorstel(titelVeld, doelVeld, String(data.get('stakeholder') || ''));
+      var criteriumVeld = invoerForm.querySelector('[name="criterion"]');
+      if (criteriumVeld && voorstel) {
+        criteriumVeld.value = voorstel;
+        updateGherkinPreview();
+        toast('Voorstel ingevuld — pas aan wat je wilt');
+      }
+      return;
+    }
+
     if (target.closest('[data-create-focus]')) {
       // Het loket staat in Confluence, niet op het Jira-bord: daar hoort de vraag
       // achter de wens thuis. Elke "nieuwe wens"-knop brengt je dus daarheen.
@@ -1199,7 +1266,11 @@
       render();
       return;
     }
-    if (target && target.closest('[data-ticket-form]')) updateGherkinPreview();
+    if (target && target.closest('[data-ticket-form]')) {
+      updateGherkinPreview();
+      var hint = $('[data-suggest-criterion-hint]');
+      if (hint && !hint.hidden) hint.hidden = true;
+    }
   });
 
   document.addEventListener('keydown', function (event) {

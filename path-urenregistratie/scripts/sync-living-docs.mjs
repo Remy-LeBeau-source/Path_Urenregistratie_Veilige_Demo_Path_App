@@ -151,6 +151,7 @@ function techniqueFor(definition, testCase) {
       'PIPE-H-004': 'Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole',
       'PIPE-H-006': 'Meting van berekende stijl in licht en donker + responsive viewport (intake #45)',
       'PIPE-H-007': 'Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst',
+      'PIPE-H-008': 'Beslistabel op het criterium-voorstel (leeg/getal/status/generiek geeft elk een ander Then) + negatieve controle op een extern netwerkverzoek',
       'PIPE-H-005': 'Toestandsovergang over drie weergavestanden + meting van berekende stijl + persistentie na herladen',
       'PIPE-N-001': 'Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole'
     }[testCase.id] || 'End-to-end use-case + regressiebewaking';

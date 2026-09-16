@@ -301,7 +301,11 @@
               </select>
             </label>
             <label>Gewenste waarde<input name="goal" required maxlength="140" placeholder="Waarom is dit belangrijk?"></label>
-            <label>Acceptatiecriterium<textarea name="criterion" rows="3" required maxlength="220" placeholder="Wanneer is dit aantoonbaar goed?"></textarea></label>
+            <label>Acceptatiecriterium
+              <textarea name="criterion" rows="3" required maxlength="220" placeholder="Wanneer is dit aantoonbaar goed?"></textarea>
+            </label>
+            <button type="button" class="ghost-button small" data-suggest-criterion>Stel een acceptatiecriterium voor</button>
+            <p class="form-hint" data-suggest-criterion-hint hidden>Vul eerst Samenvatting en Gewenste waarde in.</p>
             <div class="story-preview" data-story-box>
               <p class="product-label confluence">ZO LEEST JOUW VRAAG STRAKS</p>
               <p data-story-preview>Kies een stakeholder en vul de samenvatting en de gewenste waarde in.</p>
