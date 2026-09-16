@@ -94,10 +94,10 @@ test.describe('Path Pipeline TEST-demo', () => {
       await page.getByLabel('Acceptatiecriterium').fill('de gebruiker wisselt tussen Backoffice en medewerkers');
     });
 
-    await test.step('When de wens wordt doorgezet naar VS Code', async () => {
+    await test.step('When de flow wordt gestart', async () => {
       const [popup] = await Promise.all([
         context.waitForEvent('page'),
-        page.getByRole('button', { name: 'Doorzetten naar VS Code' }).click(),
+        page.getByRole('button', { name: 'Start de flow' }).click(),
       ]);
       const url = new URL(popup.url());
       expect(url.origin + url.pathname).toBe('https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App/issues/new');

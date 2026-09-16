@@ -22,7 +22,7 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
     # Testtechniek: Toestandsovergangtest (ingediend → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van de issue-URL
     # Aantoonbare Playwright-assertions in deze case: 29
     Given een nieuwe wens met acceptatiecriterium
-    When de wens wordt doorgezet naar VS Code
+    When de flow wordt gestart
     Then staat de wens op het bord als wachtend op VS Code, ook na herladen
     And een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc
 

@@ -19,7 +19,7 @@ When("de pagina is geladen, staan de vier fasen en de laatste vijf echte oplever
 And("Kennisbank en Testbeheer projecteren dezelfde echte cases en de Living Doc toont hooguit tien");
 Then("wordt met Playwright-assertions bevestigd dat de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin");
 Given("een nieuwe wens met acceptatiecriterium");
-When("de wens wordt doorgezet naar VS Code");
+When("de flow wordt gestart");
 Then("staat de wens op het bord als wachtend op VS Code, ook na herladen");
 And("een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc");
 Given("de pipelinepagina met de echte projectstand");

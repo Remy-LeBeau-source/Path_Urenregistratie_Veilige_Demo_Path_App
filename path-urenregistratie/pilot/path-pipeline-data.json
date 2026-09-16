@@ -1,7 +1,23 @@
 {
-  "appVersion": "2.0.124",
+  "appVersion": "2.0.125",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "16 sep",
+      "version": "2.0.125",
+      "wish": "Knop op de demo-pagina heet \"Start de flow\" in plaats van \"Doorzetten naar VS Code\": zegt wat er gebeurt in plaats van waar het heen gaat. Kop, menu, uitleg en PIPELINE-INTAKE.md meeveranderd; PIPE-H-002 controleert de nieuwe naam.",
+      "cases": [
+        {
+          "id": "PIPE-H-002",
+          "title": "een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Toestandsovergangtest (ingediend → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van de issue-URL",
+          "assertions": 29,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden\n  Given een nieuwe wens met acceptatiecriterium\n  When de flow wordt gestart\n  Then staat de wens op het bord als wachtend op VS Code, ook na herladen\n  And een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc"
+        }
+      ]
+    },
     {
       "date": "16 sep",
       "version": "2.0.124",
@@ -151,22 +167,6 @@
           "assertions": 5,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker\n  Given de Kennisbank van de pipelinepagina\n  When de flow voor PIPE-H-003 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.116",
-      "wish": "Berichten: elk bericht toont ingeklapt één regel samenvatting onder de titel, zoals bij Nieuw in de app; verdwijnt bij openklappen (NOT-H-018, tegenproef rood).",
-      "cases": [
-        {
-          "id": "NOT-H-018",
-          "title": "een ingeklapt bericht toont een korte samenvatting onder de titel, die verdwijnt zodra je het openklapt",
-          "feature": "tests/playwright/features/notifications.feature",
-          "technique": "API-contract + equivalentieklasse",
-          "assertions": 8,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: een ingeklapt bericht toont een korte samenvatting onder de titel, die verdwijnt zodra je het openklapt\n  Given meldingen beheren is voorbereid\n  Then toont een lang bericht ingeklapt een afgekapte samenvatting van de eigen tekst\n  And toont een kort bericht zijn volledige tekst als samenvatting, zonder afkapping\n  When het bericht wordt opengeklapt, then verdwijnt de samenvatting"
         }
       ]
     }

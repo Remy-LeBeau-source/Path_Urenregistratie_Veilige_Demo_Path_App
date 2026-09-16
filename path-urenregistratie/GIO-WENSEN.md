@@ -25,6 +25,7 @@ Nieuwste bovenaan per status. Statussen: **open**, **bezig**, **klaar (versie)**
 
 | Datum | Wens / besluit | Versie |
 |---|---|---|
+| 16 sep | Knop op de demo-pagina heet "Start de flow" in plaats van "Doorzetten naar VS Code": zegt wat er gebeurt in plaats van waar het heen gaat. Kop, menu, uitleg en PIPELINE-INTAKE.md meeveranderd; PIPE-H-002 controleert de nieuwe naam. | 2.0.125 |
 | 16 sep | Een medewerker mag het uurtarief niet zien (wens Gio). Het scherm toonde het al niet, maar de server stuurde tarief en btw-percentage van de eigen opdracht wel mee bij het inloggen, en niet tonen is geen afscherming. Beide velden gaan nu niet meer naar een medewerker; beheer krijgt ze ongewijzigd voor de facturen. ROLE-N-007 met tegenproef (rood op de oude servercode). | 2.0.124 |
 | 16 sep | Eigen vondst (grenswaarden met accenten en emoji): de lengtecontroles op de server telden bytes in plaats van tekens. Een onderwerp of naam van 160 tekens met accenten werd geweigerd terwijl het invoerveld en de kolom hem toelaten, en de fout bevatte geen uitleg. Nu tekens tellen in announcements, staff, settings, mail-recipients, customer-timesheets en timesheets, met een duidelijke melding (ANN-N-007, ADM-WR-N-008). | 2.0.121 |
 | 16 sep | Verboden statusovergangen afgedekt: goedkeuren of correctie vragen op een concept, twee keer goedkeuren, opnieuw indienen van een goedgekeurde maand (TS-REV-API-N-002). | 2.0.120 |

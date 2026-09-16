@@ -530,8 +530,8 @@
       title.textContent = waiting[0].key + ' is doorgezet naar VS Code';
       status.textContent = 'De wens staat als GitHub-issue klaar (label ' + INTAKE_LABEL + '). In VS Code maakt de agent nu het feature-bestand en de Playwright-case, draait de impactregressie en werkt de Living Doc bij; na CI verschijnt de oplevering hier vanzelf bij "Opgeleverd".';
     } else {
-      title.textContent = 'Klaar om een wens door te zetten';
-      status.textContent = 'Vul rechts één wens in. Die gaat als GitHub-issue naar VS Code, waar de agent de testcase maakt, de regressie draait en de Living Doc bijwerkt — tot en met TEST.';
+      title.textContent = 'Klaar om de flow te starten';
+      status.textContent = 'Vul rechts één wens in en klik "Start de flow". Die gaat als GitHub-issue naar VS Code, waar de agent de testcase maakt, de regressie draait en de Living Doc bijwerkt — tot en met TEST.';
     }
 
     $$('[data-checkpoint]').forEach(function (checkpoint) {
