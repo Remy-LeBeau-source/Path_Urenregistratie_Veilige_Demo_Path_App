@@ -7,16 +7,35 @@ wens door de molen gaat, zodat elke agent hem hetzelfde oppakt.
 
 ## 1. Intake (de pagina)
 
-- "Start de flow" maakt een voorgevuld GitHub-issue met label `pipeline-intake`
-  (titel `PATH-nnn <wens>`, body met stakeholder, gewenste waarde, acceptatiecriterium en Gherkin).
-  Gio klikt zelf op "Submit new issue" — de pagina bevat geen sleutels.
-- Op de pagina staat de wens intussen in "Te doen" met "Wacht op VS Code".
+Het loket is **Confluence**, niet het Jira-bord: daar hoort de vraag achter de wens thuis. Op het bord staat
+alleen een wegwijzer ernaartoe.
+
+- Gio vult het formulier in (Samenvatting, Stakeholder, Type, Gewenste waarde, Acceptatiecriterium, met het
+  uitklapbare Gherkin-voorbeeld dat meedenkt) en klikt "Start de flow". **Dat is alles wat hij doet.**
+- Opslaan zet de wens in de eigen intakewachtrij: `pilot/path-pipeline-intake.php` schrijft hem weg onder
+  `storage.private_root`, dus buiten de webroot. De wens krijgt een `PATH-nnn`-nummer en de status
+  `aangenomen`, en staat meteen in "Te doen" met "Wacht op VS Code" — ook voor iemand anders die de pagina
+  opent, want de wachtrij staat op de server en niet in de browser.
+- Er staat geen sleutel in de pagina en er gaat niets naar GitHub. Het issue maakt de agent zelf aan (stap 2),
+  zodat het spoor in GitHub blijft bestaan zonder token op een publieke pagina.
+- Grenzen die overeind blijven: hooguit 5 wensen per kwartier per adres, 30 per uur totaal, 50 in de wachtrij
+  (oudste valt eraf), 4 kB per verzoek en lengtegrenzen per veld. Het IP-adres wordt **niet** bewaard, alleen
+  een korte hash om mee te tellen. De pagina waarschuwt zichtbaar dat er geen namen, adressen of bedragen in
+  een wens horen, want de demo-omgeving is open.
+- Het endpoint weigert alles zodra de omgeving `production` is, en dat is ook de uitkomst als er geen omgeving
+  is ingesteld (PIPE-N-002 bewijst beide kanten). Daar bovenop sluit het productie-archief `pilot/` sowieso uit.
 
 ## 2. Oppakken (VS Code)
 
 ```
-gh issue list --label pipeline-intake --state open
-gh issue view <nr>
+npm run intake                 # de wachtrij op TEST, met per wens wat je nodig hebt
+npm run intake -- --lokaal     # dezelfde wachtrij op de lokale server
+```
+
+Daarna maak je zelf het issue aan, zodat het spoor in GitHub blijft:
+
+```
+gh issue create --label pipeline-intake --title "PATH-nnn <wens>" --body "<stakeholder, waarde, criterium, Gherkin>"
 ```
 
 Per issue, in deze volgorde (elk punt is een bestaande afspraak uit de MD's):
@@ -33,6 +52,15 @@ Per issue, in deze volgorde (elk punt is een bestaande afspraak uit de MD's):
    medewerker iets van deze versie, dan hoort er een regel bij in `index.html` (`#nieuw-in-de-app-lijst`):
    bovenaan, met versienummer, korte kop, één zin en het commit-tijdstip
    (`<time datetime="YYYY-MM-DDTHH:MM">16 sep · 17:25</time>`). Hooguit twintig regels, de oudste valt eraf.
+   **Een release-notitie mag nooit verraden dat er iets dichtgezet is dat eerder openstond.** Gio wees hier op
+   16 sep op, en terecht: medewerkers lezen deze lijst. Mijn regel bij 2.0.124 luidde "Facturatiegegevens
+   blijven bij Backoffice — je eigen scherm haalt alleen nog op wat je zelf nodig hebt". Daar staat geen bedrag
+   en niet het woord tarief in, dus KLV-H-018 liet hem door, maar een oplettende lezer leidt eruit af dat zijn
+   scherm die gegevens eerder wél binnenkreeg. Dat is een aanwijzing die je niet uitdeelt. Herschreven naar
+   "Je scherm laadt alleen je eigen gegevens — bij het inloggen haalt de app voortaan alleen op wat je in je
+   eigen scherm gebruikt": waar, nuttig, en zonder wijzer naar het gat. Schrijf de notitie dus vanuit wat er nu
+   goed gaat, niet vanuit wat er mis was. Het volledige verhaal hoort in GIO-WENSEN.md, de commit en de
+   testcase — daar hoort het thuis en daar leest geen medewerker mee.
    Nooit namen, bedragen of woorden als "tarief" of "euro" — **KLV-H-018 keurt dat af**, en dat is precies hoe
    het op 16 sep gevonden werd: de versies 2.0.121 tot en met 2.0.129 stonden er niet in, terwijl de lijst wél
    het versienummer in de voettekst toonde. Gio merkte het zelf op. Niet elke versie hoeft erin: een wijziging
@@ -46,8 +74,16 @@ Per issue, in deze volgorde (elk punt is een bestaande afspraak uit de MD's):
 
 `scripts/pipeline-demo-data.mjs` bouwt `pilot/path-pipeline-data.json` uit GIO-WENSEN.md (laatste 10 "Klaar",
 laatste 5 "Open en bezig"), de feature-bestanden (Gherkin, techniek, assertions) en LIVING-DOC.md. De pagina
-toont daaruit de laatste 5 opleveringen op het bord, de bijbehorende cases in Testbeheer en de laatste 10 in de
-Living Doc. `npm run check` faalt als dat bestand achterloopt.
+toont daaruit **de laatste 10 opleveringen in alle drie de werkruimtes** — op het Jira-bord, in de Confluence
+paginaboom en in Testbeheer — plus de laatste 10 in de Living Doc. Komt er een nieuwe bij, dan valt de oudste
+eraf. Dat blijft staan na F5, want het komt uit dit bestand en niet uit de browser. `npm run check` faalt als
+dat bestand achterloopt.
+
+**De kaart verschuift mee met de echte stand, niemand sleept hem daarheen.** Een wens staat in "Te doen" zolang
+hij alleen in de wachtrij staat; zodra hij in GIO-WENSEN.md onder "Open en bezig" verschijnt komt hij uit de
+projectstand en schuift hij naar "In uitvoering"; na oplevering staat hij bij "Opgeleverd". De pagina ruimt de
+wachtrijkaart dan op, anders zou dezelfde wens twee kaarten krijgen. Zelf slepen tussen kolommen kan bewust
+niet: dan kun je een kaart op "Opgeleverd" zetten die nooit is opgeleverd, en juist dat ondergraaft de demo.
 
 ## Grenzen
 

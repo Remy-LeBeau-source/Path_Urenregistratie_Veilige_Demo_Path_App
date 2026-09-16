@@ -3,12 +3,13 @@
 (function () {
   var STORAGE_KEY = 'path-pipeline-demo-v1';
   var DATA_URL = 'path-pipeline-data.json';
+  var INTAKE_URL = 'path-pipeline-intake.php';
   var REPO_URL = 'https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App';
   var INTAKE_LABEL = 'pipeline-intake';
   var LIVING_DOC_CAP = 10;
-  var BOARD_DONE_CAP = 5;
-  var DOC_TREE_CAP = 5;
-  var TEST_CAP = 12;
+  var BOARD_DONE_CAP = 10;
+  var DOC_TREE_CAP = 10;
+  var TEST_CAP = 20;
   var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var STEP_DELAY = prefersReducedMotion ? 120 : 900;
 
@@ -434,7 +435,7 @@
       rightLabel: 'USER STORY', rightTitle: ticket.key + ' · User Story', rightText: 'Als ' + stakeholder + ' wil ik ' + lower + ', zodat ' + goal + '.',
       fo: 'De oplossing ondersteunt "' + ticket.title + '". Het gedrag is voor ' + stakeholder + ' zichtbaar en voldoet aan het vastgelegde acceptatiecriterium.',
       to: ticket.status === 'ingediend'
-        ? 'Als GitHub-issue (' + INTAKE_LABEL + ') doorgezet naar VS Code. Daar maakt de agent het feature-bestand en de Playwright-case, draait de impactregressie, werkt LIVING-DOC.md en GIO-WENSEN.md bij en pusht naar CI en TEST.'
+        ? 'Aangenomen in de intakewachtrij. De agent in VS Code haalt hem daar op, maakt het feature-bestand en de Playwright-case, draait de impactregressie, werkt LIVING-DOC.md en GIO-WENSEN.md bij en pusht naar CI en TEST. Het issue met label ' + INTAKE_LABEL + ' maakt de agent zelf aan; dat hoef jij niet te doen.'
         : 'Koppel ' + ticket.key + ' aan ' + ticket.testId + ', automatiseer het scenario op ' + ticket.platform + ' en publiceer de uitslag via de TEST-pipeline naar de Living Doc.',
       criterion: ticket.criterion || 'De beschreven verandering is zichtbaar en automatisch gecontroleerd.',
       gherkin: ticket.gherkin, author: 'Analyse voor ' + stakeholder,
@@ -536,11 +537,11 @@
       title.textContent = lastCompletedKey + ' is volledig verwerkt (simulatie)';
       status.textContent = 'De gesimuleerde flow is afgerond met ' + (lastCompletedResult === 'pass' ? 'een geslaagde controle' : 'een aandachtspunt') + '. De nieuwste regel staat nu bovenaan de Living Doc.';
     } else if (waiting.length) {
-      title.textContent = waiting[0].key + ' is doorgezet naar VS Code';
-      status.textContent = 'De wens staat als GitHub-issue klaar (label ' + INTAKE_LABEL + '). In VS Code maakt de agent nu het feature-bestand en de Playwright-case, draait de impactregressie en werkt de Living Doc bij; na CI verschijnt de oplevering hier vanzelf bij "Opgeleverd".';
+      title.textContent = waiting[0].key + ' is aangenomen';
+      status.textContent = 'De wens staat in de intakewachtrij. De agent in VS Code haalt hem daar op, maakt het feature-bestand en de Playwright-case, draait de impactregressie en werkt de Living Doc bij; na CI verschijnt de oplevering hier vanzelf bij "Opgeleverd". Jij hoeft niets meer te doen.';
     } else {
       title.textContent = 'Klaar om de flow te starten';
-      status.textContent = 'Vul rechts één wens in en klik "Start de flow". Die gaat als GitHub-issue naar VS Code, waar de agent de testcase maakt, de regressie draait en de Living Doc bijwerkt — tot en met TEST.';
+      status.textContent = 'Vul rechts één wens in en klik "Start de flow". Opslaan is genoeg: de wens landt in de intakewachtrij, waar de agent hem oppakt, de testcase maakt, de regressie draait en de Living Doc bijwerkt — tot en met TEST.';
     }
 
     $$('[data-checkpoint]').forEach(function (checkpoint) {
@@ -728,6 +729,25 @@
       '&labels=' + encodeURIComponent(INTAKE_LABEL) + '&body=' + encodeURIComponent(body);
   }
 
+  function ticketVan(wens, bron) {
+    // Elke wens die deze browser voor het eerst ziet krijgt het volgende
+    // demo-casenummer. Bij de simulatie hangt de Zephyr-kaart daaraan, dus zonder
+    // nummer zou er in Testbeheer niets verschijnen.
+    state.demoCase = (state.demoCase || 0) + 1;
+    return {
+      key: wens.key, title: wens.title, type: wens.type || 'feature', status: 'ingediend',
+      testId: 'TC-DEMO-H-' + String(state.demoCase).padStart(3, '0'),
+      platform: 'desktop-chromium', result: '', source: bron,
+      stakeholder: wens.stakeholder || 'Product Owner', goal: wens.goal || '', criterion: wens.criterion || '',
+      date: wens.date || nowLabel(), gherkin: wens.gherkin || gherkinVoor(wens.title, wens.criterion)
+    };
+  }
+
+  // De wens gaat naar de eigen wachtrij op de server (pilot/path-pipeline-intake.php),
+  // niet naar een voorgevuld GitHub-formulier dat Gio zelf moet afmaken. Het
+  // GitHub-issue maakt de agent later zelf aan; dat tussenstation hoort onzichtbaar
+  // te zijn. Lukt opslaan niet (pagina via file:// geopend, of de server antwoordt
+  // niet), dan zeggen we dat ook eerlijk in plaats van te doen alsof het gelukt is.
   function addTicket(form) {
     var data = new FormData(form);
     var title = String(data.get('title') || '').trim();
@@ -736,40 +756,140 @@
     var goal = String(data.get('goal') || '').trim();
     var type = String(data.get('type') || 'feature');
     if (!title || !criterion || !goal) return;
-    var key = 'PATH-' + state.sequence++;
-    var ticket = {
-      key: key, title: title, type: type, status: 'ingediend', testId: 'TC-DEMO-H-' + String(state.sequence - 198).padStart(3, '0'),
-      platform: 'desktop-chromium', result: '', source: 'local', stakeholder: stakeholder, goal: goal, criterion: criterion,
-      date: nowLabel(), gherkin: gherkinVoor(title, criterion)
-    };
+
+    var feedback = $('[data-form-feedback]');
+    var knop = form.querySelector('button[type="submit"]');
+    if (knop) knop.disabled = true;
+    if (feedback) {
+      feedback.classList.remove('is-blocked');
+      feedback.textContent = 'Bezig met opslaan in de wachtrij…';
+    }
+
+    var wens = { title: title, goal: goal, criterion: criterion, stakeholder: stakeholder, type: type };
+
+    opslaanInWachtrij(wens).then(function (opgeslagen) {
+      plaatsTicket(ticketVan({
+        key: opgeslagen.key, title: title, type: type, stakeholder: stakeholder,
+        goal: goal, criterion: criterion, date: nowLabel(), gherkin: gherkinVoor(title, criterion)
+      }, 'queue'), form);
+      if (feedback) {
+        feedback.classList.remove('is-blocked');
+        feedback.innerHTML = '<b>' + escapeHtml(opgeslagen.key) + ' is aangenomen.</b> Hij staat nu in de wachtrij en in "Te doen". '
+          + 'De agent in VS Code haalt hem daar op, maakt het feature-bestand en de testcase, draait de impactregressie, werkt de Living Doc bij en pusht naar CI en TEST. '
+          + 'Je hoeft verder niets te doen; zodra hij is opgeleverd verschijnt hij hier bij "Opgeleverd".';
+      }
+      toast(opgeslagen.key + ' aangenomen in de wachtrij');
+    }).catch(function (fout) {
+      var key = 'PATH-' + state.sequence++;
+      plaatsTicket(ticketVan({
+        key: key, title: title, type: type, stakeholder: stakeholder,
+        goal: goal, criterion: criterion, date: nowLabel(), gherkin: gherkinVoor(title, criterion)
+      }, 'local'), form);
+      if (feedback) {
+        feedback.classList.add('is-blocked');
+        feedback.innerHTML = '<b>Niet in de wachtrij gezet.</b> ' + escapeHtml(String(fout && fout.message ? fout.message : fout))
+          + ' ' + escapeHtml(key) + ' staat daarom alleen in deze browser; niemand anders ziet hem. '
+          + '<a href="' + escapeHtml(issueUrlFor(state.customTickets[0])) + '" target="_blank" rel="noopener" data-issue-url>Toch zelf als GitHub-issue indienen.</a>';
+      }
+      toast('Opslaan mislukt — ' + key + ' staat alleen lokaal');
+    }).then(function () {
+      if (knop) knop.disabled = false;
+    });
+  }
+
+  function plaatsTicket(ticket, form) {
     state.customTickets.unshift(ticket);
-    ui.docKey = key;
+    ui.docKey = ticket.key;
     ui.fixedDoc = '';
     ui.query = '';
     var search = $('[data-search]');
     if (search) search.value = '';
     saveState();
     render();
-    form.reset();
-    updateGherkinPreview();
-    var url = issueUrlFor(ticket);
-    var feedback = $('[data-form-feedback]');
-    if (feedback) {
-      feedback.classList.remove('is-blocked');
-      feedback.innerHTML = escapeHtml(key) + ' staat in "Te doen". GitHub opent met het voorgevulde issue: klik daar op <b>Submit new issue</b>, dan pakt de agent hem in VS Code op. <a href="' + escapeHtml(url) + '" target="_blank" rel="noopener" data-issue-url>Opent GitHub niet? Klik hier.</a>';
+    if (form) {
+      form.reset();
+      updateGherkinPreview();
     }
-    var opened = window.open(url, '_blank', 'noopener');
-    if (!opened && feedback) feedback.classList.add('is-blocked');
-    toast(key + ' doorgezet naar VS Code');
   }
 
+  function opslaanInWachtrij(wens) {
+    if (!window.fetch) return Promise.reject(new Error('Deze browser kan geen wensen opslaan.'));
+    return fetch(INTAKE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+      body: JSON.stringify(wens)
+    }).then(function (response) {
+      return response.json().catch(function () { return {}; }).then(function (json) {
+        if (!response.ok || !json || !json.wish || !json.wish.key) {
+          throw new Error(json && json.error ? json.error : 'De wachtrij antwoordde met code ' + response.status + '.');
+        }
+        return json.wish;
+      });
+    }, function () {
+      throw new Error('De wachtrij was niet bereikbaar (open de pagina via TEST, niet als bestand).');
+    });
+  }
+
+  // De wachtrij staat op de server, dus een wens die iemand anders indiende is
+  // hier ook zichtbaar. Een wens die deze browser zelf al kent wordt niet dubbel
+  // toegevoegd, en een wens die inmiddels is opgeleverd komt uit de feed en hoort
+  // dus niet meer bij "Te doen".
+  function mergeWachtrij(wensen) {
+    if (!Array.isArray(wensen)) return false;
+
+    // De kaart verschuift vanzelf mee met de echte stand van de keten. Zodra een
+    // wens in de projectstand opduikt -- open en bezig, of opgeleverd -- is die
+    // projectie de waarheid en hoort de wachtrijkaart weg. Zonder deze opruiming
+    // zou dezelfde wens twee kaarten krijgen: een in "Te doen" uit de wachtrij en
+    // een in "In uitvoering" uit de projectstand.
+    var inProjectstand = {};
+    deliveredTickets().forEach(function (t) { inProjectstand[t.key] = true; });
+    openTickets().forEach(function (t) { inProjectstand[t.key] = true; });
+
+    var voor = state.customTickets.length;
+    state.customTickets = state.customTickets.filter(function (t) {
+      return !(t.source === 'queue' && inProjectstand[t.key]);
+    });
+    var veranderd = state.customTickets.length !== voor;
+
+    var bekend = {};
+    state.customTickets.forEach(function (t) { bekend[t.key] = true; });
+    wensen.slice().reverse().forEach(function (wens) {
+      if (!wens || !wens.key || bekend[wens.key] || inProjectstand[wens.key]) return;
+      bekend[wens.key] = true;
+      state.customTickets.unshift(ticketVan(wens, 'queue'));
+      veranderd = true;
+    });
+
+    if (veranderd) saveState();
+    return veranderd;
+  }
+
+  // Het loket staat in Confluence en wordt door een stakeholder ingevuld, dus het
+  // denkt mee in diens taal: de losse velden worden meteen een leesbare user story
+  // en een Gherkin-scenario. Wie invult ziet zo wat de agent straks oppakt.
   function updateGherkinPreview() {
     var form = $('[data-ticket-form]');
+    if (!form) return;
+    var data = new FormData(form);
+    var title = String(data.get('title') || '').trim();
+    var criterion = String(data.get('criterion') || '').trim();
+    var goal = String(data.get('goal') || '').trim();
+    var stakeholder = String(data.get('stakeholder') || 'Product Owner').trim();
+
     var preview = $('[data-gherkin-preview]');
-    if (!form || !preview) return;
-    var title = String(new FormData(form).get('title') || '').trim();
-    var criterion = String(new FormData(form).get('criterion') || '').trim();
-    preview.textContent = title || criterion ? gherkinVoor(title, criterion) : 'Vul hierboven een samenvatting en acceptatiecriterium in.';
+    if (preview) preview.textContent = title || criterion ? gherkinVoor(title, criterion) : 'Vul hierboven een samenvatting en acceptatiecriterium in.';
+
+    var story = $('[data-story-preview]');
+    if (story) {
+      if (!title && !goal) {
+        story.textContent = 'Kies een stakeholder en vul de samenvatting en de gewenste waarde in.';
+      } else {
+        var lager = title ? title.charAt(0).toLowerCase() + title.slice(1) : '…';
+        story.textContent = 'Als ' + stakeholder + ' wil ik ' + lager + ', zodat ' + (goal || '…') + '.';
+      }
+    }
   }
 
   // ===================== Klikafhandeling =====================
@@ -863,7 +983,9 @@
     }
 
     if (target.closest('[data-create-focus]')) {
-      switchTab('backlog', false);
+      // Het loket staat in Confluence, niet op het Jira-bord: daar hoort de vraag
+      // achter de wens thuis. Elke "nieuwe wens"-knop brengt je dus daarheen.
+      switchTab('knowledge', false);
       closePanels();
       var veld = $('[data-create-field]');
       if (veld) { veld.focus(); veld.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'center' }); }
@@ -956,7 +1078,9 @@
   // De grens van tien is opslaggedrag, niet alleen een visueel filter:
   // een oudere reeks uit een vorige sessie wordt bij openen echt opgeschoond.
   saveState();
-  switchTab('backlog', false);
+  // De pagina opent in Confluence, want daar begint de keten: de PO schrijft de
+  // vraag op, pas daarna verschijnt het ticket in Jira en de testcase in Zephyr.
+  switchTab('knowledge', false);
   render();
   updateGherkinPreview();
   applyHash();
@@ -973,6 +1097,18 @@
     }).catch(function () {
       document.body.setAttribute('data-feed', 'fallback');
       render();
+    // De wachtrij wordt pas daarna opgehaald: het samenvoegen moet weten wat er al
+    // in de projectstand staat, anders krijgt een opgepakte wens twee kaarten.
+    }).then(function () {
+      return fetch(INTAKE_URL, { cache: 'no-store' });
+    }).then(function (response) {
+      if (!response.ok) throw new Error('wachtrij ' + response.status);
+      return response.json();
+    }).then(function (json) {
+      document.body.setAttribute('data-queue', 'loaded');
+      if (mergeWachtrij(json && json.wishes)) render();
+    }).catch(function () {
+      document.body.setAttribute('data-queue', 'offline');
     });
   } else {
     document.body.setAttribute('data-feed', 'fallback');
