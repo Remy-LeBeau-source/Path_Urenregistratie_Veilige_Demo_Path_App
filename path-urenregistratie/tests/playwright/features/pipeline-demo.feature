@@ -13,18 +13,30 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
     # Testtechniek: Datagedreven vergelijking (pagina versus pilot/path-pipeline-data.json) + traceerbaarheid over drie projecties
     # Aantoonbare Playwright-assertions in deze case: 27
     Given de zelfstandige TEST-only pipelinepagina met de echte projectstand
-    When de pagina is geladen, staan de vier fasen en de laatste vijf echte opleveringen op het bord
+    When de pagina is geladen, staan de vier fasen en de laatste tien echte opleveringen op het bord
     And Kennisbank en Testbeheer projecteren dezelfde echte cases en de Living Doc toont hooguit tien
     Then wordt met Playwright-assertions bevestigd dat de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin
 
   @happy
-  Scenario: [PIPE-H-002] een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden
-    # Testtechniek: Toestandsovergangtest (ingediend → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van de issue-URL
-    # Aantoonbare Playwright-assertions in deze case: 30
-    Given een nieuwe wens met acceptatiecriterium
-    When de flow wordt gestart
-    Then staat de wens op het bord als wachtend op VS Code, ook na herladen
+  Scenario: [PIPE-H-002] opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub
+    # Testtechniek: Toestandsovergangtest (aangenomen → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van het wachtrij-antwoord + negatieve controle dat GitHub niet meer wordt benaderd
+    # Aantoonbare Playwright-assertions in deze case: 42
+    Given de pagina opent in Confluence, want daar begint de keten
+    And vanaf het Jira-bord wijst een knop terug naar het loket
+    And een nieuwe wens met acceptatiecriterium
+    When de flow wordt gestart, gaat de wens naar de eigen wachtrij en niet naar GitHub
+    Then meldt de pagina dat hij is aangenomen en staat hij op het bord, ook na herladen
+    And een tweede bezoeker met een schone browser ziet dezelfde wens, want de wachtrij staat op de server
     And een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc
+
+  @negative
+  Scenario: [PIPE-N-002] de intakewachtrij weigert onvolledige, te grote en verkeerd geadresseerde invoer, en bestaat niet op productie
+    # Testtechniek: Foutinjectie op de intake (leeg veld, onleesbare invoer, grensoverschrijding, verkeerde methode) + omgevingsafscherming met tegenproef
+    # Aantoonbare Playwright-assertions in deze case: 17
+    Given de intakewachtrij van de open demo-omgeving
+    When er onvolledige, onleesbare, te grote en verkeerd geadresseerde verzoeken binnenkomen
+    Then staat er van al die pogingen niets in de wachtrij en lekt er geen IP-kenmerk
+    And op een productieomgeving bestaat de wachtrij helemaal niet
 
   @happy
   Scenario: [PIPE-H-004] zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes
@@ -53,7 +65,7 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
   @negative
   Scenario: [PIPE-N-001] de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon
     # Testtechniek: Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole
-    # Aantoonbare Playwright-assertions in deze case: 11
+    # Aantoonbare Playwright-assertions in deze case: 12
     Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid
     When de Kennisbank op de telefoon wordt geopend
     Then toont de Living Doc precies tien regels, lokaal vóór echt, en bewaart hij er tien

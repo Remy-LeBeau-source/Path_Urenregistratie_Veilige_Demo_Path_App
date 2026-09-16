@@ -1,7 +1,38 @@
 {
-  "appVersion": "2.0.132",
+  "appVersion": "2.0.134",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "16 sep",
+      "version": "2.0.134",
+      "wish": "Wens van Gio: indienen mag geen klik in GitHub meer kosten. Invullen en opslaan, klaar. Het loket is nu Confluence (daar hoort de vraag achter de wens thuis); op het Jira-bord staat alleen de wegwijzer ernaartoe. Opslaan zet de wens in een eigen intakewachtrij (`pilot/path-pipeline-intake.php`, opslag buiten de webroot), niet in de app-database -- een tabel zou een migratie betekenen en die draait ook op productie. Het GitHub-issue maakt de agent zelf aan, zodat het spoor blijft bestaan zonder token op een publieke pagina. De wachtrij staat op de server, dus een tweede bezoeker ziet dezelfde wens. Grenzen: 5 per kwartier per adres, 30 per uur, 50 in de wachtrij, 4 kB per verzoek, lengtegrenzen per veld, geen IP-adres maar een hash, en een zichtbare waarschuwing dat er geen namen, adressen of bedragen in een wens horen. Het endpoint weigert alles zodra de omgeving production is -- ook als er geen omgeving is ingesteld. PIPE-H-002 herschreven (opslaan in plaats van pop-up, plus tegenproef dat github.com niet meer wordt benaderd en dat een schone browser de wens ook ziet) en PIPE-N-002 nieuw.",
+      "cases": [
+        {
+          "id": "PIPE-H-002",
+          "title": "opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Toestandsovergangtest (aangenomen → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van het wachtrij-antwoord + negatieve controle dat GitHub niet meer wordt benaderd",
+          "assertions": 42,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub\n  Given de pagina opent in Confluence, want daar begint de keten\n  And vanaf het Jira-bord wijst een knop terug naar het loket\n  And een nieuwe wens met acceptatiecriterium\n  When de flow wordt gestart, gaat de wens naar de eigen wachtrij en niet naar GitHub\n  Then meldt de pagina dat hij is aangenomen en staat hij op het bord, ook na herladen\n  And een tweede bezoeker met een schone browser ziet dezelfde wens, want de wachtrij staat op de server\n  And een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc"
+        },
+        {
+          "id": "PIPE-N-002",
+          "title": "de intakewachtrij weigert onvolledige, te grote en verkeerd geadresseerde invoer, en bestaat niet op productie",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Foutinjectie op de intake (leeg veld, onleesbare invoer, grensoverschrijding, verkeerde methode) + omgevingsafscherming met tegenproef",
+          "assertions": 17,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de intakewachtrij weigert onvolledige, te grote en verkeerd geadresseerde invoer, en bestaat niet op productie\n  Given de intakewachtrij van de open demo-omgeving\n  When er onvolledige, onleesbare, te grote en verkeerd geadresseerde verzoeken binnenkomen\n  Then staat er van al die pogingen niets in de wachtrij en lekt er geen IP-kenmerk\n  And op een productieomgeving bestaat de wachtrij helemaal niet"
+        }
+      ]
+    },
+    {
+      "date": "16 sep",
+      "version": "2.0.134",
+      "wish": "Wens van Gio: in Jira, Confluence en Zephyr altijd de laatste tien opleveringen, ook na F5, met de oudste die eraf valt, en de Living Doc die de nieuwe case meteen meetoont. Grenzen van vijf naar tien, Testbeheer naar twintig cases zodat de cases van die tien opleveringen erin passen. De kaart verschuift mee met de echte stand van de keten (wachtrij -> open en bezig -> opgeleverd) en de wachtrijkaart wordt opgeruimd zodra de wens in de projectstand verschijnt, anders krijgt dezelfde wens twee kaarten. Zelf slepen tussen kolommen bewust niet: dan kun je iets op Opgeleverd zetten dat nooit is opgeleverd.",
+      "cases": []
+    },
     {
       "date": "16 sep",
       "version": "2.0.132",
@@ -85,12 +116,12 @@
       "cases": [
         {
           "id": "PIPE-H-002",
-          "title": "een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden",
+          "title": "opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub",
           "feature": "tests/playwright/features/pipeline-demo.feature",
-          "technique": "Toestandsovergangtest (ingediend → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van de issue-URL",
-          "assertions": 30,
+          "technique": "Toestandsovergangtest (aangenomen → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van het wachtrij-antwoord + negatieve controle dat GitHub niet meer wordt benaderd",
+          "assertions": 42,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden\n  Given een nieuwe wens met acceptatiecriterium\n  When de flow wordt gestart\n  Then staat de wens op het bord als wachtend op VS Code, ook na herladen\n  And een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc"
+          "gherkin": "Scenario: opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub\n  Given de pagina opent in Confluence, want daar begint de keten\n  And vanaf het Jira-bord wijst een knop terug naar het loket\n  And een nieuwe wens met acceptatiecriterium\n  When de flow wordt gestart, gaat de wens naar de eigen wachtrij en niet naar GitHub\n  Then meldt de pagina dat hij is aangenomen en staat hij op het bord, ook na herladen\n  And een tweede bezoeker met een schone browser ziet dezelfde wens, want de wachtrij staat op de server\n  And een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc"
         }
       ]
     },
@@ -107,47 +138,6 @@
           "assertions": 12,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: de medewerker krijgt het uurtarief en btw-percentage van zijn opdracht niet mee, de beheerder wel\n  Given de medewerker is ingelogd\n  When hij zijn eigen opdracht ophaalt\n  Then staan tarief en btw er niet in, ook niet als lege waarde\n  And de rest van zijn opdracht blijft gewoon bruikbaar\n  And de beheerder krijgt ze wel, want daar worden de facturen mee gemaakt"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.121",
-      "wish": "Eigen vondst (grenswaarden met accenten en emoji): de lengtecontroles op de server telden bytes in plaats van tekens. Een onderwerp of naam van 160 tekens met accenten werd geweigerd terwijl het invoerveld en de kolom hem toelaten, en de fout bevatte geen uitleg. Nu tekens tellen in announcements, staff, settings, mail-recipients, customer-timesheets en timesheets, met een duidelijke melding (ANN-N-007, ADM-WR-N-008).",
-      "cases": [
-        {
-          "id": "ANN-N-007",
-          "title": "de lengtegrens telt tekens zoals het invoerveld, ook met accenten en emoji, en legt uit wat er mis is",
-          "feature": "tests/playwright/features/announcements.feature",
-          "technique": "Negatieve equivalentieklasse + error guessing",
-          "assertions": 8,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: de lengtegrens telt tekens zoals het invoerveld, ook met accenten en emoji, en legt uit wat er mis is\n  Given mededelingen versturen, intrekken en verbergen is voorbereid\n  When de flow voor ANN-N-007 wordt uitgevoerd\n  Then wordt precies de grens geaccepteerd, ook als elk teken meer dan één byte is\n  And wordt één teken te veel geweigerd, met een melding die zegt wat er mis is\n  And cleanup: de verstuurde testmededeling wordt ingetrokken en bij medewerkers verborgen"
-        },
-        {
-          "id": "ADM-WR-N-008",
-          "title": "lengtegrenzen tellen tekens, niet bytes: een naam vol accenten mag tot de volle lengte",
-          "feature": "tests/playwright/features/organization-settings.feature",
-          "technique": "Negatieve equivalentieklasse + error guessing",
-          "assertions": 6,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: lengtegrenzen tellen tekens, niet bytes: een naam vol accenten mag tot de volle lengte\n  Given organisatie-instellingen beheren is voorbereid\n  When een medewerker met 160 tekens in de naam wordt opgeslagen\n  Then wordt de naam volledig bewaard, zonder afkappen"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.120",
-      "wish": "Verboden statusovergangen afgedekt: goedkeuren of correctie vragen op een concept, twee keer goedkeuren, opnieuw indienen van een goedgekeurde maand (TS-REV-API-N-002).",
-      "cases": [
-        {
-          "id": "TS-REV-API-N-002",
-          "title": "elke verboden statusovergang wordt geweigerd en laat de urenstaat ongemoeid",
-          "feature": "tests/playwright/features/correction-approval-workflow.feature",
-          "technique": "Toestandsovergang",
-          "assertions": 19,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: elke verboden statusovergang wordt geweigerd en laat de urenstaat ongemoeid\n  Given een concept van een medewerker in een eigen periode\n  When de beheerder een concept probeert goed te keuren of te laten corrigeren, then weigert de server beide\n  And blijft goedkeuren geweigerd zodra de maand al is goedgekeurd\n  And mag de medewerker een goedgekeurde maand niet opnieuw indienen of als concept overschrijven\n  Then wordt met Playwright-assertions bevestigd dat elke verboden statusovergang wordt geweigerd en laat de urenstaat ongemoeid"
         }
       ]
     }

@@ -15,13 +15,20 @@ const But = navigate;
 
 // Eenvoudige F12-navigatie; de echte acties en assertions staan in het specbestand hierboven.
 Given("de zelfstandige TEST-only pipelinepagina met de echte projectstand");
-When("de pagina is geladen, staan de vier fasen en de laatste vijf echte opleveringen op het bord");
+When("de pagina is geladen, staan de vier fasen en de laatste tien echte opleveringen op het bord");
 And("Kennisbank en Testbeheer projecteren dezelfde echte cases en de Living Doc toont hooguit tien");
 Then("wordt met Playwright-assertions bevestigd dat de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin");
-Given("een nieuwe wens met acceptatiecriterium");
-When("de flow wordt gestart");
-Then("staat de wens op het bord als wachtend op VS Code, ook na herladen");
+Given("de pagina opent in Confluence, want daar begint de keten");
+And("vanaf het Jira-bord wijst een knop terug naar het loket");
+And("een nieuwe wens met acceptatiecriterium");
+When("de flow wordt gestart, gaat de wens naar de eigen wachtrij en niet naar GitHub");
+Then("meldt de pagina dat hij is aangenomen en staat hij op het bord, ook na herladen");
+And("een tweede bezoeker met een schone browser ziet dezelfde wens, want de wachtrij staat op de server");
 And("een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc");
+Given("de intakewachtrij van de open demo-omgeving");
+When("er onvolledige, onleesbare, te grote en verkeerd geadresseerde verzoeken binnenkomen");
+Then("staat er van al die pogingen niets in de wachtrij en lekt er geen IP-kenmerk");
+And("op een productieomgeving bestaat de wachtrij helemaal niet");
 Given("de pipelinepagina met de echte projectstand");
 When("er wordt gezocht, gefilterd, gesorteerd en een kaart wordt geopend");
 Then("tonen bord, kennisbank en testbeheer telkens de bijbehorende selectie");

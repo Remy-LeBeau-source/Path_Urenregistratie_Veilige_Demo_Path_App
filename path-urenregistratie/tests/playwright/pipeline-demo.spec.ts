@@ -1,3 +1,6 @@
+import { execFileSync } from 'node:child_process';
+import { rmSync } from 'node:fs';
+import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 
 type FeedCase = { id: string; title: string; platform: string; gherkin: string };
@@ -13,7 +16,7 @@ async function feedVanServer(page: Page): Promise<Feed> {
 
 function verwachteSleutels(feed: Feed): string[] {
   const gebruikt = new Set<string>();
-  return feed.delivered.slice(0, 5).map((row) => {
+  return feed.delivered.slice(0, 10).map((row) => {
     const versie = row.version.match(/\d+\.\d+\.\d+/);
     const basis = row.cases[0]?.id ?? (versie ? versie[0] : (row.version.split(/[\s(]/)[0] || 'oplevering').toUpperCase());
     let sleutel = basis;
@@ -23,7 +26,28 @@ function verwachteSleutels(feed: Feed): string[] {
   });
 }
 
+/**
+ * De intakewachtrij weigert meer dan vijf wensen per kwartier vanaf hetzelfde
+ * adres. Die grens is er voor de open demo-omgeving en blijft staan; hem voor de
+ * test verruimen zou precies de bescherming weghalen die we willen. In plaats
+ * daarvan begint elke run met een lege wachtrij. Het pad wordt niet geraden maar
+ * bij de code zelf opgevraagd, zodat test en endpoint nooit uit elkaar lopen.
+ */
+function leegDeWachtrij(): void {
+  const projectMap = join(__dirname, '..', '..');
+  const pad = execFileSync('php', ['-r', "require 'pilot/path-pipeline-intake-lib.php'; echo intake_omgeving_en_pad()[1];"], {
+    cwd: projectMap,
+    encoding: 'utf8',
+  }).trim();
+  expect(pad, 'de wachtrij moet een echt pad hebben').toContain('path-pipeline-intake.json');
+  rmSync(pad, { force: true });
+}
+
 test.describe('Path Pipeline TEST-demo', () => {
+  test.beforeAll(() => {
+    leegDeWachtrij();
+  });
+
   test('[PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin', async ({ page }) => {
     let feed: Feed;
     await test.step('Given de zelfstandige TEST-only pipelinepagina met de echte projectstand', async () => {
@@ -34,13 +58,13 @@ test.describe('Path Pipeline TEST-demo', () => {
       await expect(page.locator('[data-feed-version]')).toContainText(`projectstand app ${feed.appVersion}`);
     });
 
-    await test.step('When de pagina is geladen, staan de vier fasen en de laatste vijf echte opleveringen op het bord', async () => {
+    await test.step('When de pagina is geladen, staan de vier fasen en de laatste tien echte opleveringen op het bord', async () => {
       await expect(page.locator('body')).toHaveAttribute('data-pilot-design', 'path-pipeline');
       await expect(page.locator('[data-phase]')).toHaveCount(4);
-      await expect(page.locator('[data-ticket-list="done"] .ticket-card')).toHaveCount(5);
+      await expect(page.locator('[data-ticket-list="done"] .ticket-card')).toHaveCount(10);
       await expect(page.locator('[data-ticket-list="done"] .issue-key')).toHaveText(verwachteSleutels(feed!));
-      await expect(page.locator('[data-ticket-list="done"] [data-source="feed"]')).toHaveCount(5);
-      const metGherkin = feed!.delivered.slice(0, 5).filter((row) => row.cases.length).length;
+      await expect(page.locator('[data-ticket-list="done"] [data-source="feed"]')).toHaveCount(10);
+      const metGherkin = feed!.delivered.slice(0, 10).filter((row) => row.cases.length).length;
       await expect(page.locator('[data-ticket-list="done"] .gherkin')).toHaveCount(metGherkin);
       const openOpBord = feed!.open.length;
       const todo = Number(await page.locator('[data-count="todo"]').textContent());
@@ -57,7 +81,7 @@ test.describe('Path Pipeline TEST-demo', () => {
       feed!.delivered.forEach((row) => row.cases.forEach((c) => { if (!uniekeCases.has(c.id)) uniekeCases.set(c.id, c); }));
 
       await page.getByRole('tab', { name: /Kennisbank/ }).click();
-      await expect(page.locator('[data-doc-tree] li')).toHaveCount(5);
+      await expect(page.locator('[data-doc-tree] li')).toHaveCount(10);
       await page.locator(`[data-doc-select="${eersteMetCase.cases[0].id}"]`).click();
       await expect(page.locator('[data-doc-title]')).toContainText(eersteMetCase.cases[0].id);
       await expect(page.locator('[data-doc-page]')).toContainText('FUNCTIONEEL ONTWERP');
@@ -70,7 +94,7 @@ test.describe('Path Pipeline TEST-demo', () => {
       await expect(page.locator('[data-doc-page]')).not.toContainText('https://');
 
       await page.getByRole('tab', { name: /Testbeheer/ }).click();
-      const verwachtAantal = Math.min(12, uniekeCases.size);
+      const verwachtAantal = Math.min(20, uniekeCases.size);
       await expect(page.locator('[data-test-table] tr')).toHaveCount(verwachtAantal);
       for (const c of [...uniekeCases.values()].slice(0, verwachtAantal)) {
         await expect(page.locator(`[data-testcase="${c.id}"]`)).toContainText(c.title.slice(0, 40));
@@ -80,61 +104,117 @@ test.describe('Path Pipeline TEST-demo', () => {
     });
   });
 
-  test('[PIPE-H-002] een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden', async ({ page, context }) => {
+  test('[PIPE-H-002] opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub', async ({ page, context }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await context.route('https://github.com/**', (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<p>GitHub (onderschept in de test)</p>' }));
+
+    // Tegenbewijs voor de oude werkwijze: de pagina opende zelf een GitHub-tabblad
+    // dat Gio nog moest afmaken. Elk verzoek naar github.com faalt hier hard, dus
+    // als de pagina dat opnieuw zou doen valt deze case om in plaats van stil door
+    // te gaan.
+    let githubBezocht = 0;
+    await context.route('https://github.com/**', (route) => { githubBezocht += 1; return route.abort(); });
+
+    // De Confluence-pagina heeft zelf ook een kop "Stakeholdervraag", dus de velden
+    // worden binnen het formulier gezocht en niet op de hele pagina.
+    const formulier = page.locator('[data-ticket-form]');
+
     await page.goto('/pilot/path-pipeline.html');
     await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
 
-    await test.step('Given een nieuwe wens met acceptatiecriterium', async () => {
-      await page.getByLabel('Samenvatting').fill('Maandtotalen blijven gelijk na filterwissel');
-      await page.getByLabel('Stakeholder').selectOption('Backoffice');
-      await page.getByLabel('Type').selectOption('bug');
-      await page.getByLabel('Gewenste waarde').fill('Backoffice altijd dezelfde betrouwbare maandtotalen ziet');
-      await page.getByLabel('Acceptatiecriterium').fill('de gebruiker wisselt tussen Backoffice en medewerkers');
+    await test.step('Given de pagina opent in Confluence, want daar begint de keten', async () => {
+      // De volgorde volgt de werkelijkheid: de vraag ontstaat in Confluence, wordt
+      // daarna een ticket in Jira en landt als testcase in Zephyr. Zowel de landing
+      // als de leesvolgorde van de tabs moet dat aanhouden.
+      await expect(page.getByRole('tab', { name: /Kennisbank/ })).toHaveAttribute('aria-selected', 'true');
+      await expect(page.locator('[data-ticket-form]')).toBeVisible();
+      const tabVolgorde = await page.getByRole('tab').allTextContents();
+      expect(tabVolgorde.map((t) => t.replace(/\s+/g, ' ').trim())).toEqual([
+        expect.stringContaining('Confluence'),
+        expect.stringContaining('Jira'),
+        expect.stringContaining('Zephyr'),
+      ]);
+      // Deze pagina mag openbaar staan onder één voorwaarde, en die voorwaarde
+      // hoort zichtbaar naast het invoerveld te staan -- niet in de kleine letters.
+      await expect(page.locator('#nieuwe-wens')).toContainText('openbaar');
+      await expect(page.locator('#nieuwe-wens')).toContainText('geen persoonsgegevens en geen klantgegevens');
+      await expect(page.locator('#nieuwe-wens')).toContainText('Jouw vraag als stakeholder');
     });
 
-    await test.step('When de flow wordt gestart', async () => {
-      const [popup] = await Promise.all([
-        context.waitForEvent('page'),
+    await test.step('And vanaf het Jira-bord wijst een knop terug naar het loket', async () => {
+      await page.getByRole('tab', { name: /Backlog/ }).click();
+      await expect(page.locator('[data-ticket-form]')).toBeHidden();
+      await page.getByRole('button', { name: /Naar het wensenloket/ }).click();
+      await expect(page.getByRole('tab', { name: /Kennisbank/ })).toHaveAttribute('aria-selected', 'true');
+      await expect(page.locator('[data-ticket-form]')).toBeVisible();
+    });
+
+    await test.step('And een nieuwe wens met acceptatiecriterium', async () => {
+      await formulier.getByLabel('Samenvatting').fill('Maandtotalen blijven gelijk na filterwissel');
+      await formulier.getByLabel('Stakeholder').selectOption('Backoffice');
+      await formulier.getByLabel('Type').selectOption('bug');
+      await formulier.getByLabel('Gewenste waarde').fill('Backoffice altijd dezelfde betrouwbare maandtotalen ziet');
+      await formulier.getByLabel('Acceptatiecriterium').fill('de gebruiker wisselt tussen Backoffice en medewerkers');
+
+      // Het loket denkt mee in de taal van de rol die invult: de losse velden
+      // worden meteen een leesbare user story, niet pas na het opslaan.
+      await expect(page.locator('[data-story-preview]')).toHaveText(
+        'Als Backoffice wil ik maandtotalen blijven gelijk na filterwissel, zodat Backoffice altijd dezelfde betrouwbare maandtotalen ziet.'
+      );
+      await expect(page.locator('[data-gherkin-preview]')).toContainText('Scenario: Maandtotalen blijven gelijk na filterwissel');
+    });
+
+    let sleutel = '';
+    await test.step('When de flow wordt gestart, gaat de wens naar de eigen wachtrij en niet naar GitHub', async () => {
+      const [antwoord] = await Promise.all([
+        page.waitForResponse((r) => r.url().includes('path-pipeline-intake.php') && r.request().method() === 'POST'),
         page.locator('[data-ticket-form] button[type="submit"]').click(),
       ]);
-      await expect(page.locator('[data-ticket-form] button[type="submit"]')).toContainText('Start de flow');
-      const url = new URL(popup.url());
-      expect(url.origin + url.pathname).toBe('https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App/issues/new');
-      expect(url.searchParams.get('title')).toBe('PATH-198 Maandtotalen blijven gelijk na filterwissel');
-      expect(url.searchParams.get('labels')).toBe('pipeline-intake');
-      const body = url.searchParams.get('body') ?? '';
-      expect(body).toContain('**Stakeholder:** Backoffice');
-      expect(body).toContain('**Acceptatiecriterium:** de gebruiker wisselt tussen Backoffice en medewerkers');
-      expect(body).toContain('Scenario: Maandtotalen blijven gelijk na filterwissel');
-      expect(body).toContain('PIPELINE-INTAKE.md');
-      await popup.close();
+      expect(antwoord.status(), 'de wachtrij neemt de wens aan').toBe(201);
+      const json = await antwoord.json();
+      sleutel = json.wish.key;
+      expect(sleutel).toMatch(/^PATH-\d+$/);
+      expect(json.wish.status).toBe('aangenomen');
+      expect(json.wish.stakeholder).toBe('Backoffice');
+      expect(json.wish.criterion).toBe('de gebruiker wisselt tussen Backoffice en medewerkers');
+      expect(json.wish.ip_hash, 'het IP-kenmerk blijft binnen de server').toBeUndefined();
+      expect(githubBezocht, 'de pagina stuurt niemand meer naar GitHub').toBe(0);
+      expect(context.pages().length, 'er gaat geen tweede tabblad open').toBe(1);
     });
 
-    await test.step('Then staat de wens op het bord als wachtend op VS Code, ook na herladen', async () => {
-      const kaart = page.locator('[data-ticket="PATH-198"]');
-      await expect(kaart).toBeVisible();
-      await expect(page.locator('[data-ticket-list="todo"] [data-ticket="PATH-198"] .status-pill')).toHaveText('Wacht op VS Code');
-      await expect(kaart.locator('.issue-link')).toHaveAttribute('href', /issues\?q=.*pipeline-intake/);
-      await expect(page.locator('[data-flow-title]')).toContainText('PATH-198 is doorgezet naar VS Code');
-      await expect(page.locator('[data-form-feedback]')).toContainText('Submit new issue');
-      await expect(page.getByLabel('Samenvatting')).toHaveValue('');
+    await test.step('Then meldt de pagina dat hij is aangenomen en staat hij op het bord, ook na herladen', async () => {
+      await expect(page.locator('[data-form-feedback]')).toContainText(`${sleutel} is aangenomen`);
+      await expect(page.locator('[data-form-feedback]')).not.toContainText('Submit new issue');
+      await expect(formulier.getByLabel('Samenvatting')).toHaveValue('');
+      await expect(page.locator('[data-flow-title]')).toContainText(`${sleutel} is aangenomen`);
+      await page.getByRole('tab', { name: /Backlog/ }).click();
+      await expect(page.locator(`[data-ticket-list="todo"] [data-ticket="${sleutel}"] .status-pill`)).toHaveText('Wacht op VS Code');
       await page.reload();
-      await expect(page.locator('[data-ticket-list="todo"] [data-ticket="PATH-198"] .status-pill')).toHaveText('Wacht op VS Code');
+      await expect(page.locator(`[data-ticket-list="todo"] [data-ticket="${sleutel}"] .status-pill`)).toHaveText('Wacht op VS Code');
+    });
+
+    await test.step('And een tweede bezoeker met een schone browser ziet dezelfde wens, want de wachtrij staat op de server', async () => {
+      const tweede = await context.browser()!.newPage();
+      await tweede.goto('/pilot/path-pipeline.html');
+      await expect(tweede.locator('body')).toHaveAttribute('data-queue', 'loaded');
+      await tweede.getByRole('tab', { name: /Backlog/ }).click();
+      await expect(tweede.locator(`[data-ticket-list="todo"] [data-ticket="${sleutel}"]`)).toBeVisible();
+      await tweede.close();
     });
 
     await test.step('And een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc', async () => {
-      await page.locator('[data-run-ticket="PATH-198"]').click();
-      await expect(page.locator('[data-ticket="PATH-198"]')).toHaveClass(/is-running/);
+      // Na het herladen staat de pagina weer op Confluence; de simulatieknop hoort
+      // bij de kaart op het Jira-bord.
+      await page.getByRole('tab', { name: /Backlog/ }).click();
+      await page.locator(`[data-run-ticket="${sleutel}"]`).click();
+      await expect(page.locator(`[data-ticket="${sleutel}"]`)).toHaveClass(/is-running/);
       await expect(page.locator('[data-phase].is-active')).toHaveCount(1);
       await expect(page.getByRole('tab', { name: /Kennisbank/ })).toHaveAttribute('aria-selected', 'true', { timeout: 5_000 });
-      await expect(page.locator('[data-living-doc] li').first()).toContainText('PATH-198');
+      await expect(page.locator('[data-living-doc] li').first()).toContainText(sleutel);
       await expect(page.locator('[data-living-doc] li').first()).toHaveClass(/is-new/);
       await expect(page.locator('[data-living-doc] li').first()).toContainText('simulatie');
       await expect(page.locator('[data-living-doc] li')).toHaveCount(10);
       await expect(page.locator('[data-flow-monitor]')).toContainText('volledig verwerkt (simulatie)');
-      await expect(page.locator('[data-doc-title]')).toContainText('PATH-198');
+      await expect(page.locator('[data-doc-title]')).toContainText(sleutel);
       await expect(page.locator('[data-doc-story]')).toContainText('Als Backoffice');
 
       await page.getByRole('tab', { name: /Testbeheer/ }).click();
@@ -142,8 +222,62 @@ test.describe('Path Pipeline TEST-demo', () => {
       await expect(page.locator('[data-testcase="TC-DEMO-H-001"] .status-pill')).toHaveText(/Geslaagd|Aandacht/);
 
       await page.getByRole('tab', { name: /Backlog/ }).click();
-      await expect(page.locator('[data-ticket-list="done"] [data-ticket="PATH-198"]')).toBeVisible();
-      await expect(page.locator('[data-ticket-list="done"] .ticket-card')).toHaveCount(5);
+      await expect(page.locator(`[data-ticket-list="done"] [data-ticket="${sleutel}"]`)).toBeVisible();
+      await expect(page.locator('[data-ticket-list="done"] .ticket-card')).toHaveCount(10);
+    });
+  });
+
+  test('[PIPE-N-002] de intakewachtrij weigert onvolledige, te grote en verkeerd geadresseerde invoer, en bestaat niet op productie', async ({ request }) => {
+    const url = '/pilot/path-pipeline-intake.php';
+
+    await test.step('Given de intakewachtrij van de open demo-omgeving', async () => {
+      const antwoord = await request.get(url);
+      expect(antwoord.status()).toBe(200);
+      expect((await antwoord.json()).environment).not.toBe('production');
+    });
+
+    await test.step('When er onvolledige, onleesbare, te grote en verkeerd geadresseerde verzoeken binnenkomen', async () => {
+      const zonderCriterium = await request.post(url, { data: { title: 'Alleen een titel', goal: 'iets', criterion: '' } });
+      expect(zonderCriterium.status()).toBe(422);
+      expect((await zonderCriterium.json()).error).toContain('alle drie nodig');
+
+      const onleesbaar = await request.post(url, { headers: { 'Content-Type': 'application/json' }, data: 'dit is geen json' });
+      expect(onleesbaar.status()).toBe(400);
+
+      const teGroot = await request.post(url, { data: { title: 'x'.repeat(5000), goal: 'g', criterion: 'c' } });
+      expect(teGroot.status()).toBe(413);
+
+      const verkeerdeMethode = await request.fetch(url, { method: 'DELETE' });
+      expect(verkeerdeMethode.status()).toBe(405);
+      expect(verkeerdeMethode.headers()['allow']).toBe('GET, POST');
+    });
+
+    await test.step('Then staat er van al die pogingen niets in de wachtrij en lekt er geen IP-kenmerk', async () => {
+      const antwoord = await request.get(url);
+      expect(antwoord.status()).toBe(200);
+      const json = await antwoord.json();
+      expect(json.wishes.some((w: { title: string }) => w.title.startsWith('Alleen een titel'))).toBe(false);
+      expect(json.wishes.some((w: { title: string }) => w.title.startsWith('xxxx'))).toBe(false);
+      expect(json.wishes.every((w: Record<string, unknown>) => w.ip_hash === undefined)).toBe(true);
+      expect(JSON.stringify(json)).not.toContain('127.0.0.1');
+    });
+
+    await test.step('And op een productieomgeving bestaat de wachtrij helemaal niet', async () => {
+      const projectMap = join(__dirname, '..', '..');
+      const opProductie = execFileSync('php', ['pilot/path-pipeline-intake.php'], {
+        cwd: projectMap, encoding: 'utf8', env: { ...process.env, PATH_APP_ENVIRONMENT: 'production' },
+      });
+      expect(opProductie).toContain('bestaat alleen op TEST');
+      expect(opProductie).not.toContain('wishes');
+
+      // Tegenproef: dezelfde aanroep zonder dat slot geeft wel de wachtrij terug,
+      // dus de weigering hierboven komt door de omgeving en niet doordat het
+      // endpoint sowieso niets doet.
+      const opTest = execFileSync('php', ['pilot/path-pipeline-intake.php'], {
+        cwd: projectMap, encoding: 'utf8', env: { ...process.env, PATH_APP_ENVIRONMENT: 'test' },
+      });
+      expect(opTest).toContain('wishes');
+      expect(opTest).not.toContain('bestaat alleen op TEST');
     });
   });
 
@@ -156,6 +290,8 @@ test.describe('Path Pipeline TEST-demo', () => {
     });
 
     await test.step('When er wordt gezocht, gefilterd, gesorteerd en een kaart wordt geopend', async () => {
+      // De pagina landt sinds 2.0.134 in Confluence; het bord staat een tab verder.
+      await page.getByRole('tab', { name: /Backlog/ }).click();
       const alleKaarten = await page.locator('.ticket-card').count();
       expect(alleKaarten).toBeGreaterThan(0);
 
@@ -175,7 +311,7 @@ test.describe('Path Pipeline TEST-demo', () => {
       await expect(page.locator('[data-filter-summary]')).toContainText('eigen demo-wensen');
       await expect(page.locator('[data-ticket-list="done"] .ticket-card')).toHaveCount(0);
       await page.locator('[data-sourcefilter="all"]').click();
-      await expect(page.locator('[data-ticket-list="done"] .ticket-card')).toHaveCount(5);
+      await expect(page.locator('[data-ticket-list="done"] .ticket-card')).toHaveCount(10);
       await page.locator('#page-title').click();
       await expect(page.locator('[data-panel="filters"]')).toBeHidden();
     });
@@ -338,7 +474,8 @@ test.describe('Path Pipeline TEST-demo', () => {
       expect(buitenBeeld, `Tabbladen buiten beeld: ${buitenBeeld.map((t) => t.naam).join(', ')}`).toEqual([]);
       await expect(page.locator('script[src*="assets/app.js"], link[href*="assets/styles.css"]')).toHaveCount(0);
       await expect(page.locator('footer')).toContainText('geen koppeling met een bestaand Jira-, Confluence- of Zephyr-account');
-      await expect(page.locator('footer')).toContainText('GitHub-issue');
+      await expect(page.locator('footer')).toContainText('aangenomen in de intakewachtrij');
+      await expect(page.locator('footer'), 'Gio hoeft nergens meer zelf een issue aan te maken').not.toContainText('GitHub-issue');
     });
   });
 

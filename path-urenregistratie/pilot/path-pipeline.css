@@ -321,9 +321,20 @@ button, summary { -webkit-tap-highlight-color: transparent; }
 .card-run:hover { background: var(--jira); color: #fff; }
 
 /* Nieuwe-wens-kaart */
+/* Op het Jira-bord staat geen formulier meer, alleen de wegwijzer ernaartoe. */
+.loket-verwijzing { position: sticky; top: 72px; padding: 18px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); }
+.loket-verwijzing h2 { margin: 5px 0 6px; font-size: 18px; font-weight: 600; }
+.loket-verwijzing p:not(.product-label) { margin: 0 0 16px; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .create-card { position: sticky; top: 72px; padding: 18px; }
 .create-card h2 { margin: 5px 0 6px; font-size: 18px; font-weight: 600; }
 .create-card > p:not(.product-label):not(.form-feedback) { margin: 0 0 16px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+/* Het loket denkt mee: de losse velden worden meteen een leesbare user story,
+   in dezelfde opmaak als de analysekaart op de Confluence-pagina zelf. */
+.story-preview { padding: 10px 12px; border: 1px solid var(--line); border-left: 3px solid var(--confluence); border-radius: 0 3px 3px 0; background: var(--confluence-soft); }
+.story-preview p[data-story-preview] { margin: 4px 0 0; color: var(--ink); font-size: 13px; line-height: 1.5; }
+/* De wachtrij is op TEST voor iedereen leesbaar. Die waarschuwing hoort naast
+   het invoerveld te staan, niet onderaan bij de kleine lettertjes. */
+.create-card > p.create-note { margin: -8px 0 16px; padding: 7px 9px; border-left: 3px solid var(--amber); border-radius: 0 3px 3px 0; background: var(--amber-soft); color: var(--amber); font-size: 12px; }
 .create-card form, .create-card label { display: flex; flex-direction: column; }
 .create-card form { gap: 12px; }
 .create-card label { gap: 5px; color: var(--muted); font-size: 12px; font-weight: 600; }
@@ -350,7 +361,10 @@ button, summary { -webkit-tap-highlight-color: transparent; }
 .gherkin pre { margin: 8px 0 0; padding: 10px; overflow: auto; border-left: 3px solid var(--zephyr); border-radius: 0 3px 3px 0; background: var(--surface-2); color: var(--ink); font-family: var(--mono); font-size: 11px; line-height: 1.65; white-space: pre-wrap; }
 
 /* ===================== Confluence ===================== */
-.knowledge-layout, .zephyr-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 16px; align-items: start; }
+.zephyr-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 16px; align-items: start; }
+/* Confluence is het loket: de paginaboom, het document en rechts het
+   wensenformulier. Gio vult daar in, slaat op, en is klaar. */
+.knowledge-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr) 330px; gap: 16px; align-items: start; }
 .page-tree { position: sticky; top: 72px; padding: 14px 10px; }
 .tree-space { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 0 4px; font-size: 14px; font-weight: 600; }
 .tree-space span { width: 26px; height: 26px; border-radius: 4px; display: grid; place-items: center; background: var(--confluence); color: #fff; font-size: 11px; font-weight: 700; }
