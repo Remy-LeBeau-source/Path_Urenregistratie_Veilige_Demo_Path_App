@@ -146,33 +146,33 @@
   "open": [
     {
       "date": "16 sep",
-      "wish": "Wens Gio (demo-pagina): de knop mag niet meer naar GitHub sturen om daar handmatig \"Submit new issue\" te klikken. Je vult de wens in (in de wensform of op de Confluence-pagina), drukt op opslaan, en de keten loopt vanaf dat moment vanzelf door: ticket, Zephyr-testcase, automatische test, Living Doc, TEST. Het GitHub-tussenstation hoort onzichtbaar te zijn.",
-      "who": "main",
+      "wish": "Basisregel (Gio): het wensformulier krijgt een keuzelijst met verbeteringen die wij zelf al zien (nice-to-haves), waar de PO uit kan kiezen; vrij typen blijft altijd mogelijk. De lijst leeft in dit bestand onder het kopje \"Nice to have\" en de pagina toont hem vandaar; kiezen vult het formulier voor, de PO past aan of typt zelf. Wie een verbetering ziet die geen wens van Gio is, zet hem daar neer in plaats van in een bericht.",
+      "who": "herontwerp",
+      "status": "bezig"
+    },
+    {
+      "date": "16 sep",
+      "wish": "Wens Gio (formulier): het type \"Chore\" zegt een PO niets (\"is mij niet bekend\"). Zichtbaar label wordt \"Onderhoud\": een klusje zonder zichtbaar effect voor de gebruiker, zoals opruimen of een instelling bijwerken. De waarde erachter blijft gelijk zodat labels en intake niets merken.",
+      "who": "herontwerp",
+      "status": "bezig"
+    },
+    {
+      "date": "16 sep",
+      "wish": "Werkafspraak (uit de kaartenwens): de kolom In uitvoering op het demobord vult zich alleen als een wens in deze lijst op bezig staat. Wie een wens oppakt, zet hem hier op bezig en pusht dat; bij oplevering verhuist hij naar Klaar met versie. Zonder die discipline beweegt er niets, hoe goed het bord ook is.",
+      "who": "werkwijze",
+      "status": "vastgelegd"
+    },
+    {
+      "date": "16 sep",
+      "wish": "Wens Gio (naam en versie): hernoem de demo-pagina alvast naar een eigen naam, blijvend binnen pilot/: pilot/path-kwaliteitsstraat.html, met \"Path Kwaliteitsstraat\" als titel (die kop stond er al en vond Gio mooi). Zet het versienummer onderaan in de voettekst, net zoals de urenapp dat doet, in plaats van de losse regel \"projectstand app 2.0.x\" bovenaan. Let op: een hernoeming raakt ook de PIPE-testcases, PIPELINE-INTAKE.md, de demodata-generator en de uitrolcontrole, dus in één hand houden.",
+      "who": "herontwerp, na de push van main",
       "status": "open"
     },
     {
       "date": "16 sep",
-      "wish": "CI-risico, nog niet opgelost: shard 8 van de tien testshards draait structureel 17-18 minuten terwijl de afbreeklimiet 22 minuten is; de snelste shards doen 2-5 minuten. Gemeten over drie releases (35023441673, 35035388985, 35043135123), zowel bij Validate als bij Promote Test. Oorzaak is de inhoud, niet het aantal: de zware integratiespecs (urenregistratie schrijven, correcties, beveiliging, rollen, teambeheer) vallen samen in één shard. Eerder is ditzelfde voor dashboard.spec.ts opgelost door dat bestand te splitsen. Nog te doen: opnieuw verdelen of splitsen, anders valt een release ooit om op de tijdslimiet.",
+      "wish": "Route vastgelegd (besluit Gio): de kwaliteitsstraat wordt eerst echt operationeel voor ons eigen proces -- Gio dient wensen in via Confluence, wij voeren uit, alles traceerbaar. Inloggen is nu expliciet geen prioriteit: voorlopig een openbare pagina op TEST, later kijken we naar inloggen. Voorwaarde die daarbij hoort: zolang hij openbaar is horen er geen persoonsgegevens en geen klantgegevens in. Wil Gio hem later ook live, dan verhuist hij uit pilot/ (die map gaat per contract nooit naar PROD) naar een eigen map met een eigen naam -- niet Jira of Confluence, want dat zijn merknamen van Atlassian; \"Path Kwaliteitsstraat\" staat al als kop op de pagina. Pas op dat moment komt inloggen en eigen opslag met geschiedenis en back-up aan de orde.",
       "who": "main",
-      "status": "open"
-    },
-    {
-      "date": "16 sep",
-      "wish": "Uitgezocht (TW-2): SKIN-H-029 valt alleen op deze machine om, op WebKit onder Windows, en is groen in CI en op mobiel Chrome. Met metingen uitgesloten: het voorkeurenvenster, het thema, de vormgeving, de viewport en de installatiebanner; er ligt nooit iets over de knop. Het blijft hangen in het naar-beeld-scrollen van de browser zelf. Vervolg: die klik ongevoelig maken voor dat scrollen.",
-      "who": "herontwerp",
-      "status": "open, na go-live"
-    },
-    {
-      "date": "16 sep",
-      "wish": "Eigen vondst in de testset zelf: een paar cases leunen op de gezaaide urenstaat, dus wie lokaal de hele suite in één keer draait krijgt rood op cases die niets mankeren (E2E-H-018, SKIN-H-035). In CI valt het niet op omdat die in aparte shards met een eigen database draaien. Oplossing is dezelfde als eerder bij de dashboardcases: elke schrijvende case maakt zijn eigen maand aan (TW-1 in CODEX_HANDOFF.md).",
-      "who": "herontwerp",
-      "status": "open, na go-live"
-    },
-    {
-      "date": "15 sep",
-      "wish": "Wisselvallig op mobile-safari: SKIN-H-040. 15 sep 5 van 5 keer groen herhaald, niet te reproduceren; opnieuw bekijken als hij in CI nog eens valt.",
-      "who": "herontwerp",
-      "status": "in de gaten houden"
+      "status": "route"
     }
   ]
 }
