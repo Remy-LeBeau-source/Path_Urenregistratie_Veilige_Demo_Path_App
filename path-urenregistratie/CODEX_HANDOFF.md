@@ -611,3 +611,20 @@ alleen testdekking en verificatie. Onderstaande bevinding is dus vastgelegd, nie
 - Bijbehorende case: `[ADM-WR-N-009] een onmogelijk uurtarief wordt geweigerd, niet bewaard` in
   `admin-writes.spec.ts`: net onder de grens hoort te mogen, erboven een 400 met uitleg, en na de
   weigering hoort het oude tarief nog te staan.
+
+## Nachtronde herontwerp 16 sep — wat er gebeurd is en wat er open staat
+
+- Stand branch: `herontwerp` staat op de documentatie- en poortherstelcommits van deze nacht.
+  Er is niets aan productiecode gewijzigd sinds 2.0.121; dat is de afspraak tot de go-live.
+- CI: run 35055982017 (2.0.121, commit 9f8587ef) viel rood op één poort, niet op een test:
+  `pilot/path-pipeline-data.json` liep achter op GIO-WENSEN.md. Alle andere controles in die shard
+  waren groen, inclusief de volledige smoke. Hersteld met `npm run pipeline:data`; daarna opnieuw
+  gepusht. De main-sessie heeft de oorzaak weggenomen door `docs:sync` de demo-feed zelf te laten
+  regenereren, dus draai voortaan `npm run docs:sync` vóór het pushen.
+- Lokale regressie: draait per project, elk met een verse database, omdat een gedeelde database
+  ongeveer 60 valse roodmeldingen oplevert (eerder geverifieerd: dezelfde cases apart groen).
+- Nog niet op de branch: testcase PWD-N-018 (grens van de inlogrem) ligt op de lokale tak
+  `wip/pwd-n-018`. Hij heeft nog niet gedraaid, want een tweede lokale run zou de testdatabase
+  onder de lopende regressie weghalen. Pas pushen nadat hij groen is.
+- Open bevindingen: BEV-1 tot en met BEV-5 hierboven, plus de te verifiëren val van E2E-H-018.
+  Alle vijf staan ook op GIO-WENSEN.md, met per stuk de voorgestelde fix en de bijbehorende case.
