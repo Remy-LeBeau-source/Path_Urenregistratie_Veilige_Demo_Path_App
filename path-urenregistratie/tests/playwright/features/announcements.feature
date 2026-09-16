@@ -76,6 +76,16 @@ Feature: Mededelingen versturen, intrekken en verbergen
     Then wordt elk ontbrekend verplicht veld afzonderlijk gemeld
 
   @negative
+  Scenario: [ANN-N-007] de lengtegrens telt tekens zoals het invoerveld, ook met accenten en emoji, en legt uit wat er mis is
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given mededelingen versturen, intrekken en verbergen is voorbereid
+    When de flow voor ANN-N-007 wordt uitgevoerd
+    Then wordt precies de grens geaccepteerd, ook als elk teken meer dan één byte is
+    And wordt één teken te veel geweigerd, met een melding die zegt wat er mis is
+    And cleanup: de verstuurde testmededeling wordt ingetrokken en bij medewerkers verborgen
+
+  @negative
   Scenario: [ANN-N-006] een medewerker kan zelf geen mededeling versturen en anoniem is alles dicht
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 2

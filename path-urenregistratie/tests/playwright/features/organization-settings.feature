@@ -163,6 +163,14 @@ Feature: Organisatie-instellingen beheren
     Then blijft Instellingen actief in plaats van terug te vallen op Dashboard
 
   @negative
+  Scenario: [ADM-WR-N-008] lengtegrenzen tellen tekens, niet bytes: een naam vol accenten mag tot de volle lengte
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given organisatie-instellingen beheren is voorbereid
+    When een medewerker met 160 tekens in de naam wordt opgeslagen
+    Then wordt de naam volledig bewaard, zonder afkappen
+
+  @negative
   Scenario: [ADM-WR-N-005] een al bestaande naam blokkeert of waarschuwt niet: alleen het e-mailadres moet uniek zijn
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 5

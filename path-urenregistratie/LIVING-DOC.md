@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 588 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 592 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 588 unieke case-ID's
+- Playwright executable cases: 592 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 589 unieke case-ID's
+- Totaal executable cases: 593 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 636
-- Niet-mobile projectuitvoeringen: 540
+- Uitvoeringen: 640
+- Niet-mobile projectuitvoeringen: 544
 - Mobile functionele cases: 48
 - Pixel 7 / Chromium-uitvoeringen: 48
 - iPhone 13 / WebKit-uitvoeringen: 48
 
-De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 588 Playwright-functionele cases in totaal 636 resultaten op: 540 + (48 x 2) = 636.
+De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 592 Playwright-functionele cases in totaal 640 resultaten op: 544 + (48 x 2) = 640.
 
 ## Documentatieketen
 
@@ -46,7 +46,7 @@ De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 588 Playwri
 
 - Feature: `tests/playwright/features/organization-settings.feature`
 - Source: `tests/playwright/admin-writes.spec.ts`
-- Cases: 29
+- Cases: 30
 
 - [ADM-WR-H-019] latere startdatum vraagt bevestiging en vermeldt dat historie bewaard blijft — Techniek: API-contract + equivalentieklasse · Assertions: 9
 - [ADM-WR-H-020] server berekent echte historische impact vóór een latere startdatum wordt opgeslagen — Techniek: API-contract + equivalentieklasse · Assertions: 12
@@ -67,6 +67,7 @@ De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 588 Playwri
 - [ADM-WR-H-009] goedkeuringsloop volgt logische maand/medewerker-volgorde — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [ADM-WR-H-010] server-led aangemaakte beheerder en medewerker overleven een echte paginaherlading — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [ADM-WR-H-011] een echte paginaherlading blijft op het geopende scherm i.p.v. terug te springen naar Dashboard — Techniek: API-contract + equivalentieklasse · Assertions: 5
+- [ADM-WR-N-008] lengtegrenzen tellen tekens, niet bytes: een naam vol accenten mag tot de volle lengte — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [ADM-WR-N-005] een al bestaande naam blokkeert of waarschuwt niet: alleen het e-mailadres moet uniek zijn — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
 - [ADM-WR-N-006] dubbele naam is toegestaan, maar een al gebruikt e-mailadres wordt hard geblokkeerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
 - [ADM-WR-N-007] actief-accounttotaal klopt op elke stap: exact duplicaat verandert niets, uniek account telt precies 1 op — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 15
@@ -482,13 +483,13 @@ De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 588 Playwri
 - [NOT-H-013] een melding in de bel brengt de medewerker direct naar de plek waar iets te doen is — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
 - [NOT-H-014] Alles gelezen in Berichten leest alleen de mededelingen en laat de bel met rust — Techniek: API-contract + equivalentieklasse · Assertions: 8
 - [NOT-H-016] bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 10, de bel hooguit 10 — Techniek: Grenswaardenanalyse · Assertions: 18
-- [NOT-H-017] Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 16
+- [NOT-H-017] Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 20
 
 ### Mededelingen versturen, intrekken en verbergen
 
 - Feature: `tests/playwright/features/announcements.feature`
 - Source: `tests/playwright/announcements.spec.ts`
-- Cases: 9
+- Cases: 10
 
 - [ANN-H-001] beheerder verstuurt een mededeling aan een gekozen medewerker — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [ANN-H-002] een concept blijft intern en kan daarna definitief worden verwijderd — Techniek: API-contract + equivalentieklasse · Assertions: 7
@@ -498,6 +499,7 @@ De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 588 Playwri
 - [ANN-H-009] een via het scherm gekozen medewerker wordt ook bij de server als die medewerker bewaard — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [ANN-N-004] intrekken zonder reden wordt geweigerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
 - [ANN-N-005] verzenden zonder titel, bericht of ontvanger wordt geweigerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
+- [ANN-N-007] de lengtegrens telt tekens zoals het invoerveld, ook met accenten en emoji, en legt uit wat er mis is — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
 - [ANN-N-006] een medewerker kan zelf geen mededeling versturen en anoniem is alles dicht — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
 
 ### Wachtwoordherstel en misbruikbeveiliging
@@ -651,7 +653,7 @@ De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 588 Playwri
 
 - Feature: `tests/playwright/features/klassiek-verkenning.feature`
 - Source: `tests/playwright/klassiek-verkenning.spec.ts`
-- Cases: 22
+- Cases: 23
 
 - [KLV-N-002] het maandkeuzepaneel valt op geen enkele breedte buiten het scherm — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 8
 - [KLV-N-003] in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 3
@@ -664,6 +666,7 @@ De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 588 Playwri
 - [KLV-H-010] op TEST staat alleen Herstel bovenin; thema, vormgeving en versie staan in het profielmenu — Techniek: Responsive viewport + toegankelijkheidsinspectie (44px, toetsenbord) + end-to-end use-case · Assertions: 15
 - [KLV-H-021] de knoppen onder Testfuncties tonen waar je naartoe gaat, niet waar je bent — Techniek: Toestandsovergangtest (licht↔donker, Klassiek↔Modern, heen en terug) + toegankelijkheidsinspectie (geen misleidend aria-pressed) · Assertions: 16
 - [KLV-N-022] de statuspillen naast de koppen in Instellingen blijven binnen hun kaart op smalle telefoons — Techniek: Responsive viewport (320/360/390) + grenswaarden smalle telefoon + lay-outmeting binnen de kaart · Assertions: 1
+- [KLV-N-023] verlof en ziekte accepteren geen onmogelijk aantal uren en gaan dan niet naar de server — Techniek: Grenswaardenanalyse (maandmaximum voor verlof en ziekte) + foutafhandeling zonder serverfout · Assertions: 13
 - [KLV-N-011] de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 5
 - [KLV-N-012] typen in één dag van de laatste open week maakt de rest van die week niet ingevuld — Techniek: Toestandsovergangtest (onaangeraakt → deels ingevuld) + beslistabel indienbaarheid + herladen (persistentie) · Assertions: 6
 - [KLV-H-013] Week opslaan telt lege dagen als bewust 0: daarna Maand indienen, ook buiten de laatste week — Techniek: Toestandsovergangtest (Opslaan = bewust 0) + beslistabel indienbaarheid · Assertions: 4
@@ -740,11 +743,12 @@ De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 588 Playwri
 
 - Feature: `tests/playwright/features/correction-approval-workflow.feature`
 - Source: `tests/playwright/timesheet-review-flow.spec.ts`
-- Cases: 4
+- Cases: 5
 
 - [TS-REV-API-H-005] admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking — Techniek: Concurrency + toestandsovergang · Assertions: 70
 - [TS-REV-API-H-006] gelijktijdige approve-requests door twee beheerders leveren exact één winnaar — Techniek: Concurrency + toestandsovergang · Assertions: 7
 - [TS-REV-API-H-007] jaarwisseling december naar januari verwerkt urenstaten correct over de jaargrens — Techniek: API-contract + equivalentieklasse · Assertions: 7
+- [TS-REV-API-N-002] elke verboden statusovergang wordt geweigerd en laat de urenstaat ongemoeid — Techniek: Toestandsovergang · Assertions: 19
 - [TS-REV-API-N-001] server weigert een dagregel op zaterdag of zondag, ook als de aanroep de client omzeilt — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 
 ### Correcties en goedkeuringen behandelen

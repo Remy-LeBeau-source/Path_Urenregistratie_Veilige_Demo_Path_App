@@ -503,3 +503,69 @@ Bron: gui r377-420 (markup) en r1194-1270 (`maanden`-logica); DESIGN-BESLUITEN.
 - Donker thema is deze ronde niet herontworpen, alleen de menubalk loopt mee.
 - Afwijking `--muted` i.p.v. `--line` voor dagen buiten de maand is door Gio goedgekeurd en in de referentie
   overgenomen.
+
+## Bevindingen uit de nachtronde (16 sep, nog NIET gefixt — productiecode bevroren tot go-live)
+
+Afgesproken met de main-sessie: vóór de mogelijke go-live geen wijzigingen meer in productiecode,
+alleen testdekking en verificatie. Onderstaande bevinding is dus vastgelegd, niet opgelost.
+
+### BEV-1 — twee dagregels voor dezelfde datum in één opslag laten maand en dagen uit elkaar lopen
+
+- Techniek: equivalentieklassen + foutgok op de vorm van de payload (niet op de waarden).
+- Waar: `server/api/timesheets.php`, `timesheet_normalize_day_entries()` (r270-375) en
+  `timesheet_write_entries()` (r427 e.v.).
+- Wat er misgaat: de normalisatie controleert per dagregel datum, werkdag, 0-24 uur en lengte,
+  en eist daarna dat de som van de dagregels gelijk is aan `billable_hours`. Dubbele datums worden
+  niet geweigerd. Bij het wegschrijven is de upsert `ON DUPLICATE KEY UPDATE hours = VALUES(hours)`,
+  dus van twee regels voor dezelfde dag blijft alleen de laatste staan.
+- Gevolg: een payload met 2 x 8 uur op dezelfde dag en `billableHours: 16` wordt geaccepteerd;
+  de maandkolom `billable_hours` bewaart 16, maar `time_entries` bewaart 8. Lezen gebruikt twee
+  bronnen (`timesheet_day_entries()` voor de dagen, de timesheetrij voor het totaal), dus het
+  verschil blijft bestaan en is voor de medewerker niet zichtbaar te herstellen.
+- Voorstel fix (na go-live): in `timesheet_normalize_day_entries()` een dubbele `work_date`
+  weigeren met 400 `invalid-payload` en de melding "Elke dag mag maar één keer in de opslag staan."
+- Bijbehorende case (schrijven zodra de fix mag; eerst rood op de huidige code laten zien):
+  `[TS-API-N-014] dezelfde dag twee keer in één opslag wordt geweigerd` in
+  `tests/playwright/timesheet-write.spec.ts`, eigen toekomstige maand, assertions:
+  status 400, `error === 'invalid-payload'`, en na een `read` dat het maandtotaal en de som van de
+  dagregels gelijk zijn.
+
+### BEV-2 — intrekken zet de melding zelf op gelezen (vraag voor Gio, geen fout)
+
+- Techniek: beslistabel op "wanneer wordt een bericht gelezen?" (handeling x brontoestand).
+- Waar: `server/api/announcements.php`, `action=withdraw` (r351): alle openstaande notificaties bij
+  die mededeling krijgen `read_at`.
+- Waarom het opvalt: Gio's regel is dat berichten niet vanzelf als gelezen mogen verdwijnen. Bij
+  intrekken gebeurt dat op de server wél. In de lijst blijft de mededeling zichtbaar onder het
+  filter "Ingetrokken", dus hij verdwijnt niet; hij telt alleen niet meer mee als ongelezen.
+- Voorstel: zo laten, maar aan Gio voorleggen. Wil hij dat een ingetrokken bericht ongelezen blijft
+  tot de medewerker het opent, dan vervalt die UPDATE en moet NOT-H-01x daarop worden uitgebreid.
+- Rest van dit bestand ongemoeid; de scheiding en de bevoegdheden in announcements.php zijn
+  nagelopen (bedrijfsscope, alleen beheerder mag schrijven, CSRF verplicht, status bewaakt) en
+  daar is niets op aan te merken.
+
+### Te verifiëren na de regressie — E2E-H-018 viel om in de verse-database-run
+
+- `tests/playwright/business-workflows-attachments.spec.ts:47` [E2E-H-018] stopte op
+  "de urenstaat hoort goedgekeurd te zijn": status bleef `draft` in plaats van `approved`.
+- Opgetreden in de per-project regressie (desktop-chromium, verse database), test 78 van 525.
+  In CI is deze case op dezelfde commit groen, dus eerst apart herhalen voordat er een
+  conclusie aan hangt.
+- Waar te kijken als hij apart ook rood is: de case vult één dag met 8 uur, klikt
+  `[data-hours-week-scope="all"]` en dient in. Sinds de nieuwe indienlogica (maand indienen mag
+  pas als elke werkdag bewust is ingevuld) kan die POST een concept-opslag zijn geworden in
+  plaats van een indiening. Dan hoort de case de maand eerst volledig te vullen.
+
+### BEV-3 — de melding "Niet opgeslagen" wordt niet voorgelezen
+
+- Techniek: toegankelijkheidsinspectie op de foutmeldingen van de urenvakken.
+- Waar: `index.html` r823, `<small id="hours-autosave-status">` heeft geen `role="status"` /
+  `aria-live="polite"`; `assets/app.js` (rond r10240) zet daar wél de blokkerende meldingen in
+  ("Niet opgeslagen: een dag kan maximaal 24 uur hebben." en de maandgrens voor verlof/ziekte).
+- Gevolg: wie met een schermlezer werkt, krijgt geen signaal dat de invoer is geweigerd. Het vak
+  zelf staat wel op `aria-invalid`, maar dat wordt pas gemeld als de focus er weer op komt.
+- Voorstel fix (na go-live, één attribuut): `role="status" aria-live="polite"` op dat element.
+- Bijbehorende case: `[KLV-N-024] een geweigerde invoer wordt ook hoorbaar gemeld` in
+  `klassiek-verkenning.spec.ts`: 25 uur in een dagvak zetten, assert dat
+  `#hours-autosave-status` de melding bevat én `aria-live="polite"` heeft. Tegenproef: op de
+  huidige opmaak rood op de aria-live-assertie.

@@ -807,6 +807,26 @@ test.describe('notifications api', () => {
       await expect(page.locator('#berichten-paginering [data-pagina-stand]')).toHaveText('1–10 van 15');
     });
 
+    await test.step('And vat een ingetrokken bericht de reden samen, niet de tekst die niet meer geldt', async () => {
+      // Zelfde gedachte als het label Ingetrokken (besluit Gio 15 sep): "Kantoor vandaag
+      // gesloten" mag nergens lezen alsof het nog geldt, ook niet in de samenvattingsregel.
+      await page.locator('[data-announcement-archive-filter="withdrawn"]').click();
+      const kaart = lijst.locator('.employee-announcement-card.is-withdrawn').first();
+      await expect(kaart).toBeVisible();
+      await kaart.locator('[data-bericht-toggle]').click();
+      const gegevens = await kaart.evaluate(el => ({
+        snippet: (el.querySelector('.bericht-snippet')?.textContent || '').trim(),
+        reden: (el.querySelector('[data-employee-withdrawal-note]')?.textContent || '').trim(),
+        tekst: (el.querySelector('.bericht-inhoud > p')?.textContent || '').trim(),
+      }));
+      const kern = gegevens.snippet.replace(/…$/, '').trim();
+      expect(kern.length, 'er hoort een samenvatting te staan').toBeGreaterThan(5);
+      expect(gegevens.reden.includes(kern), `samenvatting "${kern}" hoort uit de reden te komen`).toBe(true);
+      expect(gegevens.tekst.startsWith(kern), 'de samenvatting hoort niet de vervallen tekst te zijn').toBe(false);
+      await kaart.locator('[data-bericht-toggle]').click();
+      await page.locator('[data-announcement-archive-filter="all"]').click();
+    });
+
     for (const thema of ['dark', 'light'] as const) {
       await test.step(`And is een ingetrokken bericht in ${thema} rustig lavendel (geen oranje vlak) en leesbaar (≥ 4,5:1)`, async () => {
         await page.evaluate(t => {

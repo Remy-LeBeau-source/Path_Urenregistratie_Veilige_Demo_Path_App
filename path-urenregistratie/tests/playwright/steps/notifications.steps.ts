@@ -68,3 +68,4 @@ And("zet een filterwissel de lijst terug op pagina 1");
 When("de flow voor NOT-H-017 wordt uitgevoerd");
 Then("staat Actueel aan, met alleen berichten die nog gelden");
 And("tellen de filters op: Ongelezen + Gelezen = Actueel, Actueel + Ingetrokken = Alles");
+And("vat een ingetrokken bericht de reden samen, niet de tekst die niet meer geldt");

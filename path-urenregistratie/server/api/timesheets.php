@@ -348,7 +348,7 @@ function timesheet_parse_day_entries(array $payload, int $year, int $month, floa
         // Andere weken sturen zoals voorheen alleen dagen met uren > 0 mee.
 
         $description = trim((string)($entry['description'] ?? ''));
-        if (strlen($description) > 200) {
+        if (mb_strlen($description, 'UTF-8') > 200) {
             auth_send_json([
                 'ok' => false,
                 'error' => 'invalid-payload',
@@ -676,6 +676,22 @@ if ($needsWritePayload) {
     $billableHours = timesheet_decimal($payload, 'billable_hours', 0.0);
     $leaveHours = timesheet_decimal($payload, 'leave_hours', 0.0);
     $sicknessHours = timesheet_decimal($payload, 'sickness_hours', 0.0);
+    // Een maand kan niet meer uren bevatten dan zijn eigen dagen. Verlof en ziekte hadden
+    // alleen een ondergrens, dus een typefout (800 in plaats van 8) werd gewoon bewaard en
+    // telde mee in de maandtotalen (KLV-N-023, 16 sep). Het scherm blokkeert dit al, maar
+    // een slot dat alleen in de browser zit, is geen slot.
+    $maandMaximum = (int)date('t', mktime(0, 0, 0, (int)$period['month'], 1, (int)$period['year'])) * 24;
+    // Ook contracturen: die zijn niet begrensd en een te groot getal liep vast op de kolom
+    // (DECIMAL(7,2)), wat een 500 gaf in plaats van een nette weigering (gemeten 16 sep).
+    foreach (['leave_hours' => $leaveHours, 'sickness_hours' => $sicknessHours, 'contractual_hours' => $contractualHours, 'billable_hours' => $billableHours] as $veld => $waarde) {
+        if ($waarde > $maandMaximum) {
+            auth_send_json([
+                'ok' => false,
+                'error' => 'invalid-payload',
+                'message' => 'Het veld ' . $veld . ' kan deze maand niet meer dan ' . $maandMaximum . ' uur zijn.',
+            ], 400);
+        }
+    }
     $employeeNote = isset($payload['employee_note']) ? trim((string)$payload['employee_note']) : '';
     $dayEntries = timesheet_parse_day_entries($payload, $period['year'], $period['month'], $billableHours);
 }

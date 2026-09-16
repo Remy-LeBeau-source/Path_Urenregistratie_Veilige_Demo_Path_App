@@ -429,6 +429,103 @@ test.describe('timesheet review flow api', () => {
     });
   });
 
+  test('[TS-REV-API-N-002] elke verboden statusovergang wordt geweigerd en laat de urenstaat ongemoeid', async ({ request }) => {
+    // Toestandsovergangstest: de urenstaat kent draft, submitted, approved en correction.
+    // De toegestane overgangen zijn getest in TS-REV-API-H-005; deze case dekt de andere
+    // kant van de tabel af, de overgangen die niet mogen. De server bewaakt ze los van het
+    // scherm, want een slot dat alleen in de browser zit is geen slot. Zonder deze case
+    // zou een later versoepelde bewaking pas in productie opvallen.
+    const authApi = new AuthApi(request);
+    const timesheetApi = new TimesheetApi(request);
+    let period = '';
+    let employeeId = 0;
+    let versie = 0;
+
+    const stand = async () => {
+      const gelezen = await timesheetApi.read(period, employeeId || undefined);
+      expect(gelezen.status).toBe(200);
+      return { status: String(gelezen.body?.timesheet?.status || ''), versie: Number(gelezen.body?.timesheet?.version || 0) };
+    };
+
+    await test.step('Given een concept van een medewerker in een eigen periode', async () => {
+      const login = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(login.user.role).toBe('employee');
+      period = await findWritablePeriod(timesheetApi);
+      const concept = await timesheetApi.write({
+        action: 'save_draft', period,
+        contractualHours: 160, billableHours: 12, leaveHours: 0, sicknessHours: 0,
+        dayEntries: buildDayEntries(period, 8, 4),
+      });
+      expect(concept.status).toBe(200);
+      expect(concept.body.timesheet.status).toBe('draft');
+      versie = Number(concept.body.timesheet.version || 0);
+      const gelezen = await timesheetApi.read(period);
+      employeeId = Number(gelezen.body?.employee_id || 0);
+      expect(employeeId).toBeGreaterThan(0);
+    });
+
+    await test.step('When de beheerder een concept probeert goed te keuren of te laten corrigeren, then weigert de server beide', async () => {
+      await authApi.logout();
+      const adminLogin = await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      expect(adminLogin.user.role).toBe('administrator');
+
+      for (const [label, actie] of [['goedkeuren', 'approve'], ['correctie vragen', 'request_correction']] as const) {
+        const res = await timesheetApi.write({
+          action: actie, period, employeeId, expectedVersion: versie,
+          contractualHours: 160, billableHours: 12, leaveHours: 0, sicknessHours: 0,
+          dayEntries: buildDayEntries(period, 8, 4),
+          correctionMessage: actie === 'request_correction' ? 'Mag niet vanuit concept' : undefined,
+        });
+        expect(res.status, `${label} vanuit concept: status`).toBe(409);
+        expect(res.body.error, `${label} vanuit concept: error`).toBe('invalid-timesheet-transition');
+      }
+      const na = await stand();
+      expect(na, 'een geweigerde overgang mag niets veranderen').toEqual({ status: 'draft', versie });
+    });
+
+    await test.step('And blijft goedkeuren geweigerd zodra de maand al is goedgekeurd', async () => {
+      await authApi.logout();
+      await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      const ingediend = await timesheetApi.write({
+        action: 'submit', period, expectedVersion: versie,
+        contractualHours: 160, billableHours: 12, leaveHours: 0, sicknessHours: 0,
+        dayEntries: buildDayEntries(period, 8, 4),
+      });
+      expect(ingediend.status).toBe(200);
+      expect(ingediend.body.timesheet.status).toBe('submitted');
+
+      await authApi.logout();
+      await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      const goedgekeurd = await timesheetApi.write({ action: 'approve', period, employeeId, expectedVersion: Number(ingediend.body.timesheet.version || 0), contractualHours: 160, billableHours: 12, leaveHours: 0, sicknessHours: 0, dayEntries: buildDayEntries(period, 8, 4) });
+      expect(goedgekeurd.status).toBe(200);
+      expect(goedgekeurd.body.timesheet.status).toBe('approved');
+      const naGoedkeuren = await stand();
+
+      const nogmaals = await timesheetApi.write({ action: 'approve', period, employeeId, expectedVersion: naGoedkeuren.versie, contractualHours: 160, billableHours: 12, leaveHours: 0, sicknessHours: 0, dayEntries: buildDayEntries(period, 8, 4) });
+      expect(nogmaals.status, 'twee keer goedkeuren').toBe(409);
+      expect(nogmaals.body.error).toBe('invalid-timesheet-transition');
+      expect(await stand(), 'een tweede goedkeuring mag niets veranderen').toEqual(naGoedkeuren);
+    });
+
+    await test.step('And mag de medewerker een goedgekeurde maand niet opnieuw indienen of als concept overschrijven', async () => {
+      await authApi.logout();
+      await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      const voor = await stand();
+
+      for (const actie of ['submit', 'save_draft'] as const) {
+        const res = await timesheetApi.write({
+          action: actie, period, expectedVersion: voor.versie,
+          contractualHours: 160, billableHours: 16, leaveHours: 0, sicknessHours: 0,
+          dayEntries: buildDayEntries(period, 8, 8),
+        });
+        expect([403, 409], `${actie} op een goedgekeurde maand hoort geweigerd te worden (status ${res.status})`).toContain(res.status);
+        expect(res.body.ok, `${actie}: ok-vlag`).toBe(false);
+      }
+      expect(await stand(), 'een goedgekeurde maand blijft ongemoeid').toEqual(voor);
+      await authApi.logout();
+    });
+  });
+
   test('[TS-REV-API-N-001] server weigert een dagregel op zaterdag of zondag, ook als de aanroep de client omzeilt', async ({ request }) => {
     const authApi = new AuthApi(request);
     const timesheetApi = new TimesheetApi(request);

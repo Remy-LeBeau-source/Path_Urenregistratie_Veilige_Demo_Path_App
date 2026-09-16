@@ -201,11 +201,14 @@ if ($action === 'send' || $action === 'save_draft') {
         }
     }
 
-    if (strlen($title) > 160) {
-        auth_send_json(['ok' => false, 'error' => 'title-too-long'], 400);
+    // Tekens tellen, niet bytes. Het invoerveld in de app begrenst op 160 respectievelijk
+    // 1500 tekens (maxlength), maar strlen() telde bytes: een onderwerp met accenten of een
+    // emoji werd dan geweigerd terwijl het veld het toeliet, en zonder uitleg (16 sep).
+    if (mb_strlen($title, 'UTF-8') > 160) {
+        auth_send_json(['ok' => false, 'error' => 'title-too-long', 'message' => 'Het onderwerp kan maximaal 160 tekens lang zijn.'], 400);
     }
-    if (strlen($message) > 1500) {
-        auth_send_json(['ok' => false, 'error' => 'message-too-long'], 400);
+    if (mb_strlen($message, 'UTF-8') > 1500) {
+        auth_send_json(['ok' => false, 'error' => 'message-too-long', 'message' => 'Het bericht kan maximaal 1500 tekens lang zijn.'], 400);
     }
 
     // Resolve recipients from correction source when correction_of_id is set

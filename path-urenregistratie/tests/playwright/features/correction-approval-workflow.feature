@@ -45,6 +45,16 @@ Feature: Correctie- en goedkeuringsproces
     Then wordt met Playwright-assertions bevestigd dat jaarwisseling december naar januari verwerkt urenstaten correct over de jaargrens
 
   @negative
+  Scenario: [TS-REV-API-N-002] elke verboden statusovergang wordt geweigerd en laat de urenstaat ongemoeid
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 19
+    Given een concept van een medewerker in een eigen periode
+    When de beheerder een concept probeert goed te keuren of te laten corrigeren, then weigert de server beide
+    And blijft goedkeuren geweigerd zodra de maand al is goedgekeurd
+    And mag de medewerker een goedgekeurde maand niet opnieuw indienen of als concept overschrijven
+    Then wordt met Playwright-assertions bevestigd dat elke verboden statusovergang wordt geweigerd en laat de urenstaat ongemoeid
+
+  @negative
   Scenario: [TS-REV-API-N-001] server weigert een dagregel op zaterdag of zondag, ook als de aanroep de client omzeilt
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 6

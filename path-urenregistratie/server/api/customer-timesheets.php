@@ -76,7 +76,7 @@ function customer_timesheet_optional_positive_int(array $payload, string $field)
 function customer_timesheet_required_text(array $payload, string $field, int $maxLength = 2000): string
 {
     $value = trim((string)($payload[$field] ?? ''));
-    if ($value === '' || strlen($value) > $maxLength) {
+    if ($value === '' || mb_strlen($value, 'UTF-8') > $maxLength) {
         customer_timesheet_json([
             'ok' => false,
             'error' => 'invalid-payload',

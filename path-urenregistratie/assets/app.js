@@ -9185,13 +9185,16 @@ function berichtKaartHtml(bericht) {
   const intrekking = bericht.ingetrokken
     ? '<div class="announcement-withdrawal-note" data-employee-withdrawal-note><strong>Deze mededeling is ingetrokken en geldt niet meer</strong>' + escapeHtml(bericht.reden || "Er is geen reden vastgelegd.") + '</div>'
     : "";
+  // Bij een ingetrokken bericht vat de reden samen, niet de tekst die niet meer geldt
+  // (zelfde gedachte als het label: "Kantoor vandaag gesloten" mag niet als geldig lezen).
+  const samenvatting = berichtSnippet(bericht.ingetrokken ? (bericht.reden || "Deze mededeling geldt niet meer.") : bericht.message);
   const markeer = bericht.unread
     ? '<button class="text-button bericht-markeer" type="button" data-bericht-gelezen="' + bericht.id + '" aria-label="' + escapeHtml("Markeer " + bericht.title + " als gelezen") + '">Markeer als gelezen</button>'
     : "";
   return '<article class="employee-announcement-card' + (bericht.unread ? " is-unread" : "") + (bericht.ingetrokken ? " is-withdrawn" : "") + (open ? " is-open" : " is-dicht") + '" data-bericht-id="' + bericht.id + '">'
     + '<div class="bericht-kop-rij">'
       + '<button class="bericht-kop" type="button" data-bericht-toggle="' + bericht.id + '" aria-expanded="' + (open ? "true" : "false") + '" aria-controls="' + inhoudId + '">'
-        + '<span class="bericht-kop-tekst">' + label + '<h3>' + escapeHtml(bericht.title) + '</h3><small class="bericht-snippet">' + escapeHtml(berichtSnippet(bericht.message)) + '</small></span>'
+        + '<span class="bericht-kop-tekst">' + label + '<h3>' + escapeHtml(bericht.title) + '</h3>' + (samenvatting ? '<small class="bericht-snippet">' + escapeHtml(samenvatting) + '</small>' : "") + '</span>'
         + '<small>' + escapeHtml(bericht.createdAt) + '</small>'
         + '<span class="bericht-chevron" aria-hidden="true"></span>'
       + '</button>'
@@ -10171,6 +10174,13 @@ function updateTimesheetSubmitUi(record) {
   return normalizedStatus;
 }
 
+// Een maand kan niet meer uren bevatten dan zijn eigen dagen: 28 t/m 31 dagen x 24 uur.
+// Verlof en ziekte hadden alleen een ondergrens, dus een typefout (800 in plaats van 8)
+// werd gewoon opgeslagen en telde mee in het maandtotaal (KLV-N-023).
+function maandUrenMaximum(period = currentPeriod()) {
+  return new Date(Date.UTC(period.year, period.monthIndex + 1, 0)).getUTCDate() * 24;
+}
+
 function updateHoursTotal(markDraft) {
   const employee = currentEmployee();
   const record = recordFor(employee.id);
@@ -10204,9 +10214,23 @@ function updateHoursTotal(markDraft) {
     row.querySelector(".week-total").textContent = hoursFormat.format(weekTotal);
   });
   const total = totalEntries(record.entries);
-  record.leave = Math.max(0, Number(document.querySelector("#summary-leave").value) || 0);
-  record.sick = Math.max(0, Number(document.querySelector("#summary-sick").value) || 0);
-  if (markDraft && teVeelUren === 0) {
+  // Verlof en ziekte: zelfde aanpak als een dag van meer dan 24 uur. Het vak wordt als
+  // ongeldig gemarkeerd, de vorige geldige waarde blijft staan en er gaat niets naar de
+  // server tot het klopt.
+  const maandMaximum = maandUrenMaximum();
+  let teVeelMaandUren = 0;
+  [["#summary-leave", "leave"], ["#summary-sick", "sick"]].forEach(([selector, sleutel]) => {
+    const veld = document.querySelector(selector);
+    if (!veld) return;
+    veld.max = String(maandMaximum);
+    const teVeel = veld.value !== "" && Number(veld.value) > maandMaximum;
+    veld.setAttribute("aria-invalid", String(teVeel));
+    if (teVeel) teVeelMaandUren += 1;
+    record[sleutel] = teVeel
+      ? Math.max(0, Number(record[sleutel]) || 0)
+      : Math.max(0, Number(veld.value) || 0);
+  });
+  if (markDraft && teVeelUren === 0 && teVeelMaandUren === 0) {
     if (record.timesheetStatus !== "correction") record.timesheetStatus = "draft";
     record.invoiceStatus = "concept";
     record.payrollStatus = "concept";
@@ -10214,7 +10238,9 @@ function updateHoursTotal(markDraft) {
     scheduleDraftTimesheetWrite();
     document.querySelector("#hours-autosave-status").textContent = "Automatisch opgeslagen om " + new Intl.DateTimeFormat("nl-NL", { hour: "2-digit", minute: "2-digit" }).format(new Date());
   } else if (markDraft) {
-    document.querySelector("#hours-autosave-status").textContent = "Niet opgeslagen: een dag kan maximaal 24 uur hebben.";
+    document.querySelector("#hours-autosave-status").textContent = teVeelUren > 0
+      ? "Niet opgeslagen: een dag kan maximaal 24 uur hebben."
+      : "Niet opgeslagen: verlof en ziekte kunnen deze maand samen niet meer dan " + maandMaximum + " uur zijn.";
   }
   const weekMatch = /^week-(\d+)$/.exec(state.hoursWeekScope || "");
   const selectedWeek = weekMatch ? currentPeriod().weekRows[Number(weekMatch[1])] : null;
@@ -10235,7 +10261,9 @@ function updateHoursTotal(markDraft) {
     label.className = "is-" + stand.soort;
     label.textContent = stand.tekst;
   });
-  document.querySelector("#hours-target-help").textContent = teVeelUren > 0
+  document.querySelector("#hours-target-help").textContent = teVeelMaandUren > 0 && teVeelUren === 0
+    ? "Niet opgeslagen: verlof en ziekte kunnen deze maand samen niet meer dan " + maandMaximum + " uur zijn. Pas het rood omlijnde vak aan."
+    : teVeelUren > 0
     ? "Niet opgeslagen: een dag kan maximaal 24 uur hebben. Pas het rood omlijnde vak aan."
     : isTimesheetEditableForEmployee(record)
     ? "Automatisch opgeslagen. " + (openDagen === 0 ? "Alle werkdagen zijn ingevuld." : openDagen === 1 ? "Nog 1 werkdag niet ingevuld." : "Nog " + openDagen + " werkdagen niet ingevuld.")

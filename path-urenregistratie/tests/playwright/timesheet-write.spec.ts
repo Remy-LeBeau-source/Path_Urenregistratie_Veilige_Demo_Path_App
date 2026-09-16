@@ -389,6 +389,15 @@ test.describe('timesheet write api', () => {
       ['niet-bestaande datum', { dayEntries: [{ workDate: `${period}-32`, hours: 8 }], billableHours: 8 }],
       ['billable telt niet op tot de dagregels', { dayEntries: [{ workDate: `${period}-01`, hours: 8 }], billableHours: 40 }],
       ['negatief verlof', { dayEntries: [{ workDate: `${period}-01`, hours: 8 }], billableHours: 8, leaveHours: -4 }],
+      // Bovengrens per maand: verlof en ziekte hadden alleen een ondergrens, dus een typefout
+      // (800 in plaats van 8) werd gewoon bewaard (KLV-N-023, 16 sep). Een maand kan nooit meer
+      // uren bevatten dan zijn eigen dagen: 28 t/m 31 dagen x 24 uur, dus 745 is altijd te veel.
+      ['meer verlof dan de maand uren heeft', { dayEntries: [{ workDate: `${period}-01`, hours: 8 }], billableHours: 8, leaveHours: 745 }],
+      ['meer ziekte dan de maand uren heeft', { dayEntries: [{ workDate: `${period}-01`, hours: 8 }], billableHours: 8, sicknessHours: 745 }],
+      // Contracturen waren helemaal niet begrensd: een te groot getal liep vast op de kolom
+      // (DECIMAL(7,2)) en gaf een 500 timesheet-write-failed in plaats van een nette weigering.
+      ['contracturen groter dan de kolom aankan', { dayEntries: [{ workDate: `${period}-01`, hours: 8 }], billableHours: 8, contractualHours: 100000 }],
+      ['contracturen meer dan de maand uren heeft', { dayEntries: [{ workDate: `${period}-01`, hours: 8 }], billableHours: 8, contractualHours: 745 }],
     ];
 
     await test.step('When elke ongeldige dagregel wordt verstuurd', async () => {

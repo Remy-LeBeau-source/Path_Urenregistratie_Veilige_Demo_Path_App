@@ -36,5 +36,10 @@ Then("wordt met Playwright-assertions bevestigd dat gelijktijdige approve-reques
 Given("de medewerker is ingelogd");
 When("de medewerker concepten opslaat voor december en de daaropvolgende januari");
 Then("wordt met Playwright-assertions bevestigd dat jaarwisseling december naar januari verwerkt urenstaten correct over de jaargrens");
+Given("een concept van een medewerker in een eigen periode");
+When("de beheerder een concept probeert goed te keuren of te laten corrigeren, then weigert de server beide");
+And("blijft goedkeuren geweigerd zodra de maand al is goedgekeurd");
+And("mag de medewerker een goedgekeurde maand niet opnieuw indienen of als concept overschrijven");
+Then("wordt met Playwright-assertions bevestigd dat elke verboden statusovergang wordt geweigerd en laat de urenstaat ongemoeid");
 When("de medewerker rechtstreeks via de API een dagregel op een weekenddag probeert op te slaan");
 Then("wijst de server het verzoek af met een duidelijke foutmelding");
