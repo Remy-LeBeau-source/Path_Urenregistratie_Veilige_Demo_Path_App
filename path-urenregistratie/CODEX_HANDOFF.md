@@ -678,3 +678,11 @@ gedraaid, klopt die nulmeting niet meer. Deze groep gaat er dus van uit dat hij 
 heeft — wat in CI klopt (eigen shard, eigen database) en lokaal in één volledige run niet.
 Eerder deze nacht al bevestigd: dezelfde veertien cases apart gedraaid gaven 14 geslaagd in
 3,5 minuten.
+
+#### Uitkomst mobile-safari (verse database, 16 sep)
+
+233 geslaagd, 2 gevallen, 4 overgeslagen in 42,8 minuten. Beide vallen zijn tijdslimieten, geen
+assertie over gedrag: `E2E-N-021` (klik op "Hele maand" haalde de 15 seconden niet, de knop was
+wel gevonden) en `SKIN-H-029` (de case liep over de 45 seconden). WebKit is lokaal het traagste
+project en draaide hier terwijl de machine ook andere runs deed; apart herhalen voordat hier een
+conclusie aan hangt. In CI is dit project op dezelfde stand groen.
