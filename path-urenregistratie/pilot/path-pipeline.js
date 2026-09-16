@@ -72,6 +72,41 @@
     }
   };
 
+  // ---- Weergave: licht, donker of de systeeminstelling volgen ----
+  var THEME_KEY = 'path-pipeline-theme';
+  var themes = [
+    { id: 'system', icon: '◐', label: 'systeem' },
+    { id: 'light', icon: '☀', label: 'licht' },
+    { id: 'dark', icon: '☾', label: 'donker' }
+  ];
+
+  function applyTheme(id) {
+    var keuze = themes.find(function (t) { return t.id === id; }) || themes[0];
+    if (keuze.id === 'system') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', keuze.id);
+    var knop = document.querySelector('[data-theme-toggle]');
+    if (knop) {
+      knop.setAttribute('aria-label', 'Weergave: ' + keuze.label + '. Klik voor de volgende.');
+      knop.setAttribute('title', 'Weergave: ' + keuze.label);
+      knop.setAttribute('data-theme-state', keuze.id);
+      var icoon = knop.querySelector('[data-theme-icon]');
+      if (icoon) icoon.textContent = keuze.icon;
+    }
+    try { localStorage.setItem(THEME_KEY, keuze.id); } catch (_error) { /* geen opslag */ }
+    return keuze.id;
+  }
+
+  function huidigeTheme() {
+    try { return localStorage.getItem(THEME_KEY) || 'system'; } catch (_error) { return 'system'; }
+  }
+
+  function volgendeTheme() {
+    var index = themes.findIndex(function (t) { return t.id === huidigeTheme(); });
+    return applyTheme(themes[(index + 1) % themes.length].id);
+  }
+
+  applyTheme(huidigeTheme());
+
   var feed = { delivered: [], open: [], appVersion: '', loaded: false };
   var ui = { view: 'backlog', query: '', type: 'all', source: 'all', status: 'all', sort: '', sortDir: 'asc', expandAll: false, docKey: '', fixedDoc: '', detail: '' };
 
@@ -829,6 +864,12 @@
       var zoek2 = $('[data-search]');
       if (zoek2) { zoek2.value = ''; zoek2.focus(); }
       render();
+      return;
+    }
+
+    if (target.closest('[data-theme-toggle]')) {
+      var gekozen = volgendeTheme();
+      toast('Weergave: ' + (themes.find(function (t) { return t.id === gekozen; }) || themes[0]).label);
       return;
     }
 

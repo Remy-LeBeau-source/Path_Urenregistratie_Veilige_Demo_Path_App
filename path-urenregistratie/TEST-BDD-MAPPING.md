@@ -494,6 +494,7 @@
 | PIPE-H-002 | ui | pipeline-demo.feature | een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden | Toestandsovergangtest (ingediend → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van de issue-URL | 29 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden | Happy | 18 | Actueel |
 | PIPE-H-004 | ui | pipeline-demo.feature | zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes | Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole | 24 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes | Happy | 18 | Actueel |
 | PIPE-H-003 | ui | pipeline-demo.feature | de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker | Meting van berekende stijl (computed style) in licht en donker kleurschema | 5 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker | Happy | 18 | Actueel |
+| PIPE-H-005 | ui | pipeline-demo.feature | de weergaveknop kiest licht, donker of systeem en onthoudt die keuze | Toestandsovergang over drie weergavestanden + meting van berekende stijl + persistentie na herladen | 13 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | de weergaveknop kiest licht, donker of systeem en onthoudt die keuze | Happy | 18 | Actueel |
 | PIPE-N-001 | ui | pipeline-demo.feature | de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon | Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole | 9 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon | Negative | 18 | Actueel |
 | SKIN-H-001 | ui | skin.feature | de app start standaard in de klassieke vormgeving | End-to-end use-case + visuele contractasserties | 3 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de app start standaard in de klassieke vormgeving | Happy | 19 | Actueel |
 | SKIN-H-002 | ui | skin.feature | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | End-to-end use-case + visuele contractasserties | 6 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | Happy | 19 | Actueel |
@@ -609,9 +610,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 587
+- Playwright executable cases: 588
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 588
+- Totaal unieke executable cases: 589
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32

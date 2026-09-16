@@ -242,6 +242,47 @@ test.describe('Path Pipeline TEST-demo', () => {
     }
   });
 
+  test('[PIPE-H-005] de weergaveknop kiest licht, donker of systeem en onthoudt die keuze', async ({ page }) => {
+    const stand = () => page.evaluate(() => ({
+      attribuut: document.documentElement.getAttribute('data-theme'),
+      canvas: getComputedStyle(document.body).backgroundColor,
+    }));
+
+    await test.step('Given een bezoeker met een donkere systeeminstelling', async () => {
+      await page.emulateMedia({ colorScheme: 'dark' });
+      await page.goto('/pilot/path-pipeline.html');
+      await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
+      const start = await stand();
+      expect(start.attribuut, 'zonder keuze volgt de pagina het systeem').toBeNull();
+      expect(start.canvas).toBe('rgb(29, 33, 37)');
+    });
+
+    await test.step('When de weergaveknop wordt gebruikt', async () => {
+      const knop = page.locator('[data-theme-toggle]');
+      await knop.click();
+      await expect(knop).toHaveAttribute('data-theme-state', 'light');
+      const licht = await stand();
+      expect(licht.attribuut, 'een eigen keuze wint van de systeeminstelling').toBe('light');
+      expect(licht.canvas).toBe('rgb(247, 248, 249)');
+
+      await knop.click();
+      await expect(knop).toHaveAttribute('data-theme-state', 'dark');
+      expect((await stand()).canvas).toBe('rgb(29, 33, 37)');
+
+      await knop.click();
+      await expect(knop).toHaveAttribute('data-theme-state', 'system');
+      expect((await stand()).attribuut, 'terug naar systeem laat het attribuut weer los').toBeNull();
+    });
+
+    await test.step('Then blijft de keuze staan na herladen', async () => {
+      await page.locator('[data-theme-toggle]').click();
+      await page.reload();
+      await expect(page.locator('[data-theme-toggle]')).toHaveAttribute('data-theme-state', 'light');
+      expect((await stand()).canvas).toBe('rgb(247, 248, 249)');
+      await expect(page.locator('[data-theme-toggle]')).toHaveAttribute('aria-label', /licht/);
+    });
+  });
+
   test('[PIPE-N-001] de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon', async ({ page }) => {
     await page.addInitScript(([key]) => {
       localStorage.setItem(key, JSON.stringify({

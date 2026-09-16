@@ -134,6 +134,7 @@ function techniqueFor(definition, testCase) {
       'PIPE-H-002': 'Toestandsovergangtest (ingediend → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van de issue-URL',
       'PIPE-H-003': 'Meting van berekende stijl (computed style) in licht en donker kleurschema',
       'PIPE-H-004': 'Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole',
+      'PIPE-H-005': 'Toestandsovergang over drie weergavestanden + meting van berekende stijl + persistentie na herladen',
       'PIPE-N-001': 'Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole'
     }[testCase.id] || 'End-to-end use-case + regressiebewaking';
   }

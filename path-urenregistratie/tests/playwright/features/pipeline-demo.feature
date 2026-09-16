@@ -42,6 +42,14 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
     When de flow voor PIPE-H-003 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker
 
+  @happy
+  Scenario: [PIPE-H-005] de weergaveknop kiest licht, donker of systeem en onthoudt die keuze
+    # Testtechniek: Toestandsovergang over drie weergavestanden + meting van berekende stijl + persistentie na herladen
+    # Aantoonbare Playwright-assertions in deze case: 13
+    Given een bezoeker met een donkere systeeminstelling
+    When de weergaveknop wordt gebruikt
+    Then blijft de keuze staan na herladen
+
   @negative
   Scenario: [PIPE-N-001] de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon
     # Testtechniek: Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole

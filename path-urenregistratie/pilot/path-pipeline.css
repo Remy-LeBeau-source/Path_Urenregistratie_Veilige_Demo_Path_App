@@ -40,7 +40,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --jira: #579dff;
     --jira-strong: #85b8ff;
     --jira-soft: #0c2a5e;
@@ -75,6 +75,42 @@
   }
 }
 
+/* Eigen keuze donker, ongeacht de systeeminstelling. */
+:root[data-theme="dark"] {
+    --jira: #579dff;
+    --jira-strong: #85b8ff;
+    --jira-soft: #0c2a5e;
+    --confluence: #579dff;
+    --confluence-soft: #0c2a5e;
+    --zephyr: #9f8fef;
+    --zephyr-soft: #2b2451;
+    --ink: #dee4ea;
+    --ink-strong: #f4f6f8;
+    --muted: #9fadbc;
+    --subtle: #8c9bab;
+    --line: #2c3a47;
+    --line-strong: #454f59;
+    --canvas: #1d2125;
+    --surface: #22272b;
+    --surface-2: #282e33;
+    --surface-3: #2c333a;
+    --green: #7ee2b8;
+    --green-soft: #164b35;
+    --amber: #f5cd47;
+    --amber-soft: #3d3316;
+    --red: #ff9c8f;
+    --red-soft: #5a1e1a;
+    --purple: #b8acf6;
+    --purple-soft: #2d2851;
+    --topbar: #1d2125;
+    --topbar-ink: #dee4ea;
+    --topbar-line: #2c3a47;
+    --shadow-card: 0 1px 1px rgba(0, 0, 0, .5), 0 0 1px 1px rgba(0, 0, 0, .3);
+    --shadow-panel: 0 8px 12px rgba(0, 0, 0, .5), 0 0 1px rgba(0, 0, 0, .4);
+    color-scheme: dark;
+}
+
+
 * { box-sizing: border-box; }
 html { min-width: 320px; background: var(--canvas); }
 body {
@@ -97,8 +133,9 @@ button, summary { -webkit-tap-highlight-color: transparent; }
   display: flex; align-items: center; gap: 8px; padding: 0 10px;
   background: var(--topbar); color: var(--topbar-ink); border-bottom: 1px solid var(--topbar-line);
 }
-.app-switcher { width: 32px; height: 32px; border: 0; border-radius: 3px; background: transparent; display: grid; place-items: center; cursor: pointer; }
+.app-switcher { display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 8px; border: 0; border-radius: 3px; background: transparent; cursor: pointer; }
 .app-switcher:hover, .app-switcher[aria-expanded="true"] { background: var(--surface-2); }
+.app-switcher-label { font-size: 13px; font-weight: 600; color: var(--muted); }
 .grid-dots { display: grid; grid-template-columns: repeat(3, 4px); gap: 2px; }
 .grid-dots i { width: 4px; height: 4px; border-radius: 1px; background: var(--muted); }
 .product-mark { display: flex; align-items: center; gap: 8px; padding-right: 8px; min-width: 0; }
@@ -420,6 +457,9 @@ button, summary { -webkit-tap-highlight-color: transparent; }
 @media (max-width: 900px) {
   body { grid-template-columns: minmax(0, 1fr); grid-template-areas: "top" "main" "footer"; }
   .icon-rail { display: none; }
+  /* Zonder zijbalk moet invoeren meteen in beeld staan, niet onder het bord. */
+  .backlog-layout { display: flex; flex-direction: column; }
+  .create-card { order: -1; }
   .phase-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .phase-strip li:nth-child(2n) { border-right: 0; }
   .phase-strip li:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
@@ -430,11 +470,12 @@ button, summary { -webkit-tap-highlight-color: transparent; }
 }
 @media (max-width: 620px) {
   .global-search { max-width: none; }
-  .global-search kbd, .test-badge, .avatar-stack, .product-name { display: none; }
-  /* Create wordt een compacte plusknop, anders past de balk niet op een telefoon. */
+  .global-search kbd, .test-badge, .avatar-stack, .product-name, .app-switcher-label { display: none; }
+  /* Op een telefoon past "Nieuwe wens" niet voluit; wel herkenbaar blijven. */
   .create-button { padding: 0 10px; font-size: 0; }
-  .create-button::before { content: "＋"; font-size: 15px; }
+  .create-button::before { content: "＋ Wens"; font-size: 13px; font-weight: 600; }
   .product-bar { gap: 6px; padding: 0 6px; }
+  .workspace-tabs { position: sticky; top: 56px; z-index: 20; background: var(--canvas); }
   .drop-panel, .drop-panel.wide { left: 8px; right: 8px; width: auto; }
   .living-doc li { grid-template-columns: minmax(0, 1fr); }
   .living-doc time { grid-row: 1; justify-self: start; }

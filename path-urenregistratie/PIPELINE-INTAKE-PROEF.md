@@ -23,3 +23,10 @@ Legenda per stap: tijdstip · wat · bewijs (commit, run-id, URL).
 - 03:00 · Gebouwd: productbalk die per werkruimte meewisselt, projectzijbalk, Jira-bord met kolommen en kaarten, Confluence-pagina met paginaboom en FO/TO, Zephyr met mappenboom, tegels en sorteerbare tabel. Geen merklogo's.
 - 03:00 · Alles bedienbaar gemaakt: zoeken, filteren op type en bron, detailpaneel met doorklik naar Kennisbank of Testbeheer, sorteren op elke kolom, filteren op status, scenario's in één klik uitklappen, deeplinks in de URL en toetsenbordbediening. Bewaakt met **PIPE-H-004** (24 assertions).
 - 03:00 · Gevonden en opgelost tijdens het testen: de productbalk liep op een telefoon 64px buiten beeld (454 bij een scherm van 390). Create werd een compacte plusknop, de productnaam verdwijnt en de tabbladenrij schuift. Nu 390 van 390, bewaakt in PIPE-N-001.
+
+## Telefoon en weergave (16 sep, wens van Gio tijdens het meekijken)
+
+- 03:30 · Gio: "ik moet ook lokaal iets kunnen invoeren en maak het menu duidelijk op mijn telefoon". Gemeten op 390px: het invoerveld stond op 1547px onder het bord, het menu was een naamloos rasterknopje.
+- 03:35 · Opgelost: menu heet "Menu" en opent met "Nieuwe wens invoeren" boven de drie werkruimtes; op een telefoon staat het invoerformulier boven het bord (978px) en de balkknop springt met de cursor direct in het veld. Gecontroleerd op een echt telefoonprofiel: indienen werkt, kaart komt op "Wacht op VS Code".
+- 03:36 · Ook gecontroleerd zonder server, rechtstreeks vanaf schijf (file://): valt netjes terug op voorbeelddata, meldt dat, en invoeren werkt daar ook (5 kaarten wordt 6).
+- 03:45 · Weergaveknop toegevoegd (licht / donker / systeem), met **PIPE-H-005**: een eigen keuze wint van de systeeminstelling, de keuze blijft na herladen staan, en "systeem" laat het attribuut weer los. Zes van zes groen op een eigen poort en database, zodat de parallelle verkenning geen last had.
