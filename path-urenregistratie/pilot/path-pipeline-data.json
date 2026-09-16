@@ -1,7 +1,105 @@
 {
-  "appVersion": "2.0.119",
+  "appVersion": "2.0.121",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "16 sep",
+      "version": "2.0.121",
+      "wish": "Eigen vondst (grenswaarden met accenten en emoji): de lengtecontroles op de server telden bytes in plaats van tekens. Een onderwerp of naam van 160 tekens met accenten werd geweigerd terwijl het invoerveld en de kolom hem toelaten, en de fout bevatte geen uitleg. Nu tekens tellen in announcements, staff, settings, mail-recipients, customer-timesheets en timesheets, met een duidelijke melding (ANN-N-007, ADM-WR-N-008).",
+      "cases": [
+        {
+          "id": "ANN-N-007",
+          "title": "de lengtegrens telt tekens zoals het invoerveld, ook met accenten en emoji, en legt uit wat er mis is",
+          "feature": "tests/playwright/features/announcements.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 8,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de lengtegrens telt tekens zoals het invoerveld, ook met accenten en emoji, en legt uit wat er mis is\n  Given mededelingen versturen, intrekken en verbergen is voorbereid\n  When de flow voor ANN-N-007 wordt uitgevoerd\n  Then wordt precies de grens geaccepteerd, ook als elk teken meer dan één byte is\n  And wordt één teken te veel geweigerd, met een melding die zegt wat er mis is\n  And cleanup: de verstuurde testmededeling wordt ingetrokken en bij medewerkers verborgen"
+        },
+        {
+          "id": "ADM-WR-N-008",
+          "title": "lengtegrenzen tellen tekens, niet bytes: een naam vol accenten mag tot de volle lengte",
+          "feature": "tests/playwright/features/organization-settings.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 6,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: lengtegrenzen tellen tekens, niet bytes: een naam vol accenten mag tot de volle lengte\n  Given organisatie-instellingen beheren is voorbereid\n  When een medewerker met 160 tekens in de naam wordt opgeslagen\n  Then wordt de naam volledig bewaard, zonder afkappen"
+        }
+      ]
+    },
+    {
+      "date": "16 sep",
+      "version": "2.0.120",
+      "wish": "Verboden statusovergangen afgedekt: goedkeuren of correctie vragen op een concept, twee keer goedkeuren, opnieuw indienen van een goedgekeurde maand (TS-REV-API-N-002).",
+      "cases": [
+        {
+          "id": "TS-REV-API-N-002",
+          "title": "elke verboden statusovergang wordt geweigerd en laat de urenstaat ongemoeid",
+          "feature": "tests/playwright/features/correction-approval-workflow.feature",
+          "technique": "Toestandsovergang",
+          "assertions": 19,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: elke verboden statusovergang wordt geweigerd en laat de urenstaat ongemoeid\n  Given een concept van een medewerker in een eigen periode\n  When de beheerder een concept probeert goed te keuren of te laten corrigeren, then weigert de server beide\n  And blijft goedkeuren geweigerd zodra de maand al is goedgekeurd\n  And mag de medewerker een goedgekeurde maand niet opnieuw indienen of als concept overschrijven\n  Then wordt met Playwright-assertions bevestigd dat elke verboden statusovergang wordt geweigerd en laat de urenstaat ongemoeid"
+        }
+      ]
+    },
+    {
+      "date": "16 sep",
+      "version": "2.0.119",
+      "wish": "Eigen vondst (grenswaardenanalyse): verlof en ziekte hadden geen bovengrens, niet in het scherm, niet in de app en niet op de server. Een typefout (800 in plaats van 8) werd gewoon opgeslagen. Nu begrensd op het aantal dagen van de maand maal 24, met dezelfde melding als bij meer dan 24 uur per dag (KLV-N-023, TS-API-N-013).",
+      "cases": [
+        {
+          "id": "KLV-N-023",
+          "title": "verlof en ziekte accepteren geen onmogelijk aantal uren en gaan dan niet naar de server",
+          "feature": "tests/playwright/features/klassiek-verkenning.feature",
+          "technique": "Grenswaardenanalyse (maandmaximum voor verlof en ziekte) + foutafhandeling zonder serverfout",
+          "assertions": 13,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: verlof en ziekte accepteren geen onmogelijk aantal uren en gaan dan niet naar de server\n  Given vondsten uit de monkey-verkenning op Klassiek is voorbereid\n  And geldt dezelfde grens voor Ziekte\n  When de flow voor KLV-N-023 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat verlof en ziekte accepteren geen onmogelijk aantal uren en gaan dan niet naar de server"
+        },
+        {
+          "id": "TS-API-N-013",
+          "title": "elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database",
+          "feature": "tests/playwright/features/time-registration.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 5,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database\n  Given een ingelogde medewerker met een schrijfbare periode\n  When elke ongeldige dagregel wordt verstuurd\n  Then bestaat er nog geen urenstaat voor die periode"
+        }
+      ]
+    },
+    {
+      "date": "16 sep",
+      "version": "2.0.119",
+      "wish": "Eigen vondst: contracturen waren helemaal niet begrensd; een te groot getal gaf een 500-serverfout in plaats van een nette weigering. Nu dezelfde maandgrens, ook voor declarabele uren (TS-API-N-013).",
+      "cases": [
+        {
+          "id": "TS-API-N-013",
+          "title": "elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database",
+          "feature": "tests/playwright/features/time-registration.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 5,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database\n  Given een ingelogde medewerker met een schrijfbare periode\n  When elke ongeldige dagregel wordt verstuurd\n  Then bestaat er nog geen urenstaat voor die periode"
+        }
+      ]
+    },
+    {
+      "date": "16 sep",
+      "version": "2.0.119",
+      "wish": "Ingetrokken bericht vat ingeklapt de reden samen, niet de tekst die niet meer geldt (NOT-H-017). Monkey-verkenning met 10 nieuwe seeds (desktop en telefoon) vond niets.",
+      "cases": [
+        {
+          "id": "NOT-H-017",
+          "title": "Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar",
+          "feature": "tests/playwright/features/notifications.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 20,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar\n  Given meldingen beheren is voorbereid\n  When de flow voor NOT-H-017 wordt uitgevoerd\n  Then staat Actueel aan, met alleen berichten die nog gelden\n  And tellen de filters op: Ongelezen + Gelezen = Actueel, Actueel + Ingetrokken = Alles\n  And vat een ingetrokken bericht de reden samen, niet de tekst die niet meer geldt"
+        }
+      ]
+    },
     {
       "date": "16 sep",
       "version": "main",
@@ -71,84 +169,6 @@
           "gherkin": "Scenario: een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert\n  Given een medewerker logt op de telefoon voor het eerst in en de sync-afronding valt in de race\n  When de hydratie-afronding één keer klapt op de hertekening\n  Then staat er nergens meer een laadtekst en is het dashboard bruikbaar"
         }
       ]
-    },
-    {
-      "date": "15 sep",
-      "version": "2.0.113",
-      "wish": "Filter Gelezen in Berichten, compact: Actueel · Ongelezen · Gelezen · Ingetrokken · Alles met aantallen; ingetrokken in een zachte lavendeltint in plaats van bruin (NOT-H-011, NOT-H-017).",
-      "cases": [
-        {
-          "id": "NOT-H-011",
-          "title": "een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen",
-          "feature": "tests/playwright/features/notifications.feature",
-          "technique": "API-contract + equivalentieklasse",
-          "assertions": 25,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen\n  Given twee ongelezen mededelingen en een ongelezen statusmelding\n  When de medewerker Berichten opent, then zijn alle berichten ingeklapt, staan de nieuwe bovenaan en is de eerste in beeld\n  And blijven ze ongelezen, ook als ze langer in beeld staan\n  When de medewerker het eerste bericht openklapt, then is dat bericht gelezen en blijft het open\n  When de medewerker bij het tweede op Markeer als gelezen tikt, then is het gelezen zonder open te gaan\n  And toont het filter Gelezen precies de drie gelezen berichten, compact met aantal\n  And valt een leeg filter Ongelezen bij terugkomen terug op Actueel\n  Then wordt met Playwright-assertions bevestigd dat een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen"
-        },
-        {
-          "id": "NOT-H-017",
-          "title": "Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar",
-          "feature": "tests/playwright/features/notifications.feature",
-          "technique": "Negatieve equivalentieklasse + error guessing",
-          "assertions": 16,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar\n  Given meldingen beheren is voorbereid\n  When de flow voor NOT-H-017 wordt uitgevoerd\n  Then staat Actueel aan, met alleen berichten die nog gelden\n  And tellen de filters op: Ongelezen + Gelezen = Actueel, Actueel + Ingetrokken = Alles"
-        }
-      ]
-    },
-    {
-      "date": "15 sep",
-      "version": "main 2.0.113-seed",
-      "wish": "Meer voorbeeldberichten: elke medewerker 15 mededelingen, 6 ingetrokken, 9 actueel, 5 ongelezen, zodat er onder Alles een tweede pagina is.",
-      "cases": []
-    },
-    {
-      "date": "16 sep",
-      "version": "Codex 2.0.115",
-      "wish": "Berichten duidelijker en de belmelding klanturenstaat opent het klanturenstaatscherm met het uploadvak klaar (NOT-H-013 met vier meldingen).",
-      "cases": [
-        {
-          "id": "NOT-H-013",
-          "title": "een melding in de bel brengt de medewerker direct naar de plek waar iets te doen is",
-          "feature": "tests/playwright/features/notifications.feature",
-          "technique": "Beslissingstabel rollen en autorisatie",
-          "assertions": 9,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: een melding in de bel brengt de medewerker direct naar de plek waar iets te doen is\n  Given meldingen beheren is voorbereid\n  When de flow voor NOT-H-013 wordt uitgevoerd\n  Then toont de bel alleen de drie meldingen over de medewerker zelf"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "main (Codex, geen versiebump)",
-      "wish": "Demo-pipeline (Jira/Confluence/Zephyr-simulatie) ook als echte TEST-URL, afgeleid van de bestaande omgeving: https://uren-test.pathconsultancy.nl/pilot/path-pipeline.html (live zodra release 35035388985 op TEST staat). Gebouwd door Codex (ab660018) met eigen Playwright-cases PIPE-H-001/002 en PIPE-N-001; Living Doc bewaart hard 10, toont 5. Alleen TEST, nooit PROD. Leerpunt: nieuwe specs ook aanmelden in scripts/sync-living-docs.mjs (herontwerp).",
-      "cases": [
-        {
-          "id": "PIPE-H-001",
-          "title": "de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin",
-          "feature": "tests/playwright/features/pipeline-demo.feature",
-          "technique": "Datagedreven vergelijking (pagina versus pilot/path-pipeline-data.json) + traceerbaarheid over drie projecties",
-          "assertions": 27,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin\n  Given de zelfstandige TEST-only pipelinepagina met de echte projectstand\n  When de pagina is geladen, staan de vier fasen en de laatste vijf echte opleveringen op het bord\n  And Kennisbank en Testbeheer projecteren dezelfde echte cases en de Living Doc toont hooguit tien\n  Then wordt met Playwright-assertions bevestigd dat de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin"
-        },
-        {
-          "id": "PIPE-N-001",
-          "title": "de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon",
-          "feature": "tests/playwright/features/pipeline-demo.feature",
-          "technique": "Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole",
-          "assertions": 11,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de Kennisbank op de telefoon wordt geopend\n  Then toont de Living Doc precies tien regels, lokaal vóór echt, en bewaart hij er tien\n  And de pagina heeft geen horizontale overflow of gedeelde appcode"
-        }
-      ]
-    },
-    {
-      "date": "15 sep",
-      "version": "werkwijze",
-      "wish": "Werkwijze stokje: één agent per branch tegelijk (wie \"aan zet\" staat bovenaan CODEX_HANDOFF.md). Overdragen = alles gepusht + CI-uitkomst + stokje bijwerken; overnemen = fetch, schone werkmap, log lezen. Versienummer altijd hoogste op origin + 1. Aanleiding: dubbel 2.0.69, afgebroken CI 2.0.73 en achtergebleven commit toen Codex en Claude tegelijk werkten (14 sep).",
-      "cases": []
     }
   ],
   "open": [
@@ -159,28 +179,28 @@
       "status": "open"
     },
     {
+      "date": "16 sep",
+      "wish": "Eigen vondst, nog niet gefixt (productiecode bevroren tot de go-live): twee dagregels voor dezelfde datum in één opslag worden geaccepteerd. Het maandtotaal bewaart de som (2 x 8 = 16), de dagen bewaren er maar één (8), en dat verschil blijft staan. Fix en testcase TS-API-N-014 liggen klaar in CODEX_HANDOFF.md (BEV-1).",
+      "who": "herontwerp",
+      "status": "open, na go-live"
+    },
+    {
+      "date": "16 sep",
+      "wish": "Eigen vondst, nog niet gefixt (bevroren tot go-live): de melding \"Niet opgeslagen: een dag kan maximaal 24 uur hebben\" staat in een element zonder aria-live, dus een schermlezer meldt niet dat de invoer geweigerd is. Fix is één attribuut, case KLV-N-024 ligt klaar (BEV-3 in CODEX_HANDOFF.md).",
+      "who": "herontwerp",
+      "status": "open, na go-live"
+    },
+    {
+      "date": "16 sep",
+      "wish": "Vraag aan Gio: bij het intrekken van een mededeling zet de server de bijbehorende melding zelf op gelezen. Het bericht verdwijnt niet (het staat onder Ingetrokken), maar telt niet meer als ongelezen. Zo laten of moet het ongelezen blijven tot je het opent? (BEV-2 in CODEX_HANDOFF.md)",
+      "who": "Gio",
+      "status": "open"
+    },
+    {
       "date": "15 sep",
       "wish": "Wisselvallig op mobile-safari: SKIN-H-040. 15 sep 5 van 5 keer groen herhaald, niet te reproduceren; opnieuw bekijken als hij in CI nog eens valt.",
       "who": "herontwerp",
       "status": "in de gaten houden"
-    },
-    {
-      "date": "15 sep",
-      "wish": "Oude 0-regels uit de indienbug: geen opschoonscript. PROD is nog niet live (alleen gebruikers gemigreerd) en krijgt bij de livegang een verse migratie/reset met de gerepareerde code (R44 in BESLISTABEL.md; de reset hoort bij de livegangchecklist van Gio).",
-      "who": "besluit",
-      "status": "vastgelegd"
-    },
-    {
-      "date": "15 sep",
-      "wish": "Bel en Berichten blijven allebei: bel = eigen urenstatus, correcties, herinneringen; Berichten = algemene mededelingen.",
-      "who": "besluit",
-      "status": "vastgelegd"
-    },
-    {
-      "date": "15 sep",
-      "wish": "Dialoog met toetsenbord onder \"minder beweging\": dialoog krimpt niet mee (SKIN-N-008 fixme). Controleren op echte iPhone.",
-      "who": "herontwerp",
-      "status": "open"
     }
   ]
 }
