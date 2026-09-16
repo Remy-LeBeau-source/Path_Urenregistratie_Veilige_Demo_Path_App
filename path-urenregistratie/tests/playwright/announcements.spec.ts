@@ -671,4 +671,51 @@ test.describe('announcements api', () => {
     await authApi.logout();
     await ctx.dispose();
   });
+
+  test('[ANN-N-010] een bericht kan niet tegelijk correctie en intrekking van iets anders zijn', async () => {
+    // Gevonden bij decision-table-analyse (16 sep, kritische controleronde): de UI
+    // stuurt correction_of_id en withdrawal_of_id nooit samen (het zijn losse knoppen
+    // op losse berichten -- geverifieerd: assets/app.js stuurt bij "send" nooit
+    // withdrawal_of_id mee), maar de server nam de combinatie zonder klagen aan.
+    // Verdediging op API-niveau, ook al is de combinatie via de app zelf niet te
+    // bereiken.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const suffix = Date.now().toString().slice(-7);
+    const recipientId = await firstEmployeeUserId(ctx);
+    const eerste = await postAnnouncement(ctx, {
+      action: 'send',
+      title: `Origineel voor dubbele referentie ${suffix}`,
+      message: 'Eerste bericht.',
+      recipient_user_ids: [recipientId],
+    });
+    const eersteId = Number(eerste.body.announcement_id ?? eerste.body.id ?? 0);
+    expect(eersteId).toBeGreaterThan(0);
+
+    const tweede = await postAnnouncement(ctx, {
+      action: 'send',
+      title: `Tweede voor dubbele referentie ${suffix}`,
+      message: 'Tweede bericht.',
+      recipient_user_ids: [recipientId],
+    });
+    const tweedeId = Number(tweede.body.announcement_id ?? tweede.body.id ?? 0);
+    expect(tweedeId).toBeGreaterThan(0);
+
+    await test.step('Then weigert de server een bericht met beide referenties tegelijk', async () => {
+      const dubbel = await postAnnouncement(ctx, {
+        action: 'send',
+        title: `Dubbele referentie ${suffix}`,
+        message: 'Dit mag niet.',
+        correction_of_id: eersteId,
+        withdrawal_of_id: tweedeId,
+      });
+      expect(dubbel.status).toBe(400);
+      expect(dubbel.body.error).toBe('ambiguous-reference');
+    });
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
 });

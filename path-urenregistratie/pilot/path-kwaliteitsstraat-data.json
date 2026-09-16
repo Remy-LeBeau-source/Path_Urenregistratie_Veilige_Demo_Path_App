@@ -1,13 +1,23 @@
 {
-  "appVersion": "2.0.140",
-  "generatedAt": "2026-09-16T20:41:22.784Z",
+  "appVersion": "2.0.141",
+  "generatedAt": "2026-09-16T21:11:59.364Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
       "date": "16 sep",
-      "version": "2.0.140",
-      "wish": "Besluit Gio: elke versie krijgt voortaan zonder uitzondering een regel in \"Nieuw in de app\", ook een versie die alleen Backoffice, de kwaliteitsstraat-demo of de testset raakt. De acht ontbrekende versies (2.0.130 t/m 2.0.138) zijn met terugwerkende kracht aangevuld, terug naar twintig regels. PIPELINE-INTAKE.md bijgewerkt.",
-      "cases": []
+      "version": "2.0.141",
+      "wish": "Dekkingsronde (vervolg op de kritische controleronde): sessie/CSRF, uploadvalidatie klanturenstaten en de urenstaat-toestandsmachine (indienen/corrigeren/goedkeuren/vergrendelen) doorgelicht -- alle drie al degelijk gebouwd, geen gat gevonden. Wel één klein gat via decision-table-analyse in announcements.php: een bericht met zowel `correction_of_id` als `withdrawal_of_id` werd zonder klagen aangenomen (kind werd 'withdrawal', maar `correction_of_id` bleef ook staan en de ontvangerslijst kwam van de correctie-tak, een innerlijk tegenstrijdige rij). Niet bereikbaar via de app zelf (geverifieerd: assets/app.js stuurt bij versturen nooit `withdrawal_of_id` mee, alleen `correction_of_id`), dus verdediging op API-niveau, geen gebruikersgevaar. ANN-N-010 nieuw, tegenproef gedaan (rood zonder de validatie).",
+      "cases": [
+        {
+          "id": "ANN-N-010",
+          "title": "een bericht kan niet tegelijk correctie en intrekking van iets anders zijn",
+          "feature": "tests/playwright/features/announcements.feature",
+          "technique": "Decision-table-analyse (combinatie van twee onderling uitsluitende referentievelden) + negatieve equivalentieklasse",
+          "assertions": 4,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een bericht kan niet tegelijk correctie en intrekking van iets anders zijn\n  Given mededelingen versturen, intrekken en verbergen is voorbereid\n  When de flow voor ANN-N-010 wordt uitgevoerd\n  Then weigert de server een bericht met beide referenties tegelijk"
+        }
+      ]
     },
     {
       "date": "16 sep",
@@ -165,6 +175,12 @@
   "open": [
     {
       "date": "16 sep",
+      "wish": "Eigen vondst, niet bevestigd (dekkingsronde): de idempotency-check op mail_enqueue_timesheet_final_approval (en vergelijkbare functies in server/mail/queue.php) is een SELECT-dan-INSERT zonder database-constraint of rijvergrendeling, dus in theorie een race tussen twee gelijktijdige verzoeken. In de praktijk is de enige bekende aanroeper (de approve-actie in timesheets.php) al beschermd door optimistische versievergrendeling op de urenstaat zelf: een tweede gelijktijdige poging krijgt daar al 409 (stale-version) vóórdat de mailfunctie wordt bereikt. Geen discriminerend bewijs dat dit gat echt bereikbaar is; niet gepatcht op een vermoeden (eigen regel). Nog te doen: uitzoeken of er een aanroeppad bestaat dat niet via die versievergrendeling loopt, en zo ja, een UNIQUE-constraint overwegen zoals bij reminder_log.",
+      "who": "main",
+      "status": "open"
+    },
+    {
+      "date": "16 sep",
       "wish": "Werkafspraak (uit de kaartenwens): de kolom In uitvoering op het demobord vult zich alleen als een wens in deze lijst op bezig staat. Wie een wens oppakt, zet hem hier op bezig en pusht dat; bij oplevering verhuist hij naar Klaar met versie. Zonder die discipline beweegt er niets, hoe goed het bord ook is.",
       "who": "werkwijze",
       "status": "vastgelegd"
@@ -184,12 +200,6 @@
     {
       "date": "16 sep",
       "wish": "Uitgezocht (TW-2): SKIN-H-029 valt alleen op deze machine om, op WebKit onder Windows, en is groen in CI en op mobiel Chrome. Met metingen uitgesloten: het voorkeurenvenster, het thema, de vormgeving, de viewport en de installatiebanner; er ligt nooit iets over de knop. Het blijft hangen in het naar-beeld-scrollen van de browser zelf. Vervolg: die klik ongevoelig maken voor dat scrollen.",
-      "who": "herontwerp",
-      "status": "open, na go-live"
-    },
-    {
-      "date": "16 sep",
-      "wish": "Eigen vondst in de testset zelf: een paar cases leunen op de gezaaide urenstaat, dus wie lokaal de hele suite in één keer draait krijgt rood op cases die niets mankeren (E2E-H-018, SKIN-H-035). In CI valt het niet op omdat die in aparte shards met een eigen database draaien. Oplossing is dezelfde als eerder bij de dashboardcases: elke schrijvende case maakt zijn eigen maand aan (TW-1 in CODEX_HANDOFF.md).",
       "who": "herontwerp",
       "status": "open, na go-live"
     }
