@@ -1,7 +1,13 @@
 {
-  "appVersion": "2.0.131",
+  "appVersion": "2.0.132",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "16 sep",
+      "version": "2.0.132",
+      "wish": "Gat in het testherstel gedicht, gevonden bij het uitzoeken van een rode CI-run: `reminder_log` was de enige tabel met een verwijzing naar een andere tabel die bij het herstel van de basisgegevens niet werd leeggemaakt (hij kwam er later bij, migratie 031). Een test die zelf een medewerker aanmaakt waarvoor daarna een herinnering wordt gelogd, liet daardoor een regel achter die naar een verdwenen gebruiker wees. Gemeten: zonder de fix blijft er na het herstel precies 1 zo'n regel staan, met de fix 0. Eerlijk erbij: dit is bewijs van het gat, niet van de oorzaak van CI-run 35118175923. Die run viel op dezelfde meting om, maar de tegenproef discrimineerde niet -- dezelfde specs slaagden lokaal zowel met als zonder de fix. Blijft CI rood op deze assertie, dan ligt de oorzaak ergens anders.",
+      "cases": []
+    },
     {
       "date": "16 sep",
       "version": "werkwijze",
@@ -142,31 +148,6 @@
           "assertions": 19,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: elke verboden statusovergang wordt geweigerd en laat de urenstaat ongemoeid\n  Given een concept van een medewerker in een eigen periode\n  When de beheerder een concept probeert goed te keuren of te laten corrigeren, then weigert de server beide\n  And blijft goedkeuren geweigerd zodra de maand al is goedgekeurd\n  And mag de medewerker een goedgekeurde maand niet opnieuw indienen of als concept overschrijven\n  Then wordt met Playwright-assertions bevestigd dat elke verboden statusovergang wordt geweigerd en laat de urenstaat ongemoeid"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.119",
-      "wish": "Eigen vondst (grenswaardenanalyse): verlof en ziekte hadden geen bovengrens, niet in het scherm, niet in de app en niet op de server. Een typefout (800 in plaats van 8) werd gewoon opgeslagen. Nu begrensd op het aantal dagen van de maand maal 24, met dezelfde melding als bij meer dan 24 uur per dag (KLV-N-023, TS-API-N-013).",
-      "cases": [
-        {
-          "id": "KLV-N-023",
-          "title": "verlof en ziekte accepteren geen onmogelijk aantal uren en gaan dan niet naar de server",
-          "feature": "tests/playwright/features/klassiek-verkenning.feature",
-          "technique": "Grenswaardenanalyse (maandmaximum voor verlof en ziekte) + foutafhandeling zonder serverfout",
-          "assertions": 13,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: verlof en ziekte accepteren geen onmogelijk aantal uren en gaan dan niet naar de server\n  Given vondsten uit de monkey-verkenning op Klassiek is voorbereid\n  And geldt dezelfde grens voor Ziekte\n  When de flow voor KLV-N-023 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat verlof en ziekte accepteren geen onmogelijk aantal uren en gaan dan niet naar de server"
-        },
-        {
-          "id": "TS-API-N-013",
-          "title": "elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database",
-          "feature": "tests/playwright/features/time-registration.feature",
-          "technique": "Negatieve equivalentieklasse + error guessing",
-          "assertions": 5,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database\n  Given een ingelogde medewerker met een schrijfbare periode\n  When elke ongeldige dagregel wordt verstuurd\n  Then bestaat er nog geen urenstaat voor die periode"
         }
       ]
     }
