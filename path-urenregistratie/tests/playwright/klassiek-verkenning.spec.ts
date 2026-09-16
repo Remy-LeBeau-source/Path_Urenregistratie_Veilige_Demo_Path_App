@@ -482,6 +482,78 @@ test('[KLV-N-022] de statuspillen naast de koppen in Instellingen blijven binnen
   }
 });
 
+test('[KLV-N-023] verlof en ziekte accepteren geen onmogelijk aantal uren en gaan dan niet naar de server', async ({ page }) => {
+  // Grenswaardenanalyse, naar analogie van KLV-N-008 (een dag mag maximaal 24 uur).
+  // Verlof en ziekte hadden alleen een ondergrens: niet in het scherm (geen max), niet in
+  // de app (Math.max(0, ...)) en niet op de server (timesheet_decimal weigert alleen
+  // negatief). Een typefout als 800 in plaats van 8 werd dus gewoon opgeslagen en telde
+  // mee in het maandtotaal en op het dashboard. Bovengrens: een maand kan niet meer uren
+  // hebben dan zijn eigen dagen, dus dagen × 24.
+  test.setTimeout(90_000);
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await naarMijnUren(page);
+  // Een eigen maand ver vooruit: deze case schrijft naar de server.
+  const maand = await page.evaluate(() => {
+    const nu = new Date();
+    const d = new Date(nu.getFullYear(), nu.getMonth() + 9, 1);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  });
+  await kiesMaand(page, maand);
+  const dagenInMaand = await page.evaluate(m => {
+    const [jaar, maandNr] = m.split('-').map(Number);
+    return new Date(Date.UTC(jaar, maandNr, 0)).getUTCDate();
+  }, maand);
+  const maximum = dagenInMaand * 24;
+  const verlof = page.locator('#summary-leave');
+  const melding = page.locator('#hours-autosave-status');
+
+  await test.step(`Given het veld Verlof, met ${maximum} uur als maximum voor deze maand`, async () => {
+    // Beheer bepaalt of de medewerker verlof en ziekte zelf invult; staat dat uit, dan
+    // verbergt Klassiek het hele blok. Voor deze case zetten we het aan.
+    await page.evaluate(() => {
+      const staat = (0, eval)('state') as { settings: { leaveSickEntryEnabled: boolean } };
+      staat.settings.leaveSickEntryEnabled = true;
+      ((0, eval)('renderAll') as () => void)();
+    });
+    await expect(verlof).toBeVisible();
+    await expect(verlof).toHaveAttribute('max', String(maximum));
+  });
+
+  await test.step(`When precies ${maximum} uur wordt ingevuld, then wordt dat gewoon opgeslagen`, async () => {
+    const opgeslagen = page.waitForResponse(r => r.url().includes('/server/api/timesheets.php') && r.request().method() === 'POST', { timeout: 20_000 });
+    await verlof.fill(String(maximum));
+    await opgeslagen;
+    await expect(verlof).toHaveAttribute('aria-invalid', 'false');
+    expect(await page.evaluate(() => ((0, eval)('recordFor') as (id: number) => { leave: number })(((0, eval)('currentEmployee') as () => { id: number })().id).leave)).toBe(maximum);
+  });
+
+  await test.step(`When er ${maximum + 1} uur wordt ingevuld, then wordt het geweigerd en gaat er niets naar de server`, async () => {
+    let naSchrijven = 0;
+    page.on('request', r => { if (r.url().includes('/server/api/timesheets.php') && r.method() === 'POST') naSchrijven += 1; });
+    await verlof.fill(String(maximum + 1));
+    await expect(verlof).toHaveAttribute('aria-invalid', 'true');
+    await expect(melding).toContainText('Niet opgeslagen');
+    await expect(melding).toContainText(String(maximum));
+    // De vorige geldige waarde blijft in de telling staan.
+    expect(await page.evaluate(() => ((0, eval)('recordFor') as (id: number) => { leave: number })(((0, eval)('currentEmployee') as () => { id: number })().id).leave)).toBe(maximum);
+    await page.waitForTimeout(1_500);
+    expect(naSchrijven, 'een onmogelijke waarde hoort niet naar de server te gaan').toBe(0);
+  });
+
+  await test.step('And geldt dezelfde grens voor Ziekte', async () => {
+    await verlof.fill('0');
+    const ziekte = page.locator('#summary-sick');
+    await expect(ziekte).toHaveAttribute('max', String(maximum));
+    await ziekte.fill(String(maximum + 5));
+    await expect(ziekte).toHaveAttribute('aria-invalid', 'true');
+    await expect(melding).toContainText('Niet opgeslagen');
+    await ziekte.fill('0');
+    await expect(ziekte).toHaveAttribute('aria-invalid', 'false');
+  });
+});
+
 test('[KLV-N-011] de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop', async ({ page }) => {
   // Zachte vondst monkey beheerkant (15 sep) en rood in release 34950426101: met echte
   // maildata stak een regel van de mailgeschiedenis bij 1024px 38px buiten beeld (grid

@@ -32,13 +32,13 @@ const definitions = [
   { kind: 'playwright', spec: 'announcements.spec.ts', feature: 'announcements.feature', steps: 'announcements.steps.ts', name: 'Mededelingen versturen, intrekken en verbergen', tags: ['regressie', 'api', 'fase:15'], parentSuite: 'API', suite: 'Announcements', allureFeature: 'Mededelingen', phase: 15 },
   { kind: 'playwright', spec: 'password-reset.spec.ts', feature: 'password-reset.feature', steps: 'password-reset.steps.ts', name: 'Wachtwoordherstel en misbruikbeveiliging', tags: ['regressie', 'security', 'fase:13'], parentSuite: 'Security', suite: 'Password Reset / Rate Limiting', allureFeature: 'Audit & Security', phase: 13 },
   { kind: 'playwright', spec: 'pilot-page.spec.ts', feature: 'pilot-page.feature', steps: 'pilot-page.steps.ts', name: 'Functionele 1919-pilotportals naast de bestaande app', tags: ['regressie', 'ui', 'desktop', 'mobile', 'fase:18'], parentSuite: 'UI Desktop', suite: '1919 Pilot', allureFeature: '1919 Pilot', phase: 18 },
-  { kind: 'playwright', spec: 'pipeline-demo.spec.ts', feature: 'pipeline-demo.feature', steps: 'pipeline-demo.steps.ts', name: 'Interactieve Path Pipeline als zelfstandige TEST-demo', tags: ['regressie', 'ui', 'desktop', 'mobile', 'fase:18'], parentSuite: 'UI Desktop', suite: 'Pipeline Demo', allureFeature: 'Pipeline Demo', phase: 18 },
   { kind: 'playwright', spec: 'period-management.spec.ts', feature: 'period-management.feature', steps: 'period-management.steps.ts', name: 'Maandperiodes beheren', tags: ['regressie', 'api', 'fase:15'], parentSuite: 'API', suite: 'Period Management', allureFeature: 'Periodebeheer', phase: 15 },
   { kind: 'playwright', spec: 'production-safety.spec.ts', feature: 'production-safety.feature', steps: 'production-safety.steps.ts', name: 'Veilige productieconfiguratie en deployment', tags: ['regressie', 'security', 'fase:14'], parentSuite: 'Security', suite: 'Production Safety', allureFeature: 'Audit & Security', phase: 14 },
   { kind: 'playwright', spec: 'reminders.spec.ts', feature: 'reminders.feature', steps: 'reminders.steps.ts', name: 'Serverplanning herinneringen', tags: ['regressie', 'api', 'fase:15'], parentSuite: 'API', suite: 'Reminders', allureFeature: 'Herinneringen', phase: 15 },
   { kind: 'playwright', spec: 'roles-api.spec.ts', feature: 'roles-authorization.feature', steps: 'roles-api.steps.ts', name: 'Rollen, rechten en gegevensafscherming', tags: ['regressie', 'security', 'fase:4'], parentSuite: 'Security', suite: 'Role Scope', allureFeature: 'Audit & Security', phase: 4 },
   { kind: 'playwright', spec: 'security.spec.ts', feature: 'security.feature', steps: 'security.steps.ts', name: 'Authenticatie- en API-beveiliging', tags: ['regressie', 'security', 'fase:5'], parentSuite: 'Security', suite: 'CSRF & Authentication', allureFeature: 'Audit & Security', phase: 5 },
   { kind: 'playwright', spec: 'klassiek-verkenning.spec.ts', feature: 'klassiek-verkenning.feature', steps: 'klassiek-verkenning.steps.ts', name: 'Vondsten uit de monkey-verkenning op Klassiek', tags: ['regressie', 'ui', 'desktop', 'fase:19'], parentSuite: 'UI Desktop', suite: 'Klassiek verkenning', allureFeature: 'Vormgeving', phase: 19 },
+  { kind: 'playwright', spec: 'pipeline-demo.spec.ts', feature: 'pipeline-demo.feature', steps: 'pipeline-demo.steps.ts', name: 'Interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand', tags: ['regressie', 'ui', 'desktop', 'mobile', 'fase:18'], parentSuite: 'UI Desktop', suite: 'Pipeline-demo', allureFeature: 'Werkwijze & pipeline', phase: 18 },
   { kind: 'playwright', spec: 'skin.spec.ts', feature: 'skin.feature', steps: 'skin.steps.ts', name: 'Vormgevingsschakelaar (klassiek / nieuw)', tags: ['regressie', 'ui', 'desktop', 'fase:19'], parentSuite: 'UI Desktop', suite: 'Skin', allureFeature: 'Vormgeving', phase: 19 },
   { kind: 'playwright', spec: 'timesheet-review-flow.spec.ts', feature: 'correction-approval-workflow.feature', steps: 'timesheets-review-integration.steps.ts', name: 'Correctie- en goedkeuringsproces', tags: ['regressie', 'integration', 'fase:9'], parentSuite: 'DB / Integratie', suite: 'Optimistic Locking', allureFeature: 'Correctie & Goedkeuring', phase: 9 },
   { kind: 'playwright', spec: 'timesheet-review-ui.spec.ts', feature: 'correction-approval-ui.feature', steps: 'timesheets-review-ui.steps.ts', name: 'Correcties en goedkeuringen behandelen', tags: ['regressie', 'ui', 'desktop', 'fase:9'], parentSuite: 'UI Desktop', suite: 'Correcties', allureFeature: 'Correctie & Goedkeuring', phase: 9 },
@@ -128,6 +128,16 @@ function techniqueFor(definition, testCase) {
   const text = `${testCase.id} ${testCase.title}`.toLowerCase();
   if (definition.spec === 'accessibility.spec.ts') return 'Toegankelijkheidsinspectie + toetsenbord-use-case';
   if (definition.spec === 'mobile-ui.spec.ts') return 'Responsive viewport + end-to-end use-case';
+  if (definition.spec === 'pipeline-demo.spec.ts') {
+    return {
+      'PIPE-H-001': 'Datagedreven vergelijking (pagina versus pilot/path-pipeline-data.json) + traceerbaarheid over drie projecties',
+      'PIPE-H-002': 'Toestandsovergangtest (ingediend → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van de issue-URL',
+      'PIPE-H-003': 'Meting van berekende stijl (computed style) in licht en donker kleurschema',
+      'PIPE-H-004': 'Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole',
+      'PIPE-H-005': 'Toestandsovergang over drie weergavestanden + meting van berekende stijl + persistentie na herladen',
+      'PIPE-N-001': 'Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole'
+    }[testCase.id] || 'End-to-end use-case + regressiebewaking';
+  }
   // Monkey-vondsten: de techniek die de vondst deed, plus die de vaste case gebruikt.
   if (definition.spec === 'klassiek-verkenning.spec.ts') {
     const perCase = {
@@ -157,6 +167,7 @@ function techniqueFor(definition, testCase) {
       'PIPE-N-001': 'Grenswaardenanalyse (Living Doc op tien) + responsive viewport + negatieve controle (geen externe koppeling)',
       'NOT-H-018': 'Grenswaardenanalyse (korte vs lange tekst, afkappen bij 90 tekens) + toestandsovergang (ingeklapt naar open)',
       'NOT-H-017': 'Equivalentieklassen (actueel/ongelezen/gelezen/ingetrokken) + optelregel tussen filters + contrastmeting in licht en donker',
+      'KLV-N-023': 'Grenswaardenanalyse (maandmaximum voor verlof en ziekte) + foutafhandeling zonder serverfout',
       'KLV-N-022': 'Responsive viewport (320/360/390) + grenswaarden smalle telefoon + lay-outmeting binnen de kaart',
       'KLV-H-021': 'Toestandsovergangtest (licht↔donker, Klassiek↔Modern, heen en terug) + toegankelijkheidsinspectie (geen misleidend aria-pressed)',
       'KLV-H-020':'Beslistabel (stap → knoptekst) + visuele consistentie met de huisstijlknop in licht en donker',

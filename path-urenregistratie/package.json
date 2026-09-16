@@ -1,11 +1,11 @@
 {
   "name": "path-urenregistratie",
-  "version": "2.0.117",
+  "version": "2.0.119",
   "private": true,
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "check": "npm run version:check && node --check assets/app.js && node scripts/smoke-test.mjs && node scripts/server-message-language-check.mjs && node scripts/contrast-licht-donker.mjs && npm run test:design && npm run test:bdd:design && npm run test:db:config && npm run test:ops",
+    "check": "npm run version:check && node --check assets/app.js && node scripts/smoke-test.mjs && node scripts/server-message-language-check.mjs && node scripts/contrast-licht-donker.mjs && node scripts/pipeline-demo-data.mjs --check && npm run test:design && npm run test:bdd:design && npm run test:db:config && npm run test:ops",
     "version:set": "node scripts/set-version.mjs",
     "version:check": "node scripts/set-version.mjs --check && node scripts/set-version-check.mjs",
     "test:design": "node scripts/test-design-audit.mjs",
@@ -56,7 +56,8 @@
     "docs:sync": "node scripts/sync-living-docs.mjs",
     "erd": "node scripts/generate-erd.mjs",
     "docs:bundle": "node scripts/build-live-doc-bundle.mjs",
-    "docs:refresh": "npm run docs:sync && npm run test:e2e && npm run allure:generate && npm run docs:bundle"
+    "docs:refresh": "npm run docs:sync && npm run test:e2e && npm run allure:generate && npm run docs:bundle",
+    "pipeline:data": "node scripts/pipeline-demo-data.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",

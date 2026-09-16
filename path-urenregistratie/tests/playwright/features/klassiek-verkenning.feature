@@ -103,6 +103,15 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
     Then wordt met Playwright-assertions bevestigd dat de statuspillen naast de koppen in Instellingen blijven binnen hun kaart op smalle telefoons
 
   @negative
+  Scenario: [KLV-N-023] verlof en ziekte accepteren geen onmogelijk aantal uren en gaan dan niet naar de server
+    # Testtechniek: Grenswaardenanalyse (maandmaximum voor verlof en ziekte) + foutafhandeling zonder serverfout
+    # Aantoonbare Playwright-assertions in deze case: 13
+    Given vondsten uit de monkey-verkenning op Klassiek is voorbereid
+    And geldt dezelfde grens voor Ziekte
+    When de flow voor KLV-N-023 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat verlof en ziekte accepteren geen onmogelijk aantal uren en gaan dan niet naar de server
+
+  @negative
   Scenario: [KLV-N-011] de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop
     # Testtechniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport
     # Aantoonbare Playwright-assertions in deze case: 5

@@ -8,6 +8,7 @@ Nieuwste bovenaan per status. Statussen: **open**, **bezig**, **klaar (versie)**
 
 | Datum | Wens / besluit van Gio | Wie | Status |
 |---|---|---|---|
+| 16 sep | Donkere modus op de demo-pagina ook zelf kunnen kiezen (licht / donker / systeem) in plaats van alleen de systeeminstelling volgen. | main | open |
 | 15 sep | Wisselvallig op mobile-safari: SKIN-H-040. 15 sep 5 van 5 keer groen herhaald, niet te reproduceren; opnieuw bekijken als hij in CI nog eens valt. | herontwerp | in de gaten houden |
 | 15 sep | Oude 0-regels uit de indienbug: geen opschoonscript. PROD is nog niet live (alleen gebruikers gemigreerd) en krijgt bij de livegang een verse migratie/reset met de gerepareerde code (R44 in BESLISTABEL.md; de reset hoort bij de livegangchecklist van Gio). | besluit | vastgelegd |
 | 15 sep | Bel en Berichten blijven allebei: bel = eigen urenstatus, correcties, herinneringen; Berichten = algemene mededelingen. | besluit | vastgelegd |
@@ -17,6 +18,12 @@ Nieuwste bovenaan per status. Statussen: **open**, **bezig**, **klaar (versie)**
 
 | Datum | Wens / besluit | Versie |
 |---|---|---|
+| 16 sep | Eigen vondst (grenswaardenanalyse): verlof en ziekte hadden geen bovengrens, niet in het scherm, niet in de app en niet op de server. Een typefout (800 in plaats van 8) werd gewoon opgeslagen. Nu begrensd op het aantal dagen van de maand maal 24, met dezelfde melding als bij meer dan 24 uur per dag (KLV-N-023, TS-API-N-013). | 2.0.119 |
+| 16 sep | Eigen vondst: contracturen waren helemaal niet begrensd; een te groot getal gaf een 500-serverfout in plaats van een nette weigering. Nu dezelfde maandgrens, ook voor declarabele uren (TS-API-N-013). | 2.0.119 |
+| 16 sep | Ingetrokken bericht vat ingeklapt de reden samen, niet de tekst die niet meer geldt (NOT-H-017). Monkey-verkenning met 10 nieuwe seeds (desktop en telefoon) vond niets. | 2.0.119 |
+| 16 sep | Demo-pagina op TEST is het echte loket geworden: een wens op https://uren-test.pathconsultancy.nl/pilot/path-pipeline.html wordt een GitHub-issue (label pipeline-intake) dat de agent in VS Code oppakt volgens PIPELINE-INTAKE.md (GIO-WENSEN → feature + spec → impactregressie → LIVING-DOC → versie → CI → TEST). De pagina toont de echte laatste 5 opleveringen en 10 Living Doc-regels uit GIO-WENSEN en de feature-bestanden (scripts/pipeline-demo-data.mjs), bewaakt door npm run check. Eigen agent: .claude/agents/pipeline-intake.md, logboek in PIPELINE-INTAKE-PROEF.md. | main |
+| 16 sep | Intake #44: Jira, Confluence en Zephyr Scale 1-op-1 in opmaak zoals we ze kennen — productbalk die meewisselt, projectzijbalk, bord met kolommen en kaarten, Confluence-pagina met FO/TO, Zephyr met mappenboom en sorteerbare tabel; geen merklogo's. Alles bedienbaar: zoeken, filteren op type en bron, detailpaneel, sorteren, filteren op status, deeplinks (PIPE-H-004). | main |
+| 16 sep | Intake-proef #43: Confluence-tekst in de demo op het Atlassian-lettertype, 16px met regelhoogte 24px, ook in donker (PIPE-H-003, tegenproef rood op de oude opmaak). Eerste wens die de hele keten van pagina tot TEST doorliep. | main |
 | 16 sep | Berichten: elk bericht toont ingeklapt één regel samenvatting onder de titel, zoals bij Nieuw in de app; verdwijnt bij openklappen (NOT-H-018, tegenproef rood). | 2.0.116 |
 | 16 sep | MOB-H-024 was wisselvallig (ongeveer 1 op 3 rood, ook op 2.0.113): late 401-ruis van de inlograce landde na het wissen. De case negeert nu alleen die 401-ruis, de rest blijft hard. 5 van 5 groen. | 2.0.116 |
 | 15 sep | Filter Gelezen in Berichten, compact: Actueel · Ongelezen · Gelezen · Ingetrokken · Alles met aantallen; ingetrokken in een zachte lavendeltint in plaats van bruin (NOT-H-011, NOT-H-017). | 2.0.113 |

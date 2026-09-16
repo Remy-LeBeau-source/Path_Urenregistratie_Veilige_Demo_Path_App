@@ -2,90 +2,127 @@
 
 (function () {
   var STORAGE_KEY = 'path-pipeline-demo-v1';
+  var DATA_URL = 'path-pipeline-data.json';
+  var REPO_URL = 'https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App';
+  var INTAKE_LABEL = 'pipeline-intake';
+  var LIVING_DOC_CAP = 10;
+  var BOARD_DONE_CAP = 5;
+  var DOC_TREE_CAP = 5;
+  var TEST_CAP = 12;
   var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var STEP_DELAY = prefersReducedMotion ? 120 : 900;
 
-  var seeds = [
-    {
-      key: 'PATH-196', title: 'Ingetrokken mededeling toont label en reden', type: 'bug', status: 'done',
-      testId: 'TC-NOT-H-012', platform: 'desktop-chromium', result: 'pass',
-      gherkin: 'Scenario: Ingetrokken mededeling toont label en reden\n  Given Stasjo opent Berichten met ingetrokken voorbeeldmededelingen in de TEST-basis\n  When hij het filter Ingetrokken kiest\n  Then staan alleen ingetrokken berichten er, ingeklapt met label\n  And zie je de reden zodra je het bericht openklapt'
-    },
-    {
-      key: 'PATH-194', title: 'PROD-poort breekt release alleen af bij een nieuwere release', type: 'ci', status: 'done',
-      testId: 'TC-PROD-WEKKER-01', platform: 'CI', result: 'pass',
-      gherkin: 'Scenario: PROD-poort breekt release alleen af bij een nieuwere release\n  Given een release na TEST-deploy wacht op de handmatige PROD-poort\n  When na tien minuten geen nieuwere commit op main staat\n  Then blijft de goedkeuring open\n  But zodra main een nieuwere commit bevat\n  Then wordt alleen de oudere wachtende run afgebroken'
-    },
-    {
-      key: 'PATH-197', title: 'Hele maand blijft staan na een hertekening op de achtergrond', type: 'bug', status: 'done',
-      testId: 'TC-DASH-N-032', platform: 'desktop-chromium', result: 'pass',
-      gherkin: 'Scenario: Hele maand blijft staan na een hertekening op de achtergrond\n  Given Klassiek op Mijn uren met Hele maand gekozen\n  When de app op de achtergrond opnieuw tekent\n  Then blijft Hele maand staan met de indienknop\n  And geldt dat ook in Modern op Mijn uren'
-    },
-    {
-      key: 'PATH-188', title: 'Testfuncties uit de balken, alleen Herstel blijft bovenin', type: 'feature', status: 'done',
-      testId: 'TC-KLV-H-018', platform: 'desktop-chromium', result: 'pass',
-      gherkin: 'Scenario: Testfuncties uit de balken, alleen Herstel blijft bovenin\n  Given de medewerker de app op TEST opent\n  Then staat alleen Herstel in de balk\n  And staan thema, vormgeving, omgeving en versie in het profielmenu\n  And houdt Beheer Herstel in zijn eigen topbalk'
-    },
-    {
-      key: 'PATH-191', title: 'Inlogklik wacht tot de scrollanimatie stopt', type: 'chore', status: 'done',
-      testId: 'TC-AUTH-H-025', platform: 'mobile-safari', result: 'pass',
-      gherkin: 'Scenario: Inlogklik wacht tot de scrollanimatie stopt\n  Given mobile-safari de inlogknop naar het midden scrolt\n  When de pagina nog zacht doorscrolt\n  Then wacht de helper tot de scroll tien frames stilstaat\n  And klikt hij daarna op het midden van de volledig zichtbare knop'
-    }
-  ];
+  var products = {
+    backlog: { logo: 'J', name: 'Jira', scope: 'Path Uren & Facturatie', color: 'var(--jira)' },
+    knowledge: { logo: 'C', name: 'Confluence', scope: 'Ruimte Path Kwaliteit', color: 'var(--confluence)' },
+    tests: { logo: 'Z', name: 'Zephyr Scale', scope: 'Testcyclus TC-24', color: 'var(--zephyr)' }
+  };
 
-  var seedAnalysis = {
-    'PATH-196': {
-      stakeholder: 'Backoffice & communicatie',
-      goal: 'medewerkers direct begrijpen waarom een mededeling niet meer geldig is',
-      criterion: 'Bij het filter Ingetrokken staan alleen ingetrokken berichten en wordt na openklappen de reden zichtbaar.',
-      fo: 'Berichten krijgt een aparte status Ingetrokken. Het overzicht filtert hierop, toont het label op de ingeklapte kaart en toont de vastgelegde reden in het geopende bericht.',
-      to: 'Projecteer status en intrekreden uit dezelfde berichtenbron. Filter client-side op de ingetrokken status en bewaak label, inklappen en reden met TC-NOT-H-012 op desktop-chromium.'
+  // Terugval als de feed niet laadt (bijvoorbeeld rechtstreeks vanaf schijf openen).
+  var fallbackSeeds = [
+    { key: 'PATH-196', title: 'Ingetrokken mededeling toont label en reden', type: 'bug', testId: 'TC-NOT-H-012', platform: 'desktop-chromium',
+      gherkin: 'Scenario: Ingetrokken mededeling toont label en reden\n  Given Stasjo opent Berichten met ingetrokken voorbeeldmededelingen in de TEST-basis\n  When hij het filter Ingetrokken kiest\n  Then staan alleen ingetrokken berichten er, ingeklapt met label\n  And zie je de reden zodra je het bericht openklapt' },
+    { key: 'PATH-194', title: 'PROD-poort breekt release alleen af bij een nieuwere release', type: 'ci', testId: 'TC-PROD-WEKKER-01', platform: 'CI',
+      gherkin: 'Scenario: PROD-poort breekt release alleen af bij een nieuwere release\n  Given een release na TEST-deploy wacht op de handmatige PROD-poort\n  When na tien minuten geen nieuwere commit op main staat\n  Then blijft de goedkeuring open\n  And wordt alleen een oudere wachtende run afgebroken zodra main verder is' },
+    { key: 'PATH-197', title: 'Hele maand blijft staan na een hertekening op de achtergrond', type: 'bug', testId: 'TC-DASH-N-032', platform: 'desktop-chromium',
+      gherkin: 'Scenario: Hele maand blijft staan na een hertekening op de achtergrond\n  Given Klassiek op Mijn uren met Hele maand gekozen\n  When de app op de achtergrond opnieuw tekent\n  Then blijft Hele maand staan met de indienknop\n  And geldt dat ook in Modern op Mijn uren' },
+    { key: 'PATH-188', title: 'Testfuncties uit de balken, alleen Herstel blijft bovenin', type: 'feature', testId: 'TC-KLV-H-018', platform: 'desktop-chromium',
+      gherkin: 'Scenario: Testfuncties uit de balken, alleen Herstel blijft bovenin\n  Given de medewerker de app op TEST opent\n  Then staat alleen Herstel in de balk\n  And staan thema, vormgeving, omgeving en versie in het profielmenu' },
+    { key: 'PATH-191', title: 'Inlogklik wacht tot de scrollanimatie stopt', type: 'chore', testId: 'TC-AUTH-H-025', platform: 'mobile-safari',
+      gherkin: 'Scenario: Inlogklik wacht tot de scrollanimatie stopt\n  Given mobile-safari de inlogknop naar het midden scrolt\n  When de pagina nog zacht doorscrolt\n  Then wacht de helper tot de scroll tien frames stilstaat\n  And klikt hij daarna op het midden van de volledig zichtbare knop' }
+  ].map(function (seed, index) {
+    return Object.assign({ status: 'done', result: 'pass', source: 'fallback', version: 'voorbeeld', date: '15 sep',
+      cases: [{ id: seed.testId, title: seed.title, platform: seed.platform, technique: 'Voorbeeld', assertions: 0, gherkin: seed.gherkin, feature: '' }],
+      livingTime: '15 sep · ' + String(16 + index).padStart(2, '0') + ':2' + index }, seed);
+  });
+
+  var vastePaginas = {
+    teststrategie: {
+      key: 'TESTSTRATEGIE', title: 'Teststrategie', leftLabel: 'Uitgangspunt', leftTitle: 'Bewijs boven belofte',
+      leftText: 'Elke wens of fix krijgt een uitvoerbare Playwright-case met harde assertions, een benoemde TMap/ISTQB-techniek en een tegenproef die rood is op de oude code.',
+      rightLabel: 'Bereik', rightTitle: 'Desktop, telefoon en database',
+      rightText: 'Desktop-chromium, mobile-chrome en mobile-safari, aangevuld met een directe SQL/DB-smoke voor de infrastructuur.',
+      fo: 'De Living Documentation maakt dezelfde uitvoerbare cases leesbaar: .feature voor het gedrag, .steps.ts voor de navigatie, .spec.ts als uitvoerbare waarheid, plus Allure voor de rapportage.',
+      to: 'scripts/sync-living-docs.mjs bouwt LIVING-DOC.md uit de specs. Een nieuw specbestand moet in de definitions van dat script staan, anders vallen de feature en steps weg en faalt npm run test:design.',
+      criterion: 'Geen enkele oplevering gaat naar TEST zonder groene regressie en een aantoonbare case.',
+      gherkin: 'Scenario: Elke oplevering is aantoonbaar\n  Given een wens of fix is gebouwd\n  When de regressie lokaal en in CI draait\n  Then is er een case met assertions die deze wens bewaakt\n  And staat de uitkomst in de Living Doc',
+      summary: 'Hoe we bewijzen dat een oplevering doet wat is afgesproken.', author: 'Bron: LIVING-DOC.md en de werkwijze uit GIO-WENSEN.md', updated: 'Vaste pagina', trace: 'Vast', testId: 'n.v.t.'
     },
-    'PATH-194': {
-      stakeholder: 'Release manager',
-      goal: 'een geldige productiegoedkeuring openblijft zolang er geen nieuwere release klaarstaat',
-      criterion: 'De PROD-poort breekt uitsluitend een wachtende run af wanneer main aantoonbaar een nieuwere commit bevat.',
-      fo: 'De releasewachter controleert periodiek of de wachtende release nog de nieuwste is. Zonder nieuwere release blijft de handmatige goedkeuring open.',
-      to: 'Vergelijk de commit van de wachtende workflow met de actuele commit op main. Annuleer alleen bij een echte opvolger en dek de beslissingstabel af met TC-PROD-WEKKER-01 in CI.'
+    releaseafspraken: {
+      key: 'RELEASEAFSPRAKEN', title: 'Releaseafspraken', leftLabel: 'Omgevingen', leftTitle: 'Lokaal → CI → TEST → PROD',
+      leftText: 'Lokaal draait de gerichte regressie vóór het pushen. CI draait de volledige suite in tien shards. TEST is uren-test.pathconsultancy.nl en volgt automatisch na een groene run.',
+      rightLabel: 'Productie', rightTitle: 'Handmatige keuze, altijd',
+      rightText: 'De stap naar productie is een handmatige goedkeuring die alleen Gio geeft. Geen enkele agent keurt die poort goed; een wachtende run wordt hooguit afgebroken als er een nieuwere release klaarstaat.',
+      fo: 'Eén agent per branch tegelijk (het "stokje"). Overdragen betekent: alles gepusht, CI-uitkomst erbij en de regel bijgewerkt.',
+      to: 'Versienummer: altijd het hoogste nummer op origin/main en origin/herontwerp plus 1, gezet met npm run version:set. Nooit een nummer hergebruiken.',
+      criterion: 'PROD wijzigt alleen na een bewuste klik van Gio, nooit automatisch.',
+      gherkin: 'Scenario: De poort naar productie blijft van Gio\n  Given een release staat groen op TEST\n  When de pipeline bij de productiepoort komt\n  Then wacht hij op een handmatige goedkeuring\n  And breekt hij alleen af als er een nieuwere release klaarstaat',
+      summary: 'Welke stappen automatisch gaan en welke keuze bij een mens blijft.', author: 'Bron: BESLISTABEL.md (R45) en CODEX_HANDOFF.md', updated: 'Vaste pagina', trace: 'Vast', testId: 'TC-PROD-WEKKER-01'
     },
-    'PATH-197': {
-      stakeholder: 'Medewerker',
-      goal: 'de gekozen maandweergave stabiel blijft tijdens achtergrondverversing',
-      criterion: 'Hele maand blijft geselecteerd wanneer de urenpagina op de achtergrond opnieuw wordt getekend.',
-      fo: 'De keuze Hele maand is gebruikersstatus en blijft behouden bij een hertekening. De indienactie blijft in dezelfde context beschikbaar.',
-      to: 'Bewaar de gekozen scope buiten de tijdelijke renderstructuur en lees deze bij iedere render terug. TC-DASH-N-032 bewaakt dit op desktop-chromium.'
-    },
-    'PATH-188': {
-      stakeholder: 'Product Owner',
-      goal: 'TEST zo veel mogelijk op PROD lijkt zonder herstelbaarheid te verliezen',
-      criterion: 'Alleen Herstel staat in de balk en overige testfuncties staan gegroepeerd in het profielmenu.',
-      fo: 'De primaire balk toont uitsluitend Herstel. Thema, vormgeving, omgeving en versie zijn beschikbaar onder Testfuncties in het profielmenu.',
-      to: 'Projecteer testbediening op basis van omgeving en rol, zonder testelementen in PROD. TC-KLV-H-018 bewaakt de zichtbaarheid op desktop-chromium.'
-    },
-    'PATH-191': {
-      stakeholder: 'QA & mobiele gebruikers',
-      goal: 'de inlogactie betrouwbaar werkt terwijl mobiel scrollen nog uitloopt',
-      criterion: 'De klik vindt pas plaats nadat de scrollanimatie aantoonbaar tot stilstand is gekomen.',
-      fo: 'De gebruiker kan op mobiel betrouwbaar inloggen, ook wanneer de knop eerst naar het midden van het scherm wordt gescrold.',
-      to: 'Meet opeenvolgende stabiele scrollframes, bepaal daarna het zichtbare middelpunt en klik pas dan. TC-AUTH-H-025 bewaakt dit op mobile-safari.'
+    intake: {
+      key: 'INTAKE', title: 'Intake en werkwijze', leftLabel: 'Loket', leftTitle: 'Deze pagina',
+      leftText: 'Een wens die hier wordt ingediend, wordt een GitHub-issue met label pipeline-intake. De agent in VS Code pakt dat issue op en loopt de keten af.',
+      rightLabel: 'Keten', rightTitle: 'Acht stappen tot TEST',
+      rightText: 'GIO-WENSEN → feature + spec + steps → impactregressie → LIVING-DOC → versie → push → CI → TEST, en daarna de wens naar "Klaar".',
+      fo: 'De pagina toont geen verzonnen data: de opleveringen, cases, technieken en assertions komen uit GIO-WENSEN.md en de feature-bestanden, via scripts/pipeline-demo-data.mjs.',
+      to: 'npm run check faalt als pilot/path-pipeline-data.json achterloopt op de projectstand. Zo kan de demo niet stilletjes verouderen.',
+      criterion: 'Wat hier staat, is terug te vinden in de repository.',
+      gherkin: 'Scenario: Een wens loopt van het loket tot TEST\n  Given Gio dient een wens in op deze pagina\n  When de agent het issue met label pipeline-intake oppakt\n  Then ontstaan er een feature, een spec en een groene regressie\n  And staat de oplevering daarna in de Living Doc en op TEST',
+      summary: 'Hoe een wens op deze pagina uiteindelijk op TEST terechtkomt.', author: 'Bron: PIPELINE-INTAKE.md', updated: 'Vaste pagina', trace: 'Vast', testId: 'PIPE-H-002'
     }
   };
 
-  function seedLivingDoc() {
-    return seeds.map(function (ticket, index) {
-      return { key: ticket.key, text: ticket.title, result: 'Geslaagd', time: '15 sep · ' + String(16 + index).padStart(2, '0') + ':2' + index };
-    });
+  // ---- Weergave: licht, donker of de systeeminstelling volgen ----
+  var THEME_KEY = 'path-pipeline-theme';
+  var themes = [
+    { id: 'system', icon: '◐', label: 'systeem' },
+    { id: 'light', icon: '☀', label: 'licht' },
+    { id: 'dark', icon: '☾', label: 'donker' }
+  ];
+
+  function applyTheme(id) {
+    var keuze = themes.find(function (t) { return t.id === id; }) || themes[0];
+    if (keuze.id === 'system') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', keuze.id);
+    var knop = document.querySelector('[data-theme-toggle]');
+    if (knop) {
+      knop.setAttribute('aria-label', 'Weergave: ' + keuze.label + '. Klik voor de volgende.');
+      knop.setAttribute('title', 'Weergave: ' + keuze.label);
+      knop.setAttribute('data-theme-state', keuze.id);
+      var icoon = knop.querySelector('[data-theme-icon]');
+      if (icoon) icoon.textContent = keuze.icon;
+    }
+    try { localStorage.setItem(THEME_KEY, keuze.id); } catch (_error) { /* geen opslag */ }
+    return keuze.id;
   }
 
+  function huidigeTheme() {
+    try { return localStorage.getItem(THEME_KEY) || 'system'; } catch (_error) { return 'system'; }
+  }
+
+  function volgendeTheme() {
+    var index = themes.findIndex(function (t) { return t.id === huidigeTheme(); });
+    return applyTheme(themes[(index + 1) % themes.length].id);
+  }
+
+  applyTheme(huidigeTheme());
+
+  var feed = { delivered: [], open: [], appVersion: '', loaded: false };
+  var ui = { view: 'backlog', query: '', type: 'all', source: 'all', status: 'all', sort: '', sortDir: 'asc', expandAll: false, docKey: '', fixedDoc: '', detail: '' };
+
   function initialState() {
-    return { schemaVersion: 2, sequence: 198, customTickets: [], customTests: [], livingDoc: seedLivingDoc(), activePhase: 0, activeTicket: '' };
+    return { schemaVersion: 3, sequence: 198, customTickets: [], customTests: [], livingDoc: [], activePhase: 0, activeTicket: '' };
   }
 
   function loadState() {
     try {
       var stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-      if (!stored || stored.schemaVersion !== 2 || !Array.isArray(stored.customTickets) || !Array.isArray(stored.customTests) || !Array.isArray(stored.livingDoc)) return initialState();
-      stored.livingDoc = stored.livingDoc.slice(0, 10);
+      if (!stored || !Array.isArray(stored.customTickets) || !Array.isArray(stored.customTests) || !Array.isArray(stored.livingDoc)) return initialState();
+      if (stored.schemaVersion !== 3) {
+        stored.livingDoc = stored.livingDoc.filter(function (entry) { return !/^PATH-19[1-7]$/.test(entry.key); });
+        stored.schemaVersion = 3;
+      }
+      stored.livingDoc = stored.livingDoc.slice(0, LIVING_DOC_CAP);
       stored.activePhase = 0;
       stored.activeTicket = '';
       stored.customTickets.forEach(function (ticket) { if (ticket.status === 'doing') ticket.status = 'todo'; });
@@ -98,18 +135,20 @@
   var state = loadState();
   var lastCompletedKey = '';
   var lastCompletedResult = '';
-  var selectedDocKey = state.customTickets.length ? state.customTickets[0].key : seeds[0].key;
 
   var phaseCopy = {
-    1: { title: 'Vraag en acceptatiecriterium vastgelegd', status: 'Jira maakt het ticket aan en Confluence vertaalt de vraag naar een leesbaar Gherkin-scenario.' },
-    2: { title: 'Testcase staat in Zephyr', status: 'De traceerbare testcase is toegevoegd en gekoppeld aan hetzelfde PATH-ticket.' },
+    1: { title: 'Vraag en acceptatiecriterium vastgelegd', status: 'Het ticket staat in Jira en Confluence vertaalt de vraag naar een leesbaar Gherkin-scenario.' },
+    2: { title: 'Testcase staat in Zephyr', status: 'De traceerbare testcase is toegevoegd en gekoppeld aan hetzelfde ticket.' },
     3: { title: 'Automatische controles draaien lokaal', status: 'Playwright, Cypress en de API-controle simuleren het bewijs vóór een push.' },
     4: { title: 'CI verwerkt de feedback op TEST', status: 'Het resultaat wordt gepubliceerd en als nieuwste bewijsregel aan de Living Doc toegevoegd.' }
   };
 
+  function $(selector) { return document.querySelector(selector); }
+  function $$(selector) { return Array.prototype.slice.call(document.querySelectorAll(selector)); }
+
   function saveState() {
     var snapshot = Object.assign({}, state, { activePhase: 0, activeTicket: '' });
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot)); } catch (_error) { /* opslag niet beschikbaar */ }
   }
 
   function escapeHtml(value) {
@@ -118,76 +157,191 @@
     });
   }
 
-  function iconFor(type) {
-    return { bug: '!', feature: '◆', chore: '●', ci: '↯' }[type] || '◆';
+  function iconFor(type) { return { bug: '!', feature: '◆', chore: '●', ci: '↯' }[type] || '◆'; }
+
+  function shorten(text, max) {
+    var clean = String(text).replace(/\s+/g, ' ').trim();
+    if (clean.length <= max) return clean;
+    var cut = clean.slice(0, max);
+    return cut.slice(0, Math.max(cut.lastIndexOf(' '), max - 20)) + '…';
   }
 
-  function statusLabel(ticket) {
-    if (ticket.status === 'doing') return '<span class="status-pill running">Fase ' + state.activePhase + ' van 4</span>';
-    if (ticket.result === 'fail') return '<span class="status-pill fail">CI aandacht</span>';
-    if (ticket.status === 'done') return '<span class="status-pill pass">Op TEST</span>';
-    return '<span class="status-pill running">Te doen</span>';
+  function typeFor(wish) {
+    var text = String(wish).toLowerCase();
+    if (/pipeline|ci\b|prod-|wekker|release|deploy/.test(text)) return 'ci';
+    if (/werkwijze|stokje|seed|documentatie|erd\b/.test(text)) return 'chore';
+    if (/fout|bug|kapot|stak uit|onleesbaar|vervuil|verspring|niet meer|herstel/.test(text)) return 'bug';
+    return 'feature';
   }
 
-  function ticketHtml(ticket) {
-    var canRun = ticket.status === 'todo';
-    return '<article class="ticket-card' + (ticket.status === 'doing' ? ' is-running' : '') + '" data-ticket="' + escapeHtml(ticket.key) + '">' +
-      '<div class="ticket-card-top"><span><i class="issue-icon ' + escapeHtml(ticket.type) + '">' + iconFor(ticket.type) + '</i> <code class="issue-key">' + escapeHtml(ticket.key) + '</code></span>' + statusLabel(ticket) + '</div>' +
-      '<h4>' + escapeHtml(ticket.title) + '</h4>' +
-      '<div class="ticket-meta"><span>' + escapeHtml(ticket.testId) + '</span><span>' + escapeHtml(ticket.platform) + '</span></div>' +
-      '<details class="gherkin"><summary>Gherkin</summary><pre>' + escapeHtml(ticket.gherkin) + '</pre></details>' +
-      (canRun ? '<div class="ticket-actions"><span class="issue-key">Klaar voor planning</span><button type="button" data-run-ticket="' + escapeHtml(ticket.key) + '">Voer pipeline uit</button></div>' : '') +
-      '</article>';
+  function deliveryKey(row, used) {
+    var base;
+    if (row.cases[0]) base = row.cases[0].id;
+    else {
+      var match = String(row.version).match(/\d+\.\d+\.\d+/);
+      base = match ? match[0] : (String(row.version).split(/[\s(]/)[0] || 'oplevering').toUpperCase();
+    }
+    var key = base;
+    for (var n = 2; used[key]; n += 1) key = base + '-' + n;
+    used[key] = true;
+    return key;
   }
 
-  function allTickets() {
-    return state.customTickets.concat(seeds);
+  function deliveredTickets() {
+    if (!feed.loaded) return fallbackSeeds;
+    var used = {};
+    return feed.delivered.map(function (row) {
+      var first = row.cases[0];
+      return {
+        key: deliveryKey(row, used), title: shorten(row.wish, 110), wish: row.wish, type: typeFor(row.wish),
+        status: 'done', result: 'pass', source: 'feed', version: row.version, date: row.date,
+        testId: first ? first.id : '', platform: first ? first.platform : '',
+        gherkin: row.cases.map(function (c) { return c.gherkin; }).join('\n\n'),
+        cases: row.cases, livingTime: row.date
+      };
+    });
   }
 
-  function allTests() {
-    return state.customTests.concat(seeds);
+  function openTickets() {
+    return feed.open.map(function (row, index) {
+      return {
+        key: 'WENS-' + (index + 1), title: shorten(row.wish, 110), wish: row.wish, type: typeFor(row.wish),
+        status: /bezig/.test(row.status) ? 'doing' : 'todo', result: '', source: 'feed', who: row.who, openStatus: row.status,
+        date: row.date, testId: '', platform: '', gherkin: '', cases: []
+      };
+    });
   }
 
-  function latestTickets() {
-    return allTickets().slice(0, 5);
+  function matchesFilters(ticket) {
+    if (ui.type !== 'all' && ticket.type !== ui.type) return false;
+    var isLocal = ticket.source !== 'feed' && ticket.source !== 'fallback';
+    if (ui.source === 'feed' && isLocal) return false;
+    if (ui.source === 'local' && !isLocal) return false;
+    if (!ui.query) return true;
+    var haystack = [ticket.key, ticket.title, ticket.wish, ticket.testId, ticket.platform, ticket.version, ticket.gherkin].join(' ').toLowerCase();
+    return haystack.indexOf(ui.query) >= 0;
   }
 
-  function analysisFor(ticket) {
-    var fixed = seedAnalysis[ticket.key] || {};
-    var stakeholder = ticket.stakeholder || fixed.stakeholder || 'Stakeholder';
-    var goal = ticket.goal || fixed.goal || 'de gevraagde verandering aantoonbaar waarde oplevert';
-    var criterion = ticket.criterion || fixed.criterion || 'De beschreven verandering is zichtbaar en automatisch gecontroleerd.';
-    var fo = ticket.fo || fixed.fo || ('De oplossing ondersteunt "' + ticket.title + '". Het gedrag is voor ' + stakeholder + ' zichtbaar en voldoet aan het vastgelegde acceptatiecriterium.');
-    var to = ticket.to || fixed.to || ('Koppel ' + ticket.key + ' aan ' + ticket.testId + ', automatiseer het scenario op ' + ticket.platform + ' en publiceer de uitslag via de TEST-pipeline naar de Living Doc.');
+  function boardColumns() {
+    var local = state.customTickets;
+    var done = local.filter(function (t) { return t.status === 'done'; }).concat(deliveredTickets()).slice(0, BOARD_DONE_CAP);
+    var open = openTickets();
     return {
-      stakeholder: stakeholder,
-      goal: goal,
-      criterion: criterion,
-      fo: fo,
-      to: to,
-      story: 'Als ' + stakeholder + ' wil ik ' + ticket.title.charAt(0).toLowerCase() + ticket.title.slice(1) + ', zodat ' + goal + '.',
-      question: 'Hoe zorgen we dat ' + ticket.title.charAt(0).toLowerCase() + ticket.title.slice(1) + ' en dat dit controleerbaar wordt opgeleverd?'
+      todo: local.filter(function (t) { return t.status === 'todo' || t.status === 'ingediend'; }).concat(open.filter(function (t) { return t.status === 'todo'; })).filter(matchesFilters),
+      doing: local.filter(function (t) { return t.status === 'doing'; }).concat(open.filter(function (t) { return t.status === 'doing'; })).filter(matchesFilters),
+      done: done.filter(matchesFilters)
     };
   }
 
-  function renderBoard() {
-    ['todo', 'doing', 'done'].forEach(function (column) {
-      var list = document.querySelector('[data-ticket-list="' + column + '"]');
-      if (!list) return;
-      var tickets = latestTickets().filter(function (ticket) { return ticket.status === column; });
-      list.innerHTML = tickets.length ? tickets.map(ticketHtml).join('') : '<p class="empty-column">Geen tickets</p>';
-      var count = document.querySelector('[data-count="' + column + '"]');
-      if (count) count.textContent = String(tickets.length);
+  function docTickets() {
+    return state.customTickets.filter(function (t) { return t.status !== 'todo'; }).concat(deliveredTickets()).slice(0, DOC_TREE_CAP);
+  }
+
+  function allTests() {
+    var seen = {};
+    var rows = state.customTests.map(function (t) {
+      return { id: t.testId, title: t.title, platform: t.platform, result: t.result, gherkin: t.gherkin, technique: 'Demo-simulatie', assertions: 0, folder: 'Demo-wensen', ticketKey: t.key };
     });
-    var total = document.querySelector('[data-backlog-count]');
-    if (total) total.textContent = String(latestTickets().length);
+    deliveredTickets().forEach(function (ticket) {
+      ticket.cases.forEach(function (c) {
+        if (seen[c.id]) return;
+        seen[c.id] = true;
+        rows.push({ id: c.id, title: c.title, platform: c.platform, result: 'pass', gherkin: c.gherkin, technique: c.technique, assertions: c.assertions, feature: c.feature, folder: folderFor(c.id), ticketKey: ticket.key });
+      });
+    });
+    return rows.slice(0, TEST_CAP);
+  }
+
+  function folderFor(id) {
+    var prefix = String(id).split('-')[0];
+    return { TC: 'Regressie', NOT: 'Berichten', KLV: 'Klassiek', DASH: 'Dashboard', AUTH: 'Inloggen', PIPE: 'Pipeline-demo', SKIN: 'Vormgeving' }[prefix] || 'Overig';
+  }
+
+  function visibleTests() {
+    var rows = allTests().filter(function (row) {
+      if (ui.status !== 'all' && row.result !== ui.status) return false;
+      if (ui.folder && row.folder !== ui.folder) return false;
+      if (!ui.query) return true;
+      return [row.id, row.title, row.platform, row.technique, row.gherkin].join(' ').toLowerCase().indexOf(ui.query) >= 0;
+    });
+    if (ui.sort) {
+      rows.sort(function (a, b) {
+        var x = a[ui.sort] === undefined ? '' : a[ui.sort];
+        var y = b[ui.sort] === undefined ? '' : b[ui.sort];
+        var result = typeof x === 'number' ? x - y : String(x).localeCompare(String(y), 'nl');
+        return ui.sortDir === 'desc' ? -result : result;
+      });
+    }
+    return rows;
+  }
+
+  function livingDocEntries() {
+    var real = deliveredTickets().map(function (t) {
+      return { key: t.key, text: t.title, result: t.source === 'feed' ? 'Opgeleverd · ' + t.version : 'Geslaagd', time: t.livingTime };
+    });
+    return state.livingDoc.concat(real).slice(0, LIVING_DOC_CAP);
+  }
+
+  // ===================== Weergave =====================
+  function statusLabel(ticket) {
+    if (ticket.status === 'ingediend') return '<span class="status-pill waiting">Wacht op VS Code</span>';
+    if (ticket.status === 'doing' && ticket.source === 'feed') return '<span class="status-pill running">' + escapeHtml(ticket.who || 'bezig') + '</span>';
+    if (ticket.status === 'doing') return '<span class="status-pill running">Fase ' + state.activePhase + ' van 4</span>';
+    if (ticket.status === 'todo' && ticket.source === 'feed') return '<span class="status-pill open">' + escapeHtml(ticket.openStatus || 'open') + '</span>';
+    if (ticket.result === 'fail') return '<span class="status-pill fail">CI aandacht</span>';
+    if (ticket.status === 'done') return '<span class="status-pill pass">Op TEST</span>';
+    return '<span class="status-pill open">Te doen</span>';
+  }
+
+  function ticketHtml(ticket) {
+    var isLocal = ticket.source !== 'feed' && ticket.source !== 'fallback';
+    var canRun = isLocal && (ticket.status === 'todo' || ticket.status === 'ingediend');
+    var meta = '';
+    if (ticket.version && ticket.source === 'feed') meta += '<span class="version-chip">' + escapeHtml(ticket.version) + '</span>';
+    if (ticket.platform) meta += '<span>' + escapeHtml(ticket.platform) + '</span>';
+    if (ticket.who && ticket.status !== 'done') meta += '<span>' + escapeHtml(ticket.who) + '</span>';
+    return '<article class="ticket-card' + (ticket.status === 'doing' && isLocal ? ' is-running' : '') + '" data-ticket="' + escapeHtml(ticket.key) + '" data-source="' + escapeHtml(isLocal ? 'local' : ticket.source) + '">' +
+      '<button type="button" class="card-open" data-open-ticket="' + escapeHtml(ticket.key) + '"><h4>' + escapeHtml(ticket.title) + '</h4></button>' +
+      '<div class="ticket-card-foot">' +
+        '<i class="issue-icon ' + escapeHtml(ticket.type) + '" aria-hidden="true">' + iconFor(ticket.type) + '</i>' +
+        '<code class="issue-key">' + escapeHtml(ticket.key) + '</code>' +
+        statusLabel(ticket) +
+        (meta ? '<span class="ticket-meta">' + meta + '</span>' : '') +
+      '</div>' +
+      (ticket.gherkin ? '<details class="gherkin"' + (ui.expandAll ? ' open' : '') + '><summary>Gherkin</summary><pre>' + escapeHtml(ticket.gherkin) + '</pre></details>' : '') +
+      (ticket.status === 'ingediend' ? '<div class="ticket-card-foot"><a class="issue-link" href="' + escapeHtml(issueSearchUrl()) + '" target="_blank" rel="noopener">Bekijk issue op GitHub ↗</a></div>' : '') +
+      (canRun ? '<div class="ticket-card-foot"><button type="button" class="card-run" data-run-ticket="' + escapeHtml(ticket.key) + '">Simuleer de flow</button></div>' : '') +
+      '</article>';
+  }
+
+  function renderBoard() {
+    var columns = boardColumns();
+    ['todo', 'doing', 'done'].forEach(function (column) {
+      var list = $('[data-ticket-list="' + column + '"]');
+      if (!list) return;
+      list.innerHTML = columns[column].length ? columns[column].map(ticketHtml).join('')
+        : '<p class="empty-column">' + (ui.query || ui.type !== 'all' || ui.source !== 'all' ? 'Geen resultaten met dit filter' : 'Geen tickets') + '</p>';
+      var count = $('[data-count="' + column + '"]');
+      if (count) count.textContent = String(columns[column].length);
+    });
+    var total = columns.todo.length + columns.doing.length + columns.done.length;
+    var badge = $('[data-backlog-count]');
+    if (badge) badge.textContent = String(total);
+    var meta = $('[data-board-meta]');
+    if (meta) meta.textContent = ui.query || ui.type !== 'all' || ui.source !== 'all' ? total + ' van ' + (boardTotalOngefilterd()) + ' getoond' : 'Actuele demo';
+  }
+
+  function boardTotalOngefilterd() {
+    var local = state.customTickets;
+    return local.filter(function (t) { return t.status === 'done'; }).concat(deliveredTickets()).slice(0, BOARD_DONE_CAP).length
+      + local.filter(function (t) { return t.status !== 'done'; }).length + openTickets().length;
   }
 
   function renderPhases() {
-    document.querySelectorAll('[data-phase]').forEach(function (element) {
+    $$('[data-phase]').forEach(function (element) {
       var phase = Number(element.getAttribute('data-phase'));
       element.classList.toggle('is-active', phase === state.activePhase);
-      element.classList.toggle('is-complete', state.activePhase > phase || (state.activePhase === 4 && phase < 4));
+      element.classList.toggle('is-complete', state.activePhase > phase);
     });
   }
 
@@ -198,77 +352,164 @@
   }
 
   function renderTests() {
-    var tests = allTests().slice(0, 5);
-    var table = document.querySelector('[data-test-table]');
+    var rows = visibleTests();
+    var table = $('[data-test-table]');
     if (table) {
-      table.innerHTML = tests.map(function (testCase) {
-        return '<tr data-testcase="' + escapeHtml(testCase.testId) + '"><td><code>' + escapeHtml(testCase.testId) + '</code></td><td>' + escapeHtml(testCase.title) + '</td><td>' + escapeHtml(testCase.platform) + '</td><td>' + resultPill(testCase.result) + '</td><td><details class="gherkin"><summary>Gherkin</summary><pre>' + escapeHtml(testCase.gherkin) + '</pre></details></td></tr>';
-      }).join('');
+      table.innerHTML = rows.length ? rows.map(function (row) {
+        var detail = row.assertions ? '<small>' + escapeHtml(row.technique) + ' · ' + row.assertions + ' assertions</small>' : '';
+        return '<tr data-testcase="' + escapeHtml(row.id) + '">' +
+          '<td><button type="button" class="row-open" data-open-ticket="' + escapeHtml(row.ticketKey) + '">' + escapeHtml(row.id) + '</button></td>' +
+          '<td>' + escapeHtml(row.title) + detail + '</td>' +
+          '<td>' + escapeHtml(row.platform) + '</td>' +
+          '<td class="assert-count">' + (row.assertions || '—') + '</td>' +
+          '<td>' + resultPill(row.result) + '</td>' +
+          '<td><details class="gherkin"' + (ui.expandAll ? ' open' : '') + '><summary>Gherkin</summary><pre>' + escapeHtml(row.gherkin) + '</pre></details></td></tr>';
+      }).join('') : '<tr><td colspan="6"><p class="empty-column">Geen testcases met dit filter</p></td></tr>';
     }
-    var passed = tests.filter(function (testCase) { return testCase.result === 'pass'; }).length;
-    var failed = tests.filter(function (testCase) { return testCase.result === 'fail'; }).length;
-    var running = tests.filter(function (testCase) { return testCase.result === 'running'; }).length;
-    var metrics = document.querySelector('[data-test-metrics]');
-    if (metrics) metrics.innerHTML = '<div class="metric"><span>Testcases</span><strong>' + tests.length + '</strong></div><div class="metric pass"><span>Geslaagd</span><strong>' + passed + '</strong></div><div class="metric fail"><span>Aandacht</span><strong>' + failed + '</strong></div><div class="metric running"><span>Draait nu</span><strong>' + running + '</strong></div>';
-    var count = document.querySelector('[data-test-count]');
-    if (count) count.textContent = String(tests.length);
+    var alle = allTests();
+    var passed = alle.filter(function (r) { return r.result === 'pass'; }).length;
+    var failed = alle.filter(function (r) { return r.result === 'fail'; }).length;
+    var running = alle.filter(function (r) { return r.result === 'running'; }).length;
+    var metrics = $('[data-test-metrics]');
+    if (metrics) {
+      metrics.innerHTML = '<div class="metric"><span>Testcases</span><strong>' + alle.length + '</strong></div>' +
+        '<div class="metric pass"><span>Geslaagd</span><strong>' + passed + '</strong></div>' +
+        '<div class="metric fail"><span>Aandacht</span><strong>' + failed + '</strong></div>' +
+        '<div class="metric running"><span>Draait nu</span><strong>' + running + '</strong></div>';
+    }
+    var count = $('[data-test-count]');
+    if (count) count.textContent = String(alle.length);
+
+    var folders = {};
+    alle.forEach(function (row) { folders[row.folder] = (folders[row.folder] || 0) + 1; });
+    var tree = $('[data-test-folders]');
+    if (tree) {
+      tree.innerHTML = '<li><button type="button" class="' + (ui.folder ? '' : 'is-current') + '" data-folder="">Alle mappen <b>' + alle.length + '</b></button></li>' +
+        Object.keys(folders).sort().map(function (name) {
+          return '<li><button type="button" class="' + (ui.folder === name ? 'is-current' : '') + '" data-folder="' + escapeHtml(name) + '">' + escapeHtml(name) + ' <b>' + folders[name] + '</b></button></li>';
+        }).join('');
+    }
+    $$('[data-sort-arrow]').forEach(function (arrow) {
+      arrow.textContent = arrow.getAttribute('data-sort-arrow') === ui.sort ? (ui.sortDir === 'asc' ? '↑' : '↓') : '';
+    });
   }
 
   function renderLivingDoc() {
-    state.livingDoc = state.livingDoc.slice(0, 10);
-    var list = document.querySelector('[data-living-doc]');
+    state.livingDoc = state.livingDoc.slice(0, LIVING_DOC_CAP);
+    var list = $('[data-living-doc]');
     if (!list) return;
-    list.innerHTML = state.livingDoc.slice(0, 5).map(function (entry) {
-      return '<li data-living-key="' + escapeHtml(entry.key) + '" class="' + (entry.key === lastCompletedKey ? 'is-new' : '') + '"><code>' + escapeHtml(entry.key) + '</code><p>' + escapeHtml(entry.text) + ' · ' + escapeHtml(entry.result) + '</p><time>' + escapeHtml(entry.time) + '</time></li>';
+    list.innerHTML = livingDocEntries().map(function (entry) {
+      return '<li data-living-key="' + escapeHtml(entry.key) + '" class="' + (entry.key === lastCompletedKey ? 'is-new' : '') + '">' +
+        '<code>' + escapeHtml(entry.key) + '</code><p>' + escapeHtml(entry.text) + ' · ' + escapeHtml(entry.result) + '</p><time>' + escapeHtml(entry.time) + '</time></li>';
     }).join('');
   }
 
   function setText(selector, value) {
-    var element = document.querySelector(selector);
+    var element = $(selector);
     if (element) element.textContent = value;
   }
 
+  function analysisForLocal(ticket) {
+    var stakeholder = ticket.stakeholder || 'Stakeholder';
+    var goal = ticket.goal || 'de gevraagde verandering aantoonbaar waarde oplevert';
+    var lower = ticket.title.charAt(0).toLowerCase() + ticket.title.slice(1);
+    return {
+      leftLabel: 'STAKEHOLDERVRAAG', leftTitle: stakeholder, leftText: 'Hoe zorgen we dat ' + lower + ' en dat dit controleerbaar wordt opgeleverd?',
+      rightLabel: 'USER STORY', rightTitle: ticket.key + ' · User Story', rightText: 'Als ' + stakeholder + ' wil ik ' + lower + ', zodat ' + goal + '.',
+      fo: 'De oplossing ondersteunt "' + ticket.title + '". Het gedrag is voor ' + stakeholder + ' zichtbaar en voldoet aan het vastgelegde acceptatiecriterium.',
+      to: ticket.status === 'ingediend'
+        ? 'Als GitHub-issue (' + INTAKE_LABEL + ') doorgezet naar VS Code. Daar maakt de agent het feature-bestand en de Playwright-case, draait de impactregressie, werkt LIVING-DOC.md en GIO-WENSEN.md bij en pusht naar CI en TEST.'
+        : 'Koppel ' + ticket.key + ' aan ' + ticket.testId + ', automatiseer het scenario op ' + ticket.platform + ' en publiceer de uitslag via de TEST-pipeline naar de Living Doc.',
+      criterion: ticket.criterion || 'De beschreven verandering is zichtbaar en automatisch gecontroleerd.',
+      gherkin: ticket.gherkin, author: 'Analyse voor ' + stakeholder,
+      updated: ticket.status === 'ingediend' ? 'Ingediend, wacht op VS Code' : (ticket.key === lastCompletedKey ? 'Zojuist bijgewerkt' : 'Lokale demo'),
+      summary: 'Analyse en ontwerp bij de stakeholdervraag, gekoppeld aan Jira en de uitvoerbare testbasis in Zephyr.',
+      trace: ticket.status === 'ingediend' ? 'Wacht op VS Code' : (ticket.status === 'doing' ? 'In uitvoering' : (ticket.result === 'fail' ? 'Aandacht' : 'Opgeleverd')),
+      testId: ticket.testId
+    };
+  }
+
+  function analysisForDelivered(ticket) {
+    var cases = ticket.cases || [];
+    var caseLines = cases.length
+      ? cases.map(function (c) { return c.id + ' — ' + (c.technique || 'techniek n.t.b.') + (c.assertions ? ' · ' + c.assertions + ' assertions' : '') + (c.feature ? '\n' + c.feature : ''); }).join('\n\n')
+      : 'Voor deze oplevering is geen aparte Playwright-case vastgelegd in GIO-WENSEN (werkwijze, seed of documentatie).';
+    return {
+      leftLabel: 'WENS VAN GIO (GIO-WENSEN.MD)', leftTitle: ticket.date + ' · ' + ticket.version, leftText: ticket.wish || ticket.title,
+      rightLabel: 'BEWIJS', rightTitle: cases.length ? cases.length + ' Playwright-case' + (cases.length === 1 ? '' : 's') : 'Geen aparte case',
+      rightText: cases.length ? cases.map(function (c) { return c.id + ': ' + c.title; }).join(' · ') : 'Vastgelegd als werkwijze of data, zonder eigen testcase.',
+      fo: ticket.wish || ticket.title, to: caseLines,
+      criterion: cases.length ? cases[0].title : ticket.title,
+      gherkin: ticket.gherkin || 'Geen Gherkin: deze oplevering heeft geen eigen Playwright-case.',
+      author: 'Bron: GIO-WENSEN.md · tests/playwright/features · LIVING-DOC.md',
+      updated: 'Opgeleverd in ' + ticket.version + (feed.appVersion ? ' · app ' + feed.appVersion : ''),
+      summary: 'Echte oplevering uit de projectstand: de wens uit GIO-WENSEN.md met de gekoppelde cases uit de feature-bestanden.',
+      trace: 'Opgeleverd', testId: ticket.testId
+    };
+  }
+
   function renderKnowledge() {
-    var tickets = latestTickets();
-    if (!tickets.some(function (ticket) { return ticket.key === selectedDocKey; })) selectedDocKey = tickets[0].key;
-    var selected = tickets.find(function (ticket) { return ticket.key === selectedDocKey; }) || tickets[0];
-    var analysis = analysisFor(selected);
-    var tree = document.querySelector('[data-doc-tree]');
+    var tickets = docTickets();
+    var tree = $('[data-doc-tree]');
     if (tree) {
-      tree.innerHTML = tickets.map(function (ticket) {
-        return '<li class="' + (ticket.key === selected.key ? 'is-current' : '') + '"><button type="button" data-doc-select="' + escapeHtml(ticket.key) + '"><code>' + escapeHtml(ticket.key) + '</code><span>' + escapeHtml(ticket.title) + '</span></button></li>';
+      tree.innerHTML = tickets.map(function (t) {
+        return '<li class="' + (!ui.fixedDoc && t.key === ui.docKey ? 'is-current' : '') + '"><button type="button" data-doc-select="' + escapeHtml(t.key) + '"><code>' + escapeHtml(t.key) + '</code><span>' + escapeHtml(t.title) + '</span></button></li>';
       }).join('');
+    }
+    var docCount = $('[data-doc-count]');
+    if (docCount) docCount.textContent = String(tickets.length);
+    $$('[data-doc-fixed]').forEach(function (button) {
+      button.classList.toggle('is-current', ui.fixedDoc === button.getAttribute('data-doc-fixed'));
+    });
+
+    var selected = null;
+    var a = null;
+    if (ui.fixedDoc && vastePaginas[ui.fixedDoc]) {
+      a = vastePaginas[ui.fixedDoc];
+      selected = { key: a.key, title: a.title };
+    } else {
+      if (!tickets.some(function (t) { return t.key === ui.docKey; })) ui.docKey = tickets.length ? tickets[0].key : '';
+      selected = tickets.find(function (t) { return t.key === ui.docKey; }) || tickets[0];
+      if (!selected) return;
+      a = selected.source === 'feed' || selected.source === 'fallback' ? analysisForDelivered(selected) : analysisForLocal(selected);
     }
 
     setText('[data-doc-key]', selected.key);
     setText('[data-doc-title]', selected.key + ' · ' + selected.title);
-    setText('[data-doc-summary]', 'Analyse en ontwerp bij de stakeholdervraag, gekoppeld aan Jira en de uitvoerbare testbasis in Zephyr.');
-    setText('[data-doc-author]', 'Analyse voor ' + analysis.stakeholder);
-    setText('[data-doc-updated]', selected.key === lastCompletedKey ? 'Zojuist bijgewerkt' : 'Onderdeel van de laatste 5');
-    setText('[data-doc-stakeholder]', analysis.stakeholder);
-    setText('[data-doc-question]', analysis.question);
-    setText('[data-doc-story-title]', selected.key + ' · User Story');
-    setText('[data-doc-story]', analysis.story);
-    setText('[data-doc-fo]', analysis.fo);
-    setText('[data-doc-to]', analysis.to);
-    setText('[data-doc-criterion]', analysis.criterion);
-    setText('[data-doc-gherkin]', selected.gherkin);
+    setText('[data-doc-summary]', a.summary);
+    setText('[data-doc-author]', a.author);
+    setText('[data-doc-updated]', a.updated);
+    setText('[data-doc-left-label]', a.leftLabel);
+    setText('[data-doc-stakeholder]', a.leftTitle);
+    setText('[data-doc-question]', a.leftText);
+    setText('[data-doc-right-label]', a.rightLabel);
+    setText('[data-doc-story-title]', a.rightTitle);
+    setText('[data-doc-story]', a.rightText);
+    setText('[data-doc-fo]', a.fo);
+    setText('[data-doc-to]', a.to);
+    setText('[data-doc-criterion]', a.criterion);
+    setText('[data-doc-gherkin]', a.gherkin);
 
-    var trace = document.querySelector('[data-doc-trace]');
+    var trace = $('[data-doc-trace]');
     if (trace) {
-      var result = selected.status === 'doing' ? 'In uitvoering' : (selected.result === 'fail' ? 'Aandacht' : 'Opgeleverd');
-      trace.innerHTML = '<span><small>Jira</small><strong>' + escapeHtml(selected.key) + '</strong></span><i>→</i><span><small>Confluence</small><strong>FO + TO</strong></span><i>→</i><span><small>Zephyr</small><strong>' + escapeHtml(selected.testId) + '</strong></span><i>→</i><span><small>Living Doc</small><strong>' + escapeHtml(result) + '</strong></span>';
+      trace.innerHTML = '<span><small>Jira</small><strong>' + escapeHtml(selected.key) + '</strong></span><i>→</i>' +
+        '<span><small>Confluence</small><strong>FO + TO</strong></span><i>→</i>' +
+        '<span><small>Zephyr</small><strong>' + escapeHtml(a.testId || '—') + '</strong></span><i>→</i>' +
+        '<span><small>Living Doc</small><strong>' + escapeHtml(a.trace) + '</strong></span>';
     }
+    var toTest = $('[data-doc-to-test]');
+    if (toTest) toTest.hidden = !a.testId || a.testId === 'n.v.t.';
   }
 
   function renderFlowMonitor() {
-    var monitor = document.querySelector('[data-flow-monitor]');
-    var title = document.querySelector('[data-flow-title]');
-    var status = document.querySelector('[data-flow-status]');
+    var monitor = $('[data-flow-monitor]');
+    var title = $('[data-flow-title]');
+    var status = $('[data-flow-status]');
     if (!monitor || !title || !status) return;
 
     var running = state.activePhase >= 1 && state.activePhase <= 4;
     var complete = state.activePhase > 4 && lastCompletedKey;
+    var waiting = state.customTickets.filter(function (t) { return t.status === 'ingediend'; });
     monitor.classList.toggle('is-running', running);
     monitor.classList.toggle('is-complete', Boolean(complete));
 
@@ -276,23 +517,39 @@
       title.textContent = state.activeTicket + ' · stap ' + state.activePhase + ' van 4';
       status.textContent = phaseCopy[state.activePhase].title + '. ' + phaseCopy[state.activePhase].status;
     } else if (complete) {
-      title.textContent = lastCompletedKey + ' is volledig verwerkt';
-      status.textContent = 'De flow is afgerond met ' + (lastCompletedResult === 'pass' ? 'een geslaagde controle' : 'een aandachtspunt') + '. De nieuwste regel staat nu bovenaan de Living Doc.';
+      title.textContent = lastCompletedKey + ' is volledig verwerkt (simulatie)';
+      status.textContent = 'De gesimuleerde flow is afgerond met ' + (lastCompletedResult === 'pass' ? 'een geslaagde controle' : 'een aandachtspunt') + '. De nieuwste regel staat nu bovenaan de Living Doc.';
+    } else if (waiting.length) {
+      title.textContent = waiting[0].key + ' is doorgezet naar VS Code';
+      status.textContent = 'De wens staat als GitHub-issue klaar (label ' + INTAKE_LABEL + '). In VS Code maakt de agent nu het feature-bestand en de Playwright-case, draait de impactregressie en werkt de Living Doc bij; na CI verschijnt de oplevering hier vanzelf bij "Opgeleverd".';
     } else {
-      title.textContent = 'Klaar om een volledige flow te starten';
-      status.textContent = 'Vul rechts één vraag in. De demo maakt daarna automatisch het ticket, de testcase, het testresultaat en de Living Doc-regel.';
+      title.textContent = 'Klaar om een wens door te zetten';
+      status.textContent = 'Vul rechts één wens in. Die gaat als GitHub-issue naar VS Code, waar de agent de testcase maakt, de regressie draait en de Living Doc bijwerkt — tot en met TEST.';
     }
 
-    document.querySelectorAll('[data-checkpoint]').forEach(function (checkpoint) {
+    $$('[data-checkpoint]').forEach(function (checkpoint) {
       var phase = Number(checkpoint.getAttribute('data-checkpoint'));
       checkpoint.classList.toggle('is-active', running && phase === state.activePhase);
       checkpoint.classList.toggle('is-complete', state.activePhase > phase);
     });
 
-    var form = document.querySelector('[data-ticket-form]');
-    if (form) {
-      Array.prototype.forEach.call(form.elements, function (control) { control.disabled = Boolean(state.activeTicket); });
-    }
+    var form = $('[data-ticket-form]');
+    if (form) Array.prototype.forEach.call(form.elements, function (control) { control.disabled = Boolean(state.activeTicket); });
+    setText('[data-feed-version]', feed.loaded ? 'projectstand app ' + feed.appVersion : 'voorbeelddata (feed niet geladen)');
+  }
+
+  function renderFilterSummary() {
+    var parts = [];
+    if (ui.query) parts.push('zoekterm "' + ui.query + '"');
+    if (ui.type !== 'all') parts.push('type ' + ui.type);
+    if (ui.source !== 'all') parts.push(ui.source === 'feed' ? 'echte projectstand' : 'eigen demo-wensen');
+    if (ui.status !== 'all') parts.push('status ' + ui.status);
+    setText('[data-filter-summary]', parts.length ? 'Actief: ' + parts.join(', ') + '.' : 'Geen filters actief.');
+    $$('[data-type-filters] button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-type') === ui.type)); });
+    $$('[data-source-filters] button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-sourcefilter') === ui.source)); });
+    $$('[data-status-filters] button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-status') === ui.status)); });
+    var clear = $('[data-search-clear]');
+    if (clear) clear.hidden = !ui.query;
   }
 
   function render() {
@@ -302,26 +559,96 @@
     renderKnowledge();
     renderLivingDoc();
     renderFlowMonitor();
+    renderFilterSummary();
   }
 
+  // ===================== Navigatie =====================
   function switchTab(name, focus) {
-    document.querySelectorAll('[data-tab]').forEach(function (tab) {
+    if (!products[name]) return;
+    ui.view = name;
+    document.body.setAttribute('data-workspace', name);
+    $$('[data-tab]').forEach(function (tab) {
       var active = tab.getAttribute('data-tab') === name;
-      tab.setAttribute('aria-selected', active ? 'true' : 'false');
-      tab.setAttribute('tabindex', active ? '0' : '-1');
-      if (active && focus) tab.focus();
+      if (tab.getAttribute('role') === 'tab') {
+        tab.setAttribute('aria-selected', active ? 'true' : 'false');
+        tab.setAttribute('tabindex', active ? '0' : '-1');
+        if (active && focus) tab.focus();
+      }
     });
-    document.querySelectorAll('[data-panel]').forEach(function (panel) {
-      panel.hidden = panel.getAttribute('data-panel') !== name;
+    $$('[data-panel-view]').forEach(function (panel) { panel.hidden = panel.getAttribute('data-panel-view') !== name; });
+    $$('[data-tab-target]').forEach(function (button) { button.classList.toggle('is-active', button.getAttribute('data-tab-target') === name); });
+    var product = products[name];
+    setText('[data-product-name]', product.name);
+    setText('[data-product-scope]', product.scope);
+    var logo = $('[data-product-logo]');
+    if (logo) { logo.textContent = product.logo; logo.style.background = product.color; }
+    var hash = '#' + name + (name === 'knowledge' && ui.docKey ? '/' + ui.docKey : '');
+    if (window.location.hash !== hash) history.replaceState(null, '', hash);
+  }
+
+  function closePanels(except) {
+    $$('[data-panel]').forEach(function (panel) {
+      if (panel.getAttribute('data-panel') !== except) panel.hidden = true;
     });
-    document.querySelectorAll('[data-tab-target]').forEach(function (button) {
-      button.classList.toggle('is-active', button.getAttribute('data-tab-target') === name);
+    $$('[data-panel-toggle]').forEach(function (button) {
+      button.setAttribute('aria-expanded', String(!$('[data-panel="' + button.getAttribute('data-panel-toggle') + '"]').hidden));
     });
   }
 
-  function delay() {
-    return new Promise(function (resolve) { window.setTimeout(resolve, STEP_DELAY); });
+  var toastTimer = 0;
+  function toast(text) {
+    var element = $('[data-toast]');
+    if (!element) return;
+    element.textContent = text;
+    element.hidden = false;
+    window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(function () { element.hidden = true; }, 3200);
   }
+
+  function findTicket(key) {
+    return state.customTickets.concat(deliveredTickets(), openTickets()).find(function (t) { return t.key === key; });
+  }
+
+  function openDetail(key) {
+    var ticket = findTicket(key);
+    if (!ticket) return;
+    ui.detail = key;
+    var isLocal = ticket.source !== 'feed' && ticket.source !== 'fallback';
+    var icon = $('[data-detail-icon]');
+    if (icon) { icon.className = 'issue-icon ' + ticket.type; icon.textContent = iconFor(ticket.type); }
+    setText('[data-detail-key]', ticket.key);
+    setText('[data-detail-title]', ticket.title);
+    $('[data-detail-pills]').innerHTML = statusLabel(ticket) + (ticket.platform ? '<span class="status-pill open">' + escapeHtml(ticket.platform) + '</span>' : '');
+    var fields = [
+      ['Type', { feature: 'Feature', bug: 'Bug', chore: 'Chore', ci: 'CI/CD' }[ticket.type] || ticket.type],
+      ['Bron', isLocal ? 'Eigen demo-wens (lokaal bewaard)' : 'Echte projectstand (GIO-WENSEN.md)'],
+      ['Versie', ticket.version || '—'],
+      ['Datum', ticket.date || '—'],
+      ['Testcase', ticket.testId || '—'],
+      ['Wie', ticket.who || (isLocal ? 'Jij, via dit formulier' : 'main')]
+    ];
+    if (ticket.wish && ticket.wish !== ticket.title) fields.push(['Volledige wens', ticket.wish]);
+    if (ticket.criterion) fields.push(['Acceptatiecriterium', ticket.criterion]);
+    if (ticket.cases && ticket.cases.length) fields.push(['Cases', ticket.cases.map(function (c) { return c.id + ' (' + (c.assertions || 0) + ' assertions)'; }).join(', ')]);
+    $('[data-detail-fields]').innerHTML = fields.map(function (pair) {
+      return '<dt>' + escapeHtml(pair[0]) + '</dt><dd>' + escapeHtml(pair[1]) + '</dd>';
+    }).join('');
+    setText('[data-detail-gherkin]', ticket.gherkin || 'Geen Gherkin bij dit ticket.');
+    var run = $('[data-detail-run]');
+    if (run) run.hidden = !(isLocal && (ticket.status === 'todo' || ticket.status === 'ingediend'));
+    $('[data-detail-drawer]').hidden = false;
+    $('[data-detail-backdrop]').hidden = false;
+    var close = $('[data-detail-close]');
+    if (close) close.focus();
+  }
+
+  function closeDetail() {
+    ui.detail = '';
+    $('[data-detail-drawer]').hidden = true;
+    $('[data-detail-backdrop]').hidden = true;
+  }
+
+  function delay() { return new Promise(function (resolve) { window.setTimeout(resolve, STEP_DELAY); }); }
 
   function nowLabel() {
     return new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date()).replace(',', ' ·');
@@ -329,7 +656,8 @@
 
   async function runPipeline(key) {
     var ticket = state.customTickets.find(function (item) { return item.key === key; });
-    if (!ticket || ticket.status !== 'todo' || state.activeTicket) return;
+    if (!ticket || (ticket.status !== 'todo' && ticket.status !== 'ingediend') || state.activeTicket) return;
+    closeDetail();
     state.activeTicket = key;
     lastCompletedKey = '';
     lastCompletedResult = '';
@@ -338,29 +666,50 @@
 
     for (var phase = 1; phase <= 4; phase += 1) {
       state.activePhase = phase;
-      if (phase === 2) {
-        state.customTests.push(Object.assign({}, ticket, { status: 'done', result: 'running' }));
-      }
+      if (phase === 2) state.customTests.push(Object.assign({}, ticket, { status: 'done', result: 'running' }));
       render();
       await delay();
     }
 
-    var result = Math.random() < .82 ? 'pass' : 'fail';
+    var result = Math.random() < 0.82 ? 'pass' : 'fail';
     ticket.status = 'done';
     ticket.result = result;
     var testCase = state.customTests.find(function (item) { return item.key === key; });
     if (testCase) testCase.result = result;
-    state.livingDoc.unshift({ key: ticket.key, text: ticket.title, result: result === 'pass' ? 'Geslaagd op TEST' : 'Aandacht in CI', time: nowLabel() });
-    state.livingDoc = state.livingDoc.slice(0, 10);
+    state.livingDoc.unshift({ key: ticket.key, text: ticket.title, result: result === 'pass' ? 'Geslaagd (simulatie)' : 'Aandacht in CI (simulatie)', time: nowLabel() });
+    state.livingDoc = state.livingDoc.slice(0, LIVING_DOC_CAP);
     state.activePhase = 5;
     state.activeTicket = '';
     lastCompletedKey = ticket.key;
     lastCompletedResult = result;
+    ui.docKey = ticket.key;
+    ui.fixedDoc = '';
     saveState();
     render();
     switchTab('knowledge', false);
-    var livingEntry = document.querySelector('[data-living-key="' + ticket.key + '"]');
+    var livingEntry = $('[data-living-key="' + ticket.key + '"]');
     if (livingEntry) livingEntry.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'center' });
+  }
+
+  // ===================== Intake naar GitHub =====================
+  function issueSearchUrl() {
+    return REPO_URL + '/issues?q=' + encodeURIComponent('is:issue label:' + INTAKE_LABEL + ' sort:created-desc');
+  }
+
+  function gherkinVoor(title, criterion) {
+    return 'Scenario: ' + (title || 'Nieuwe wens') + '\n  Given een gebruiker de nieuwe werkwijze gebruikt\n  When ' + (criterion || 'de wens is doorgevoerd') + '\n  Then is de uitkomst zichtbaar en automatisch gecontroleerd';
+  }
+
+  function issueUrlFor(ticket) {
+    var body = [
+      '**Bron:** Path Pipeline-demo op TEST · **Type:** ' + ticket.type + ' · **Stakeholder:** ' + ticket.stakeholder,
+      '', '**Gewenste waarde:** ' + ticket.goal,
+      '', '**Acceptatiecriterium:** ' + ticket.criterion,
+      '', '```gherkin', ticket.gherkin, '```',
+      '', '**Afspraak voor de agent in VS Code (zie PIPELINE-INTAKE.md):** GIO-WENSEN → feature + spec + steps (en aanmelden in scripts/sync-living-docs.mjs) → impactregressie → LIVING-DOC → versie → push → CI → TEST → GIO-WENSEN "Klaar" → `npm run pipeline:data`.'
+    ].join('\n');
+    return REPO_URL + '/issues/new?title=' + encodeURIComponent(ticket.key + ' ' + ticket.title) +
+      '&labels=' + encodeURIComponent(INTAKE_LABEL) + '&body=' + encodeURIComponent(body);
   }
 
   function addTicket(form) {
@@ -372,65 +721,244 @@
     var type = String(data.get('type') || 'feature');
     if (!title || !criterion || !goal) return;
     var key = 'PATH-' + state.sequence++;
-    var testId = 'TC-DEMO-H-' + String(state.sequence - 198).padStart(3, '0');
-    state.customTickets.unshift({
-      key: key, title: title, type: type, status: 'todo', testId: testId, platform: 'desktop-chromium', result: '',
-      stakeholder: stakeholder, goal: goal, criterion: criterion,
-      gherkin: 'Scenario: ' + title + '\n  Given een gebruiker de nieuwe werkwijze gebruikt\n  When ' + criterion + '\n  Then is de uitkomst zichtbaar en automatisch gecontroleerd'
-    });
-    selectedDocKey = key;
+    var ticket = {
+      key: key, title: title, type: type, status: 'ingediend', testId: 'TC-DEMO-H-' + String(state.sequence - 198).padStart(3, '0'),
+      platform: 'desktop-chromium', result: '', source: 'local', stakeholder: stakeholder, goal: goal, criterion: criterion,
+      date: nowLabel(), gherkin: gherkinVoor(title, criterion)
+    };
+    state.customTickets.unshift(ticket);
+    ui.docKey = key;
+    ui.fixedDoc = '';
+    ui.query = '';
+    var search = $('[data-search]');
+    if (search) search.value = '';
     saveState();
     render();
     form.reset();
-    var feedback = document.querySelector('[data-form-feedback]');
-    if (feedback) feedback.textContent = key + ' is aangemaakt. De volledige flow start nu automatisch.';
-    runPipeline(key);
+    updateGherkinPreview();
+    var url = issueUrlFor(ticket);
+    var feedback = $('[data-form-feedback]');
+    if (feedback) {
+      feedback.classList.remove('is-blocked');
+      feedback.innerHTML = escapeHtml(key) + ' staat in "Te doen". GitHub opent met het voorgevulde issue: klik daar op <b>Submit new issue</b>, dan pakt de agent hem in VS Code op. <a href="' + escapeHtml(url) + '" target="_blank" rel="noopener" data-issue-url>Opent GitHub niet? Klik hier.</a>';
+    }
+    var opened = window.open(url, '_blank', 'noopener');
+    if (!opened && feedback) feedback.classList.add('is-blocked');
+    toast(key + ' doorgezet naar VS Code');
   }
 
+  function updateGherkinPreview() {
+    var form = $('[data-ticket-form]');
+    var preview = $('[data-gherkin-preview]');
+    if (!form || !preview) return;
+    var title = String(new FormData(form).get('title') || '').trim();
+    var criterion = String(new FormData(form).get('criterion') || '').trim();
+    preview.textContent = title || criterion ? gherkinVoor(title, criterion) : 'Vul hierboven een samenvatting en acceptatiecriterium in.';
+  }
+
+  // ===================== Klikafhandeling =====================
   document.addEventListener('click', function (event) {
     var target = event.target instanceof Element ? event.target : null;
     if (!target) return;
-    var tab = target.closest('[data-tab], [data-tab-target]');
-    if (tab) switchTab(tab.getAttribute('data-tab') || tab.getAttribute('data-tab-target'), true);
-    var runButton = target.closest('[data-run-ticket]');
-    if (runButton) runPipeline(runButton.getAttribute('data-run-ticket'));
-    var docButton = target.closest('[data-doc-select]');
-    if (docButton) {
-      selectedDocKey = docButton.getAttribute('data-doc-select');
-      renderKnowledge();
+
+    var panelToggle = target.closest('[data-panel-toggle]');
+    if (panelToggle) {
+      var naam = panelToggle.getAttribute('data-panel-toggle');
+      var panel = $('[data-panel="' + naam + '"]');
+      var wasHidden = panel.hidden;
+      closePanels();
+      panel.hidden = !wasHidden;
+      panelToggle.setAttribute('aria-expanded', String(!panel.hidden));
+      return;
     }
+
+    var tab = target.closest('[data-tab], [data-tab-target]');
+    if (tab) {
+      closePanels();
+      switchTab(tab.getAttribute('data-tab') || tab.getAttribute('data-tab-target'), tab.getAttribute('role') === 'tab');
+      return;
+    }
+
+    var typeFilter = target.closest('[data-type]');
+    if (typeFilter) { ui.type = typeFilter.getAttribute('data-type'); render(); return; }
+    var sourceFilter = target.closest('[data-sourcefilter]');
+    if (sourceFilter) { ui.source = sourceFilter.getAttribute('data-sourcefilter'); render(); return; }
+    var statusFilter = target.closest('[data-status]');
+    if (statusFilter) { ui.status = statusFilter.getAttribute('data-status'); render(); return; }
+    var folderButton = target.closest('[data-folder]');
+    if (folderButton) { ui.folder = folderButton.getAttribute('data-folder'); render(); return; }
+
+    var sortButton = target.closest('[data-sort]');
+    if (sortButton) {
+      var veld = sortButton.getAttribute('data-sort');
+      if (ui.sort === veld) ui.sortDir = ui.sortDir === 'asc' ? 'desc' : 'asc';
+      else { ui.sort = veld; ui.sortDir = 'asc'; }
+      renderTests();
+      return;
+    }
+
+    var expandAll = target.closest('[data-expand-all]');
+    if (expandAll) {
+      ui.expandAll = !ui.expandAll;
+      expandAll.setAttribute('aria-pressed', String(ui.expandAll));
+      expandAll.textContent = ui.expandAll ? 'Alle scenario\'s inklappen' : 'Alle scenario\'s uitklappen';
+      render();
+      return;
+    }
+
+    var runButton = target.closest('[data-run-ticket], [data-detail-run]');
+    if (runButton) { runPipeline(runButton.getAttribute('data-run-ticket') || ui.detail); return; }
+
+    var openTicket = target.closest('[data-open-ticket]');
+    if (openTicket) { openDetail(openTicket.getAttribute('data-open-ticket')); return; }
+
+    if (target.closest('[data-detail-close], [data-detail-backdrop]')) { closeDetail(); return; }
+    if (target.closest('[data-detail-doc]')) { ui.docKey = ui.detail; ui.fixedDoc = ''; closeDetail(); switchTab('knowledge', false); render(); return; }
+    if (target.closest('[data-detail-test]')) {
+      var ticket = findTicket(ui.detail);
+      ui.query = ticket && ticket.testId ? ticket.testId.toLowerCase() : '';
+      var zoek = $('[data-search]');
+      if (zoek) zoek.value = ui.query;
+      ui.status = 'all'; ui.folder = '';
+      closeDetail(); switchTab('tests', false); render();
+      return;
+    }
+
+    var docSelect = target.closest('[data-doc-select]');
+    if (docSelect) { ui.docKey = docSelect.getAttribute('data-doc-select'); ui.fixedDoc = ''; renderKnowledge(); history.replaceState(null, '', '#knowledge/' + ui.docKey); return; }
+    var docFixed = target.closest('[data-doc-fixed]');
+    if (docFixed) { ui.fixedDoc = docFixed.getAttribute('data-doc-fixed'); renderKnowledge(); return; }
+
+    if (target.closest('[data-doc-copy]')) {
+      var tekst = $('[data-doc-gherkin]').textContent;
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(tekst).then(function () { toast('Gherkin gekopieerd'); }, function () { toast('Kopiëren niet toegestaan'); });
+      else toast('Kopiëren niet beschikbaar in deze browser');
+      return;
+    }
+    if (target.closest('[data-doc-to-test]')) {
+      var trace = $('[data-doc-trace] strong:nth-of-type(1)');
+      var caseId = $$('[data-doc-trace] span')[2];
+      ui.query = caseId ? caseId.textContent.replace('Zephyr', '').trim().toLowerCase() : '';
+      var zoekveld = $('[data-search]');
+      if (zoekveld) zoekveld.value = ui.query;
+      ui.status = 'all'; ui.folder = '';
+      switchTab('tests', false); render();
+      return;
+    }
+
+    if (target.closest('[data-create-focus]')) {
+      switchTab('backlog', false);
+      closePanels();
+      var veld = $('[data-create-field]');
+      if (veld) { veld.focus(); veld.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'center' }); }
+      return;
+    }
+    if (target.closest('[data-jump-living]')) {
+      switchTab('knowledge', false);
+      var living = $('#living-doc');
+      if (living) living.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+      return;
+    }
+    if (target.closest('[data-search-clear]')) {
+      ui.query = '';
+      var zoek2 = $('[data-search]');
+      if (zoek2) { zoek2.value = ''; zoek2.focus(); }
+      render();
+      return;
+    }
+
+    if (target.closest('[data-theme-toggle]')) {
+      var gekozen = volgendeTheme();
+      toast('Weergave: ' + (themes.find(function (t) { return t.id === gekozen; }) || themes[0]).label);
+      return;
+    }
+
     if (target.closest('[data-reset]')) {
-      localStorage.removeItem(STORAGE_KEY);
+      try { localStorage.removeItem(STORAGE_KEY); } catch (_error) { /* geen opslag */ }
       state = initialState();
       lastCompletedKey = '';
       lastCompletedResult = '';
-      selectedDocKey = seeds[0].key;
+      ui.docKey = ''; ui.fixedDoc = ''; ui.query = ''; ui.type = 'all'; ui.source = 'all'; ui.status = 'all'; ui.folder = '';
+      var zoekveld2 = $('[data-search]');
+      if (zoekveld2) zoekveld2.value = '';
+      closeDetail();
       switchTab('backlog', false);
       render();
-      var feedback = document.querySelector('[data-form-feedback]');
-      if (feedback) feedback.textContent = 'De demo is hersteld naar de vijf vaste opleveringen.';
+      var feedback = $('[data-form-feedback]');
+      if (feedback) feedback.textContent = 'De lokale demo-tickets zijn gewist; de echte opleveringen blijven staan.';
+      toast('Demo hersteld');
+      return;
     }
+
+    if (!target.closest('.drop-panel') && !target.closest('[data-panel-toggle]')) closePanels();
+  });
+
+  document.addEventListener('input', function (event) {
+    var target = event.target;
+    if (target && target.matches('[data-search]')) {
+      ui.query = String(target.value || '').trim().toLowerCase();
+      render();
+      return;
+    }
+    if (target && target.closest('[data-ticket-form]')) updateGherkinPreview();
   });
 
   document.addEventListener('keydown', function (event) {
     if (event.key === '/' && document.activeElement && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
       event.preventDefault();
-      var search = document.querySelector('[data-search]');
+      var search = $('[data-search]');
       if (search) search.focus();
+      return;
     }
-    if ((event.key === 'ArrowLeft' || event.key === 'ArrowRight') && event.target instanceof Element && event.target.matches('[data-tab]')) {
-      var tabs = Array.prototype.slice.call(document.querySelectorAll('[data-tab]'));
+    if (event.key === 'Escape') {
+      if (!$('[data-detail-drawer]').hidden) { closeDetail(); return; }
+      closePanels();
+      return;
+    }
+    if ((event.key === 'ArrowLeft' || event.key === 'ArrowRight') && event.target instanceof Element && event.target.matches('[role="tab"]')) {
+      var tabs = $$('[role="tab"]');
       var current = tabs.indexOf(event.target);
       var next = (current + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
       switchTab(tabs[next].getAttribute('data-tab'), true);
     }
   });
 
-  var form = document.querySelector('[data-ticket-form]');
+  var form = $('[data-ticket-form]');
   if (form) form.addEventListener('submit', function (event) { event.preventDefault(); addTicket(form); });
+
+  function applyHash() {
+    var hash = String(window.location.hash || '').replace('#', '');
+    if (!hash) return;
+    var parts = hash.split('/');
+    if (products[parts[0]]) {
+      if (parts[1]) { ui.docKey = decodeURIComponent(parts[1]); ui.fixedDoc = ''; }
+      switchTab(parts[0], false);
+    }
+  }
+  window.addEventListener('hashchange', function () { applyHash(); render(); });
 
   // De grens van tien is opslaggedrag, niet alleen een visueel filter:
   // een oudere reeks uit een vorige sessie wordt bij openen echt opgeschoond.
   saveState();
+  switchTab('backlog', false);
   render();
+  updateGherkinPreview();
+  applyHash();
+
+  if (window.fetch) {
+    fetch(DATA_URL, { cache: 'no-store' }).then(function (response) {
+      if (!response.ok) throw new Error('feed ' + response.status);
+      return response.json();
+    }).then(function (json) {
+      feed = { delivered: json.delivered || [], open: json.open || [], appVersion: json.appVersion || '', loaded: true };
+      document.body.setAttribute('data-feed', 'loaded');
+      render();
+      applyHash();
+    }).catch(function () {
+      document.body.setAttribute('data-feed', 'fallback');
+      render();
+    });
+  } else {
+    document.body.setAttribute('data-feed', 'fallback');
+  }
 })();

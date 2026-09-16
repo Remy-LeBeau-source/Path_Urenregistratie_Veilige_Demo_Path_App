@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 585 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 589 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 585 unieke case-ID's
+- Playwright executable cases: 589 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 586 unieke case-ID's
+- Totaal executable cases: 590 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 630
-- Niet-mobile projectuitvoeringen: 540
-- Mobile functionele cases: 45
-- Pixel 7 / Chromium-uitvoeringen: 45
-- iPhone 13 / WebKit-uitvoeringen: 45
+- Uitvoeringen: 637
+- Niet-mobile projectuitvoeringen: 541
+- Mobile functionele cases: 48
+- Pixel 7 / Chromium-uitvoeringen: 48
+- iPhone 13 / WebKit-uitvoeringen: 48
 
-De 45 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 585 Playwright-functionele cases in totaal 630 resultaten op: 540 + (45 x 2) = 630.
+De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 589 Playwright-functionele cases in totaal 637 resultaten op: 541 + (48 x 2) = 637.
 
 ## Documentatieketen
 
@@ -551,16 +551,6 @@ De 45 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 585 Playwri
 - [PILOT-N-001] elke pilot-URL toont alleen de onderdelen van zijn eigen rol — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [PILOT-N-002] beide pilots blijven zonder horizontale overflow op telefoon — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 
-### Interactieve Path Pipeline als zelfstandige TEST-demo
-
-- Feature: `tests/playwright/features/pipeline-demo.feature`
-- Source: `tests/playwright/pipeline-demo.spec.ts`
-- Cases: 3
-
-- [PIPE-H-001] de demo verbindt backlog, kennisbank en testbeheer met vijf echte opleveringen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 18
-- [PIPE-H-002] een nieuw ticket loopt door vier fasen naar Zephyr en de Living Doc — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 24
-- [PIPE-N-001] de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
-
 ### Maandperiodes beheren
 
 - Feature: `tests/playwright/features/period-management.feature`
@@ -661,7 +651,7 @@ De 45 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 585 Playwri
 
 - Feature: `tests/playwright/features/klassiek-verkenning.feature`
 - Source: `tests/playwright/klassiek-verkenning.spec.ts`
-- Cases: 22
+- Cases: 23
 
 - [KLV-N-002] het maandkeuzepaneel valt op geen enkele breedte buiten het scherm — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 8
 - [KLV-N-003] in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 3
@@ -674,6 +664,7 @@ De 45 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 585 Playwri
 - [KLV-H-010] op TEST staat alleen Herstel bovenin; thema, vormgeving en versie staan in het profielmenu — Techniek: Responsive viewport + toegankelijkheidsinspectie (44px, toetsenbord) + end-to-end use-case · Assertions: 15
 - [KLV-H-021] de knoppen onder Testfuncties tonen waar je naartoe gaat, niet waar je bent — Techniek: Toestandsovergangtest (licht↔donker, Klassiek↔Modern, heen en terug) + toegankelijkheidsinspectie (geen misleidend aria-pressed) · Assertions: 16
 - [KLV-N-022] de statuspillen naast de koppen in Instellingen blijven binnen hun kaart op smalle telefoons — Techniek: Responsive viewport (320/360/390) + grenswaarden smalle telefoon + lay-outmeting binnen de kaart · Assertions: 1
+- [KLV-N-023] verlof en ziekte accepteren geen onmogelijk aantal uren en gaan dan niet naar de server — Techniek: Grenswaardenanalyse (maandmaximum voor verlof en ziekte) + foutafhandeling zonder serverfout · Assertions: 13
 - [KLV-N-011] de mailgeschiedenis in Instellingen blijft binnen beeld, ook met lange regels en een herstelknop — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 5
 - [KLV-N-012] typen in één dag van de laatste open week maakt de rest van die week niet ingevuld — Techniek: Toestandsovergangtest (onaangeraakt → deels ingevuld) + beslistabel indienbaarheid + herladen (persistentie) · Assertions: 6
 - [KLV-H-013] Week opslaan telt lege dagen als bewust 0: daarna Maand indienen, ook buiten de laatste week — Techniek: Toestandsovergangtest (Opslaan = bewust 0) + beslistabel indienbaarheid · Assertions: 4
@@ -685,6 +676,19 @@ De 45 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 585 Playwri
 - [KLV-H-019] ingevulde uren op Mijn uren zijn leesbaar in licht en donker, op telefoon en desktop — Techniek: Contrastmeting (WCAG 4,5:1) + themacombinaties (licht/donker) × responsive viewport (390/1280) · Assertions: 2
 - [KLV-H-020] de actieknop in Mijn maanden heeft de huisstijl en zegt wat er nu te doen is — Techniek: Beslistabel (stap → knoptekst) + visuele consistentie met de huisstijlknop in licht en donker · Assertions: 5
 - [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie — Techniek: Monkey testing (seeded) + concurrency + toestandsovergang · Assertions: 11
+
+### Interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand
+
+- Feature: `tests/playwright/features/pipeline-demo.feature`
+- Source: `tests/playwright/pipeline-demo.spec.ts`
+- Cases: 6
+
+- [PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin — Techniek: Datagedreven vergelijking (pagina versus pilot/path-pipeline-data.json) + traceerbaarheid over drie projecties · Assertions: 26
+- [PIPE-H-002] een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden — Techniek: Toestandsovergangtest (ingediend → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van de issue-URL · Assertions: 29
+- [PIPE-H-004] zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes — Techniek: Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole · Assertions: 24
+- [PIPE-H-003] de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker — Techniek: Meting van berekende stijl (computed style) in licht en donker kleurschema · Assertions: 5
+- [PIPE-H-005] de weergaveknop kiest licht, donker of systeem en onthoudt die keuze — Techniek: Toestandsovergang over drie weergavestanden + meting van berekende stijl + persistentie na herladen · Assertions: 13
+- [PIPE-N-001] de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon — Techniek: Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole · Assertions: 9
 
 ### Vormgevingsschakelaar (klassiek / nieuw)
 

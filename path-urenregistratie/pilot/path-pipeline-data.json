@@ -1,0 +1,186 @@
+{
+  "appVersion": "2.0.118",
+  "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
+  "delivered": [
+    {
+      "date": "16 sep",
+      "version": "main",
+      "wish": "Demo-pagina op TEST is het echte loket geworden: een wens op https://uren-test.pathconsultancy.nl/pilot/path-pipeline.html wordt een GitHub-issue (label pipeline-intake) dat de agent in VS Code oppakt volgens PIPELINE-INTAKE.md (GIO-WENSEN → feature + spec → impactregressie → LIVING-DOC → versie → CI → TEST). De pagina toont de echte laatste 5 opleveringen en 10 Living Doc-regels uit GIO-WENSEN en de feature-bestanden (scripts/pipeline-demo-data.mjs), bewaakt door npm run check. Eigen agent: .claude/agents/pipeline-intake.md, logboek in PIPELINE-INTAKE-PROEF.md.",
+      "cases": []
+    },
+    {
+      "date": "16 sep",
+      "version": "main",
+      "wish": "Intake #44: Jira, Confluence en Zephyr Scale 1-op-1 in opmaak zoals we ze kennen — productbalk die meewisselt, projectzijbalk, bord met kolommen en kaarten, Confluence-pagina met FO/TO, Zephyr met mappenboom en sorteerbare tabel; geen merklogo's. Alles bedienbaar: zoeken, filteren op type en bron, detailpaneel, sorteren, filteren op status, deeplinks (PIPE-H-004).",
+      "cases": [
+        {
+          "id": "PIPE-H-004",
+          "title": "zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole",
+          "assertions": 24,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes\n  Given de pipelinepagina met de echte projectstand\n  When er wordt gezocht, gefilterd, gesorteerd en een kaart wordt geopend\n  Then tonen bord, kennisbank en testbeheer telkens de bijbehorende selectie"
+        }
+      ]
+    },
+    {
+      "date": "16 sep",
+      "version": "main",
+      "wish": "Intake-proef #43: Confluence-tekst in de demo op het Atlassian-lettertype, 16px met regelhoogte 24px, ook in donker (PIPE-H-003, tegenproef rood op de oude opmaak). Eerste wens die de hele keten van pagina tot TEST doorliep.",
+      "cases": [
+        {
+          "id": "PIPE-H-003",
+          "title": "de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Meting van berekende stijl (computed style) in licht en donker kleurschema",
+          "assertions": 5,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker\n  Given de Kennisbank van de pipelinepagina\n  When de flow voor PIPE-H-003 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker"
+        }
+      ]
+    },
+    {
+      "date": "16 sep",
+      "version": "2.0.116",
+      "wish": "Berichten: elk bericht toont ingeklapt één regel samenvatting onder de titel, zoals bij Nieuw in de app; verdwijnt bij openklappen (NOT-H-018, tegenproef rood).",
+      "cases": [
+        {
+          "id": "NOT-H-018",
+          "title": "een ingeklapt bericht toont een korte samenvatting onder de titel, die verdwijnt zodra je het openklapt",
+          "feature": "tests/playwright/features/notifications.feature",
+          "technique": "API-contract + equivalentieklasse",
+          "assertions": 8,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een ingeklapt bericht toont een korte samenvatting onder de titel, die verdwijnt zodra je het openklapt\n  Given meldingen beheren is voorbereid\n  Then toont een lang bericht ingeklapt een afgekapte samenvatting van de eigen tekst\n  And toont een kort bericht zijn volledige tekst als samenvatting, zonder afkapping\n  When het bericht wordt opengeklapt, then verdwijnt de samenvatting"
+        }
+      ]
+    },
+    {
+      "date": "16 sep",
+      "version": "2.0.116",
+      "wish": "MOB-H-024 was wisselvallig (ongeveer 1 op 3 rood, ook op 2.0.113): late 401-ruis van de inlograce landde na het wissen. De case negeert nu alleen die 401-ruis, de rest blijft hard. 5 van 5 groen.",
+      "cases": [
+        {
+          "id": "MOB-H-024",
+          "title": "een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert",
+          "feature": "tests/playwright/features/mobile.feature",
+          "technique": "Responsive viewport + end-to-end use-case",
+          "assertions": 7,
+          "platform": "mobile",
+          "gherkin": "Scenario: een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert\n  Given een medewerker logt op de telefoon voor het eerst in en de sync-afronding valt in de race\n  When de hydratie-afronding één keer klapt op de hertekening\n  Then staat er nergens meer een laadtekst en is het dashboard bruikbaar"
+        }
+      ]
+    },
+    {
+      "date": "15 sep",
+      "version": "2.0.113",
+      "wish": "Filter Gelezen in Berichten, compact: Actueel · Ongelezen · Gelezen · Ingetrokken · Alles met aantallen; ingetrokken in een zachte lavendeltint in plaats van bruin (NOT-H-011, NOT-H-017).",
+      "cases": [
+        {
+          "id": "NOT-H-011",
+          "title": "een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen",
+          "feature": "tests/playwright/features/notifications.feature",
+          "technique": "API-contract + equivalentieklasse",
+          "assertions": 25,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen\n  Given twee ongelezen mededelingen en een ongelezen statusmelding\n  When de medewerker Berichten opent, then zijn alle berichten ingeklapt, staan de nieuwe bovenaan en is de eerste in beeld\n  And blijven ze ongelezen, ook als ze langer in beeld staan\n  When de medewerker het eerste bericht openklapt, then is dat bericht gelezen en blijft het open\n  When de medewerker bij het tweede op Markeer als gelezen tikt, then is het gelezen zonder open te gaan\n  And toont het filter Gelezen precies de drie gelezen berichten, compact met aantal\n  And valt een leeg filter Ongelezen bij terugkomen terug op Actueel\n  Then wordt met Playwright-assertions bevestigd dat een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen"
+        },
+        {
+          "id": "NOT-H-017",
+          "title": "Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar",
+          "feature": "tests/playwright/features/notifications.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 16,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar\n  Given meldingen beheren is voorbereid\n  When de flow voor NOT-H-017 wordt uitgevoerd\n  Then staat Actueel aan, met alleen berichten die nog gelden\n  And tellen de filters op: Ongelezen + Gelezen = Actueel, Actueel + Ingetrokken = Alles"
+        }
+      ]
+    },
+    {
+      "date": "15 sep",
+      "version": "main 2.0.113-seed",
+      "wish": "Meer voorbeeldberichten: elke medewerker 15 mededelingen, 6 ingetrokken, 9 actueel, 5 ongelezen, zodat er onder Alles een tweede pagina is.",
+      "cases": []
+    },
+    {
+      "date": "16 sep",
+      "version": "Codex 2.0.115",
+      "wish": "Berichten duidelijker en de belmelding klanturenstaat opent het klanturenstaatscherm met het uploadvak klaar (NOT-H-013 met vier meldingen).",
+      "cases": [
+        {
+          "id": "NOT-H-013",
+          "title": "een melding in de bel brengt de medewerker direct naar de plek waar iets te doen is",
+          "feature": "tests/playwright/features/notifications.feature",
+          "technique": "Beslissingstabel rollen en autorisatie",
+          "assertions": 9,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een melding in de bel brengt de medewerker direct naar de plek waar iets te doen is\n  Given meldingen beheren is voorbereid\n  When de flow voor NOT-H-013 wordt uitgevoerd\n  Then toont de bel alleen de drie meldingen over de medewerker zelf"
+        }
+      ]
+    },
+    {
+      "date": "16 sep",
+      "version": "main (Codex, geen versiebump)",
+      "wish": "Demo-pipeline (Jira/Confluence/Zephyr-simulatie) ook als echte TEST-URL, afgeleid van de bestaande omgeving: https://uren-test.pathconsultancy.nl/pilot/path-pipeline.html (live zodra release 35035388985 op TEST staat). Gebouwd door Codex (ab660018) met eigen Playwright-cases PIPE-H-001/002 en PIPE-N-001; Living Doc bewaart hard 10, toont 5. Alleen TEST, nooit PROD. Leerpunt: nieuwe specs ook aanmelden in scripts/sync-living-docs.mjs (herontwerp).",
+      "cases": [
+        {
+          "id": "PIPE-H-001",
+          "title": "de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Datagedreven vergelijking (pagina versus pilot/path-pipeline-data.json) + traceerbaarheid over drie projecties",
+          "assertions": 26,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin\n  Given de zelfstandige TEST-only pipelinepagina met de echte projectstand\n  When de pagina is geladen, staan de vier fasen en de laatste vijf echte opleveringen op het bord\n  And Kennisbank en Testbeheer projecteren dezelfde echte cases en de Living Doc toont hooguit tien\n  Then wordt met Playwright-assertions bevestigd dat de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin"
+        },
+        {
+          "id": "PIPE-N-001",
+          "title": "de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole",
+          "assertions": 9,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de Kennisbank op de telefoon wordt geopend\n  Then toont de Living Doc precies tien regels, lokaal vóór echt, en bewaart hij er tien\n  And de pagina heeft geen horizontale overflow of gedeelde appcode"
+        }
+      ]
+    },
+    {
+      "date": "15 sep",
+      "version": "werkwijze",
+      "wish": "Werkwijze stokje: één agent per branch tegelijk (wie \"aan zet\" staat bovenaan CODEX_HANDOFF.md). Overdragen = alles gepusht + CI-uitkomst + stokje bijwerken; overnemen = fetch, schone werkmap, log lezen. Versienummer altijd hoogste op origin + 1. Aanleiding: dubbel 2.0.69, afgebroken CI 2.0.73 en achtergebleven commit toen Codex en Claude tegelijk werkten (14 sep).",
+      "cases": []
+    }
+  ],
+  "open": [
+    {
+      "date": "16 sep",
+      "wish": "Donkere modus op de demo-pagina ook zelf kunnen kiezen (licht / donker / systeem) in plaats van alleen de systeeminstelling volgen.",
+      "who": "main",
+      "status": "open"
+    },
+    {
+      "date": "15 sep",
+      "wish": "Wisselvallig op mobile-safari: SKIN-H-040. 15 sep 5 van 5 keer groen herhaald, niet te reproduceren; opnieuw bekijken als hij in CI nog eens valt.",
+      "who": "herontwerp",
+      "status": "in de gaten houden"
+    },
+    {
+      "date": "15 sep",
+      "wish": "Oude 0-regels uit de indienbug: geen opschoonscript. PROD is nog niet live (alleen gebruikers gemigreerd) en krijgt bij de livegang een verse migratie/reset met de gerepareerde code (R44 in BESLISTABEL.md; de reset hoort bij de livegangchecklist van Gio).",
+      "who": "besluit",
+      "status": "vastgelegd"
+    },
+    {
+      "date": "15 sep",
+      "wish": "Bel en Berichten blijven allebei: bel = eigen urenstatus, correcties, herinneringen; Berichten = algemene mededelingen.",
+      "who": "besluit",
+      "status": "vastgelegd"
+    },
+    {
+      "date": "15 sep",
+      "wish": "Dialoog met toetsenbord onder \"minder beweging\": dialoog krimpt niet mee (SKIN-N-008 fixme). Controleren op echte iPhone.",
+      "who": "herontwerp",
+      "status": "open"
+    }
+  ]
+}
