@@ -555,3 +555,17 @@ alleen testdekking en verificatie. Onderstaande bevinding is dus vastgelegd, nie
   `[data-hours-week-scope="all"]` en dient in. Sinds de nieuwe indienlogica (maand indienen mag
   pas als elke werkdag bewust is ingevuld) kan die POST een concept-opslag zijn geworden in
   plaats van een indiening. Dan hoort de case de maand eerst volledig te vullen.
+
+### BEV-3 — de melding "Niet opgeslagen" wordt niet voorgelezen
+
+- Techniek: toegankelijkheidsinspectie op de foutmeldingen van de urenvakken.
+- Waar: `index.html` r823, `<small id="hours-autosave-status">` heeft geen `role="status"` /
+  `aria-live="polite"`; `assets/app.js` (rond r10240) zet daar wél de blokkerende meldingen in
+  ("Niet opgeslagen: een dag kan maximaal 24 uur hebben." en de maandgrens voor verlof/ziekte).
+- Gevolg: wie met een schermlezer werkt, krijgt geen signaal dat de invoer is geweigerd. Het vak
+  zelf staat wel op `aria-invalid`, maar dat wordt pas gemeld als de focus er weer op komt.
+- Voorstel fix (na go-live, één attribuut): `role="status" aria-live="polite"` op dat element.
+- Bijbehorende case: `[KLV-N-024] een geweigerde invoer wordt ook hoorbaar gemeld` in
+  `klassiek-verkenning.spec.ts`: 25 uur in een dagvak zetten, assert dat
+  `#hours-autosave-status` de melding bevat én `aria-live="polite"` heeft. Tegenproef: op de
+  huidige opmaak rood op de aria-live-assertie.
