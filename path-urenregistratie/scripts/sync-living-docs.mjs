@@ -181,7 +181,7 @@ function techniqueFor(definition, testCase) {
     return perCase[testCase.id] || 'Monkey testing (seeded) + negatieve equivalentieklasse + error guessing';
   }
   if (['SAFE-H-012', 'SAFE-H-014', 'PWD-H-006'].includes(testCase.id)) return 'Beslissingstabel + equivalentieklassen + toestandsovergang';
-  if (testCase.id === 'PWD-N-010') return 'Grenswaardenanalyse (vijfde poging mag, zesde niet) + contractcontrole van de Retry-After-koptekst';
+  if (testCase.id === 'PWD-N-018') return 'Grenswaardenanalyse (vijfde poging mag, zesde niet) + contractcontrole van de Retry-After-koptekst';
   if (testCase.id === 'SAFE-H-009') return 'Equivalentieklassen + toestandsovergang';
   if (testCase.id === 'SAFE-H-011') return 'Toestandsovergang + foutinjectie + beslissingstabel';
   if (/gelijktijd|optimistic|tweede lock|immutable/.test(text)) return 'Concurrency + toestandsovergang';

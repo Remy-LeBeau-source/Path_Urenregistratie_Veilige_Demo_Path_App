@@ -48,6 +48,10 @@ Then("wordt met Playwright-assertions bevestigd dat hergebruik van al-gebruikt t
 Given("een account met 5+ mislukte loginpogingen");
 When("de flow voor PWD-N-007 wordt uitgevoerd");
 Then("wordt de 6e poging geblokkeerd met 429");
+Given("vier mislukte inlogpogingen");
+When("de vijfde poging volgt, then is het nog steeds een gewone afwijzing");
+And("wordt de zesde geweigerd met 429 en een wachttijd");
+Then("wordt met Playwright-assertions bevestigd dat de vijfde mislukte poging mag nog, de zesde wordt geweigerd met een wachttijd");
 When("de flow voor PWD-N-008 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat request-reset weigert GET");
 When("de flow voor PWD-N-009 wordt uitgevoerd");

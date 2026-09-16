@@ -384,6 +384,7 @@
 | PWD-N-005 | security | password-reset.feature | reset-password onder twaalf tekens geeft 400 | Toestandsovergang | 2 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
 | PWD-N-006 | security | password-reset.feature | hergebruik van al-gebruikt token geeft 409 | Negatieve equivalentieklasse + error guessing | 3 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
 | PWD-N-007 | security | password-reset.feature | login wordt geblokkeerd na 5 mislukte pogingen (rate-limit) | Negatieve equivalentieklasse + error guessing | 2 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
+| PWD-N-018 | security | password-reset.feature | de vijfde mislukte poging mag nog, de zesde wordt geweigerd met een wachttijd | Grenswaardenanalyse (vijfde poging mag, zesde niet) + contractcontrole van de Retry-After-koptekst | 8 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
 | PWD-N-008 | security | password-reset.feature | request-reset weigert GET | Toestandsovergang | 2 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
 | PWD-N-009 | security | password-reset.feature | request-reset met leeg e-mailadres geeft 400 | Toestandsovergang | 2 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 13 | Actueel |
 | PWD-H-012 | security | password-reset.feature | een aangevraagde reset wordt ook echt verzonden, niet alleen in de wachtrij gezet | Toestandsovergang | 5 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
@@ -614,9 +615,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 592
+- Playwright executable cases: 593
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 593
+- Totaal unieke executable cases: 594
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32

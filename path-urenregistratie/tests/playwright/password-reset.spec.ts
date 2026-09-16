@@ -351,7 +351,7 @@ test.describe('password reset api', () => {
     await ctx.dispose();
   });
 
-  test('[PWD-N-010] de vijfde mislukte poging mag nog, de zesde wordt geweigerd met een wachttijd', async () => {
+  test('[PWD-N-018] de vijfde mislukte poging mag nog, de zesde wordt geweigerd met een wachttijd', async () => {
     // Grenswaardenanalyse op de inlogrem. PWD-N-007 dekt alleen de kant erboven (de zesde poging
     // krijgt 429). De grens zelf, de vijfde poging die nog gewoon als mislukte inlog hoort te
     // eindigen, was niet vastgelegd; een rem die per ongeluk op 4 gaat staan zou dus niemand opvallen.

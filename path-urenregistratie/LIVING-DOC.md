@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 592 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 593 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 592 unieke case-ID's
+- Playwright executable cases: 593 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 593 unieke case-ID's
+- Totaal executable cases: 594 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 640
-- Niet-mobile projectuitvoeringen: 544
+- Uitvoeringen: 641
+- Niet-mobile projectuitvoeringen: 545
 - Mobile functionele cases: 48
 - Pixel 7 / Chromium-uitvoeringen: 48
 - iPhone 13 / WebKit-uitvoeringen: 48
 
-De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 592 Playwright-functionele cases in totaal 640 resultaten op: 544 + (48 x 2) = 640.
+De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 593 Playwright-functionele cases in totaal 641 resultaten op: 545 + (48 x 2) = 641.
 
 ## Documentatieketen
 
@@ -506,7 +506,7 @@ De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 592 Playwri
 
 - Feature: `tests/playwright/features/password-reset.feature`
 - Source: `tests/playwright/password-reset.spec.ts`
-- Cases: 26
+- Cases: 27
 
 - [PWD-H-001] request-reset retourneert token in demo-modus — Techniek: Toestandsovergang · Assertions: 12
 - [PWD-H-002] onbekend e-mailadres retourneert ook ok=true (geen email-enumeration) — Techniek: API-contract + equivalentieklasse · Assertions: 3
@@ -520,6 +520,7 @@ De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 592 Playwri
 - [PWD-N-005] reset-password onder twaalf tekens geeft 400 — Techniek: Toestandsovergang · Assertions: 2
 - [PWD-N-006] hergebruik van al-gebruikt token geeft 409 — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
 - [PWD-N-007] login wordt geblokkeerd na 5 mislukte pogingen (rate-limit) — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
+- [PWD-N-018] de vijfde mislukte poging mag nog, de zesde wordt geweigerd met een wachttijd — Techniek: Grenswaardenanalyse (vijfde poging mag, zesde niet) + contractcontrole van de Retry-After-koptekst · Assertions: 8
 - [PWD-N-008] request-reset weigert GET — Techniek: Toestandsovergang · Assertions: 2
 - [PWD-N-009] request-reset met leeg e-mailadres geeft 400 — Techniek: Toestandsovergang · Assertions: 2
 - [PWD-H-012] een aangevraagde reset wordt ook echt verzonden, niet alleen in de wachtrij gezet — Techniek: Toestandsovergang · Assertions: 5

@@ -103,6 +103,15 @@ Feature: Wachtwoordherstel en misbruikbeveiliging
     Then wordt de 6e poging geblokkeerd met 429
 
   @negative
+  Scenario: [PWD-N-018] de vijfde mislukte poging mag nog, de zesde wordt geweigerd met een wachttijd
+    # Testtechniek: Grenswaardenanalyse (vijfde poging mag, zesde niet) + contractcontrole van de Retry-After-koptekst
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given vier mislukte inlogpogingen
+    When de vijfde poging volgt, then is het nog steeds een gewone afwijzing
+    And wordt de zesde geweigerd met 429 en een wachttijd
+    Then wordt met Playwright-assertions bevestigd dat de vijfde mislukte poging mag nog, de zesde wordt geweigerd met een wachttijd
+
+  @negative
   Scenario: [PWD-N-008] request-reset weigert GET
     # Testtechniek: Toestandsovergang
     # Aantoonbare Playwright-assertions in deze case: 2
