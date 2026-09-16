@@ -1,8 +1,24 @@
 {
-  "appVersion": "2.0.142",
-  "generatedAt": "2026-09-16T22:09:48.631Z",
+  "appVersion": "2.0.143",
+  "generatedAt": "2026-09-16T23:02:47.838Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "17 sep",
+      "version": "2.0.143",
+      "wish": "Dekkingsronde: Hulp & contact had de eerste/tweede-onbekende-vraag-toestandsmachine alleen in jsdom (scripts/smoke-test.mjs), zonder echte browsertest en zonder dat een BEKENDE vraag ertussenin de teller aantoonbaar terugzette. HELP-N-003 dekt nu de hele overgang (onbekend -> bekend -> onbekend -> onbekend) inclusief de letterlijke inhoud van het samengevoegde contactbericht (tegenproef rood zonder de reset).",
+      "cases": [
+        {
+          "id": "HELP-N-003",
+          "title": "pas de tweede onbekende vraag op rij geeft contact, en een bekende vraag ertussen zet de teller terug",
+          "feature": "tests/playwright/features/help-widget.feature",
+          "technique": "Toestandsovergangtest (onbekend -> bekend -> onbekend -> onbekend) op de hulpbot-teller, met inhoudscontrole van het samengevoegde contactbericht",
+          "assertions": 12,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: pas de tweede onbekende vraag op rij geeft contact, en een bekende vraag ertussen zet de teller terug\n  Given een eerste onbekende vraag, then vraagt de bot om een andere formulering zonder contactoptie\n  When daarna een bekende vraag wordt gesteld, then komt het echte antwoord en geen contactfallback\n  And telt een volgende onbekende vraag weer als de EERSTE, niet als de tweede\n  And pas de daaropvolgende tweede onbekende vraag op rij geeft de contactfallback met beide letterlijke formuleringen\n  Then wordt met Playwright-assertions bevestigd dat pas de tweede onbekende vraag op rij geeft contact, en een bekende vraag ertussen zet de teller terug"
+        }
+      ]
+    },
     {
       "date": "17 sep",
       "version": "2.0.142",
@@ -125,22 +141,6 @@
       "date": "16 sep",
       "version": "2.0.135",
       "wish": "Keuzelijst in het wensenloket (basisregel Gio): verbeteringen die wij zelf zien staan in dit bestand onder \"Nice to have\" en het formulier toont ze als klikbare chips met het waarom erbij. Kiezen vult Samenvatting en Gewenste waarde voor en zet de cursor in het acceptatiecriterium; aanpassen mag altijd en \"Zelf typen\" maakt de keuze los zonder iets te wissen (PIPE-H-007, tegenproef rood op de oude pagina).",
-      "cases": [
-        {
-          "id": "PIPE-H-007",
-          "title": "de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet",
-          "feature": "tests/playwright/features/pipeline-demo.feature",
-          "technique": "Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst",
-          "assertions": 26,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet\n  Given de keuzelijst toont de nice-to-haves uit GIO-WENSEN\n  When de PO een verbetering kiest, then staan samenvatting en waarde ingevuld en blijft het criterium aan hem\n  And zelf typen blijft mogelijk: aanpassen maakt de keuze niet ongedaan, loslaten wel\n  And het type heet Onderhoud, niet Chore\n  And de volgorde in Te doen is met het toetsenbord te wijzigen en blijft na herladen\n  And bovenin staat hoe vers de stand is en de versie staat in de voet zoals in de urenapp\n  Then wordt met Playwright-assertions bevestigd dat de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.135",
-      "wish": "Kaarten op het demobord: slepen binnen Te doen (met handvat, en ▲▼ voor het toetsenbord), volgorde blijft na F5; niet tussen kolommen. In uitvoering vult zich vanaf nu op de echte stand, want wie een wens oppakt zet hem hier op bezig (werkafspraak) (PIPE-H-007).",
       "cases": [
         {
           "id": "PIPE-H-007",

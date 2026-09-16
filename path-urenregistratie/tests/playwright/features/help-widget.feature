@@ -42,6 +42,16 @@ Feature: Hulp en contact
     When de beheerder verlof/ziekte handmatig invullen aanzet
     Then krijgt de medewerker nu het antwoord dat wél naar de maandsamenvatting verwijst
 
+  @negative
+  Scenario: [HELP-N-003] pas de tweede onbekende vraag op rij geeft contact, en een bekende vraag ertussen zet de teller terug
+    # Testtechniek: Toestandsovergangtest (onbekend -> bekend -> onbekend -> onbekend) op de hulpbot-teller, met inhoudscontrole van het samengevoegde contactbericht
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given een eerste onbekende vraag, then vraagt de bot om een andere formulering zonder contactoptie
+    When daarna een bekende vraag wordt gesteld, then komt het echte antwoord en geen contactfallback
+    And telt een volgende onbekende vraag weer als de EERSTE, niet als de tweede
+    And pas de daaropvolgende tweede onbekende vraag op rij geeft de contactfallback met beide letterlijke formuleringen
+    Then wordt met Playwright-assertions bevestigd dat pas de tweede onbekende vraag op rij geeft contact, en een bekende vraag ertussen zet de teller terug
+
   @happy
   Scenario: [HELP-H-002] het paneel opent en sluit met een vloeiende overgang, en meteen zonder animatievoorkeur
     # Testtechniek: Toestandsovergang

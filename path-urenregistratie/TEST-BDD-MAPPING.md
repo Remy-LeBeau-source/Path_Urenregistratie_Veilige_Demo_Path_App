@@ -266,6 +266,7 @@
 | HELP-N-001 | ui | help-widget.feature | het hulpgesprek overleeft geen paginaherlading, alleen "Gesprek wissen" binnen de sessie | Negatieve equivalentieklasse + error guessing | 9 | help-widget.steps.ts | help-widget.spec.ts | UI Desktop | Hulp & Contact | het hulpgesprek overleeft geen paginaherlading, alleen "Gesprek wissen" binnen de sessie | Negative | 17 | Actueel |
 | HELP-H-003 | ui | help-widget.feature | contact opnemen toont precies één mailknop en een kopieer-vangnet, geen dubbele keuze | End-to-end use-case + visuele contractasserties | 7 | help-widget.steps.ts | help-widget.spec.ts | UI Desktop | Hulp & Contact | contact opnemen toont precies één mailknop en een kopieer-vangnet, geen dubbele keuze | Happy | 17 | Actueel |
 | HELP-H-004 | ui | help-widget.feature | het hulpantwoord over verlof/ziekte volgt de beheerderschakelaar | End-to-end use-case + visuele contractasserties | 5 | help-widget.steps.ts | help-widget.spec.ts | UI Desktop | Hulp & Contact | het hulpantwoord over verlof/ziekte volgt de beheerderschakelaar | Happy | 17 | Actueel |
+| HELP-N-003 | ui | help-widget.feature | pas de tweede onbekende vraag op rij geeft contact, en een bekende vraag ertussen zet de teller terug | Toestandsovergangtest (onbekend -> bekend -> onbekend -> onbekend) op de hulpbot-teller, met inhoudscontrole van het samengevoegde contactbericht | 12 | help-widget.steps.ts | help-widget.spec.ts | UI Desktop | Hulp & Contact | pas de tweede onbekende vraag op rij geeft contact, en een bekende vraag ertussen zet de teller terug | Negative | 17 | Actueel |
 | HELP-H-002 | ui | help-widget.feature | het paneel opent en sluit met een vloeiende overgang, en meteen zonder animatievoorkeur | Toestandsovergang | 4 | help-widget.steps.ts | help-widget.spec.ts | UI Desktop | Hulp & Contact | het paneel opent en sluit met een vloeiende overgang, en meteen zonder animatievoorkeur | Happy | 17 | Actueel |
 | HELP-N-002 | ui | help-widget.feature | met een voorkeur voor verminderde beweging sluit het paneel direct, zonder op een animatie te wachten | Toestandsovergang | 2 | help-widget.steps.ts | help-widget.spec.ts | UI Desktop | Hulp & Contact | met een voorkeur voor verminderde beweging sluit het paneel direct, zonder op een animatie te wachten | Negative | 17 | Actueel |
 | HELP-H-005 | ui | help-widget.feature | op telefoon zit hulp in het profielmenu in plaats van een zwevende knop, voor medewerker en beheerder | Beslissingstabel rollen en autorisatie | 6 | help-widget.steps.ts | help-widget.spec.ts | UI Desktop | Hulp & Contact | op telefoon zit hulp in het profielmenu in plaats van een zwevende knop, voor medewerker en beheerder | Happy | 17 | Actueel |
@@ -630,9 +631,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 608
+- Playwright executable cases: 609
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 609
+- Totaal unieke executable cases: 610
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32

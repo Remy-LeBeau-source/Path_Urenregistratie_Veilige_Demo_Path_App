@@ -194,6 +194,58 @@ test('[HELP-H-004] het hulpantwoord over verlof/ziekte volgt de beheerderschakel
   }
 });
 
+test('[HELP-N-003] pas de tweede onbekende vraag op rij geeft contact, en een bekende vraag ertussen zet de teller terug', async ({ page }) => {
+  // Dekkingsronde: de eerste/tweede-onbekende-vraag-toestandsmachine
+  // (answerHelpQuestion() in app.js) had alleen jsdom-dekking via
+  // scripts/smoke-test.mjs, en die controleert niet dat een BEKENDE vraag
+  // ertussenin de teller terugzet, en niet de werkelijke inhoud van het
+  // samengevoegde contactbericht. Toestandsovergangtest: onbekend (1) ->
+  // bekend (reset) -> onbekend (weer 1, geen contact) -> onbekend (2, contact
+  // met beide letterlijke formuleringen).
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await openHulp(page);
+
+  const stel = async (vraag: string) => {
+    await page.locator('#help-input').fill(vraag);
+    await page.locator('#help-form').locator('button[type="submit"]').click();
+  };
+  const laatsteBotBericht = () => page.locator('#help-messages .help-message:not(.user)').last();
+
+  await test.step('Given een eerste onbekende vraag, then vraagt de bot om een andere formulering zonder contactoptie', async () => {
+    await stel('Kan ik hier mijn fietsband plakken?');
+    await expect(laatsteBotBericht()).toContainText('één keer anders');
+    await expect(page.locator('#help-messages a[href^="mailto:"]')).toHaveCount(0);
+  });
+
+  await test.step('When daarna een bekende vraag wordt gesteld, then komt het echte antwoord en geen contactfallback', async () => {
+    await stel('verlof');
+    await expect(laatsteBotBericht()).toContainText('Verlof en ziekte');
+    await expect(page.locator('#help-messages a[href^="mailto:"]')).toHaveCount(0);
+  });
+
+  await test.step('And telt een volgende onbekende vraag weer als de EERSTE, niet als de tweede', async () => {
+    await stel('Kan deze app ook koffie zetten?');
+    await expect(laatsteBotBericht()).toContainText('één keer anders');
+    await expect(page.locator('#help-messages a[href^="mailto:"]'), 'de bekende vraag ertussenin hoort de teller echt teruggezet te hebben').toHaveCount(0);
+  });
+
+  await test.step('And pas de daaropvolgende tweede onbekende vraag op rij geeft de contactfallback met beide letterlijke formuleringen', async () => {
+    await stel('Kan deze app ook mijn fiets repareren?');
+    await expect(laatsteBotBericht()).toContainText('Ook na je tweede formulering');
+    const mailtoLink = page.locator('#help-messages a[href^="mailto:"]').last();
+    await expect(mailtoLink).toBeVisible();
+    const href = decodeURIComponent(await mailtoLink.getAttribute('href') || '');
+    expect(href, 'het bericht hoort beide letterlijke formuleringen te bevatten').toContain('Kan deze app ook koffie zetten?');
+    expect(href).toContain('Kan deze app ook mijn fiets repareren?');
+    expect(href).toContain('Eerste formulering');
+    expect(href).toContain('Tweede formulering');
+  });
+
+  await loginPage.logout();
+});
+
 test('[HELP-H-002] het paneel opent en sluit met een vloeiende overgang, en meteen zonder animatievoorkeur', async ({ page }) => {
   const loginPage = new LoginPage(page);
 

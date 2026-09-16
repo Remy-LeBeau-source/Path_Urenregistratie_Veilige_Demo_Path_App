@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 608 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 609 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 608 unieke case-ID's
+- Playwright executable cases: 609 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 609 unieke case-ID's
+- Totaal executable cases: 610 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 661
-- Niet-mobile projectuitvoeringen: 555
+- Uitvoeringen: 662
+- Niet-mobile projectuitvoeringen: 556
 - Mobile functionele cases: 53
 - Pixel 7 / Chromium-uitvoeringen: 53
 - iPhone 13 / WebKit-uitvoeringen: 53
 
-De 53 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 608 Playwright-functionele cases in totaal 661 resultaten op: 555 + (53 x 2) = 661.
+De 53 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 609 Playwright-functionele cases in totaal 662 resultaten op: 556 + (53 x 2) = 662.
 
 ## Documentatieketen
 
@@ -347,12 +347,13 @@ De 53 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 608 Playwri
 
 - Feature: `tests/playwright/features/help-widget.feature`
 - Source: `tests/playwright/help-widget.spec.ts`
-- Cases: 7
+- Cases: 8
 
 - [HELP-H-001] medewerker zoekt een bekende vraag en krijgt het juiste antwoord met werkende knop — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
 - [HELP-N-001] het hulpgesprek overleeft geen paginaherlading, alleen "Gesprek wissen" binnen de sessie — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 9
 - [HELP-H-003] contact opnemen toont precies één mailknop en een kopieer-vangnet, geen dubbele keuze — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 7
 - [HELP-H-004] het hulpantwoord over verlof/ziekte volgt de beheerderschakelaar — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 5
+- [HELP-N-003] pas de tweede onbekende vraag op rij geeft contact, en een bekende vraag ertussen zet de teller terug — Techniek: Toestandsovergangtest (onbekend -> bekend -> onbekend -> onbekend) op de hulpbot-teller, met inhoudscontrole van het samengevoegde contactbericht · Assertions: 12
 - [HELP-H-002] het paneel opent en sluit met een vloeiende overgang, en meteen zonder animatievoorkeur — Techniek: Toestandsovergang · Assertions: 4
 - [HELP-N-002] met een voorkeur voor verminderde beweging sluit het paneel direct, zonder op een animatie te wachten — Techniek: Toestandsovergang · Assertions: 2
 - [HELP-H-005] op telefoon zit hulp in het profielmenu in plaats van een zwevende knop, voor medewerker en beheerder — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6

@@ -28,6 +28,11 @@ Then("staat er precies één mailto-knop en één kopieerknop, geen los Gmail-al
 Given("de schakelaar staat uit (standaard) en de medewerker vraagt naar verlof");
 When("de beheerder verlof/ziekte handmatig invullen aanzet");
 Then("krijgt de medewerker nu het antwoord dat wél naar de maandsamenvatting verwijst");
+Given("een eerste onbekende vraag, then vraagt de bot om een andere formulering zonder contactoptie");
+When("daarna een bekende vraag wordt gesteld, then komt het echte antwoord en geen contactfallback");
+And("telt een volgende onbekende vraag weer als de EERSTE, niet als de tweede");
+And("pas de daaropvolgende tweede onbekende vraag op rij geeft de contactfallback met beide letterlijke formuleringen");
+Then("wordt met Playwright-assertions bevestigd dat pas de tweede onbekende vraag op rij geeft contact, en een bekende vraag ertussen zet de teller terug");
 Given("de medewerker heeft geen voorkeur voor verminderde beweging ingesteld");
 When("de medewerker Hulp & contact opent");
 Then("krijgt het paneel de is-open-klasse en telt op als daadwerkelijk zichtbaar");

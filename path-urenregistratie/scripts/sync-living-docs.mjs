@@ -199,6 +199,7 @@ function techniqueFor(definition, testCase) {
     return perCase[testCase.id] || 'Monkey testing (seeded) + negatieve equivalentieklasse + error guessing';
   }
   if (testCase.id === 'DASH-H-052') return 'Equivalentieklassen op de eigenaarfilter (Backoffice/medewerkers/alle) + regressie op stabiele maandtotalen';
+  if (testCase.id === 'HELP-N-003') return 'Toestandsovergangtest (onbekend -> bekend -> onbekend -> onbekend) op de hulpbot-teller, met inhoudscontrole van het samengevoegde contactbericht';
   if (['SAFE-H-012', 'SAFE-H-014', 'PWD-H-006'].includes(testCase.id)) return 'Beslissingstabel + equivalentieklassen + toestandsovergang';
   if (testCase.id === 'PWD-N-018') return 'Grenswaardenanalyse (vijfde poging mag, zesde niet) + contractcontrole van de Retry-After-koptekst';
   if (testCase.id === 'TS-API-N-014') return 'Equivalentieklasse op de vorm van de payload (dubbele datum) + consistentiecontrole tussen maandtotaal en dagregels';
