@@ -16,7 +16,7 @@ const But = navigate;
 // Eenvoudige F12-navigatie; de echte acties en assertions staan in het specbestand hierboven.
 Given("interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid");
 When("de flow voor PIPE-N-003 wordt uitgevoerd");
-Then("wordt met Playwright-assertions bevestigd dat de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, voor wie de oude link nog heeft");
+Then("wordt met Playwright-assertions bevestigd dat de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt");
 Given("de zelfstandige TEST-only pipelinepagina met de echte projectstand");
 When("de pagina is geladen, staan de vier fasen en de laatste tien echte opleveringen op het bord");
 And("Kennisbank en Testbeheer projecteren dezelfde echte cases en de Living Doc toont hooguit tien");

@@ -1,8 +1,24 @@
 {
-  "appVersion": "2.0.136",
-  "generatedAt": "2026-09-16T18:46:50.395Z",
+  "appVersion": "2.0.137",
+  "generatedAt": "2026-09-16T19:04:54.919Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "16 sep",
+      "version": "2.0.136",
+      "wish": "Wens Gio (naam en versie): demo-pagina hernoemd, blijvend binnen pilot/: pilot/path-pipeline.html -> pilot/path-kwaliteitsstraat.html, titel \"Path Kwaliteitsstraat\" (die kop stond al op de pagina en Gio vond hem mooi). Naam bewust niet Jira/Confluence/Zephyr: dat zijn merknamen van Atlassian en dit staat op een publieke pagina onder Path's eigen domein. Oude URL blijft bereikbaar via een doorverwijsbestand (meta-refresh, geen 404 voor een bestaande link). Alle interne verwijzingen mee (scripts, PIPELINE-INTAKE.md, de agentdefinitie, de PIPE-spec); de localStorage-sleutel path-pipeline-demo-v1 bewust ongewijzigd, anders verliest iedereen zijn lokale demostand. PIPE-N-003 nieuw (oude URL -> 200 -> wijst door), 10 van 10 PIPE-cases groen.",
+      "cases": [
+        {
+          "id": "PIPE-N-003",
+          "title": "de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Regressiecontrole na hernoeming: oude URL blijft bereikbaar en verwijst door (meta-refresh) naar de nieuwe naam",
+          "assertions": 3,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de flow voor PIPE-N-003 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt"
+        }
+      ]
+    },
     {
       "date": "16 sep",
       "version": "2.0.135",
@@ -144,22 +160,6 @@
           "gherkin": "Scenario: de reden van intrekken kent dezelfde grens als het invoerveld en de kolom\n  Given een verzonden mededeling\n  When de reden één teken te lang is, then wordt die geweigerd met uitleg\n  And blijft de mededeling daardoor gewoon verzonden staan\n  And wordt precies 750 tekens wél geaccepteerd, ook met accenten\n  Then wordt met Playwright-assertions bevestigd dat de reden van intrekken kent dezelfde grens als het invoerveld en de kolom"
         }
       ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.130",
-      "wish": "Een ingetrokken mededeling blijft ongelezen tot de medewerker hem opent. Eerder zette het intrekken die melding zelf op gelezen, waardoor een bericht dat nooit geopend was stil uit de teller verdween; dat botst met de regel dat niets vanzelf verdwijnt. Uitzondering: gaat er een vervangend bericht uit, dan mag de oude wel op gelezen, want het nieuws staat dan in dat nieuwe bericht (ANN-N-009, tegenproef rood).",
-      "cases": [
-        {
-          "id": "ANN-N-009",
-          "title": "een ingetrokken mededeling blijft ongelezen tot de medewerker hem opent",
-          "feature": "tests/playwright/features/announcements.feature",
-          "technique": "Beslistabel (handeling x brontoestand) op wanneer een bericht als gelezen telt",
-          "assertions": 4,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: een ingetrokken mededeling blijft ongelezen tot de medewerker hem opent\n  Given een verzonden mededeling met een ongelezen melding\n  When de beheerder hem intrekt, then blijft de melding ongelezen\n  And cleanup: de testmededeling wordt bij de medewerker verborgen\n  Then wordt met Playwright-assertions bevestigd dat een ingetrokken mededeling blijft ongelezen tot de medewerker hem opent"
-        }
-      ]
     }
   ],
   "open": [
@@ -168,12 +168,6 @@
       "wish": "Werkafspraak (uit de kaartenwens): de kolom In uitvoering op het demobord vult zich alleen als een wens in deze lijst op bezig staat. Wie een wens oppakt, zet hem hier op bezig en pusht dat; bij oplevering verhuist hij naar Klaar met versie. Zonder die discipline beweegt er niets, hoe goed het bord ook is.",
       "who": "werkwijze",
       "status": "vastgelegd"
-    },
-    {
-      "date": "16 sep",
-      "wish": "Wens Gio (naam en versie): hernoem de demo-pagina alvast naar een eigen naam, blijvend binnen pilot/: pilot/path-kwaliteitsstraat.html, met \"Path Kwaliteitsstraat\" als titel (die kop stond er al en vond Gio mooi). Zet het versienummer onderaan in de voettekst, net zoals de urenapp dat doet, in plaats van de losse regel \"projectstand app 2.0.x\" bovenaan. Let op: een hernoeming raakt ook de PIPE-testcases, PIPELINE-INTAKE.md, de demodata-generator en de uitrolcontrole, dus in één hand houden.",
-      "who": "herontwerp, na de push van main",
-      "status": "open"
     },
     {
       "date": "16 sep",
@@ -190,6 +184,12 @@
     {
       "date": "16 sep",
       "wish": "Uitgezocht (TW-2): SKIN-H-029 valt alleen op deze machine om, op WebKit onder Windows, en is groen in CI en op mobiel Chrome. Met metingen uitgesloten: het voorkeurenvenster, het thema, de vormgeving, de viewport en de installatiebanner; er ligt nooit iets over de knop. Het blijft hangen in het naar-beeld-scrollen van de browser zelf. Vervolg: die klik ongevoelig maken voor dat scrollen.",
+      "who": "herontwerp",
+      "status": "open, na go-live"
+    },
+    {
+      "date": "16 sep",
+      "wish": "Eigen vondst in de testset zelf: een paar cases leunen op de gezaaide urenstaat, dus wie lokaal de hele suite in één keer draait krijgt rood op cases die niets mankeren (E2E-H-018, SKIN-H-035). In CI valt het niet op omdat die in aparte shards met een eigen database draaien. Oplossing is dezelfde als eerder bij de dashboardcases: elke schrijvende case maakt zijn eigen maand aan (TW-1 in CODEX_HANDOFF.md).",
       "who": "herontwerp",
       "status": "open, na go-live"
     }

@@ -48,17 +48,46 @@ test.describe('Path Pipeline TEST-demo', () => {
     leegDeWachtrij();
   });
 
-  test('[PIPE-N-003] de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, voor wie de oude link nog heeft', async ({ page }) => {
+  test('[PIPE-N-003] de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt', async ({ page }) => {
     // Hernoemd op 16 sep (2.0.136): pilot/path-pipeline.html -> pilot/path-kwaliteitsstraat.html.
     // De naam mocht niet Jira/Confluence/Zephyr worden, want dat zijn Atlassian-merknamen
     // en dit staat op een publieke pagina onder Path's eigen domein. De oude URL blijft
     // bereikbaar zodat een eerder gedeelde link niet zomaar 404 geeft.
+    //
+    // Waarom dit meer test dan alleen de doorverwijzing: bij de eerste versie van deze
+    // hernoeming (0de7ed5b) verwees de bestemmingspagina zelf nog naar de oude
+    // path-pipeline.css en path-pipeline.js -- een staging-fout, de werkboom had de
+    // juiste inhoud maar die was nooit gestaged. De pagina laadde toen ongestyled,
+    // want beide bestanden bestaan onder hun oude naam niet meer. Een test die alleen
+    // DOM-structuur of computed style controleert, kan zoiets missen als een
+    // toevallige browserstandaard erop lijkt; dit telt de echte netwerkantwoorden.
+    const mislukteEigenVerzoeken: string[] = [];
+    page.on('response', (response) => {
+      const url = new URL(response.url());
+      if (url.hostname === new URL(page.url() || 'http://localhost').hostname || url.pathname.startsWith('/pilot/')) {
+        if (!response.ok() && !response.url().endsWith('path-pipeline.html')) {
+          mislukteEigenVerzoeken.push(`${response.status()} ${response.url()}`);
+        }
+      }
+    });
+
     const response = await page.goto('/pilot/path-pipeline.html');
     expect(response?.status()).toBe(200);
     // De meta-refresh (content="0") vuurt na het laden van de stub, niet erbinnen:
     // expliciet wachten op de nieuwe URL in plaats van er meteen op te vertrouwen.
     await page.waitForURL(/path-kwaliteitsstraat\.html$/);
     await expect(page.locator('body')).toHaveAttribute('data-pilot-design', 'path-kwaliteitsstraat');
+
+    // Het doorslaggevende bewijs: geen enkel eigen verzoek (css/js/data) mag mislukken.
+    // Een computed-style-vergelijking (kleur, font) bleek hier te broos om als bewijs te
+    // dienen -- welke kleur "actief" hoort te zijn hangt af van welke tab actief is, en
+    // dat verandert legitiem mee met andere wensen (de pagina landt sinds 2.0.134 op
+    // Confluence, niet Jira). Een mislukt netwerkverzoek naar onze eigen bestanden kan
+    // nooit legitiem zijn, en dat is precies waarop dit incident (0de7ed5b) omviel: de
+    // pagina verwees naar path-pipeline.css/.js die niet meer bestonden. Tegenproef
+    // gedraaid: met die oude verwijzingen terug geeft deze assertie exact deze twee
+    // regels als mislukt, en niets anders.
+    expect(mislukteEigenVerzoeken, 'geen enkel eigen verzoek (css/js/data) mag 404 of een andere foutstatus geven').toEqual([]);
   });
 
   test('[PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin', async ({ page }) => {
