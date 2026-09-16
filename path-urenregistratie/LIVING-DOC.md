@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 596 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 597 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 596 unieke case-ID's
+- Playwright executable cases: 597 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 597 unieke case-ID's
+- Totaal executable cases: 598 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 645
-- Niet-mobile projectuitvoeringen: 547
+- Uitvoeringen: 646
+- Niet-mobile projectuitvoeringen: 548
 - Mobile functionele cases: 49
 - Pixel 7 / Chromium-uitvoeringen: 49
 - iPhone 13 / WebKit-uitvoeringen: 49
 
-De 49 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 596 Playwright-functionele cases in totaal 645 resultaten op: 547 + (49 x 2) = 645.
+De 49 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 597 Playwright-functionele cases in totaal 646 resultaten op: 548 + (49 x 2) = 646.
 
 ## Documentatieketen
 
@@ -33,7 +33,7 @@ De 49 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 596 Playwri
 
 - Feature: `tests/playwright/features/accessibility.feature`
 - Source: `tests/playwright/accessibility.spec.ts`
-- Cases: 6
+- Cases: 7
 
 - [A11Y-H-001] loginformulier is volledig met het toetsenbord bruikbaar en correct gelabeld — Techniek: Toegankelijkheidsinspectie + toetsenbord-use-case · Assertions: 7
 - [A11Y-H-002] admin-dashboard hoofdnavigatie is toetsenbordbereikbaar met herkenbare namen — Techniek: Toegankelijkheidsinspectie + toetsenbord-use-case · Assertions: 4
@@ -41,6 +41,7 @@ De 49 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 596 Playwri
 - [A11Y-H-004] een geopende dialoog is met het toetsenbord te bedienen en te sluiten — Techniek: Toegankelijkheidsinspectie + toetsenbord-use-case · Assertions: 7
 - [A11Y-H-005] elke interactieve elementsoort krijgt een zichtbare focusring — Techniek: Toegankelijkheidsinspectie + toetsenbord-use-case · Assertions: 5
 - [A11Y-H-006] de sluitknop van een scrollende dialoog blijft in beide skins in beeld — Techniek: Toegankelijkheidsinspectie + toetsenbord-use-case · Assertions: 21
+- [A11Y-H-007] een niet-opgeslagen urenwijziging wordt ook door een schermlezer gemeld — Techniek: Toegankelijkheidsinspectie + toetsenbord-use-case · Assertions: 3
 
 ### Organisatie-instellingen beheren
 

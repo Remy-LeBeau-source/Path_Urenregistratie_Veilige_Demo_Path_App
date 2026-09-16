@@ -277,3 +277,29 @@ test('[A11Y-H-006] de sluitknop van een scrollende dialoog blijft in beide skins
     await page.setViewportSize({ width: 1280, height: 900 });
   });
 });
+
+test('[A11Y-H-007] een niet-opgeslagen urenwijziging wordt ook door een schermlezer gemeld', async ({ page }) => {
+  // Eigen vondst: bij meer dan 24 uur op een dag verschijnt "Niet opgeslagen"
+  // in #hours-autosave-status. Dat element had geen aria-live, dus een
+  // schermlezer bleef stil terwijl er visueel een blokkade stond. Juist bij
+  // "het is NIET bewaard" mag die melding niet alleen zichtbaar zijn.
+  const loginPage = new LoginPage(page);
+
+  await test.step('Given de medewerker is ingelogd op Mijn uren', async () => {
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await expect(page.locator('#app-shell')).toBeVisible();
+  });
+
+  await test.step('Then meldt het statusveld zijn wijzigingen aan hulpsoftware', async () => {
+    const status = page.locator('#hours-autosave-status');
+    await expect(status).toHaveAttribute(
+      'aria-live',
+      /polite|assertive/,
+    );
+  });
+
+  await test.step('And hetzelfde geldt voor de uitleg onder het urenraster', async () => {
+    await expect(page.locator('#hours-target-help')).toHaveAttribute('aria-live', /polite|assertive/);
+  });
+});

@@ -24,6 +24,7 @@
 | A11Y-H-004 | ui | accessibility.feature | een geopende dialoog is met het toetsenbord te bedienen en te sluiten | Toegankelijkheidsinspectie + toetsenbord-use-case | 7 | accessibility.steps.ts | accessibility.spec.ts | UI Desktop | Accessibility | een geopende dialoog is met het toetsenbord te bedienen en te sluiten | Happy | 15 | Actueel |
 | A11Y-H-005 | ui | accessibility.feature | elke interactieve elementsoort krijgt een zichtbare focusring | Toegankelijkheidsinspectie + toetsenbord-use-case | 5 | accessibility.steps.ts | accessibility.spec.ts | UI Desktop | Accessibility | elke interactieve elementsoort krijgt een zichtbare focusring | Happy | 15 | Actueel |
 | A11Y-H-006 | ui | accessibility.feature | de sluitknop van een scrollende dialoog blijft in beide skins in beeld | Toegankelijkheidsinspectie + toetsenbord-use-case | 21 | accessibility.steps.ts | accessibility.spec.ts | UI Desktop | Accessibility | de sluitknop van een scrollende dialoog blijft in beide skins in beeld | Happy | 15 | Actueel |
+| A11Y-H-007 | ui | accessibility.feature | een niet-opgeslagen urenwijziging wordt ook door een schermlezer gemeld | Toegankelijkheidsinspectie + toetsenbord-use-case | 3 | accessibility.steps.ts | accessibility.spec.ts | UI Desktop | Accessibility | een niet-opgeslagen urenwijziging wordt ook door een schermlezer gemeld | Happy | 15 | Actueel |
 | ADM-WR-H-019 | api | organization-settings.feature | latere startdatum vraagt bevestiging en vermeldt dat historie bewaard blijft | API-contract + equivalentieklasse | 9 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | latere startdatum vraagt bevestiging en vermeldt dat historie bewaard blijft | Happy | 2 | Actueel |
 | ADM-WR-H-020 | api | organization-settings.feature | server berekent echte historische impact vóór een latere startdatum wordt opgeslagen | API-contract + equivalentieklasse | 12 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | server berekent echte historische impact vóór een latere startdatum wordt opgeslagen | Happy | 2 | Actueel |
 | ADM-WR-H-001 | api | organization-settings.feature | admin kan company/settings server-led opslaan | Beslissingstabel rollen en autorisatie | 6 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | admin kan company/settings server-led opslaan | Happy | 2 | Actueel |
@@ -618,9 +619,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 596
+- Playwright executable cases: 597
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 597
+- Totaal unieke executable cases: 598
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
