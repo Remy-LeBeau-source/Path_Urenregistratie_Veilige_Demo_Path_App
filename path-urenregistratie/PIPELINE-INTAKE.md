@@ -48,10 +48,16 @@ Per issue, in deze volgorde (elk punt is een bestaande afspraak uit de MD's):
 4. **Impactregressie** lokaal: de geraakte specs, `npm run docs:sync`, `npm run test:design`, `npm run test:bdd:design`,
    `node scripts/pipeline-demo-data.mjs --check`. Eén testrun tegelijk op deze machine (zie CODEX_HANDOFF.md).
 5. **LIVING-DOC.md** volgt uit `docs:sync`.
-5b. **"Nieuw in de app" bijwerken — geldt ook voor main, niet alleen voor de herontwerp-lane.** Merkt een
-   medewerker iets van deze versie, dan hoort er een regel bij in `index.html` (`#nieuw-in-de-app-lijst`):
-   bovenaan, met versienummer, korte kop, één zin en het commit-tijdstip
+5b. **"Nieuw in de app" bijwerken — geldt ook voor main, niet alleen voor de herontwerp-lane.** Besluit Gio
+   (16 sep): **elke versie krijgt een regel, zonder uitzondering** — ook een versie die alleen Backoffice,
+   de demo-pagina in `pilot/` of de testset raakt en die een medewerker dus niet rechtstreeks ziet. Eerder
+   stond hier dat zo'n versie mocht worden overgeslagen; dat is verlaten. Regel bij in `index.html`
+   (`#nieuw-in-de-app-lijst`): bovenaan, met versienummer, korte kop, één zin en het commit-tijdstip
    (`<time datetime="YYYY-MM-DDTHH:MM">16 sep · 17:25</time>`). Hooguit twintig regels, de oudste valt eraf.
+   Raakt de versie alleen Backoffice of de testset, schrijf de zin dan zo dat hij ook voor een medewerker
+   die het scherm niet gebruikt klopt en niets weglekt (geen interne bestandsnamen, geen testjargon) — bijvoorbeeld
+   "De tellers boven de openstaande taken bij Backoffice blijven kloppen bij het wisselen van filter" in plaats
+   van te verwijzen naar een testcase-ID of een schermnaam die de medewerker niet kent.
    **Een release-notitie mag nooit verraden dat er iets dichtgezet is dat eerder openstond.** Gio wees hier op
    16 sep op, en terecht: medewerkers lezen deze lijst. Mijn regel bij 2.0.124 luidde "Facturatiegegevens
    blijven bij Backoffice — je eigen scherm haalt alleen nog op wat je zelf nodig hebt". Daar staat geen bedrag
@@ -63,8 +69,8 @@ Per issue, in deze volgorde (elk punt is een bestaande afspraak uit de MD's):
    testcase — daar hoort het thuis en daar leest geen medewerker mee.
    Nooit namen, bedragen of woorden als "tarief" of "euro" — **KLV-H-018 keurt dat af**, en dat is precies hoe
    het op 16 sep gevonden werd: de versies 2.0.121 tot en met 2.0.129 stonden er niet in, terwijl de lijst wél
-   het versienummer in de voettekst toonde. Gio merkte het zelf op. Niet elke versie hoeft erin: een wijziging
-   aan de demo-pagina in `pilot/` of aan de testset ziet een medewerker niet.
+   het versienummer in de voettekst toonde. Gio merkte het zelf op, en scherpte de regel diezelfde dag verder
+   aan tot "elke versie, zonder uitzondering" (zie boven).
 6. **Versie**: `git fetch`, hoogste nummer op origin/main en origin/herontwerp + 1, `npm run version:set -- 2.0.x`.
 7. **Commit + push** naar `main` (stokjesregel), CI afwachten, TEST controleren.
 8. **GIO-WENSEN.md** — regel naar "Klaar" met versie en case-ID('s). Daarna `npm run pipeline:data` (de pagina

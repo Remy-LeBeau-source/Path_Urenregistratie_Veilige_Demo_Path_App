@@ -1,8 +1,14 @@
 {
-  "appVersion": "2.0.138",
-  "generatedAt": "2026-09-16T19:17:05.514Z",
+  "appVersion": "2.0.139",
+  "generatedAt": "2026-09-16T20:27:03.779Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "16 sep",
+      "version": "2.0.139",
+      "wish": "Besluit Gio: elke versie krijgt voortaan zonder uitzondering een regel in \"Nieuw in de app\", ook een versie die alleen Backoffice, de kwaliteitsstraat-demo of de testset raakt. De acht ontbrekende versies (2.0.130 t/m 2.0.138) zijn met terugwerkende kracht aangevuld, terug naar twintig regels. PIPELINE-INTAKE.md bijgewerkt.",
+      "cases": []
+    },
     {
       "date": "16 sep",
       "version": "2.0.138",
@@ -144,22 +150,6 @@
       "version": "2.0.134",
       "wish": "Volgorde en rol op de kwaliteitsstraat: je landt in Confluence (daar werkt de PO), de zijbalk en tabs volgen de keten Confluence, Jira, Zephyr, en het wensformulier staat in de Confluence-kolom met op het Jira-bord alleen een wegwijzer.",
       "cases": []
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.130",
-      "wish": "Dubbele dagregels voor dezelfde datum worden geweigerd met uitleg. Ze werden eerder geaccepteerd, waarna het maandtotaal de som bewaarde (2 x 8 = 16) en de dagen er maar één (8); dat verschil was daarna niet meer te herstellen (TS-API-N-014, tegenproef rood).",
-      "cases": [
-        {
-          "id": "TS-API-N-014",
-          "title": "dezelfde dag twee keer in één opslag wordt geweigerd en laat de maand ongemoeid",
-          "feature": "tests/playwright/features/time-registration.feature",
-          "technique": "Equivalentieklasse op de vorm van de payload (dubbele datum) + consistentiecontrole tussen maandtotaal en dagregels",
-          "assertions": 9,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: dezelfde dag twee keer in één opslag wordt geweigerd en laat de maand ongemoeid\n  Given de medewerker is ingelogd met een eigen maand\n  When hij dezelfde dag twee keer meestuurt, then weigert de server dat met uitleg\n  And blijft het maandtotaal gelijk aan de som van de dagen\n  And wordt dezelfde maand met enkele dagregels wél gewoon bewaard\n  Then wordt met Playwright-assertions bevestigd dat dezelfde dag twee keer in één opslag wordt geweigerd en laat de maand ongemoeid"
-        }
-      ]
     }
   ],
   "open": [
