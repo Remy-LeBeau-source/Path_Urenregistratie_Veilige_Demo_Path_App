@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 594 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 595 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 594 unieke case-ID's
+- Playwright executable cases: 595 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 595 unieke case-ID's
+- Totaal executable cases: 596 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 642
+- Uitvoeringen: 644
 - Niet-mobile projectuitvoeringen: 546
-- Mobile functionele cases: 48
-- Pixel 7 / Chromium-uitvoeringen: 48
-- iPhone 13 / WebKit-uitvoeringen: 48
+- Mobile functionele cases: 49
+- Pixel 7 / Chromium-uitvoeringen: 49
+- iPhone 13 / WebKit-uitvoeringen: 49
 
-De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 594 Playwright-functionele cases in totaal 642 resultaten op: 546 + (48 x 2) = 642.
+De 49 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 595 Playwright-functionele cases in totaal 644 resultaten op: 546 + (49 x 2) = 644.
 
 ## Documentatieketen
 
@@ -685,7 +685,7 @@ De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 594 Playwri
 
 - Feature: `tests/playwright/features/pipeline-demo.feature`
 - Source: `tests/playwright/pipeline-demo.spec.ts`
-- Cases: 6
+- Cases: 7
 
 - [PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin — Techniek: Datagedreven vergelijking (pagina versus pilot/path-pipeline-data.json) + traceerbaarheid over drie projecties · Assertions: 27
 - [PIPE-H-002] een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden — Techniek: Toestandsovergangtest (ingediend → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van de issue-URL · Assertions: 30
@@ -693,6 +693,7 @@ De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 594 Playwri
 - [PIPE-H-003] de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker — Techniek: Meting van berekende stijl (computed style) in licht en donker kleurschema · Assertions: 5
 - [PIPE-H-005] de weergaveknop kiest licht, donker of systeem en onthoudt die keuze — Techniek: Toestandsovergang over drie weergavestanden + meting van berekende stijl + persistentie na herladen · Assertions: 13
 - [PIPE-N-001] de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon — Techniek: Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole · Assertions: 11
+- [PIPE-H-006] de Living Doc leest op vijftien pixels, in licht en in donker — Techniek: Meting van berekende stijl in licht en donker + responsive viewport (intake #45) · Assertions: 5
 
 ### Vormgevingsschakelaar (klassiek / nieuw)
 

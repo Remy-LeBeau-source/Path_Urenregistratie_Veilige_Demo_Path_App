@@ -25,6 +25,7 @@ Nieuwste bovenaan per status. Statussen: **open**, **bezig**, **klaar (versie)**
 
 | Datum | Wens / besluit | Versie |
 |---|---|---|
+| 16 sep | Intake #45, via de demo-pagina ingediend en door de hele keten gelopen: de Living Doc staat nu op 15 pixels in plaats van 13, in licht en donker. PIPE-H-006 meet de berekende stijl in beide kleurschema's plus de telefoonbreedte; tegenproef gedaan (rood op 13px). | 2.0.127 |
 | 16 sep | Demo-pagina dichter bij de echte tools: elke Jira-kaart toont rechtsonder een avatar van wie hem oppakt (afgeleid uit de kolom Wie in deze lijst), en de Confluence-pagina heeft rechts een inhoudsopgave "Op deze pagina" met ankers naar de secties. | 2.0.126 |
 | 16 sep | Knop op de demo-pagina heet "Start de flow" in plaats van "Doorzetten naar VS Code": zegt wat er gebeurt in plaats van waar het heen gaat. Kop, menu, uitleg en PIPELINE-INTAKE.md meeveranderd; PIPE-H-002 controleert de nieuwe naam. | 2.0.125 |
 | 16 sep | Een medewerker mag het uurtarief niet zien (wens Gio). Het scherm toonde het al niet, maar de server stuurde tarief en btw-percentage van de eigen opdracht wel mee bij het inloggen, en niet tonen is geen afscherming. Beide velden gaan nu niet meer naar een medewerker; beheer krijgt ze ongewijzigd voor de facturen. ROLE-N-007 met tegenproef (rood op de oude servercode). | 2.0.124 |

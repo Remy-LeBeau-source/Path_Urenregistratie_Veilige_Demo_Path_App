@@ -501,6 +501,7 @@
 | PIPE-H-003 | ui | pipeline-demo.feature | de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker | Meting van berekende stijl (computed style) in licht en donker kleurschema | 5 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker | Happy | 18 | Actueel |
 | PIPE-H-005 | ui | pipeline-demo.feature | de weergaveknop kiest licht, donker of systeem en onthoudt die keuze | Toestandsovergang over drie weergavestanden + meting van berekende stijl + persistentie na herladen | 13 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | de weergaveknop kiest licht, donker of systeem en onthoudt die keuze | Happy | 18 | Actueel |
 | PIPE-N-001 | ui | pipeline-demo.feature | de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon | Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole | 11 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon | Negative | 18 | Actueel |
+| PIPE-H-006 | ui | pipeline-demo.feature | de Living Doc leest op vijftien pixels, in licht en in donker | Meting van berekende stijl in licht en donker + responsive viewport (intake #45) | 5 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | de Living Doc leest op vijftien pixels, in licht en in donker | Happy | 18 | Actueel |
 | SKIN-H-001 | ui | skin.feature | de app start standaard in de klassieke vormgeving | End-to-end use-case + visuele contractasserties | 3 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de app start standaard in de klassieke vormgeving | Happy | 19 | Actueel |
 | SKIN-H-002 | ui | skin.feature | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | End-to-end use-case + visuele contractasserties | 6 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | Happy | 19 | Actueel |
 | SKIN-H-003 | ui | skin.feature | terug naar "Klassiek" herstelt de klassieke vormgeving en bewaart die | Herstelbaarheid + toestandsovergang | 5 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | terug naar "Klassiek" herstelt de klassieke vormgeving en bewaart die | Happy | 19 | Actueel |
@@ -616,9 +617,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 594
+- Playwright executable cases: 595
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 595
+- Totaal unieke executable cases: 596
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32

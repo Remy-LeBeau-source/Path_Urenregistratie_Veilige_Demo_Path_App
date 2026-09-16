@@ -58,3 +58,11 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
     When de Kennisbank op de telefoon wordt geopend
     Then toont de Living Doc precies tien regels, lokaal vóór echt, en bewaart hij er tien
     And de pagina heeft geen horizontale overflow of gedeelde appcode
+
+  @happy
+  Scenario: [PIPE-H-006] de Living Doc leest op vijftien pixels, in licht en in donker
+    # Testtechniek: Meting van berekende stijl in licht en donker + responsive viewport (intake #45)
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given de Living Doc in de Kennisbank
+    When de flow voor PIPE-H-006 wordt uitgevoerd
+    Then blijft de regel ook op een telefoon binnen beeld

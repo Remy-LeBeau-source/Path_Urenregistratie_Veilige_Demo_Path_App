@@ -1,7 +1,23 @@
 {
-  "appVersion": "2.0.126",
+  "appVersion": "2.0.127",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "16 sep",
+      "version": "2.0.127",
+      "wish": "Intake #45, via de demo-pagina ingediend en door de hele keten gelopen: de Living Doc staat nu op 15 pixels in plaats van 13, in licht en donker. PIPE-H-006 meet de berekende stijl in beide kleurschema's plus de telefoonbreedte; tegenproef gedaan (rood op 13px).",
+      "cases": [
+        {
+          "id": "PIPE-H-006",
+          "title": "de Living Doc leest op vijftien pixels, in licht en in donker",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Meting van berekende stijl in licht en donker + responsive viewport (intake #45)",
+          "assertions": 5,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de Living Doc leest op vijftien pixels, in licht en in donker\n  Given de Living Doc in de Kennisbank\n  When de flow voor PIPE-H-006 wordt uitgevoerd\n  Then blijft de regel ook op een telefoon binnen beeld"
+        }
+      ]
+    },
     {
       "date": "16 sep",
       "version": "2.0.126",
@@ -143,22 +159,6 @@
       "version": "main",
       "wish": "Demo-pagina op TEST is het echte loket geworden: een wens op https://uren-test.pathconsultancy.nl/pilot/path-pipeline.html wordt een GitHub-issue (label pipeline-intake) dat de agent in VS Code oppakt volgens PIPELINE-INTAKE.md (GIO-WENSEN → feature + spec → impactregressie → LIVING-DOC → versie → CI → TEST). De pagina toont de echte laatste 5 opleveringen en 10 Living Doc-regels uit GIO-WENSEN en de feature-bestanden (scripts/pipeline-demo-data.mjs), bewaakt door npm run check. Eigen agent: .claude/agents/pipeline-intake.md, logboek in PIPELINE-INTAKE-PROEF.md.",
       "cases": []
-    },
-    {
-      "date": "16 sep",
-      "version": "main",
-      "wish": "Intake #44: Jira, Confluence en Zephyr Scale 1-op-1 in opmaak zoals we ze kennen — productbalk die meewisselt, projectzijbalk, bord met kolommen en kaarten, Confluence-pagina met FO/TO, Zephyr met mappenboom en sorteerbare tabel; geen merklogo's. Alles bedienbaar: zoeken, filteren op type en bron, detailpaneel, sorteren, filteren op status, deeplinks (PIPE-H-004).",
-      "cases": [
-        {
-          "id": "PIPE-H-004",
-          "title": "zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes",
-          "feature": "tests/playwright/features/pipeline-demo.feature",
-          "technique": "Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole",
-          "assertions": 24,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes\n  Given de pipelinepagina met de echte projectstand\n  When er wordt gezocht, gefilterd, gesorteerd en een kaart wordt geopend\n  Then tonen bord, kennisbank en testbeheer telkens de bijbehorende selectie"
-        }
-      ]
     }
   ],
   "open": [
