@@ -650,3 +650,12 @@ alleen testdekking en verificatie. Onderstaande bevinding is dus vastgelegd, nie
   en DASH-H-050, die hierom al naar een eigen maand zijn verhuisd: elke schrijvende case maakt zijn
   eigen urenstaat in een eigen maand aan in plaats van de gezaaide te gebruiken. Begin met
   E2E-H-018 en SKIN-H-035.
+
+#### Uitkomst desktop-chromium (verse database, 16 sep)
+
+516 geslaagd, 6 gevallen, 3 overgeslagen in 47,9 minuten. De zes:
+`E2E-H-018`, `SKIN-H-035`, `TS-REV-UI-H-008`, `TS-REV-UI-H-011`, `TS-REV-UI-H-012` (alle vijf
+leunen op de gezaaide urenstaat die op dat moment al is goedgekeurd of ingediend door een eerdere
+case: het patroon van TW-1) en `KLV-H-018` (de -9 pixels bij 390px, apart te verifiëren; in CI op
+Linux met een overlay-schuifbalk is dezelfde case groen). Dezelfde stand is in CI groen
+(run 35058140277).
