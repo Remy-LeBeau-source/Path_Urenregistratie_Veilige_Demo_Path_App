@@ -64,6 +64,8 @@ Then("blijven de nieuwe beheerder en medewerker zichtbaar in Teambeheer");
 Given("de administrator Instellingen heeft geopend");
 When("de pagina echt opnieuw wordt geladen (F5)");
 Then("blijft Instellingen actief in plaats van terug te vallen op Dashboard");
+When("een medewerker met 160 tekens in de naam wordt opgeslagen");
+Then("wordt de naam volledig bewaard, zonder afkappen");
 Given("de administrator is ingelogd en Teambeheer heeft geopend");
 When("een nieuwe beheerder met dezelfde naam maar een uniek adres wordt opgeslagen");
 Then("wordt het account direct aangemaakt, zonder tussenvraag over de naam");

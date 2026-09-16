@@ -492,6 +492,56 @@ test.describe('announcements api', () => {
     await ctx.dispose();
   });
 
+  test('[ANN-N-007] de lengtegrens telt tekens zoals het invoerveld, ook met accenten en emoji, en legt uit wat er mis is', async () => {
+    // Grenswaardenanalyse op de lengte. Het invoerveld in de app begrenst op 160 tekens
+    // (onderwerp) en 1500 tekens (bericht) via maxlength, maar de server telde met strlen()
+    // bytes. Een onderwerp van precies 160 tekens met accenten of een emoji werd daardoor
+    // geweigerd terwijl het veld het toeliet, en de 400 bevatte geen uitleg (16 sep).
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    const recipientId = await firstEmployeeUserId(ctx);
+    const opruimen: number[] = [];
+
+    await test.step('Then wordt precies de grens geaccepteerd, ook als elk teken meer dan één byte is', async () => {
+      // 160 tekens die samen ruim meer dan 160 bytes zijn: é is er twee en een emoji vier.
+      const titelOpDeGrens = 'é'.repeat(159) + '🙂';
+      expect([...titelOpDeGrens].length, 'precies 160 tekens').toBe(160);
+      const verstuurd = await postAnnouncement(ctx, {
+        action: 'send', title: titelOpDeGrens, message: 'ë'.repeat(1500), recipient_user_ids: [recipientId],
+      });
+      expect(verstuurd.status, `160 tekens hoort te mogen: ${JSON.stringify(verstuurd.body).slice(0, 160)}`).toBe(200);
+      const id = Number(verstuurd.body.announcement_id ?? verstuurd.body.id ?? 0);
+      if (id > 0) opruimen.push(id);
+    });
+
+    await test.step('And wordt één teken te veel geweigerd, met een melding die zegt wat er mis is', async () => {
+      const teLangeTitel = await postAnnouncement(ctx, {
+        action: 'send', title: 'a'.repeat(161), message: 'Tekst', recipient_user_ids: [recipientId],
+      });
+      expect(teLangeTitel.status).toBe(400);
+      expect(teLangeTitel.body.error).toBe('title-too-long');
+      expect(String(teLangeTitel.body.message || ''), 'de fout hoort uit te leggen wat er mis is').toMatch(/160 tekens/);
+
+      const teLangBericht = await postAnnouncement(ctx, {
+        action: 'send', title: 'Titel', message: 'b'.repeat(1501), recipient_user_ids: [recipientId],
+      });
+      expect(teLangBericht.status).toBe(400);
+      expect(teLangBericht.body.error).toBe('message-too-long');
+      expect(String(teLangBericht.body.message || '')).toMatch(/1500 tekens/);
+    });
+
+    await test.step('And cleanup: de verstuurde testmededeling wordt ingetrokken en bij medewerkers verborgen', async () => {
+      for (const id of opruimen) {
+        await postAnnouncement(ctx, { action: 'withdraw', announcement_id: id, withdrawal_reason: 'Testmededeling voor de lengtegrens.' });
+        await postAnnouncement(ctx, { action: 'hide', announcement_id: id });
+      }
+    });
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
   test('[ANN-N-006] een medewerker kan zelf geen mededeling versturen en anoniem is alles dicht', async () => {
     const anonymous = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
     await test.step('Then krijgt een anonieme aanroep 401', async () => {

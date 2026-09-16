@@ -348,7 +348,7 @@ function timesheet_parse_day_entries(array $payload, int $year, int $month, floa
         // Andere weken sturen zoals voorheen alleen dagen met uren > 0 mee.
 
         $description = trim((string)($entry['description'] ?? ''));
-        if (strlen($description) > 200) {
+        if (mb_strlen($description, 'UTF-8') > 200) {
             auth_send_json([
                 'ok' => false,
                 'error' => 'invalid-payload',

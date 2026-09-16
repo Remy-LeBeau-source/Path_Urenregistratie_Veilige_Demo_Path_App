@@ -43,7 +43,7 @@ function staff_bool(mixed $value, bool $default = false): bool
 function staff_string(mixed $value, int $maxLength = 0): string
 {
     $text = trim((string)($value ?? ''));
-    if ($maxLength > 0 && strlen($text) > $maxLength) {
+    if ($maxLength > 0 && mb_strlen($text, 'UTF-8') > $maxLength) {
         return substr($text, 0, $maxLength);
     }
     return $text;

@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 590 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 592 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 590 unieke case-ID's
+- Playwright executable cases: 592 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 591 unieke case-ID's
+- Totaal executable cases: 593 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 638
-- Niet-mobile projectuitvoeringen: 542
+- Uitvoeringen: 640
+- Niet-mobile projectuitvoeringen: 544
 - Mobile functionele cases: 48
 - Pixel 7 / Chromium-uitvoeringen: 48
 - iPhone 13 / WebKit-uitvoeringen: 48
 
-De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 590 Playwright-functionele cases in totaal 638 resultaten op: 542 + (48 x 2) = 638.
+De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 592 Playwright-functionele cases in totaal 640 resultaten op: 544 + (48 x 2) = 640.
 
 ## Documentatieketen
 
@@ -46,7 +46,7 @@ De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 590 Playwri
 
 - Feature: `tests/playwright/features/organization-settings.feature`
 - Source: `tests/playwright/admin-writes.spec.ts`
-- Cases: 29
+- Cases: 30
 
 - [ADM-WR-H-019] latere startdatum vraagt bevestiging en vermeldt dat historie bewaard blijft — Techniek: API-contract + equivalentieklasse · Assertions: 9
 - [ADM-WR-H-020] server berekent echte historische impact vóór een latere startdatum wordt opgeslagen — Techniek: API-contract + equivalentieklasse · Assertions: 12
@@ -67,6 +67,7 @@ De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 590 Playwri
 - [ADM-WR-H-009] goedkeuringsloop volgt logische maand/medewerker-volgorde — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [ADM-WR-H-010] server-led aangemaakte beheerder en medewerker overleven een echte paginaherlading — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [ADM-WR-H-011] een echte paginaherlading blijft op het geopende scherm i.p.v. terug te springen naar Dashboard — Techniek: API-contract + equivalentieklasse · Assertions: 5
+- [ADM-WR-N-008] lengtegrenzen tellen tekens, niet bytes: een naam vol accenten mag tot de volle lengte — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [ADM-WR-N-005] een al bestaande naam blokkeert of waarschuwt niet: alleen het e-mailadres moet uniek zijn — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
 - [ADM-WR-N-006] dubbele naam is toegestaan, maar een al gebruikt e-mailadres wordt hard geblokkeerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
 - [ADM-WR-N-007] actief-accounttotaal klopt op elke stap: exact duplicaat verandert niets, uniek account telt precies 1 op — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 15
@@ -488,7 +489,7 @@ De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 590 Playwri
 
 - Feature: `tests/playwright/features/announcements.feature`
 - Source: `tests/playwright/announcements.spec.ts`
-- Cases: 9
+- Cases: 10
 
 - [ANN-H-001] beheerder verstuurt een mededeling aan een gekozen medewerker — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [ANN-H-002] een concept blijft intern en kan daarna definitief worden verwijderd — Techniek: API-contract + equivalentieklasse · Assertions: 7
@@ -498,6 +499,7 @@ De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 590 Playwri
 - [ANN-H-009] een via het scherm gekozen medewerker wordt ook bij de server als die medewerker bewaard — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [ANN-N-004] intrekken zonder reden wordt geweigerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
 - [ANN-N-005] verzenden zonder titel, bericht of ontvanger wordt geweigerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
+- [ANN-N-007] de lengtegrens telt tekens zoals het invoerveld, ook met accenten en emoji, en legt uit wat er mis is — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
 - [ANN-N-006] een medewerker kan zelf geen mededeling versturen en anoniem is alles dicht — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
 
 ### Wachtwoordherstel en misbruikbeveiliging

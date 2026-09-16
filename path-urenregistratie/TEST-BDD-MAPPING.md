@@ -43,6 +43,7 @@
 | ADM-WR-H-009 | api | organization-settings.feature | goedkeuringsloop volgt logische maand/medewerker-volgorde | Beslissingstabel rollen en autorisatie | 4 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | goedkeuringsloop volgt logische maand/medewerker-volgorde | Happy | 2 | Actueel |
 | ADM-WR-H-010 | api | organization-settings.feature | server-led aangemaakte beheerder en medewerker overleven een echte paginaherlading | Beslissingstabel rollen en autorisatie | 7 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | server-led aangemaakte beheerder en medewerker overleven een echte paginaherlading | Happy | 2 | Actueel |
 | ADM-WR-H-011 | api | organization-settings.feature | een echte paginaherlading blijft op het geopende scherm i.p.v. terug te springen naar Dashboard | API-contract + equivalentieklasse | 5 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | een echte paginaherlading blijft op het geopende scherm i.p.v. terug te springen naar Dashboard | Happy | 2 | Actueel |
+| ADM-WR-N-008 | api | organization-settings.feature | lengtegrenzen tellen tekens, niet bytes: een naam vol accenten mag tot de volle lengte | Negatieve equivalentieklasse + error guessing | 6 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | lengtegrenzen tellen tekens, niet bytes: een naam vol accenten mag tot de volle lengte | Negative | 2 | Actueel |
 | ADM-WR-N-005 | api | organization-settings.feature | een al bestaande naam blokkeert of waarschuwt niet: alleen het e-mailadres moet uniek zijn | Negatieve equivalentieklasse + error guessing | 5 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | een al bestaande naam blokkeert of waarschuwt niet: alleen het e-mailadres moet uniek zijn | Negative | 2 | Actueel |
 | ADM-WR-N-006 | api | organization-settings.feature | dubbele naam is toegestaan, maar een al gebruikt e-mailadres wordt hard geblokkeerd | Negatieve equivalentieklasse + error guessing | 8 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | dubbele naam is toegestaan, maar een al gebruikt e-mailadres wordt hard geblokkeerd | Negative | 2 | Actueel |
 | ADM-WR-N-007 | api | organization-settings.feature | actief-accounttotaal klopt op elke stap: exact duplicaat verandert niets, uniek account telt precies 1 op | Negatieve equivalentieklasse + error guessing | 15 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | actief-accounttotaal klopt op elke stap: exact duplicaat verandert niets, uniek account telt precies 1 op | Negative | 2 | Actueel |
@@ -369,6 +370,7 @@
 | ANN-H-009 | api | announcements.feature | een via het scherm gekozen medewerker wordt ook bij de server als die medewerker bewaard | Beslissingstabel rollen en autorisatie | 5 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | een via het scherm gekozen medewerker wordt ook bij de server als die medewerker bewaard | Happy | 15 | Actueel |
 | ANN-N-004 | api | announcements.feature | intrekken zonder reden wordt geweigerd | Negatieve equivalentieklasse + error guessing | 3 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | intrekken zonder reden wordt geweigerd | Negative | 15 | Actueel |
 | ANN-N-005 | api | announcements.feature | verzenden zonder titel, bericht of ontvanger wordt geweigerd | Negatieve equivalentieklasse + error guessing | 6 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | verzenden zonder titel, bericht of ontvanger wordt geweigerd | Negative | 15 | Actueel |
+| ANN-N-007 | api | announcements.feature | de lengtegrens telt tekens zoals het invoerveld, ook met accenten en emoji, en legt uit wat er mis is | Negatieve equivalentieklasse + error guessing | 8 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | de lengtegrens telt tekens zoals het invoerveld, ook met accenten en emoji, en legt uit wat er mis is | Negative | 15 | Actueel |
 | ANN-N-006 | api | announcements.feature | een medewerker kan zelf geen mededeling versturen en anoniem is alles dicht | Beslissingstabel rollen en autorisatie | 2 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | een medewerker kan zelf geen mededeling versturen en anoniem is alles dicht | Negative | 15 | Actueel |
 | PWD-H-001 | security | password-reset.feature | request-reset retourneert token in demo-modus | Toestandsovergang | 12 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
 | PWD-H-002 | security | password-reset.feature | onbekend e-mailadres retourneert ook ok=true (geen email-enumeration) | API-contract + equivalentieklasse | 3 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
@@ -612,9 +614,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 590
+- Playwright executable cases: 592
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 591
+- Totaal unieke executable cases: 593
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32

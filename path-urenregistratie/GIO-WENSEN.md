@@ -17,6 +17,8 @@ Nieuwste bovenaan per status. Statussen: **open**, **bezig**, **klaar (versie)**
 
 | Datum | Wens / besluit | Versie |
 |---|---|---|
+| 16 sep | Eigen vondst (grenswaarden met accenten en emoji): de lengtecontroles op de server telden bytes in plaats van tekens. Een onderwerp of naam van 160 tekens met accenten werd geweigerd terwijl het invoerveld en de kolom hem toelaten, en de fout bevatte geen uitleg. Nu tekens tellen in announcements, staff, settings, mail-recipients, customer-timesheets en timesheets, met een duidelijke melding (ANN-N-007, ADM-WR-N-008). | 2.0.121 |
+| 16 sep | Verboden statusovergangen afgedekt: goedkeuren of correctie vragen op een concept, twee keer goedkeuren, opnieuw indienen van een goedgekeurde maand (TS-REV-API-N-002). | 2.0.120 |
 | 16 sep | Eigen vondst (grenswaardenanalyse): verlof en ziekte hadden geen bovengrens, niet in het scherm, niet in de app en niet op de server. Een typefout (800 in plaats van 8) werd gewoon opgeslagen. Nu begrensd op het aantal dagen van de maand maal 24, met dezelfde melding als bij meer dan 24 uur per dag (KLV-N-023, TS-API-N-013). | 2.0.119 |
 | 16 sep | Eigen vondst: contracturen waren helemaal niet begrensd; een te groot getal gaf een 500-serverfout in plaats van een nette weigering. Nu dezelfde maandgrens, ook voor declarabele uren (TS-API-N-013). | 2.0.119 |
 | 16 sep | Ingetrokken bericht vat ingeklapt de reden samen, niet de tekst die niet meer geldt (NOT-H-017). Monkey-verkenning met 10 nieuwe seeds (desktop en telefoon) vond niets. | 2.0.119 |

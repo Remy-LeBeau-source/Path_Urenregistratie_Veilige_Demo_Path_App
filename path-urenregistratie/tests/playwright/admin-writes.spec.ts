@@ -1118,6 +1118,42 @@ Uren: {uren} uur.`;
     await loginPage.logout();
   });
 
+  test('[ADM-WR-N-008] lengtegrenzen tellen tekens, niet bytes: een naam vol accenten mag tot de volle lengte', async () => {
+    // Grenswaardenanalyse met niet-ASCII invoer. De tekstvalidatie op de server telde bytes
+    // (strlen), terwijl de kolommen (utf8mb4 VARCHAR) en de invoervelden tekens tellen. Een
+    // naam van 160 tekens met accenten is in bytes ruim 300 en werd daardoor geweigerd,
+    // terwijl hij gewoon in de kolom past (16 sep). Nu mb_strlen.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    const suffix = Date.now().toString().slice(-7);
+    const naamOpDeGrens = 'é'.repeat(159) + 'a';
+    expect([...naamOpDeGrens].length, 'precies 160 tekens').toBe(160);
+    expect(Buffer.byteLength(naamOpDeGrens, 'utf8'), 'en ruim meer dan 160 bytes').toBeGreaterThan(160);
+
+    await test.step('When een medewerker met 160 tekens in de naam wordt opgeslagen', async () => {
+      const res = await postJson(ctx, '/server/api/staff.php', {
+        action: 'upsert_employee',
+        sendInvitation: false,
+        employee: { name: naamOpDeGrens, email: `lange-naam-${suffix}@example.invalid`, active: false, startDate: '2020-01-01' },
+        mailRecipients: [],
+      });
+      expect(res.status, `160 tekens hoort te mogen: ${JSON.stringify(res.body).slice(0, 200)}`).toBe(200);
+      expect(res.body.ok).toBe(true);
+    });
+
+    await test.step('Then wordt de naam volledig bewaard, zonder afkappen', async () => {
+      const bootstrap = await (await ctx.get('/server/api/bootstrap.php')).json();
+      const bewaard = (bootstrap.employees as Array<{ full_name?: string }>)
+        .find(item => String(item.full_name || '') === naamOpDeGrens);
+      expect(bewaard, 'de medewerker hoort te bestaan').toBeTruthy();
+      expect([...String(bewaard?.full_name || '')].length).toBe(160);
+    });
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
   test('[ADM-WR-N-005] een al bestaande naam blokkeert of waarschuwt niet: alleen het e-mailadres moet uniek zijn', async ({ page }) => {
     const loginPage = new LoginPage(page);
     const duplicateName = 'Joyce van der Steenhoven';
