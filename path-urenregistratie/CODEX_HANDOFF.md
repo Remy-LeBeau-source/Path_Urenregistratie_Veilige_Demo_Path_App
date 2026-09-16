@@ -665,3 +665,16 @@ Linux met een overlay-schuifbalk is dezelfde case groen). Dezelfde stand is in C
   49 geslaagd, nul gevallen, in 8,3 minuten — inclusief alle vijf de cases die in de volledige run
   omvielen. Daarmee staat vast dat het volgorde-artefacten van de testopzet zijn en geen
   productfouten.
+
+#### Uitkomst mobile-chrome (verse database, 16 sep)
+
+217 geslaagd, 18 gevallen, 4 overgeslagen in 29,6 minuten. Alle achttien zitten in één groep: de
+bedrijfsketens (`business-workflows-*`, E2E-H-001 t/m -028 en E2E-N-017 t/m -020). De meldingen
+wijzen op dezelfde oorzaak als TW-1, maar in een strengere vorm: die groep neemt zelf een
+nulmeting van de database en controleert na afloop dat er niets is achtergebleven
+("Na cleanup wijken deze tabellen van de baseline af: app_state", en eerder
+`baseline.orphans.total` 6 in plaats van 0). Zodra een andere spec in dezelfde database heeft
+gedraaid, klopt die nulmeting niet meer. Deze groep gaat er dus van uit dat hij de database alleen
+heeft — wat in CI klopt (eigen shard, eigen database) en lokaal in één volledige run niet.
+Eerder deze nacht al bevestigd: dezelfde veertien cases apart gedraaid gaven 14 geslaagd in
+3,5 minuten.
