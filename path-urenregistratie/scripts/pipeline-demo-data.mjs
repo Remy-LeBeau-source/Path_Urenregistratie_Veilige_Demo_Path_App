@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Bouwt pilot/path-pipeline-data.json uit de echte projectstand: de laatste
+// Bouwt pilot/path-kwaliteitsstraat-data.json uit de echte projectstand: de laatste
 // opleveringen en open wensen uit GIO-WENSEN.md, met per case het Gherkin uit
 // het feature-bestand en de techniek/assertions uit LIVING-DOC.md.
 // `--check` faalt als het bestand achterloopt (zelfde patroon als de ERD).
@@ -8,7 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const OUT = path.join(root, 'pilot', 'path-pipeline-data.json');
+const OUT = path.join(root, 'pilot', 'path-kwaliteitsstraat-data.json');
 const CASE_ID = /\b[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-[HN]-\d{3}\b/g;
 const MAX_DELIVERED = 10;
 const MAX_OPEN = 5;
@@ -89,7 +89,7 @@ const json = `${JSON.stringify(data, null, 2)}\n`;
 if (process.argv.includes('--check')) {
   const current = fs.existsSync(OUT) ? fs.readFileSync(OUT, 'utf8') : '';
   if (zonderTijd(current) !== zonderTijd(json)) {
-    console.error('pilot/path-pipeline-data.json loopt achter op GIO-WENSEN.md of de feature-bestanden. Draai: npm run pipeline:data');
+    console.error('pilot/path-kwaliteitsstraat-data.json loopt achter op GIO-WENSEN.md of de feature-bestanden. Draai: npm run pipeline:data');
     process.exit(1);
   }
   console.log('pipeline-demo-data: actueel');
@@ -99,5 +99,5 @@ if (process.argv.includes('--check')) {
   console.log('pipeline-demo-data: actueel, niet herschreven');
 } else {
   fs.writeFileSync(OUT, json);
-  console.log(`pipeline-demo-data: ${data.delivered.length} opleveringen, ${data.open.length} open, ${data.delivered.reduce((n, d) => n + d.cases.length, 0)} cases -> pilot/path-pipeline-data.json`);
+  console.log(`pipeline-demo-data: ${data.delivered.length} opleveringen, ${data.open.length} open, ${data.delivered.reduce((n, d) => n + d.cases.length, 0)} cases -> pilot/path-kwaliteitsstraat-data.json`);
 }

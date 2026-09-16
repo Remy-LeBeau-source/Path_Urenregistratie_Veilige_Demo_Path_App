@@ -1,6 +1,6 @@
 {
-  "appVersion": "2.0.135",
-  "generatedAt": "2026-09-16T17:56:56.633Z",
+  "appVersion": "2.0.136",
+  "generatedAt": "2026-09-16T18:46:50.395Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
@@ -53,7 +53,7 @@
           "id": "PIPE-H-001",
           "title": "de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin",
           "feature": "tests/playwright/features/pipeline-demo.feature",
-          "technique": "Datagedreven vergelijking (pagina versus pilot/path-pipeline-data.json) + traceerbaarheid over drie projecties",
+          "technique": "Datagedreven vergelijking (pagina versus pilot/path-kwaliteitsstraat-data.json) + traceerbaarheid over drie projecties",
           "assertions": 28,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin\n  Given de zelfstandige TEST-only pipelinepagina met de echte projectstand\n  When de pagina is geladen, staan de vier fasen en de laatste tien echte opleveringen op het bord\n  And Kennisbank en Testbeheer projecteren dezelfde echte cases en de Living Doc toont hooguit tien\n  Then wordt met Playwright-assertions bevestigd dat de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin"

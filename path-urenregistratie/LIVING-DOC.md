@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 603 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 604 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 603 unieke case-ID's
+- Playwright executable cases: 604 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 604 unieke case-ID's
+- Totaal executable cases: 605 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 654
+- Uitvoeringen: 656
 - Niet-mobile projectuitvoeringen: 552
-- Mobile functionele cases: 51
-- Pixel 7 / Chromium-uitvoeringen: 51
-- iPhone 13 / WebKit-uitvoeringen: 51
+- Mobile functionele cases: 52
+- Pixel 7 / Chromium-uitvoeringen: 52
+- iPhone 13 / WebKit-uitvoeringen: 52
 
-De 51 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 603 Playwright-functionele cases in totaal 654 resultaten op: 552 + (51 x 2) = 654.
+De 52 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 604 Playwright-functionele cases in totaal 656 resultaten op: 552 + (52 x 2) = 656.
 
 ## Documentatieketen
 
@@ -690,9 +690,10 @@ De 51 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 603 Playwri
 
 - Feature: `tests/playwright/features/pipeline-demo.feature`
 - Source: `tests/playwright/pipeline-demo.spec.ts`
-- Cases: 9
+- Cases: 10
 
-- [PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin — Techniek: Datagedreven vergelijking (pagina versus pilot/path-pipeline-data.json) + traceerbaarheid over drie projecties · Assertions: 28
+- [PIPE-N-003] de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, voor wie de oude link nog heeft — Techniek: Regressiecontrole na hernoeming: oude URL blijft bereikbaar en verwijst door (meta-refresh) naar de nieuwe naam · Assertions: 2
+- [PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin — Techniek: Datagedreven vergelijking (pagina versus pilot/path-kwaliteitsstraat-data.json) + traceerbaarheid over drie projecties · Assertions: 28
 - [PIPE-H-002] opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub — Techniek: Toestandsovergangtest (aangenomen → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van het wachtrij-antwoord + negatieve controle dat GitHub niet meer wordt benaderd · Assertions: 42
 - [PIPE-N-002] de intakewachtrij weigert onvolledige, te grote en verkeerd geadresseerde invoer, en bestaat niet op productie — Techniek: Foutinjectie op de intake (leeg veld, onleesbare invoer, grensoverschrijding, verkeerde methode) + omgevingsafscherming met tegenproef · Assertions: 17
 - [PIPE-H-007] de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet — Techniek: Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst · Assertions: 26

@@ -1,6 +1,6 @@
 ---
 name: pipeline-intake
-description: Pakt een wens op die via de Path Pipeline-demo op TEST als GitHub-issue met label pipeline-intake is ingediend, en loopt hem door de hele keten (GIO-WENSEN, feature + spec, impactregressie, LIVING-DOC, versie, push, CI, TEST, issue sluiten) volgens path-urenregistratie/PIPELINE-INTAKE.md. Gebruik dit als Gio zegt "ik heb een wens ingediend", "pak de intake op" of "kijk naar de url-wens".
+description: Pakt een wens op die Gio in het Confluence-loket van de Path Kwaliteitsstraat op TEST heeft opgeslagen (intakewachtrij pilot/path-kwaliteitsstraat-intake.php), maakt zelf het GitHub-issue met label pipeline-intake aan en loopt hem door de hele keten (GIO-WENSEN, feature + spec, impactregressie, LIVING-DOC, versie, push, CI, TEST, issue sluiten) volgens path-urenregistratie/PIPELINE-INTAKE.md. Gebruik dit als Gio zegt "ik heb een wens ingediend", "pak de intake op" of "kijk naar de url-wens".
 tools: Bash, Read, Edit, Write, Glob, Grep
 ---
 
@@ -11,8 +11,13 @@ Lees eerst, in deze volgorde: `path-urenregistratie/PIPELINE-INTAKE.md` (de kete
 `path-urenregistratie/GIO-WENSEN.md`.
 
 Werkwijze:
-1. `gh issue list --label pipeline-intake --state open` en `gh issue view <nr>`. Geen open issue: stop en meld dat.
-2. Voeg de wens toe aan GIO-WENSEN.md onder "Open en bezig" (Wie = main, Status = bezig, met #issue).
+1. `npm run intake` (de wachtrij op TEST; `-- --lokaal` voor de lokale server). Het script zegt welke wensen
+   open staan en welke al in GIO-WENSEN.md staan. Geen open wens: stop en meld dat. Gio klikt niets meer in
+   GitHub; het issue maak jij aan, zodat het spoor blijft bestaan:
+   `gh issue create --label pipeline-intake --title "PATH-nnn <wens>" --body "<stakeholder, waarde, criterium, Gherkin>"`.
+2. Voeg de wens toe aan GIO-WENSEN.md onder "Open en bezig" (Wie = main, Status = bezig, met #issue) en push
+   dat meteen: dát is het signaal waarop de kaart op de demo-pagina van "Te doen" naar "In uitvoering" schuift.
+   De wachtrij zelf heeft bewust geen schrijfsleutel; de status komt uit GIO-WENSEN.md.
 3. Vraagt de wens een productbesluit (gedrag dat Gio moet kiezen)? Stop en leg de keuze aan Gio voor; leg de
    uitkomst vast in BESLISTABEL.md.
 4. Bouw de wens. Elke wens krijgt een feature-scenario met case-ID, testtechniek en assertion-aantal, een

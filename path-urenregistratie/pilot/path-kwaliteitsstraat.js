@@ -2,8 +2,8 @@
 
 (function () {
   var STORAGE_KEY = 'path-pipeline-demo-v1';
-  var DATA_URL = 'path-pipeline-data.json';
-  var INTAKE_URL = 'path-pipeline-intake.php';
+  var DATA_URL = 'path-kwaliteitsstraat-data.json';
+  var INTAKE_URL = 'path-kwaliteitsstraat-intake.php';
   var REPO_URL = 'https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App';
   var INTAKE_LABEL = 'pipeline-intake';
   var LIVING_DOC_CAP = 10;
@@ -66,7 +66,7 @@
       rightLabel: 'Keten', rightTitle: 'Acht stappen tot TEST',
       rightText: 'GIO-WENSEN → feature + spec + steps → impactregressie → LIVING-DOC → versie → push → CI → TEST, en daarna de wens naar "Klaar".',
       fo: 'De pagina toont geen verzonnen data: de opleveringen, cases, technieken en assertions komen uit GIO-WENSEN.md en de feature-bestanden, via scripts/pipeline-demo-data.mjs.',
-      to: 'npm run check faalt als pilot/path-pipeline-data.json achterloopt op de projectstand. Zo kan de demo niet stilletjes verouderen.',
+      to: 'npm run check faalt als pilot/path-kwaliteitsstraat-data.json achterloopt op de projectstand. Zo kan de demo niet stilletjes verouderen.',
       criterion: 'Wat hier staat, is terug te vinden in de repository.',
       gherkin: 'Scenario: Een wens loopt van het loket tot TEST\n  Given Gio dient een wens in op deze pagina\n  When de agent het issue met label pipeline-intake oppakt\n  Then ontstaan er een feature, een spec en een groene regressie\n  And staat de oplevering daarna in de Living Doc en op TEST',
       summary: 'Hoe een wens op deze pagina uiteindelijk op TEST terechtkomt.', author: 'Bron: PIPELINE-INTAKE.md', updated: 'Vaste pagina', trace: 'Vast', testId: 'PIPE-H-002'
@@ -753,7 +753,7 @@
     };
   }
 
-  // De wens gaat naar de eigen wachtrij op de server (pilot/path-pipeline-intake.php),
+  // De wens gaat naar de eigen wachtrij op de server (pilot/path-kwaliteitsstraat-intake.php),
   // niet naar een voorgevuld GitHub-formulier dat Gio zelf moet afmaken. Het
   // GitHub-issue maakt de agent later zelf aan; dat tussenstation hoort onzichtbaar
   // te zijn. Lukt opslaan niet (pagina via file:// geopend, of de server antwoordt

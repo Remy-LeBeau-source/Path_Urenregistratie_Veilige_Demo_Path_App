@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// Intakewachtrij voor de demo-pagina (pilot/path-pipeline.html).
+// Intakewachtrij voor de demo-pagina (pilot/path-kwaliteitsstraat.html).
 //
 // Waarom dit bestand bestaat: Gio vulde een wens in en werd daarna naar GitHub
 // gestuurd om daar zelf op "Submit new issue" te klikken. Die klik hoort niet
@@ -24,15 +24,15 @@ declare(strict_types=1);
 //
 // Wat hier NIET gebeurt: statussen bijwerken. Een opgeslagen wens is alleen toe
 // te voegen en te lezen, nooit te wijzigen of te verwijderen. Dat "opgepakt" en
-// "geleverd" worden zichtbaar via pilot/path-pipeline-data.json, dat de agent
-// genereert en meestuurt met de gewone uitrol. Zo hoeft er geen sleutel te
+// "geleverd" worden zichtbaar via pilot/path-kwaliteitsstraat-data.json, dat de
+// agent genereert en meestuurt met de gewone uitrol. Zo hoeft er geen sleutel te
 // bestaan waarmee een voorbijganger de wachtrij kan veranderen.
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 
-require_once __DIR__ . '/path-pipeline-intake-lib.php';
+require_once __DIR__ . '/path-kwaliteitsstraat-intake-lib.php';
 
 function intake_antwoord(int $status, array $payload): void
 {

@@ -8,9 +8,17 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
   # Native Playwright-uitvoering: tests/playwright/pipeline-demo.spec.ts
   # Navigatiemapping: tests/playwright/steps/pipeline-demo.steps.ts
 
+  @negative
+  Scenario: [PIPE-N-003] de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, voor wie de oude link nog heeft
+    # Testtechniek: Regressiecontrole na hernoeming: oude URL blijft bereikbaar en verwijst door (meta-refresh) naar de nieuwe naam
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid
+    When de flow voor PIPE-N-003 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, voor wie de oude link nog heeft
+
   @happy
   Scenario: [PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin
-    # Testtechniek: Datagedreven vergelijking (pagina versus pilot/path-pipeline-data.json) + traceerbaarheid over drie projecties
+    # Testtechniek: Datagedreven vergelijking (pagina versus pilot/path-kwaliteitsstraat-data.json) + traceerbaarheid over drie projecties
     # Aantoonbare Playwright-assertions in deze case: 28
     Given de zelfstandige TEST-only pipelinepagina met de echte projectstand
     When de pagina is geladen, staan de vier fasen en de laatste tien echte opleveringen op het bord

@@ -1,7 +1,7 @@
 # Pipeline-intake: van wens op TEST tot Living Doc
 
-Gio dient een wens in op de demo-pagina op TEST (`pilot/path-pipeline.html`,
-https://uren-test.pathconsultancy.nl/pilot/path-pipeline.html). Die pagina is het loket; de agent in VS Code
+Gio dient een wens in op de demo-pagina op TEST (`pilot/path-kwaliteitsstraat.html`,
+https://uren-test.pathconsultancy.nl/pilot/path-kwaliteitsstraat.html). Die pagina is het loket; de agent in VS Code
 (Claude Code of Codex, wie het stokje op `main` heeft) doet het werk. Dit bestand is de afspraak hoe zo'n
 wens door de molen gaat, zodat elke agent hem hetzelfde oppakt.
 
@@ -12,7 +12,7 @@ alleen een wegwijzer ernaartoe.
 
 - Gio vult het formulier in (Samenvatting, Stakeholder, Type, Gewenste waarde, Acceptatiecriterium, met het
   uitklapbare Gherkin-voorbeeld dat meedenkt) en klikt "Start de flow". **Dat is alles wat hij doet.**
-- Opslaan zet de wens in de eigen intakewachtrij: `pilot/path-pipeline-intake.php` schrijft hem weg onder
+- Opslaan zet de wens in de eigen intakewachtrij: `pilot/path-kwaliteitsstraat-intake.php` schrijft hem weg onder
   `storage.private_root`, dus buiten de webroot. De wens krijgt een `PATH-nnn`-nummer en de status
   `aangenomen`, en staat meteen in "Te doen" met "Wacht op VS Code" — ook voor iemand anders die de pagina
   opent, want de wachtrij staat op de server en niet in de browser.
@@ -72,7 +72,7 @@ Per issue, in deze volgorde (elk punt is een bestaande afspraak uit de MD's):
 
 ## 3. Wat de pagina daarna toont
 
-`scripts/pipeline-demo-data.mjs` bouwt `pilot/path-pipeline-data.json` uit GIO-WENSEN.md (laatste 10 "Klaar",
+`scripts/pipeline-demo-data.mjs` bouwt `pilot/path-kwaliteitsstraat-data.json` uit GIO-WENSEN.md (laatste 10 "Klaar",
 laatste 5 "Open en bezig"), de feature-bestanden (Gherkin, techniek, assertions) en LIVING-DOC.md. De pagina
 toont daaruit **de laatste 10 opleveringen in alle drie de werkruimtes** — op het Jira-bord, in de Confluence
 paginaboom en in Testbeheer — plus de laatste 10 in de Living Doc. Komt er een nieuwe bij, dan valt de oudste

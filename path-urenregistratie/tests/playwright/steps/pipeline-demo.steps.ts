@@ -14,6 +14,9 @@ const And = navigate;
 const But = navigate;
 
 // Eenvoudige F12-navigatie; de echte acties en assertions staan in het specbestand hierboven.
+Given("interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid");
+When("de flow voor PIPE-N-003 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, voor wie de oude link nog heeft");
 Given("de zelfstandige TEST-only pipelinepagina met de echte projectstand");
 When("de pagina is geladen, staan de vier fasen en de laatste tien echte opleveringen op het bord");
 And("Kennisbank en Testbeheer projecteren dezelfde echte cases en de Living Doc toont hooguit tien");
@@ -45,7 +48,6 @@ Then("wordt met Playwright-assertions bevestigd dat de Kennisbank leest in de At
 Given("een bezoeker met een donkere systeeminstelling");
 When("de weergaveknop wordt gebruikt");
 Then("blijft de keuze staan na herladen");
-Given("interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid");
 When("de Kennisbank op de telefoon wordt geopend");
 Then("toont de Living Doc precies tien regels, lokaal vóór echt, en bewaart hij er tien");
 And("de pagina heeft geen horizontale overflow of gedeelde appcode");

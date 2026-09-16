@@ -9,7 +9,7 @@ type Feed = { appVersion: string; delivered: Array<{ version: string; wish: stri
 const STORAGE_KEY = 'path-pipeline-demo-v1';
 
 async function feedVanServer(page: Page): Promise<Feed> {
-  const response = await page.request.get('/pilot/path-pipeline-data.json');
+  const response = await page.request.get('/pilot/path-kwaliteitsstraat-data.json');
   expect(response.status(), 'de echte projectstand moet mee-uitgerold zijn').toBe(200);
   return response.json();
 }
@@ -35,11 +35,11 @@ function verwachteSleutels(feed: Feed): string[] {
  */
 function leegDeWachtrij(): void {
   const projectMap = join(__dirname, '..', '..');
-  const pad = execFileSync('php', ['-r', "require 'pilot/path-pipeline-intake-lib.php'; echo intake_omgeving_en_pad()[1];"], {
+  const pad = execFileSync('php', ['-r', "require 'pilot/path-kwaliteitsstraat-intake-lib.php'; echo intake_omgeving_en_pad()[1];"], {
     cwd: projectMap,
     encoding: 'utf8',
   }).trim();
-  expect(pad, 'de wachtrij moet een echt pad hebben').toContain('path-pipeline-intake.json');
+  expect(pad, 'de wachtrij moet een echt pad hebben').toContain('path-kwaliteitsstraat-intake.json');
   rmSync(pad, { force: true });
 }
 
@@ -48,10 +48,23 @@ test.describe('Path Pipeline TEST-demo', () => {
     leegDeWachtrij();
   });
 
+  test('[PIPE-N-003] de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, voor wie de oude link nog heeft', async ({ page }) => {
+    // Hernoemd op 16 sep (2.0.136): pilot/path-pipeline.html -> pilot/path-kwaliteitsstraat.html.
+    // De naam mocht niet Jira/Confluence/Zephyr worden, want dat zijn Atlassian-merknamen
+    // en dit staat op een publieke pagina onder Path's eigen domein. De oude URL blijft
+    // bereikbaar zodat een eerder gedeelde link niet zomaar 404 geeft.
+    const response = await page.goto('/pilot/path-pipeline.html');
+    expect(response?.status()).toBe(200);
+    // De meta-refresh (content="0") vuurt na het laden van de stub, niet erbinnen:
+    // expliciet wachten op de nieuwe URL in plaats van er meteen op te vertrouwen.
+    await page.waitForURL(/path-kwaliteitsstraat\.html$/);
+    await expect(page.locator('body')).toHaveAttribute('data-pilot-design', 'path-kwaliteitsstraat');
+  });
+
   test('[PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin', async ({ page }) => {
     let feed: Feed;
     await test.step('Given de zelfstandige TEST-only pipelinepagina met de echte projectstand', async () => {
-      expect((await page.goto('/pilot/path-pipeline.html'))?.status()).toBe(200);
+      expect((await page.goto('/pilot/path-kwaliteitsstraat.html'))?.status()).toBe(200);
       feed = await feedVanServer(page);
       expect(feed.delivered.length, 'GIO-WENSEN "Klaar" levert opleveringen').toBeGreaterThanOrEqual(5);
       await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
@@ -61,7 +74,7 @@ test.describe('Path Pipeline TEST-demo', () => {
     });
 
     await test.step('When de pagina is geladen, staan de vier fasen en de laatste tien echte opleveringen op het bord', async () => {
-      await expect(page.locator('body')).toHaveAttribute('data-pilot-design', 'path-pipeline');
+      await expect(page.locator('body')).toHaveAttribute('data-pilot-design', 'path-kwaliteitsstraat');
       await expect(page.locator('[data-phase]')).toHaveCount(4);
       await expect(page.locator('[data-ticket-list="done"] .ticket-card')).toHaveCount(10);
       await expect(page.locator('[data-ticket-list="done"] .issue-key')).toHaveText(verwachteSleutels(feed!));
@@ -120,7 +133,7 @@ test.describe('Path Pipeline TEST-demo', () => {
     // worden binnen het formulier gezocht en niet op de hele pagina.
     const formulier = page.locator('[data-ticket-form]');
 
-    await page.goto('/pilot/path-pipeline.html');
+    await page.goto('/pilot/path-kwaliteitsstraat.html');
     await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
 
     await test.step('Given de pagina opent in Confluence, want daar begint de keten', async () => {
@@ -168,7 +181,7 @@ test.describe('Path Pipeline TEST-demo', () => {
     let sleutel = '';
     await test.step('When de flow wordt gestart, gaat de wens naar de eigen wachtrij en niet naar GitHub', async () => {
       const [antwoord] = await Promise.all([
-        page.waitForResponse((r) => r.url().includes('path-pipeline-intake.php') && r.request().method() === 'POST'),
+        page.waitForResponse((r) => r.url().includes('path-kwaliteitsstraat-intake.php') && r.request().method() === 'POST'),
         page.locator('[data-ticket-form] button[type="submit"]').click(),
       ]);
       expect(antwoord.status(), 'de wachtrij neemt de wens aan').toBe(201);
@@ -196,7 +209,7 @@ test.describe('Path Pipeline TEST-demo', () => {
 
     await test.step('And een tweede bezoeker met een schone browser ziet dezelfde wens, want de wachtrij staat op de server', async () => {
       const tweede = await context.browser()!.newPage();
-      await tweede.goto('/pilot/path-pipeline.html');
+      await tweede.goto('/pilot/path-kwaliteitsstraat.html');
       await expect(tweede.locator('body')).toHaveAttribute('data-queue', 'loaded');
       await tweede.getByRole('tab', { name: /Backlog/ }).click();
       await expect(tweede.locator(`[data-ticket-list="todo"] [data-ticket="${sleutel}"]`)).toBeVisible();
@@ -230,7 +243,7 @@ test.describe('Path Pipeline TEST-demo', () => {
   });
 
   test('[PIPE-N-002] de intakewachtrij weigert onvolledige, te grote en verkeerd geadresseerde invoer, en bestaat niet op productie', async ({ request }) => {
-    const url = '/pilot/path-pipeline-intake.php';
+    const url = '/pilot/path-kwaliteitsstraat-intake.php';
 
     await test.step('Given de intakewachtrij van de open demo-omgeving', async () => {
       const antwoord = await request.get(url);
@@ -266,7 +279,7 @@ test.describe('Path Pipeline TEST-demo', () => {
 
     await test.step('And op een productieomgeving bestaat de wachtrij helemaal niet', async () => {
       const projectMap = join(__dirname, '..', '..');
-      const opProductie = execFileSync('php', ['pilot/path-pipeline-intake.php'], {
+      const opProductie = execFileSync('php', ['pilot/path-kwaliteitsstraat-intake.php'], {
         cwd: projectMap, encoding: 'utf8', env: { ...process.env, PATH_APP_ENVIRONMENT: 'production' },
       });
       expect(opProductie).toContain('bestaat alleen op TEST');
@@ -275,7 +288,7 @@ test.describe('Path Pipeline TEST-demo', () => {
       // Tegenproef: dezelfde aanroep zonder dat slot geeft wel de wachtrij terug,
       // dus de weigering hierboven komt door de omgeving en niet doordat het
       // endpoint sowieso niets doet.
-      const opTest = execFileSync('php', ['pilot/path-pipeline-intake.php'], {
+      const opTest = execFileSync('php', ['pilot/path-kwaliteitsstraat-intake.php'], {
         cwd: projectMap, encoding: 'utf8', env: { ...process.env, PATH_APP_ENVIRONMENT: 'test' },
       });
       expect(opTest).toContain('wishes');
@@ -292,9 +305,9 @@ test.describe('Path Pipeline TEST-demo', () => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     // De Confluence-pagina heeft zelf ook koppen als Stakeholdervraag: velden binnen het formulier zoeken.
     const formulier = page.locator('[data-ticket-form]');
-    await page.goto('/pilot/path-pipeline.html');
+    await page.goto('/pilot/path-kwaliteitsstraat.html');
     await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
-    const feed = await page.request.get('/pilot/path-pipeline-data.json').then((r) => r.json()) as {
+    const feed = await page.request.get('/pilot/path-kwaliteitsstraat-data.json').then((r) => r.json()) as {
       appVersion: string; generatedAt: string; niceToHave: Array<{ improvement: string; why: string }>;
     };
     expect(feed.niceToHave.length, 'GIO-WENSEN "Nice to have" levert de keuzelijst').toBeGreaterThan(0);
@@ -358,7 +371,7 @@ test.describe('Path Pipeline TEST-demo', () => {
   test('[PIPE-H-004] zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes', async ({ page }) => {
     let feed: Feed;
     await test.step('Given de pipelinepagina met de echte projectstand', async () => {
-      await page.goto('/pilot/path-pipeline.html');
+      await page.goto('/pilot/path-kwaliteitsstraat.html');
       await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
       feed = await feedVanServer(page);
     });
@@ -429,7 +442,7 @@ test.describe('Path Pipeline TEST-demo', () => {
 
   test('[PIPE-H-003] de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker', async ({ page }) => {
     await test.step('Given de Kennisbank van de pipelinepagina', async () => {
-      await page.goto('/pilot/path-pipeline.html');
+      await page.goto('/pilot/path-kwaliteitsstraat.html');
       await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
       await page.getByRole('tab', { name: /Kennisbank/ }).click();
       await expect(page.locator('[data-doc-fo]')).toBeVisible();
@@ -463,7 +476,7 @@ test.describe('Path Pipeline TEST-demo', () => {
 
     await test.step('Given een bezoeker met een donkere systeeminstelling', async () => {
       await page.emulateMedia({ colorScheme: 'dark' });
-      await page.goto('/pilot/path-pipeline.html');
+      await page.goto('/pilot/path-kwaliteitsstraat.html');
       await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
       const start = await stand();
       expect(start.attribuut, 'zonder keuze volgt de pagina het systeem').toBeNull();
@@ -514,7 +527,7 @@ test.describe('Path Pipeline TEST-demo', () => {
       }));
     }, [STORAGE_KEY]);
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto('/pilot/path-pipeline.html');
+    await page.goto('/pilot/path-kwaliteitsstraat.html');
     await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
 
     await test.step('When de Kennisbank op de telefoon wordt geopend', async () => {
@@ -559,7 +572,7 @@ test.describe('Path Pipeline TEST-demo', () => {
     // de berekende stijl in beide kleurschema's, zodat een latere opmaakronde
     // het niet ongemerkt terugdraait.
     await test.step('Given de Living Doc in de Kennisbank', async () => {
-      await page.goto('/pilot/path-pipeline.html');
+      await page.goto('/pilot/path-kwaliteitsstraat.html');
       await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
       await page.getByRole('tab', { name: /Kennisbank/ }).click();
       await expect(page.locator('[data-living-doc] li').first()).toBeVisible();

@@ -24,7 +24,7 @@ const argumenten = process.argv.slice(2);
 const alsJson = argumenten.includes('--json');
 const lokaal = argumenten.includes('--lokaal');
 const basis = lokaal ? 'http://127.0.0.1:8010' : 'https://uren-test.pathconsultancy.nl';
-const url = `${basis}/pilot/path-pipeline-intake.php`;
+const url = `${basis}/pilot/path-kwaliteitsstraat-intake.php`;
 
 let wensen = [];
 try {

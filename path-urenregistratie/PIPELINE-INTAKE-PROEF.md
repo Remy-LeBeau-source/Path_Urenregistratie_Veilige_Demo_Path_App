@@ -64,3 +64,22 @@ Het pad is nog nooit gelopen, dus nagelezen in `scripts/deploy-production-remote
 3. **Daarna migraties en opnieuw een preflight**, beide fail-closed.
 4. **Omschakeling met terugval.** De draaiende versie gaat eerst naar een rollback-map. Faalt daarna de publieke live-controle (index met het juiste versienummer, app.js, styles.css en een gezonde health.php), dan zet het script automatisch de vorige versie terug.
 5. **PROD krijgt nooit `pilot/`**: het archief sluit die map uit en de uitrol breekt af als er toch zo'n bestand in zit.
+
+## Loket zonder GitHub-klik (16 sep, avond) — 2.0.132 en 2.0.134
+
+Tijden zijn Nederlandse tijd (CEST).
+
+**18:58 — 2.0.132 (f110c48f), `reminder_log` bij het testherstel.** Aanleiding: CI-run 35118175923 van de herontwerp-lane viel om op `e2eIsolation` met precies één weesrij. `reminder_log` bleek de enige tabel met een verwijzing naar een andere tabel die het baselineherstel niet leegmaakte (migratie 031, nooit aan de lijst toegevoegd). Gemeten met een tijdelijk script: zonder de fix blijft na het herstel 1 weesrij staan, met de fix 0. **Niet bewezen: dat dit de oorzaak van die run was.** De tegenproef discrimineerde niet — dezelfde specs slaagden lokaal met én zonder de fix — en de herontwerp-sessie mat daarna nog 1 op 4 rood mét de fix. Run 35127448517 (2.0.133, met de fix) was groen; dat is één groene run, geen bewijs. Staat zo bij de code en in GIO-WENSEN.
+
+**19:09–19:45 — bouwen en meten.** Gio's wens via de herontwerp-sessie: indienen mag geen klik in GitHub meer kosten. Keuze: eigen wachtrij in `pilot/` (`path-pipeline-intake.php` + `-lib.php`), niet in de app-database, want een tabel is een migratie en die draait ook op productie. Lokaal gemeten:
+- POST → 201 met `PATH-200`, GET toont hem zonder `ip_hash`.
+- 422 zonder criterium, 400 bij onleesbare invoer, 413 boven 4 kB, 405 bij DELETE met `Allow: GET, POST`.
+- Vijf keer achter elkaar 201, de zesde 429 met de kwartiermelding.
+- Productieslot: lokale config tijdelijk op `production` gezet → 404 op GET én POST; teruggezet, md5 gelijk (`50d68958…`). Daarna ook via `PATH_APP_ENVIRONMENT=production php pilot/path-pipeline-intake.php` (weigert) tegenover `=test` (levert de wachtrij).
+- Ondertussen kwamen Gio's aanscherpingen binnen: loket in Confluence, landing en tabvolgorde Confluence → Jira → Zephyr, formulier vanuit de stakeholderrol, laatste tien overal, Living Doc meteen mee. Alles in dezelfde slag gebouwd.
+- Gio's waarschuwing "kijk uit voor gevoelige info": de "Nieuw in de app"-regel bij 2.0.124 herschreven omdat hij verried dat het scherm eerder facturatiegegevens binnenkreeg; regel vastgelegd in PIPELINE-INTAKE.md 5b.
+- Gio's besluit: openbaar, nog geen inlog, op voorwaarde dat er geen persoons- of klantgegevens in komen. Die zin staat nu vetgedrukt naast het formulier en wordt door PIPE-H-002 afgedwongen.
+
+**19:48 — 2.0.134 (d3088ece) gepusht.** PIPE-H-002 herschreven (github.com wordt afgebroken en geteld: 0; geen tweede tabblad; schone browser ziet dezelfde wens), PIPE-N-002 nieuw. 8 van 8 groen op desktop-chromium, `npm run check` groen. Vóór de push de herontwerp-sessie tegengehouden die in hetzelfde bestand wilde beginnen; zij wachten nu op deze stand en bouwen daar het slepen binnen "Te doen" en het versienummer in de voettekst bovenop.
+
+**Nog te controleren zodra CI-run 35130507463 op TEST staat:** `GET https://uren-test.pathconsultancy.nl/pilot/path-pipeline-intake.php` moet 200 geven met `"environment":"test"` — dan werkt de wachtrij daar echt, en niet alleen lokaal.

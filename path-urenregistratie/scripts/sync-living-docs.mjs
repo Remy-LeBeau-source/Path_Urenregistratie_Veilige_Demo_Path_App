@@ -130,9 +130,10 @@ function techniqueFor(definition, testCase) {
   if (definition.spec === 'mobile-ui.spec.ts') return 'Responsive viewport + end-to-end use-case';
   if (definition.spec === 'pipeline-demo.spec.ts') {
     return {
-      'PIPE-H-001': 'Datagedreven vergelijking (pagina versus pilot/path-pipeline-data.json) + traceerbaarheid over drie projecties',
+      'PIPE-H-001': 'Datagedreven vergelijking (pagina versus pilot/path-kwaliteitsstraat-data.json) + traceerbaarheid over drie projecties',
       'PIPE-H-002': 'Toestandsovergangtest (aangenomen → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van het wachtrij-antwoord + negatieve controle dat GitHub niet meer wordt benaderd',
       'PIPE-N-002': 'Foutinjectie op de intake (leeg veld, onleesbare invoer, grensoverschrijding, verkeerde methode) + omgevingsafscherming met tegenproef',
+      'PIPE-N-003': 'Regressiecontrole na hernoeming: oude URL blijft bereikbaar en verwijst door (meta-refresh) naar de nieuwe naam',
       'PIPE-H-003': 'Meting van berekende stijl (computed style) in licht en donker kleurschema',
       'PIPE-H-004': 'Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole',
       'PIPE-H-006': 'Meting van berekende stijl in licht en donker + responsive viewport (intake #45)',

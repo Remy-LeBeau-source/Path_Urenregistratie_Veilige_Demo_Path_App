@@ -6,9 +6,9 @@ declare(strict_types=1);
 // niets: het definieert alleen. Zo kan een test de resolutie van omgeving en
 // opslagpad opvragen zonder een verzoek af te vuren:
 //
-//   php -r "require 'pilot/path-pipeline-intake-lib.php'; echo intake_omgeving_en_pad()[1];"
+//   php -r "require 'pilot/path-kwaliteitsstraat-intake-lib.php'; echo intake_omgeving_en_pad()[1];"
 //
-// De afhandeling van het verzoek staat in path-pipeline-intake.php ernaast.
+// De afhandeling van het verzoek staat in path-kwaliteitsstraat-intake.php ernaast.
 
 require_once __DIR__ . '/../server/lib/health_policy.php';
 
@@ -52,7 +52,7 @@ function intake_omgeving_en_pad(): array
         ? $privateRoot
         : sys_get_temp_dir();
 
-    return [$omgeving, rtrim($map, "/\\") . '/path-pipeline-intake.json'];
+    return [$omgeving, rtrim($map, "/\\") . '/path-kwaliteitsstraat-intake.json'];
 }
 
 function intake_lege_wachtrij(): array
