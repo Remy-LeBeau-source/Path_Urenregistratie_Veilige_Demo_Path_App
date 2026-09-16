@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 586 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 587 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 586 unieke case-ID's
+- Playwright executable cases: 587 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 587 unieke case-ID's
+- Totaal executable cases: 588 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 633
-- Niet-mobile projectuitvoeringen: 539
+- Uitvoeringen: 634
+- Niet-mobile projectuitvoeringen: 540
 - Mobile functionele cases: 47
 - Pixel 7 / Chromium-uitvoeringen: 47
 - iPhone 13 / WebKit-uitvoeringen: 47
 
-De 47 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 586 Playwright-functionele cases in totaal 633 resultaten op: 539 + (47 x 2) = 633.
+De 47 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 587 Playwright-functionele cases in totaal 634 resultaten op: 540 + (47 x 2) = 634.
 
 ## Documentatieketen
 
@@ -463,7 +463,7 @@ De 47 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 586 Playwri
 
 - Feature: `tests/playwright/features/notifications.feature`
 - Source: `tests/playwright/notifications.spec.ts`
-- Cases: 17
+- Cases: 18
 
 - [NOT-H-001] ingelogde gebruiker kan notificaties ophalen — Techniek: API-contract + equivalentieklasse · Assertions: 5
 - [NOT-H-002] mark_all_read werkt zonder fouten — Techniek: Toestandsovergang · Assertions: 8
@@ -475,10 +475,11 @@ De 47 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 586 Playwri
 - [NOT-H-008] mark_read voor onbekende melding wijzigt nul records — Techniek: Grenswaardenanalyse · Assertions: 2
 - [NOT-H-009] alles gelezen wist teller en een oudere response kan deze niet herstellen — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 9
 - [NOT-H-010] Herstel zet drie lokale basismeldingen terug en beschermt ze tegen serveroverschrijving — Techniek: Herstelbaarheid + toestandsovergang · Assertions: 15
+- [NOT-H-018] een ingeklapt bericht toont een korte samenvatting onder de titel, die verdwijnt zodra je het openklapt — Techniek: API-contract + equivalentieklasse · Assertions: 8
 - [NOT-H-011] een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen — Techniek: API-contract + equivalentieklasse · Assertions: 25
 - [NOT-N-015] dichtklappen of alleen bekijken leest een ongelezen bericht niet — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
 - [NOT-H-012] medewerker ziet ingetrokken mededelingen ingeklapt met label, de reden bij openen, en het filter toont precies die — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 16
-- [NOT-H-013] een melding in de bel brengt de medewerker direct naar de plek waar iets te doen is — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
+- [NOT-H-013] een melding in de bel brengt de medewerker direct naar de plek waar iets te doen is — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
 - [NOT-H-014] Alles gelezen in Berichten leest alleen de mededelingen en laat de bel met rust — Techniek: API-contract + equivalentieklasse · Assertions: 8
 - [NOT-H-016] bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 10, de bel hooguit 10 — Techniek: Grenswaardenanalyse · Assertions: 18
 - [NOT-H-017] Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 16

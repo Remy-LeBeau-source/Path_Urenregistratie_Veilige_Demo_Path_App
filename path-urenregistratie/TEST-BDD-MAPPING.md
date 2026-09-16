@@ -353,10 +353,11 @@
 | NOT-H-008 | api | notifications.feature | mark_read voor onbekende melding wijzigt nul records | Grenswaardenanalyse | 2 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | mark_read voor onbekende melding wijzigt nul records | Happy | 15 | Actueel |
 | NOT-H-009 | api | notifications.feature | alles gelezen wist teller en een oudere response kan deze niet herstellen | Herstelbaarheid + toestandsovergang | 9 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | alles gelezen wist teller en een oudere response kan deze niet herstellen | Happy | 15 | Actueel |
 | NOT-H-010 | api | notifications.feature | Herstel zet drie lokale basismeldingen terug en beschermt ze tegen serveroverschrijving | Herstelbaarheid + toestandsovergang | 15 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | Herstel zet drie lokale basismeldingen terug en beschermt ze tegen serveroverschrijving | Happy | 15 | Actueel |
+| NOT-H-018 | api | notifications.feature | een ingeklapt bericht toont een korte samenvatting onder de titel, die verdwijnt zodra je het openklapt | API-contract + equivalentieklasse | 8 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | een ingeklapt bericht toont een korte samenvatting onder de titel, die verdwijnt zodra je het openklapt | Happy | 15 | Actueel |
 | NOT-H-011 | api | notifications.feature | een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen | API-contract + equivalentieklasse | 25 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | een mededeling telt pas als gelezen na openklappen of het knopje, en Berichten springt naar de eerste ongelezen | Happy | 15 | Actueel |
 | NOT-N-015 | api | notifications.feature | dichtklappen of alleen bekijken leest een ongelezen bericht niet | Negatieve equivalentieklasse + error guessing | 5 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | dichtklappen of alleen bekijken leest een ongelezen bericht niet | Negative | 15 | Actueel |
 | NOT-H-012 | api | notifications.feature | medewerker ziet ingetrokken mededelingen ingeklapt met label, de reden bij openen, en het filter toont precies die | Beslissingstabel rollen en autorisatie | 16 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | medewerker ziet ingetrokken mededelingen ingeklapt met label, de reden bij openen, en het filter toont precies die | Happy | 15 | Actueel |
-| NOT-H-013 | api | notifications.feature | een melding in de bel brengt de medewerker direct naar de plek waar iets te doen is | Beslissingstabel rollen en autorisatie | 6 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | een melding in de bel brengt de medewerker direct naar de plek waar iets te doen is | Happy | 15 | Actueel |
+| NOT-H-013 | api | notifications.feature | een melding in de bel brengt de medewerker direct naar de plek waar iets te doen is | Beslissingstabel rollen en autorisatie | 9 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | een melding in de bel brengt de medewerker direct naar de plek waar iets te doen is | Happy | 15 | Actueel |
 | NOT-H-014 | api | notifications.feature | Alles gelezen in Berichten leest alleen de mededelingen en laat de bel met rust | API-contract + equivalentieklasse | 8 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | Alles gelezen in Berichten leest alleen de mededelingen en laat de bel met rust | Happy | 15 | Actueel |
 | NOT-H-016 | api | notifications.feature | bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 10, de bel hooguit 10 | Grenswaardenanalyse | 18 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 10, de bel hooguit 10 | Happy | 15 | Actueel |
 | NOT-H-017 | api | notifications.feature | Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar | Negatieve equivalentieklasse + error guessing | 16 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar | Happy | 15 | Actueel |
@@ -608,9 +609,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 586
+- Playwright executable cases: 587
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 587
+- Totaal unieke executable cases: 588
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
