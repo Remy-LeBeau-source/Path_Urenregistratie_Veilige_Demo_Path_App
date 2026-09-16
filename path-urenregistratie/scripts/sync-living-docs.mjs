@@ -167,6 +167,7 @@ function techniqueFor(definition, testCase) {
       'PIPE-N-001': 'Grenswaardenanalyse (Living Doc op tien) + responsive viewport + negatieve controle (geen externe koppeling)',
       'NOT-H-018': 'Grenswaardenanalyse (korte vs lange tekst, afkappen bij 90 tekens) + toestandsovergang (ingeklapt naar open)',
       'NOT-H-017': 'Equivalentieklassen (actueel/ongelezen/gelezen/ingetrokken) + optelregel tussen filters + contrastmeting in licht en donker',
+      'TS-REV-API-N-002': 'Toestandsovergangtest (verboden overgangen in de statustabel) + controle dat een geweigerde overgang niets verandert',
       'KLV-N-023': 'Grenswaardenanalyse (maandmaximum voor verlof en ziekte) + foutafhandeling zonder serverfout',
       'KLV-N-022': 'Responsive viewport (320/360/390) + grenswaarden smalle telefoon + lay-outmeting binnen de kaart',
       'KLV-H-021': 'Toestandsovergangtest (licht↔donker, Klassiek↔Modern, heen en terug) + toegankelijkheidsinspectie (geen misleidend aria-pressed)',
