@@ -659,3 +659,9 @@ leunen op de gezaaide urenstaat die op dat moment al is goedgekeurd of ingediend
 case: het patroon van TW-1) en `KLV-H-018` (de -9 pixels bij 390px, apart te verifiëren; in CI op
 Linux met een overlay-schuifbalk is dezelfde case groen). Dezelfde stand is in CI groen
 (run 35058140277).
+
+  Tegenproef door de main-sessie (16 sep): dezelfde drie specbestanden samen in een eigen database
+  en op een eigen poort (business-workflows-attachments, skin, timesheet-review-ui) gaven
+  49 geslaagd, nul gevallen, in 8,3 minuten — inclusief alle vijf de cases die in de volledige run
+  omvielen. Daarmee staat vast dat het volgorde-artefacten van de testopzet zijn en geen
+  productfouten.
