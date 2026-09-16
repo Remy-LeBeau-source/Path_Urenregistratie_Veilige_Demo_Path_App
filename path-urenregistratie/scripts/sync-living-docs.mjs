@@ -38,6 +38,7 @@ const definitions = [
   { kind: 'playwright', spec: 'roles-api.spec.ts', feature: 'roles-authorization.feature', steps: 'roles-api.steps.ts', name: 'Rollen, rechten en gegevensafscherming', tags: ['regressie', 'security', 'fase:4'], parentSuite: 'Security', suite: 'Role Scope', allureFeature: 'Audit & Security', phase: 4 },
   { kind: 'playwright', spec: 'security.spec.ts', feature: 'security.feature', steps: 'security.steps.ts', name: 'Authenticatie- en API-beveiliging', tags: ['regressie', 'security', 'fase:5'], parentSuite: 'Security', suite: 'CSRF & Authentication', allureFeature: 'Audit & Security', phase: 5 },
   { kind: 'playwright', spec: 'klassiek-verkenning.spec.ts', feature: 'klassiek-verkenning.feature', steps: 'klassiek-verkenning.steps.ts', name: 'Vondsten uit de monkey-verkenning op Klassiek', tags: ['regressie', 'ui', 'desktop', 'fase:19'], parentSuite: 'UI Desktop', suite: 'Klassiek verkenning', allureFeature: 'Vormgeving', phase: 19 },
+  { kind: 'playwright', spec: 'pipeline-demo.spec.ts', feature: 'pipeline-demo.feature', steps: 'pipeline-demo.steps.ts', name: 'Interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand', tags: ['regressie', 'ui', 'desktop', 'mobile', 'fase:18'], parentSuite: 'UI Desktop', suite: 'Pipeline-demo', allureFeature: 'Werkwijze & pipeline', phase: 18 },
   { kind: 'playwright', spec: 'skin.spec.ts', feature: 'skin.feature', steps: 'skin.steps.ts', name: 'Vormgevingsschakelaar (klassiek / nieuw)', tags: ['regressie', 'ui', 'desktop', 'fase:19'], parentSuite: 'UI Desktop', suite: 'Skin', allureFeature: 'Vormgeving', phase: 19 },
   { kind: 'playwright', spec: 'timesheet-review-flow.spec.ts', feature: 'correction-approval-workflow.feature', steps: 'timesheets-review-integration.steps.ts', name: 'Correctie- en goedkeuringsproces', tags: ['regressie', 'integration', 'fase:9'], parentSuite: 'DB / Integratie', suite: 'Optimistic Locking', allureFeature: 'Correctie & Goedkeuring', phase: 9 },
   { kind: 'playwright', spec: 'timesheet-review-ui.spec.ts', feature: 'correction-approval-ui.feature', steps: 'timesheets-review-ui.steps.ts', name: 'Correcties en goedkeuringen behandelen', tags: ['regressie', 'ui', 'desktop', 'fase:9'], parentSuite: 'UI Desktop', suite: 'Correcties', allureFeature: 'Correctie & Goedkeuring', phase: 9 },
@@ -127,6 +128,15 @@ function techniqueFor(definition, testCase) {
   const text = `${testCase.id} ${testCase.title}`.toLowerCase();
   if (definition.spec === 'accessibility.spec.ts') return 'Toegankelijkheidsinspectie + toetsenbord-use-case';
   if (definition.spec === 'mobile-ui.spec.ts') return 'Responsive viewport + end-to-end use-case';
+  if (definition.spec === 'pipeline-demo.spec.ts') {
+    return {
+      'PIPE-H-001': 'Datagedreven vergelijking (pagina versus pilot/path-pipeline-data.json) + traceerbaarheid over drie projecties',
+      'PIPE-H-002': 'Toestandsovergangtest (ingediend → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van de issue-URL',
+      'PIPE-H-003': 'Meting van berekende stijl (computed style) in licht en donker kleurschema',
+      'PIPE-H-004': 'Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole',
+      'PIPE-N-001': 'Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole'
+    }[testCase.id] || 'End-to-end use-case + regressiebewaking';
+  }
   // Monkey-vondsten: de techniek die de vondst deed, plus die de vaste case gebruikt.
   if (definition.spec === 'klassiek-verkenning.spec.ts') {
     const perCase = {

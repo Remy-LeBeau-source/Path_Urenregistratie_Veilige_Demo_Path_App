@@ -193,6 +193,8 @@ en GIO-WENSEN.md bijgewerkt kunnen worden (main doet dat desgevraagd).
 
 **Stokje:** deze opdracht hoort bij branch `main`. Codex heeft hem uitgevoerd en het stokje is 16 sep terug bij de main-sessie (zie bovenaan).
 
+**Vervolg (16 sep, main-sessie, op verzoek van Gio):** de pagina is nu het echte loket. "Doorzetten naar VS Code" maakt een GitHub-issue met label `pipeline-intake`; de agent met het stokje op `main` pakt dat op volgens **PIPELINE-INTAKE.md** (verplichte volgorde per MD). De pagina leest `pilot/path-pipeline-data.json` (gebouwd door `scripts/pipeline-demo-data.mjs` uit GIO-WENSEN.md + feature-bestanden); `npm run check` faalt als dat bestand achterloopt, dus na elke wijziging in GIO-WENSEN "Klaar"/"Open" of in features: `npm run pipeline:data` en meecommitten.
+
 **Stand na Codex (16 sep, main-sessie):**
 - Gebouwd en gepusht door Codex in `ab660018`: `pilot/path-pipeline.html` + `.css` + `.js` (localStorage, geen Claude-db, Living Doc hard op 10 bewaard / 5 getoond), plus eigen Playwright-dekking `tests/playwright/pipeline-demo.spec.ts` met `features/pipeline-demo.feature` (PIPE-H-001, PIPE-H-002, PIPE-N-001) en steps.
 - Release 35035388985: alle tien Validate-shards groen, Promote Test loopt, daarna Deploy Test to TransIP.

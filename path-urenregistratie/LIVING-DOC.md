@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 581 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 586 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 581 unieke case-ID's
+- Playwright executable cases: 586 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 582 unieke case-ID's
-- Playwright features: 31
+- Totaal executable cases: 587 unieke case-ID's
+- Playwright features: 32
 - Database features: 1
-- Playwright steps mappings: 31
+- Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 623
+- Uitvoeringen: 633
 - Niet-mobile projectuitvoeringen: 539
-- Mobile functionele cases: 42
-- Pixel 7 / Chromium-uitvoeringen: 42
-- iPhone 13 / WebKit-uitvoeringen: 42
+- Mobile functionele cases: 47
+- Pixel 7 / Chromium-uitvoeringen: 47
+- iPhone 13 / WebKit-uitvoeringen: 47
 
-De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 581 Playwright-functionele cases in totaal 623 resultaten op: 539 + (42 x 2) = 623.
+De 47 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 586 Playwright-functionele cases in totaal 633 resultaten op: 539 + (47 x 2) = 633.
 
 ## Documentatieketen
 
@@ -674,6 +674,18 @@ De 42 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 581 Playwri
 - [KLV-H-019] ingevulde uren op Mijn uren zijn leesbaar in licht en donker, op telefoon en desktop — Techniek: Contrastmeting (WCAG 4,5:1) + themacombinaties (licht/donker) × responsive viewport (390/1280) · Assertions: 2
 - [KLV-H-020] de actieknop in Mijn maanden heeft de huisstijl en zegt wat er nu te doen is — Techniek: Beslistabel (stap → knoptekst) + visuele consistentie met de huisstijlknop in licht en donker · Assertions: 5
 - [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie — Techniek: Monkey testing (seeded) + concurrency + toestandsovergang · Assertions: 11
+
+### Interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand
+
+- Feature: `tests/playwright/features/pipeline-demo.feature`
+- Source: `tests/playwright/pipeline-demo.spec.ts`
+- Cases: 5
+
+- [PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin — Techniek: Datagedreven vergelijking (pagina versus pilot/path-pipeline-data.json) + traceerbaarheid over drie projecties · Assertions: 26
+- [PIPE-H-002] een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden — Techniek: Toestandsovergangtest (ingediend → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van de issue-URL · Assertions: 29
+- [PIPE-H-004] zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes — Techniek: Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole · Assertions: 24
+- [PIPE-H-003] de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker — Techniek: Meting van berekende stijl (computed style) in licht en donker kleurschema · Assertions: 5
+- [PIPE-N-001] de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon — Techniek: Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole · Assertions: 9
 
 ### Vormgevingsschakelaar (klassiek / nieuw)
 

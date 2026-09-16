@@ -489,6 +489,11 @@
 | KLV-H-019 | ui | klassiek-verkenning.feature | ingevulde uren op Mijn uren zijn leesbaar in licht en donker, op telefoon en desktop | Contrastmeting (WCAG 4,5:1) + themacombinaties (licht/donker) × responsive viewport (390/1280) | 2 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | ingevulde uren op Mijn uren zijn leesbaar in licht en donker, op telefoon en desktop | Happy | 19 | Actueel |
 | KLV-H-020 | ui | klassiek-verkenning.feature | de actieknop in Mijn maanden heeft de huisstijl en zegt wat er nu te doen is | Beslistabel (stap → knoptekst) + visuele consistentie met de huisstijlknop in licht en donker | 5 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | de actieknop in Mijn maanden heeft de huisstijl en zegt wat er nu te doen is | Happy | 19 | Actueel |
 | KLV-N-001 | ui | klassiek-verkenning.feature | snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie | Monkey testing (seeded) + concurrency + toestandsovergang | 11 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie | Negative | 19 | Actueel |
+| PIPE-H-001 | ui | pipeline-demo.feature | de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin | Datagedreven vergelijking (pagina versus pilot/path-pipeline-data.json) + traceerbaarheid over drie projecties | 26 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin | Happy | 18 | Actueel |
+| PIPE-H-002 | ui | pipeline-demo.feature | een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden | Toestandsovergangtest (ingediend → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van de issue-URL | 29 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | een doorgezette wens wordt een GitHub-issue voor VS Code en kan daarna gesimuleerd worden | Happy | 18 | Actueel |
+| PIPE-H-004 | ui | pipeline-demo.feature | zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes | Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole | 24 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes | Happy | 18 | Actueel |
+| PIPE-H-003 | ui | pipeline-demo.feature | de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker | Meting van berekende stijl (computed style) in licht en donker kleurschema | 5 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker | Happy | 18 | Actueel |
+| PIPE-N-001 | ui | pipeline-demo.feature | de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon | Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole | 9 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon | Negative | 18 | Actueel |
 | SKIN-H-001 | ui | skin.feature | de app start standaard in de klassieke vormgeving | End-to-end use-case + visuele contractasserties | 3 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | de app start standaard in de klassieke vormgeving | Happy | 19 | Actueel |
 | SKIN-H-002 | ui | skin.feature | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | End-to-end use-case + visuele contractasserties | 6 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan | Happy | 19 | Actueel |
 | SKIN-H-003 | ui | skin.feature | terug naar "Klassiek" herstelt de klassieke vormgeving en bewaart die | Herstelbaarheid + toestandsovergang | 5 | skin.steps.ts | skin.spec.ts | UI Desktop | Vormgeving | terug naar "Klassiek" herstelt de klassieke vormgeving en bewaart die | Happy | 19 | Actueel |
@@ -603,10 +608,10 @@
 
 ## Totalen
 
-- Playwright executable cases: 581
+- Playwright executable cases: 586
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 582
-- Playwright features: 31
+- Totaal unieke executable cases: 587
+- Playwright features: 32
 - Database features: 1
-- Playwright steps mappings: 31
+- Playwright steps mappings: 32
 - Database steps mappings: 1

@@ -8,6 +8,9 @@ Nieuwste bovenaan per status. Statussen: **open**, **bezig**, **klaar (versie)**
 
 | Datum | Wens / besluit van Gio | Wie | Status |
 |---|---|---|---|
+| 16 sep | Intake-proef #43: Confluence-tekst in de demo op het Atlassian-lettertype (16px/24px, ook donker). Ingediend via het formulier van de pagina, als GitHub-issue met label pipeline-intake; loopt de hele keten door, logboek in PIPELINE-INTAKE-PROEF.md. | main | bezig |
+| 16 sep | Intake #44: Jira, Confluence en Zephyr Scale 1-op-1 in opmaak zoals we ze kennen (topbalk, zijbalk, bord, pagina, mappenboom, lozenges; geen merklogo's). Wordt opgepakt ná #43. | main | open |
+| 16 sep | Demo-pagina op TEST wordt het echte loket: een wens op https://uren-test.pathconsultancy.nl/pilot/path-pipeline.html gaat als GitHub-issue (label pipeline-intake) naar VS Code, waar de agent de keten uit PIPELINE-INTAKE.md afloopt (GIO-WENSEN → feature + spec → impactregressie → LIVING-DOC → versie → CI → TEST). De pagina toont de echte laatste 5 opleveringen en 10 Living Doc-regels uit GIO-WENSEN en de feature-bestanden (scripts/pipeline-demo-data.mjs), ververst bij elke release. | main | bezig |
 | 15 sep | **Filter Gelezen in Berichten**, compact: Actueel · Ongelezen · Gelezen · Ingetrokken · Alles met korte labels en aantallen. (Bruin bij ingetrokken was nog 2.0.108; grijs komt met 2.0.112.) | herontwerp | bezig |
 | 15 sep | **Meer voorbeeldberichten voor alle medewerkers:** 15 mededelingen per medewerker (Stasjo, Marc, Brian, Shawn), waarvan 6 ingetrokken en 5 ongelezen, zodat onder Alles ook een tweede pagina te testen is. Nu: Stasjo 10/6/4, de rest 7 met 1 ongelezen. | main | bij main |
 | 15 sep | Wisselvallig op mobile-safari: SKIN-H-040. 15 sep 5 van 5 keer groen herhaald, niet te reproduceren; opnieuw bekijken als hij in CI nog eens valt. | herontwerp | in de gaten houden |

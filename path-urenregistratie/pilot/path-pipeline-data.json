@@ -1,0 +1,166 @@
+{
+  "appVersion": "2.0.113",
+  "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
+  "delivered": [
+    {
+      "date": "16 sep",
+      "version": "main (Codex, geen versiebump)",
+      "wish": "Demo-pipeline (Jira/Confluence/Zephyr-simulatie) ook als echte TEST-URL, afgeleid van de bestaande omgeving: https://uren-test.pathconsultancy.nl/pilot/path-pipeline.html (live zodra release 35035388985 op TEST staat). Gebouwd door Codex (ab660018) met eigen Playwright-cases PIPE-H-001/002 en PIPE-N-001; Living Doc bewaart hard 10, toont 5. Alleen TEST, nooit PROD. Leerpunt: nieuwe specs ook aanmelden in scripts/sync-living-docs.mjs (herontwerp).",
+      "cases": [
+        {
+          "id": "PIPE-H-001",
+          "title": "de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Datagedreven vergelijking (pagina versus pilot/path-pipeline-data.json) + traceerbaarheid over drie projecties",
+          "assertions": 26,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin\n  Given de zelfstandige TEST-only pipelinepagina met de echte projectstand\n  When de pagina is geladen, staan de vier fasen en de laatste vijf echte opleveringen op het bord\n  And Kennisbank en Testbeheer projecteren dezelfde echte cases en de Living Doc toont hooguit tien\n  Then wordt met Playwright-assertions bevestigd dat de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin"
+        },
+        {
+          "id": "PIPE-N-001",
+          "title": "de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole",
+          "assertions": 9,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de Kennisbank op de telefoon wordt geopend\n  Then toont de Living Doc precies tien regels, lokaal vóór echt, en bewaart hij er tien\n  And de pagina heeft geen horizontale overflow of gedeelde appcode"
+        }
+      ]
+    },
+    {
+      "date": "15 sep",
+      "version": "werkwijze",
+      "wish": "Werkwijze stokje: één agent per branch tegelijk (wie \"aan zet\" staat bovenaan CODEX_HANDOFF.md). Overdragen = alles gepusht + CI-uitkomst + stokje bijwerken; overnemen = fetch, schone werkmap, log lezen. Versienummer altijd hoogste op origin + 1. Aanleiding: dubbel 2.0.69, afgebroken CI 2.0.73 en achtergebleven commit toen Codex en Claude tegelijk werkten (14 sep).",
+      "cases": []
+    },
+    {
+      "date": "16 sep",
+      "version": "main (seed-only, geen versiebump)",
+      "wish": "Mededelingen-seed op TEST: elke medewerker (Stasjo/Marc/Brian/Shawn) krijgt nu dezelfde 15 mededelingen, 6 ingetrokken, 9 actueel, 5 ongelezen — zodat \"Alles\" een tweede pagina toont (10 per pagina). Vijf nieuwe mededelingen toegevoegd en de drie bestaande die eerst alleen Stasjo zag, nu voor alle vier. Geverifieerd met een query op de lokale testdatabase (15/6/9/5 klopt voor alle vier). Herontwerp werkt NOT-H-012/NOT-H-017 hierop bij.",
+      "cases": [
+        {
+          "id": "NOT-H-012",
+          "title": "medewerker ziet ingetrokken mededelingen ingeklapt met label, de reden bij openen, en het filter toont precies die",
+          "feature": "tests/playwright/features/notifications.feature",
+          "technique": "Beslissingstabel rollen en autorisatie",
+          "assertions": 16,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: medewerker ziet ingetrokken mededelingen ingeklapt met label, de reden bij openen, en het filter toont precies die\n  Given Stasjo opent Berichten met ingetrokken voorbeeldmededelingen in de TEST-basis\n  When hij het filter Ingetrokken kiest\n  Then staan alleen ingetrokken berichten er, ingeklapt met label, en geen ervan als ongelezen\n  And zie je de reden zodra je het bericht openklapt\n  And steekt de onderste kaart niet buiten de ronde hoeken van het paneel\n  And staat onder Alles een geldige mededeling niet als ingetrokken"
+        },
+        {
+          "id": "NOT-H-017",
+          "title": "Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar",
+          "feature": "tests/playwright/features/notifications.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 16,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar\n  Given meldingen beheren is voorbereid\n  When de flow voor NOT-H-017 wordt uitgevoerd\n  Then staat Actueel aan, met alleen berichten die nog gelden\n  And tellen de filters op: Ongelezen + Gelezen = Actueel, Actueel + Ingetrokken = Alles"
+        }
+      ]
+    },
+    {
+      "date": "16 sep",
+      "version": "artifact (geen versie)",
+      "wish": "Interactieve demo van de werkwijze uit Gio's eigen procesplaatje (Jira+Confluence → Zephyr → Playwright/Cypress/API → CI/CD), als los Claude-Artifact \"Path Pipeline\": https://claude.ai/code/artifact/724f13a3-819e-4e55-8462-abf73b8236ec — geen deel van de repo, geen appfunctie, dus geen MASTERCHECKLIST/BESLISTABEL-entry; alleen hier en in main-sessiegeheugen vastgelegd. Drie tabbladen (Backlog/Kennisbank/Testbeheer) delen live data via de artifact-db; een ticket doorlopen laat 'm zichtbaar door alle vier fases lopen en schrijft een regel in de Living Doc (hard begrensd op de laatste 10, net als \"Nieuw in de app\"). Gezaaid met vijf echte opleveringen uit dit project (PATH-196/194/197/188/191), elk met het volledige Gherkin-scenario. Blijft privé tot Gio 'm zelf deelt; main werkt 'm bij op verzoek.",
+      "cases": []
+    },
+    {
+      "date": "15 sep",
+      "version": "main 2.0.108 + 2.0.111",
+      "wish": "Voorbeeldmeldingen in de bel voor alle medewerkers op TEST: elk 4 ongelezen (correctie, uren invullen, goedgekeurd, klanturenstaat), tik springt naar de juiste plek.",
+      "cases": []
+    },
+    {
+      "date": "15 sep",
+      "version": "main 2.0.106",
+      "wish": "Prod-wekker slimmer: na 10 minuten alleen afbreken als main een nieuwere commit heeft dan de wachtende release; zo niet, dan blijft de stap naar productie open. Elke 5 minuten opnieuw gekeken (tot 360 min). Contractcheck met tegenproef, R45. Nog te bevestigen in de eerstvolgende echte release.",
+      "cases": []
+    },
+    {
+      "date": "15 sep",
+      "version": "2.0.105",
+      "wish": "Berichten: filter Actueel (alleen berichten die nog gelden) als startfilter, met aantallen in de filters (Actueel · N, Ingetrokken · N). Ingetrokken rustig en neutraal in plaats van oranje/bruin: omlijnd grijs label, gedempte titel, reden met dun streepje. NOT-H-017 (contrast ≥ 4,5 licht en donker).",
+      "cases": [
+        {
+          "id": "NOT-H-017",
+          "title": "Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar",
+          "feature": "tests/playwright/features/notifications.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 16,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar\n  Given meldingen beheren is voorbereid\n  When de flow voor NOT-H-017 wordt uitgevoerd\n  Then staat Actueel aan, met alleen berichten die nog gelden\n  And tellen de filters op: Ongelezen + Gelezen = Actueel, Actueel + Ingetrokken = Alles"
+        }
+      ]
+    },
+    {
+      "date": "15 sep",
+      "version": "2.0.105",
+      "wish": "Overzicht bij veel meldingen: Berichten toont hooguit de laatste 30, 10 per pagina met Vorige/Volgende (ongelezen altijd vooraan); de bel hooguit 10 ongelezen met \"en nog N\". NOT-H-016.",
+      "cases": [
+        {
+          "id": "NOT-H-016",
+          "title": "bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 10, de bel hooguit 10",
+          "feature": "tests/playwright/features/notifications.feature",
+          "technique": "Grenswaardenanalyse",
+          "assertions": 18,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 10, de bel hooguit 10\n  Given meldingen beheren is voorbereid\n  Then toont de bel 10 van de 15 ongelezen meldingen, met een regel voor de rest\n  And toont Berichten hooguit 30 berichten, 10 per pagina, de ongelezen vooraan\n  When de medewerker naar de laatste pagina bladert, then staan daar 21–30 en is Volgende uit\n  And zet een filterwissel de lijst terug op pagina 1"
+        }
+      ]
+    },
+    {
+      "date": "15 sep",
+      "version": "2.0.105",
+      "wish": "Nieuw in de app: datum en tijdstip van elke release, 20 updates, 5 per pagina met Vorige/Volgende. KLV-H-018.",
+      "cases": [
+        {
+          "id": "KLV-H-018",
+          "title": "Berichten toont \"Nieuw in de app\" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD",
+          "feature": "tests/playwright/features/klassiek-verkenning.feature",
+          "technique": "Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie) + inhoudscontrole (geen namen of gevoelige gegevens) + responsive viewport",
+          "assertions": 28,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: Berichten toont \"Nieuw in de app\" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD\n  Given vondsten uit de monkey-verkenning op Klassiek is voorbereid\n  When de flow voor KLV-H-018 wordt uitgevoerd\n  Then staan er lokaal/op TEST 20 updates met datum en tijdstip, nieuwste eerst\n  And staan er 5 per pagina met Vorige en Volgende, tot en met de laatste pagina\n  And staat geen naam of gevoelig gegeven in de teksten\n  And op de PROD-host is het blok weg"
+        }
+      ]
+    },
+    {
+      "date": "15 sep",
+      "version": "werkwijze",
+      "wish": "Werkwijze: bij elke fix of wens een Playwright-case met assertions, benoemde TMap/ISTQB-techniek en een tegenproef (rood op oude code).",
+      "cases": []
+    }
+  ],
+  "open": [
+    {
+      "date": "16 sep",
+      "wish": "Intake-proef #43: Confluence-tekst in de demo op het Atlassian-lettertype (16px/24px, ook donker). Ingediend via het formulier van de pagina, als GitHub-issue met label pipeline-intake; loopt de hele keten door, logboek in PIPELINE-INTAKE-PROEF.md.",
+      "who": "main",
+      "status": "bezig"
+    },
+    {
+      "date": "16 sep",
+      "wish": "Intake #44: Jira, Confluence en Zephyr Scale 1-op-1 in opmaak zoals we ze kennen (topbalk, zijbalk, bord, pagina, mappenboom, lozenges; geen merklogo's). Wordt opgepakt ná #43.",
+      "who": "main",
+      "status": "open"
+    },
+    {
+      "date": "16 sep",
+      "wish": "Demo-pagina op TEST wordt het echte loket: een wens op https://uren-test.pathconsultancy.nl/pilot/path-pipeline.html gaat als GitHub-issue (label pipeline-intake) naar VS Code, waar de agent de keten uit PIPELINE-INTAKE.md afloopt (GIO-WENSEN → feature + spec → impactregressie → LIVING-DOC → versie → CI → TEST). De pagina toont de echte laatste 5 opleveringen en 10 Living Doc-regels uit GIO-WENSEN en de feature-bestanden (scripts/pipeline-demo-data.mjs), ververst bij elke release.",
+      "who": "main",
+      "status": "bezig"
+    },
+    {
+      "date": "15 sep",
+      "wish": "Filter Gelezen in Berichten, compact: Actueel · Ongelezen · Gelezen · Ingetrokken · Alles met korte labels en aantallen. (Bruin bij ingetrokken was nog 2.0.108; grijs komt met 2.0.112.)",
+      "who": "herontwerp",
+      "status": "bezig"
+    },
+    {
+      "date": "15 sep",
+      "wish": "Meer voorbeeldberichten voor alle medewerkers: 15 mededelingen per medewerker (Stasjo, Marc, Brian, Shawn), waarvan 6 ingetrokken en 5 ongelezen, zodat onder Alles ook een tweede pagina te testen is. Nu: Stasjo 10/6/4, de rest 7 met 1 ongelezen.",
+      "who": "main",
+      "status": "bij main"
+    }
+  ]
+}
