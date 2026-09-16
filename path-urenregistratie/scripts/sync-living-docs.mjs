@@ -64,6 +64,18 @@ function extractCases(definition) {
   // een ander teken gebruikt, en geparametriseerde cases gebruiken template-
   // literals. Stop daarom alleen bij hetzelfde afsluitteken als waarmee de
   // testtitel begon, niet bij ieder willekeurig quote-teken in de leesbare titel.
+  //
+  // VALKUIL (gevonden 16 sep, ROLE-N-008): deze regex kent geen JS-escaping. Een
+  // titel als test('[X] ... collega\'s', ...) met een backslash-ontsnapt
+  // aanhalingsteken dat GELIJK is aan het openingsteken, breekt de match af bij
+  // die ontsnapte quote (de regex ziet gewoon een teken, geen escape-context).
+  // Gevolg: geen match voor die test() -- niet zichtbaar als foutmelding, maar
+  // als een verkeerd samengevoegd Scenario (de test.step()'s van de gemiste case
+  // schuiven stilzwijgend in het blok van de vorige case, met een te hoog
+  // "Aantoonbare assertions"-getal als enige aanwijzing). Voorkomen: gebruik in
+  // een testtitel nooit hetzelfde aanhalingsteken als de buitenste string, ook
+  // niet ontsnapt -- kies een andere formulering (bijv. "van een collega" i.p.v.
+  // "van collega's") of een ander buitenste quote-teken.
   const pattern = /test\(\s*(['"`])\[([^\]]+)\]\s*((?:(?!\1)[^\r\n])*)\1\s*,/g;
   const matches = [...source.matchAll(pattern)];
   const cases = matches.map((match, index) => {

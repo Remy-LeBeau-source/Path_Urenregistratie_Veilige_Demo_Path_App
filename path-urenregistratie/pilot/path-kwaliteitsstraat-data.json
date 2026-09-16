@@ -1,6 +1,6 @@
 {
   "appVersion": "2.0.139",
-  "generatedAt": "2026-09-16T20:27:03.779Z",
+  "generatedAt": "2026-09-16T20:38:52.368Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
@@ -22,6 +22,22 @@
           "assertions": 14,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: de maandtotalen boven de werkvoorraad blijven gelijk als de gebruiker wisselt tussen Backoffice en medewerkers\n  Given het dashboard met een gevulde werkvoorraad over meerdere maanden\n  When de flow voor DASH-H-052 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de maandtotalen boven de werkvoorraad blijven gelijk als de gebruiker wisselt tussen Backoffice en medewerkers"
+        }
+      ]
+    },
+    {
+      "date": "16 sep",
+      "version": "2.0.139",
+      "wish": "Kritische controleronde op verzoek van Gio (TMap/ISTQB-technieken, alle onderdelen): een decision-table-check op bootstrap.php na de eerdere tarief-fix bracht twee vergelijkbare gaten aan het licht. Twee velden werden wel al gefilterd voor een medewerker (assignments, alleen de eigen opdracht), maar `counterparties` (klant- en tussenpersoongegevens) en `assignment_mail_routes` (mailroutering + factuursjablonen per opdracht) werden zonder filter voor het hele bedrijf meegestuurd -- ook aan een medewerker, ook al toonde geen scherm het. Dezelfde soort blootstelling als het tarief eerder: met de ontwikkelaarsconsole leesbaar. Nu gefilterd tot de klant/tussenpersoon en mailroutes van de eigen opdracht(en); de eigen klantnaam op het scherm blijft gewoon werken. ROLE-N-008 nieuw, tegenproef gedaan (rood zonder de filter: 7 counterparties i.p.v. de verwachte 2). Bijvangst: manifest.php had geen naam voor de 'acc'-omgeving (nog niet live, dus nu niet bereikbaar, maar wel al bedraad in de release-pijplijn) -- toegevoegd plus een lichte, gedeelde-toestand-vrije controle (manifest-naming-check.mjs) in npm run check. Ook gevonden: een testtitel met een ontsnapt aanhalingsteken gelijk aan het buitenste quote-teken breekt de living-docs-generator stilzwijgend (geen foutmelding, een verkeerd samengevoegd Scenario) -- rechtgezet en als waarschuwing in de generator zelf vastgelegd. Impactregressie breed gedraaid: roles-api (8/8), dashboard (21/21), admin-writes (31/31), business-workflows-mail+fields (6/6), email-queue+notifications (68/68), database-integrity (3/3), mobile-ui op mobile-chrome (31/31) -- allemaal groen, geen regressie. Los daarvan: de CI-red op 2.0.137 (achterlopende pipeline-demo-data.json na een late GIO-WENSEN-wijziging) hersteld; TEST liep geen schade op, de release kwam nooit voorbij Validate.",
+      "cases": [
+        {
+          "id": "ROLE-N-008",
+          "title": "de medewerker ziet alleen de klant/tussenpersoon en mailroutering van zijn eigen opdracht, niet die van een collega",
+          "feature": "tests/playwright/features/roles-authorization.feature",
+          "technique": "Beslissingstabel rollen en autorisatie",
+          "assertions": 11,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de medewerker ziet alleen de klant/tussenpersoon en mailroutering van zijn eigen opdracht, niet die van een collega\n  Given de beheerder ziet het hele bedrijf (referentiemeting)\n  When de medewerker inlogt en zijn eigen opdracht ophaalt\n  Then staan er alleen de klant en tussenpersoon van zijn eigen opdracht in counterparties\n  And staan er alleen mailroutes van zijn eigen opdracht, niet van collega-opdrachten\n  And zijn eigen klant- en tussenpersoonnaam blijven wel gewoon bruikbaar voor het scherm"
         }
       ]
     },
@@ -143,12 +159,6 @@
       "date": "16 sep",
       "version": "2.0.134",
       "wish": "Wens van Gio: in Jira, Confluence en Zephyr altijd de laatste tien opleveringen, ook na F5, met de oudste die eraf valt, en de Living Doc die de nieuwe case meteen meetoont. Grenzen van vijf naar tien, Testbeheer naar twintig cases zodat de cases van die tien opleveringen erin passen. De kaart verschuift mee met de echte stand van de keten (wachtrij -> open en bezig -> opgeleverd) en de wachtrijkaart wordt opgeruimd zodra de wens in de projectstand verschijnt, anders krijgt dezelfde wens twee kaarten. Zelf slepen tussen kolommen bewust niet: dan kun je iets op Opgeleverd zetten dat nooit is opgeleverd.",
-      "cases": []
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.134",
-      "wish": "Volgorde en rol op de kwaliteitsstraat: je landt in Confluence (daar werkt de PO), de zijbalk en tabs volgen de keten Confluence, Jira, Zephyr, en het wensformulier staat in de Confluence-kolom met op het Jira-bord alleen een wegwijzer.",
       "cases": []
     }
   ],

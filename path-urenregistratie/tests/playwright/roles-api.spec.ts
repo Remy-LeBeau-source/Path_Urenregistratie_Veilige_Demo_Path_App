@@ -312,3 +312,58 @@ test('[ROLE-N-007] de medewerker krijgt het uurtarief en btw-percentage van zijn
     await authApi.logout();
   });
 });
+
+test('[ROLE-N-008] de medewerker ziet alleen de klant/tussenpersoon en mailroutering van zijn eigen opdracht, niet die van een collega', async ({ request }) => {
+  // Zelfde soort gat als ROLE-N-007, gevonden bij het nalopen van bootstrap.php
+  // na die fix: assignments werd al gefilterd tot de eigen opdracht, maar
+  // counterparties (klanten/tussenpersonen) en assignment_mail_routes
+  // (mailroutering + factuursjablonen per opdracht) werden zonder filter voor
+  // het hele bedrijf meegestuurd, ook aan een medewerker. Het scherm gebruikt
+  // alleen de eigen opdracht om een naam op te zoeken, maar de ruwe data van
+  // ELKE andere klant en collega-opdracht stond gewoon in het antwoord --
+  // met de ontwikkelaarsconsole te lezen, ook al toont geen scherm het.
+  const authApi = new AuthApi(request);
+  const readApi = new ReadApi(request);
+
+  let adminAantalCounterparties = 0;
+  let adminAantalRoutes = 0;
+  await test.step('Given de beheerder ziet het hele bedrijf (referentiemeting)', async () => {
+    const login = await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    expect(login.user.role).not.toBe('employee');
+    const bootstrap = await readApi.bootstrap();
+    adminAantalCounterparties = (bootstrap.counterparties as unknown[]).length;
+    adminAantalRoutes = (bootstrap.assignment_mail_routes as unknown[]).length;
+    expect(adminAantalCounterparties, 'de seed heeft meerdere klanten/tussenpersonen, anders discrimineert deze case niet').toBeGreaterThan(2);
+    expect(adminAantalRoutes, 'de seed heeft mailroutes op meerdere opdrachten, anders discrimineert deze case niet').toBeGreaterThan(3);
+    await authApi.logout();
+  });
+
+  await test.step('When de medewerker inlogt en zijn eigen opdracht ophaalt', async () => {
+    const login = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+    expect(login.user.role).toBe('employee');
+    const bootstrap = await readApi.bootstrap();
+    expect(bootstrap.assignments).toHaveLength(1);
+    const eigenOpdracht = bootstrap.assignments[0] as { client_id: number; broker_id: number; id: number };
+
+    await test.step('Then staan er alleen de klant en tussenpersoon van zijn eigen opdracht in counterparties', async () => {
+      const counterparties = bootstrap.counterparties as Array<{ id: number }>;
+      expect(counterparties.length, 'niet het hele bedrijf, alleen wat de eigen opdracht nodig heeft').toBeLessThan(adminAantalCounterparties);
+      const ids = counterparties.map(c => Number(c.id)).sort((a, b) => a - b);
+      expect(ids).toEqual([...new Set([Number(eigenOpdracht.client_id), Number(eigenOpdracht.broker_id)])].sort((a, b) => a - b));
+    });
+
+    await test.step('And staan er alleen mailroutes van zijn eigen opdracht, niet van collega-opdrachten', async () => {
+      const routes = bootstrap.assignment_mail_routes as Array<{ assignment_id: number }>;
+      expect(routes.length, 'niet alle mailroutes van het bedrijf, alleen die van de eigen opdracht').toBeLessThan(adminAantalRoutes);
+      expect(routes.length).toBeGreaterThan(0);
+      expect(routes.every(route => Number(route.assignment_id) === Number(eigenOpdracht.id))).toBe(true);
+    });
+
+    await test.step('And zijn eigen klant- en tussenpersoonnaam blijven wel gewoon bruikbaar voor het scherm', async () => {
+      const eigenKlant = (bootstrap.counterparties as Array<{ id: number; legal_name: string }>).find(c => Number(c.id) === Number(eigenOpdracht.client_id));
+      expect(eigenKlant?.legal_name).toBeTruthy();
+    });
+
+    await authApi.logout();
+  });
+});

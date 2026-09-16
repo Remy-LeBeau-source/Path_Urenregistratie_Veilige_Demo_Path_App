@@ -65,3 +65,13 @@ Feature: Rollen, rechten en gegevensafscherming
     Then staan tarief en btw er niet in, ook niet als lege waarde
     And de rest van zijn opdracht blijft gewoon bruikbaar
     And de beheerder krijgt ze wel, want daar worden de facturen mee gemaakt
+
+  @negative
+  Scenario: [ROLE-N-008] de medewerker ziet alleen de klant/tussenpersoon en mailroutering van zijn eigen opdracht, niet die van een collega
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 11
+    Given de beheerder ziet het hele bedrijf (referentiemeting)
+    When de medewerker inlogt en zijn eigen opdracht ophaalt
+    Then staan er alleen de klant en tussenpersoon van zijn eigen opdracht in counterparties
+    And staan er alleen mailroutes van zijn eigen opdracht, niet van collega-opdrachten
+    And zijn eigen klant- en tussenpersoonnaam blijven wel gewoon bruikbaar voor het scherm

@@ -458,6 +458,7 @@
 | ROLE-N-005 | security | roles-authorization.feature | medewerker kan maanden voor de startdatum en na de huidige maand ook niet via de API openen | Beslissingstabel rollen en autorisatie | 8 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | medewerker kan maanden voor de startdatum en na de huidige maand ook niet via de API openen | Negative | 4 | Actueel |
 | ROLE-N-006 | security | roles-authorization.feature | beheerder-only acties op gedeelde endpoints weigeren ook op de eigen urenstaat | Beslissingstabel rollen en autorisatie | 7 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | beheerder-only acties op gedeelde endpoints weigeren ook op de eigen urenstaat | Negative | 4 | Actueel |
 | ROLE-N-007 | security | roles-authorization.feature | de medewerker krijgt het uurtarief en btw-percentage van zijn opdracht niet mee, de beheerder wel | Beslissingstabel rollen en autorisatie | 12 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | de medewerker krijgt het uurtarief en btw-percentage van zijn opdracht niet mee, de beheerder wel | Negative | 4 | Actueel |
+| ROLE-N-008 | security | roles-authorization.feature | de medewerker ziet alleen de klant/tussenpersoon en mailroutering van zijn eigen opdracht, niet die van een collega | Beslissingstabel rollen en autorisatie | 11 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | de medewerker ziet alleen de klant/tussenpersoon en mailroutering van zijn eigen opdracht, niet die van een collega | Negative | 4 | Actueel |
 | SEC-H-001 | security | security.feature | csrf token endpoint werkt | API-contract + equivalentieklasse | 4 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
 | SEC-H-002 | security | security.feature | login met csrf werkt | API-contract + equivalentieklasse | 2 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
 | SEC-H-003 | security | security.feature | logout met csrf werkt | API-contract + equivalentieklasse | 1 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
@@ -627,9 +628,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 605
+- Playwright executable cases: 606
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 606
+- Totaal unieke executable cases: 607
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
