@@ -62,6 +62,17 @@ try {
     $assignmentsStmt->execute($assignmentsParams);
     $assignments = $assignmentsStmt->fetchAll();
 
+    // Commerciele voorwaarden horen niet bij de medewerker thuis: het tarief en
+    // het btw-percentage bepalen wat de klant betaalt, niet wat hij invult. Het
+    // scherm toonde ze al niet, maar ze stonden wel in de gegevens die zijn
+    // browser kreeg, en wegblijven uit beeld is geen afscherming. Beheer krijgt
+    // ze ongewijzigd, want daar worden de facturen gemaakt.
+    if ($isEmployee) {
+        foreach ($assignments as $index => $assignment) {
+            unset($assignments[$index]['hourly_rate'], $assignments[$index]['vat_percentage']);
+        }
+    }
+
     $counterpartiesStmt = $pdo->prepare(
         'SELECT id, company_id, type, legal_name, trade_name, invoice_address_line, invoice_postal_code, invoice_city, invoice_email, active
          FROM counterparties

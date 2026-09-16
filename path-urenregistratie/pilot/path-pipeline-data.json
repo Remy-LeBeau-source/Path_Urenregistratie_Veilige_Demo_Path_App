@@ -1,7 +1,23 @@
 {
-  "appVersion": "2.0.123",
+  "appVersion": "2.0.124",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "16 sep",
+      "version": "2.0.124",
+      "wish": "Een medewerker mag het uurtarief niet zien (wens Gio). Het scherm toonde het al niet, maar de server stuurde tarief en btw-percentage van de eigen opdracht wel mee bij het inloggen, en niet tonen is geen afscherming. Beide velden gaan nu niet meer naar een medewerker; beheer krijgt ze ongewijzigd voor de facturen. ROLE-N-007 met tegenproef (rood op de oude servercode).",
+      "cases": [
+        {
+          "id": "ROLE-N-007",
+          "title": "de medewerker krijgt het uurtarief en btw-percentage van zijn opdracht niet mee, de beheerder wel",
+          "feature": "tests/playwright/features/roles-authorization.feature",
+          "technique": "Beslissingstabel rollen en autorisatie",
+          "assertions": 12,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de medewerker krijgt het uurtarief en btw-percentage van zijn opdracht niet mee, de beheerder wel\n  Given de medewerker is ingelogd\n  When hij zijn eigen opdracht ophaalt\n  Then staan tarief en btw er niet in, ook niet als lege waarde\n  And de rest van zijn opdracht blijft gewoon bruikbaar\n  And de beheerder krijgt ze wel, want daar worden de facturen mee gemaakt"
+        }
+      ]
+    },
     {
       "date": "16 sep",
       "version": "2.0.121",
@@ -151,22 +167,6 @@
           "assertions": 8,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: een ingeklapt bericht toont een korte samenvatting onder de titel, die verdwijnt zodra je het openklapt\n  Given meldingen beheren is voorbereid\n  Then toont een lang bericht ingeklapt een afgekapte samenvatting van de eigen tekst\n  And toont een kort bericht zijn volledige tekst als samenvatting, zonder afkapping\n  When het bericht wordt opengeklapt, then verdwijnt de samenvatting"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.116",
-      "wish": "MOB-H-024 was wisselvallig (ongeveer 1 op 3 rood, ook op 2.0.113): late 401-ruis van de inlograce landde na het wissen. De case negeert nu alleen die 401-ruis, de rest blijft hard. 5 van 5 groen.",
-      "cases": [
-        {
-          "id": "MOB-H-024",
-          "title": "een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert",
-          "feature": "tests/playwright/features/mobile.feature",
-          "technique": "Responsive viewport + end-to-end use-case",
-          "assertions": 7,
-          "platform": "mobile",
-          "gherkin": "Scenario: een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert\n  Given een medewerker logt op de telefoon voor het eerst in en de sync-afronding valt in de race\n  When de hydratie-afronding één keer klapt op de hertekening\n  Then staat er nergens meer een laadtekst en is het dashboard bruikbaar"
         }
       ]
     }

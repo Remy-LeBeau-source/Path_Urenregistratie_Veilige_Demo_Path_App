@@ -55,3 +55,13 @@ Feature: Rollen, rechten en gegevensafscherming
     Given een ingelogde medewerker met zijn eigen lopende maand
     When hij de beheerdersacties op zijn eigen urenstaat rechtstreeks aanroept
     Then blijft zijn eigen medewerkersactie op dezelfde endpoints wel toegestaan
+
+  @negative
+  Scenario: [ROLE-N-007] de medewerker krijgt het uurtarief en btw-percentage van zijn opdracht niet mee, de beheerder wel
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given de medewerker is ingelogd
+    When hij zijn eigen opdracht ophaalt
+    Then staan tarief en btw er niet in, ook niet als lege waarde
+    And de rest van zijn opdracht blijft gewoon bruikbaar
+    And de beheerder krijgt ze wel, want daar worden de facturen mee gemaakt

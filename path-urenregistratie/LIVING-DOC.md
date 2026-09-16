@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 593 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 594 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 593 unieke case-ID's
+- Playwright executable cases: 594 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 594 unieke case-ID's
+- Totaal executable cases: 595 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 641
-- Niet-mobile projectuitvoeringen: 545
+- Uitvoeringen: 642
+- Niet-mobile projectuitvoeringen: 546
 - Mobile functionele cases: 48
 - Pixel 7 / Chromium-uitvoeringen: 48
 - iPhone 13 / WebKit-uitvoeringen: 48
 
-De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 593 Playwright-functionele cases in totaal 641 resultaten op: 545 + (48 x 2) = 641.
+De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 594 Playwright-functionele cases in totaal 642 resultaten op: 546 + (48 x 2) = 642.
 
 ## Documentatieketen
 
@@ -614,7 +614,7 @@ De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 593 Playwri
 
 - Feature: `tests/playwright/features/roles-authorization.feature`
 - Source: `tests/playwright/roles-api.spec.ts`
-- Cases: 6
+- Cases: 7
 
 - [ROLE-N-003] zonder sessie geeft protected API 401 — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
 - [ROLE-H-001] admin ziet volledige data — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
@@ -622,6 +622,7 @@ De 48 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 593 Playwri
 - [ROLE-N-004] een medewerker krijgt 403 op elke beheerder-only schrijfactie — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 - [ROLE-N-005] medewerker kan maanden voor de startdatum en na de huidige maand ook niet via de API openen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [ROLE-N-006] beheerder-only acties op gedeelde endpoints weigeren ook op de eigen urenstaat — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
+- [ROLE-N-007] de medewerker krijgt het uurtarief en btw-percentage van zijn opdracht niet mee, de beheerder wel — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 
 ### Authenticatie- en API-beveiliging
 

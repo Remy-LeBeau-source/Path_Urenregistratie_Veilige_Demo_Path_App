@@ -267,3 +267,48 @@ test('[ROLE-N-006] beheerder-only acties op gedeelde endpoints weigeren ook op d
     await authApi.logout();
   });
 });
+
+test('[ROLE-N-007] de medewerker krijgt het uurtarief en btw-percentage van zijn opdracht niet mee, de beheerder wel', async ({ request }) => {
+  // Wens van Gio (16 sep): een medewerker mag het tarief niet zien. Het scherm
+  // toonde het al niet, maar de server stuurde het wel mee in bootstrap, en
+  // wegblijven uit beeld is geen afscherming: met de ontwikkelaarsconsole is
+  // zulke data gewoon te lezen. Deze case meet daarom het antwoord van de
+  // server, niet wat het scherm ervan laat zien.
+  const authApi = new AuthApi(request);
+  const readApi = new ReadApi(request);
+
+  await test.step('Given de medewerker is ingelogd', async () => {
+    const login = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+    expect(login.user.role).toBe('employee');
+  });
+
+  await test.step('When hij zijn eigen opdracht ophaalt', async () => {
+    const bootstrap = await readApi.bootstrap();
+    expect(bootstrap.assignments).toHaveLength(1);
+    const eigen = bootstrap.assignments[0];
+
+    await test.step('Then staan tarief en btw er niet in, ook niet als lege waarde', async () => {
+      expect(Object.prototype.hasOwnProperty.call(eigen, 'hourly_rate')).toBe(false);
+      expect(Object.prototype.hasOwnProperty.call(eigen, 'vat_percentage')).toBe(false);
+      expect(JSON.stringify(bootstrap.assignments)).not.toContain('hourly_rate');
+      expect(JSON.stringify(bootstrap.assignments)).not.toContain('vat_percentage');
+    });
+
+    await test.step('And de rest van zijn opdracht blijft gewoon bruikbaar', async () => {
+      expect(eigen.assignment_name).toBeTruthy();
+      expect(Number(eigen.employee_id)).toBeGreaterThan(0);
+    });
+  });
+
+  await test.step('And de beheerder krijgt ze wel, want daar worden de facturen mee gemaakt', async () => {
+    await authApi.logout();
+    const login = await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    expect(login.user.role).not.toBe('employee');
+    const bootstrap = await readApi.bootstrap();
+    expect(bootstrap.assignments.length).toBeGreaterThan(1);
+    const metTarief = bootstrap.assignments.filter((item: Record<string, unknown>) => Object.prototype.hasOwnProperty.call(item, 'hourly_rate'));
+    expect(metTarief).toHaveLength(bootstrap.assignments.length);
+    expect(Number(metTarief[0].hourly_rate)).toBeGreaterThan(0);
+    await authApi.logout();
+  });
+});
