@@ -1,7 +1,23 @@
 {
-  "appVersion": "2.0.128",
+  "appVersion": "2.0.129",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "16 sep",
+      "version": "2.0.129",
+      "wish": "Een geweigerde urenwijziging wordt nu ook door een schermlezer gemeld. De melding \"Niet opgeslagen: een dag kan maximaal 24 uur hebben\" stond in een veld zonder aria-live, dus hulpsoftware bleef stil bij precies de mededeling die je wel wilt horen. A11Y-H-007 met tegenproef (rood zonder het attribuut).",
+      "cases": [
+        {
+          "id": "A11Y-H-007",
+          "title": "een niet-opgeslagen urenwijziging wordt ook door een schermlezer gemeld",
+          "feature": "tests/playwright/features/accessibility.feature",
+          "technique": "Toegankelijkheidsinspectie + toetsenbord-use-case",
+          "assertions": 3,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een niet-opgeslagen urenwijziging wordt ook door een schermlezer gemeld\n  Given de medewerker is ingelogd op Mijn uren\n  When de flow voor A11Y-H-007 wordt uitgevoerd\n  Then meldt het statusveld zijn wijzigingen aan hulpsoftware\n  And hetzelfde geldt voor de uitleg onder het urenraster"
+        }
+      ]
+    },
     {
       "date": "16 sep",
       "version": "2.0.128",
@@ -151,22 +167,6 @@
           "assertions": 5,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: elke grenswaarde in een dagregel wordt geweigerd en niets ervan komt in de database\n  Given een ingelogde medewerker met een schrijfbare periode\n  When elke ongeldige dagregel wordt verstuurd\n  Then bestaat er nog geen urenstaat voor die periode"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.119",
-      "wish": "Ingetrokken bericht vat ingeklapt de reden samen, niet de tekst die niet meer geldt (NOT-H-017). Monkey-verkenning met 10 nieuwe seeds (desktop en telefoon) vond niets.",
-      "cases": [
-        {
-          "id": "NOT-H-017",
-          "title": "Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar",
-          "feature": "tests/playwright/features/notifications.feature",
-          "technique": "Negatieve equivalentieklasse + error guessing",
-          "assertions": 20,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar\n  Given meldingen beheren is voorbereid\n  When de flow voor NOT-H-017 wordt uitgevoerd\n  Then staat Actueel aan, met alleen berichten die nog gelden\n  And tellen de filters op: Ongelezen + Gelezen = Actueel, Actueel + Ingetrokken = Alles\n  And vat een ingetrokken bericht de reden samen, niet de tekst die niet meer geldt"
         }
       ]
     }

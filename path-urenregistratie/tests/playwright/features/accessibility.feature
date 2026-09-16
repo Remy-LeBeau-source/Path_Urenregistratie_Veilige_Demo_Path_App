@@ -56,3 +56,12 @@ Feature: Toegankelijkheid en toetsenbordbediening
     Given de administrator is ingelogd op een korte viewport
     When de flow voor A11Y-H-006 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat de sluitknop van een scrollende dialoog blijft in beide skins in beeld
+
+  @happy
+  Scenario: [A11Y-H-007] een niet-opgeslagen urenwijziging wordt ook door een schermlezer gemeld
+    # Testtechniek: Toegankelijkheidsinspectie + toetsenbord-use-case
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given de medewerker is ingelogd op Mijn uren
+    When de flow voor A11Y-H-007 wordt uitgevoerd
+    Then meldt het statusveld zijn wijzigingen aan hulpsoftware
+    And hetzelfde geldt voor de uitleg onder het urenraster
