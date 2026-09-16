@@ -182,6 +182,7 @@ function techniqueFor(definition, testCase) {
   }
   if (['SAFE-H-012', 'SAFE-H-014', 'PWD-H-006'].includes(testCase.id)) return 'Beslissingstabel + equivalentieklassen + toestandsovergang';
   if (testCase.id === 'PWD-N-018') return 'Grenswaardenanalyse (vijfde poging mag, zesde niet) + contractcontrole van de Retry-After-koptekst';
+  if (testCase.id === 'CTS-API-H-018') return 'Equivalentieklassen op de schrijfwijze van een PDF-woordenboek (met en zonder spatie) + negatieve controle dat een nep-PDF geweigerd blijft';
   if (testCase.id === 'SAFE-H-009') return 'Equivalentieklassen + toestandsovergang';
   if (testCase.id === 'SAFE-H-011') return 'Toestandsovergang + foutinjectie + beslissingstabel';
   if (/gelijktijd|optimistic|tweede lock|immutable/.test(text)) return 'Concurrency + toestandsovergang';

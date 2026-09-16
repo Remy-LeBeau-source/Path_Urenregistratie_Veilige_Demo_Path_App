@@ -115,6 +115,34 @@ function buildValidPdfOfExactSize(targetBytes: number): Buffer {
   return Buffer.from(result, 'latin1');
 }
 
+// Dezelfde structuur als hierboven, maar in de compacte schrijfwijze die veel makers
+// gebruiken: geen spatie tussen /Type en /Catalog. Voor een PDF-lezer is dat identiek.
+function buildCompactPdf(): Buffer {
+  const header = '%PDF-1.4\n';
+  const objects = [
+    '1 0 obj\n<</Type/Catalog/Pages 2 0 R>>\nendobj\n',
+    '2 0 obj\n<</Type/Pages/Kids[3 0 R]/Count 1>>\nendobj\n',
+    '3 0 obj\n<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>\nendobj\n',
+  ];
+
+  let body = header;
+  const offsets: number[] = [];
+  for (const object of objects) {
+    offsets.push(body.length);
+    body += object;
+  }
+  const xrefOffset = body.length;
+  let xref = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (const offset of offsets) {
+    xref += String(offset).padStart(10, '0') + ' 00000 n \n';
+  }
+  body += xref;
+  body += `trailer\n<</Size ${objects.length + 1}/Root 1 0 R>>\nstartxref\n${xrefOffset}\n%%EOF`;
+  // De controle eist minimaal 64 bytes; deze PDF is ruim groter, maar dat blijft zo
+  // expliciet vastgelegd omdat een kleiner voorbeeld om de verkeerde reden zou falen.
+  return Buffer.from(body, 'latin1');
+}
+
 async function findWritablePeriod(api: CustomerTimesheetApi): Promise<string> {
   for (const period of CANDIDATE_PERIODS) {
     const read = await api.read(period, undefined, undefined, { attach: false });
@@ -861,6 +889,54 @@ test.describe('customer timesheet api', () => {
     await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {
       await authApi.logout();
     });
+  });
+
+  test('[CTS-API-H-018] een PDF die zijn woordenboek zonder spaties schrijft wordt gewoon aangenomen', async ({ request }) => {
+    // Equivalentieklassen op de schrijfwijze van een PDF-woordenboek. Een PDF mag
+    // /Type /Catalog, /Type/Catalog of /Type gevolgd door een nieuwe regel schrijven:
+    // alle drie betekenen hetzelfde. De uploadcontrole zocht op de letterlijke tekst
+    // mét spatie, en weigerde daardoor gewone, overal te openen bestanden van moderne
+    // makers met "Het gekozen PDF-bestand is beschadigd of ongeldig" (gemeld door Gio
+    // op 16 sep met een infographic-PDF). De bestaande testhelper schreef zelf altijd
+    // de variant mét spatie, dus geen enkele case zag dit.
+    const authApi = new AuthApi(request);
+    const customerApi = new CustomerTimesheetApi(request);
+    let period = '';
+
+    await test.step('Given de medewerker is ingelogd met een maand die nog te vullen is', async () => {
+      const employeeLogin = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(employeeLogin.user.role).toBe('employee');
+      period = await findWritablePeriod(customerApi);
+    });
+
+    await test.step('When hij een PDF uploadt die zijn woordenboek compact schrijft, then wordt die aangenomen', async () => {
+      const compact = buildCompactPdf();
+      expect(compact.toString('latin1'), 'deze PDF hoort juist géén spatie te hebben').not.toContain('/Type /Catalog');
+      expect(compact.toString('latin1')).toContain('/Type/Catalog');
+
+      const upload = await customerApi.write({
+        action: 'save_draft',
+        period,
+        file: { name: 'compacte-klanturenstaat.pdf', mimeType: 'application/pdf', buffer: compact },
+      });
+
+      expect(upload.status, `een geldige PDF hoort te mogen: ${JSON.stringify(upload.body).slice(0, 200)}`).toBe(200);
+      expect(upload.body.ok).toBe(true);
+    });
+
+    await test.step('And blijft een bestand dat alleen op een PDF lijkt geweigerd', async () => {
+      const nep = Buffer.from('%PDF-1.4\n' + 'x'.repeat(120) + '\nstartxref\n10\n%%EOF', 'latin1');
+      const geweigerd = await customerApi.write({
+        action: 'save_draft',
+        period,
+        file: { name: 'nep-klanturenstaat.pdf', mimeType: 'application/pdf', buffer: nep },
+      });
+
+      expect(geweigerd.status, 'een bestand zonder PDF-structuur hoort geweigerd te blijven').toBe(400);
+      expect(geweigerd.body.error).toBe('invalid-upload');
+    });
+
+    await authApi.logout();
   });
 
   test('[CTS-API-N-009] corrupte of te grote afbeelding en nep-PDF worden geweigerd zonder bestaand concept te vervangen', async ({ request }) => {

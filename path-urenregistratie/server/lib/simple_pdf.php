@@ -281,7 +281,22 @@ function simple_pdf_looks_valid(string $bytes): bool
     $pointsToXref = str_starts_with($xrefTarget, 'xref');
     $pointsToXrefStream = preg_match('/^\d+\s+\d+\s+obj\b/', $xrefTarget) === 1;
 
-    return ($pointsToXref || $pointsToXrefStream)
-        && str_contains($bytes, '/Type /Catalog')
-        && str_contains($bytes, '/Type /Page');
+    if (!$pointsToXref && !$pointsToXrefStream) {
+        return false;
+    }
+
+    // De naamscheiding in een PDF-woordenboek is vrij: /Type /Catalog, /Type/Catalog
+    // en /Type\n/Catalog betekenen alle drie hetzelfde. Eerder werd hier op de
+    // letterlijke tekst mét spatie gezocht, en dat weigerde gewone, prima te openen
+    // bestanden van moderne makers (16 sep, gemeld door Gio met een PDF die overal
+    // opent). Een PDF die zijn objecten comprimeert (objectstreams, PDF 1.5+) laat
+    // deze woorden helemaal niet in de ruwe bytes zien; daar is de xref-stream
+    // hierboven het structuurbewijs en mogen we die markeringen niet eisen.
+    $gebruiktObjectstreams = str_contains($bytes, '/ObjStm');
+    if ($gebruiktObjectstreams) {
+        return true;
+    }
+
+    return preg_match('#/Type\s*/Catalog\b#', $bytes) === 1
+        && preg_match('#/Type\s*/Page\b#', $bytes) === 1;
 }
