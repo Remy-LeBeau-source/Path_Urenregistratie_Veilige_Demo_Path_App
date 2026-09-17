@@ -1,6 +1,6 @@
 {
   "appVersion": "2.0.146",
-  "generatedAt": "2026-09-17T00:13:23.149Z",
+  "generatedAt": "2026-09-17T00:31:55.330Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
@@ -77,6 +77,40 @@
       ]
     },
     {
+      "date": "16 sep",
+      "version": "2.0.145",
+      "wish": "Twee dingen die Gio zelf op zijn telefoon vond, gebruiksvriendelijker gemaakt. (1) Facturatie: de idempotency-check bij het vergrendelen van een factuur was SELECT-dan-INSERT zonder databaseslot; zonder de door de browser gecontroleerde jsPDF-conceptfactuur viel de server terug op een kale, ongebrande PDF en verstuurde die gewoon echt als mail niet in dry-run stond -- exact het probleem dat al 4+ keer eerder is misgegaan (geheugennotitie invoice-pdf-must-be-jspdf). Nu een fail-closed slot (invoices_lock_requires_concept_pdf), puur getest via de PHP CLI zonder ooit een echte mailconfiguratie te laden (INV-N-027, tegenproef rood/groen). (2) \"Correctie gevraagd\" bleek uitsluitend in de demoseed te bestaan: de echte request_correction-actie maakte nooit een meldingsregel aan, dus een medewerker zag in de bel of Berichten nooit een echt correctieverzoek, en een oude seed-melding kon nooit worden opgeruimd omdat er nooit een mechanisme was dat er een had aangemaakt. Nu een echte notificatie bij het vragen van een correctie (met de tekst die Backoffice typte), opgeruimd zodra de medewerker opnieuw indient, en een nieuwe bij een heropening na goedkeuring (TS-REV-API-H-005 uitgebreid, tegenproef rood/groen op alle drie de momenten). Bijvangst: Berichten toonde geen Vorige/Volgende bij negen of minder berichten omdat de paginagrootte op 10 stond; nu 5, gelijk aan \"Nieuw in de app\" (NOT-H-016/017 bijgewerkt).",
+      "cases": [
+        {
+          "id": "INV-N-027",
+          "title": "vergrendelen zonder gecontroleerde conceptfactuur wordt geweigerd zodra mail echt verstuurt",
+          "feature": "tests/playwright/features/invoice-locking.feature",
+          "technique": "Beslissingstabel rollen en autorisatie",
+          "assertions": 5,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: vergrendelen zonder gecontroleerde conceptfactuur wordt geweigerd zodra mail echt verstuurt\n  Given facturen definitief maken en vergrendelen is voorbereid\n  When de flow voor INV-N-027 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat vergrendelen zonder gecontroleerde conceptfactuur wordt geweigerd zodra mail echt verstuurt"
+        },
+        {
+          "id": "TS-REV-API-H-005",
+          "title": "admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking",
+          "feature": "tests/playwright/features/correction-approval-workflow.feature",
+          "technique": "Concurrency + toestandsovergang",
+          "assertions": 77,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking\n  Given de medewerker is ingelogd en heeft een schrijfbare testperiode\n  When de medewerker een concept opslaat en daarna indient\n  And de reviewcontext wisselt naar administrator\n  Then een verouderde correctie-aanvraag wordt geblokkeerd met stale-version\n  Then een correctie-aanvraag zonder toelichting wordt door de server geweigerd (sectie 20: UI-verbergen is geen autorisatie)\n  When de administrator een geldige correctie-aanvraag uitvoert\n  Then een tweede correctie op dezelfde versie wordt geweigerd\n  And de context wisselt terug naar medewerker voor herindiening\n  Then een medewerker mag geen admin-reviewactie uitvoeren\n  When de medewerker na correctie opnieuw indient\n  And de context wisselt opnieuw naar administrator voor goedkeuring\n  Then een verouderde approve-aanvraag wordt geblokkeerd met stale-version\n  When de administrator met juiste versie goedkeurt\n  Then read-back toont approved status met volledige audit- en correctiehistorie\n  And een goedkeuring zonder factuur server-side kan worden heropend voor correctie\n  Then krijgt de medewerker ook bij een heropening ná goedkeuring een nieuwe, ongelezen melding\n  And cleanup: sessie sluiten voor testisolatie"
+        },
+        {
+          "id": "NOT-H-016",
+          "title": "bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 5, de bel hooguit 10",
+          "feature": "tests/playwright/features/notifications.feature",
+          "technique": "Grenswaardenanalyse",
+          "assertions": 17,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 5, de bel hooguit 10\n  Given meldingen beheren is voorbereid\n  Then toont de bel 10 van de 15 ongelezen meldingen, met een regel voor de rest\n  And toont Berichten hooguit 30 berichten, 5 per pagina (zelfde paginagrootte als Nieuw in de app), de ongelezen vooraan\n  When de medewerker naar de laatste pagina bladert, then staan daar 26–30 en is Volgende uit\n  And zet een filterwissel de lijst terug op pagina 1"
+        }
+      ]
+    },
+    {
       "date": "17 sep",
       "version": "2.0.142",
       "wish": "Wensenloket stelt zelf een testbaar acceptatiecriterium voor zodra Samenvatting en Gewenste waarde zijn ingevuld (deterministisch sjabloon, geen externe aanroep). Een getal of een bekend statuswoord in het criterium geeft een concreet \"Then\" in het Gherkin-voorbeeld; anders wordt de titel als concrete belofte gebruikt in plaats van een lege standaardzin (PIPE-H-008, tegenproef rood op de oude pagina).",
@@ -143,22 +177,6 @@
           "assertions": 14,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: de maandtotalen boven de werkvoorraad blijven gelijk als de gebruiker wisselt tussen Backoffice en medewerkers\n  Given het dashboard met een gevulde werkvoorraad over meerdere maanden\n  When de flow voor DASH-H-052 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de maandtotalen boven de werkvoorraad blijven gelijk als de gebruiker wisselt tussen Backoffice en medewerkers"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.139",
-      "wish": "Kritische controleronde op verzoek van Gio (TMap/ISTQB-technieken, alle onderdelen): een decision-table-check op bootstrap.php na de eerdere tarief-fix bracht twee vergelijkbare gaten aan het licht. Twee velden werden wel al gefilterd voor een medewerker (assignments, alleen de eigen opdracht), maar `counterparties` (klant- en tussenpersoongegevens) en `assignment_mail_routes` (mailroutering + factuursjablonen per opdracht) werden zonder filter voor het hele bedrijf meegestuurd -- ook aan een medewerker, ook al toonde geen scherm het. Dezelfde soort blootstelling als het tarief eerder: met de ontwikkelaarsconsole leesbaar. Nu gefilterd tot de klant/tussenpersoon en mailroutes van de eigen opdracht(en); de eigen klantnaam op het scherm blijft gewoon werken. ROLE-N-008 nieuw, tegenproef gedaan (rood zonder de filter: 7 counterparties i.p.v. de verwachte 2). Bijvangst: manifest.php had geen naam voor de 'acc'-omgeving (nog niet live, dus nu niet bereikbaar, maar wel al bedraad in de release-pijplijn) -- toegevoegd plus een lichte, gedeelde-toestand-vrije controle (manifest-naming-check.mjs) in npm run check. Ook gevonden: een testtitel met een ontsnapt aanhalingsteken gelijk aan het buitenste quote-teken breekt de living-docs-generator stilzwijgend (geen foutmelding, een verkeerd samengevoegd Scenario) -- rechtgezet en als waarschuwing in de generator zelf vastgelegd. Impactregressie breed gedraaid: roles-api (8/8), dashboard (21/21), admin-writes (31/31), business-workflows-mail+fields (6/6), email-queue+notifications (68/68), database-integrity (3/3), mobile-ui op mobile-chrome (31/31) -- allemaal groen, geen regressie. Los daarvan: de CI-red op 2.0.137 (achterlopende pipeline-demo-data.json na een late GIO-WENSEN-wijziging) hersteld; TEST liep geen schade op, de release kwam nooit voorbij Validate.",
-      "cases": [
-        {
-          "id": "ROLE-N-008",
-          "title": "de medewerker ziet alleen de klant/tussenpersoon en mailroutering van zijn eigen opdracht, niet die van een collega",
-          "feature": "tests/playwright/features/roles-authorization.feature",
-          "technique": "Beslissingstabel rollen en autorisatie",
-          "assertions": 11,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: de medewerker ziet alleen de klant/tussenpersoon en mailroutering van zijn eigen opdracht, niet die van een collega\n  Given de beheerder ziet het hele bedrijf (referentiemeting)\n  When de medewerker inlogt en zijn eigen opdracht ophaalt\n  Then staan er alleen de klant en tussenpersoon van zijn eigen opdracht in counterparties\n  And staan er alleen mailroutes van zijn eigen opdracht, niet van collega-opdrachten\n  And zijn eigen klant- en tussenpersoonnaam blijven wel gewoon bruikbaar voor het scherm"
         }
       ]
     }

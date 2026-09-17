@@ -9,7 +9,7 @@ Feature: Correctie- en goedkeuringsproces
   @happy
   Scenario: [TS-REV-API-H-005] admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking
     # Testtechniek: Concurrency + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 70
+    # Aantoonbare Playwright-assertions in deze case: 77
     Given de medewerker is ingelogd en heeft een schrijfbare testperiode
     When de medewerker een concept opslaat en daarna indient
     And de reviewcontext wisselt naar administrator
@@ -25,6 +25,7 @@ Feature: Correctie- en goedkeuringsproces
     When de administrator met juiste versie goedkeurt
     Then read-back toont approved status met volledige audit- en correctiehistorie
     And een goedkeuring zonder factuur server-side kan worden heropend voor correctie
+    Then krijgt de medewerker ook bij een heropening ná goedkeuring een nieuwe, ongelezen melding
     And cleanup: sessie sluiten voor testisolatie
 
   @happy

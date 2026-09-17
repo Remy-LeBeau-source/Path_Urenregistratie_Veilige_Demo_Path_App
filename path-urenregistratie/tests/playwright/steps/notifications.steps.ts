@@ -62,8 +62,8 @@ Given("twee ongelezen mededelingen in Berichten en één statusmelding in de bel
 When("de medewerker in Berichten op Alles gelezen tikt");
 Then("zijn de mededelingen gelezen en blijft de statusmelding in de bel ongelezen");
 Then("toont de bel 10 van de 15 ongelezen meldingen, met een regel voor de rest");
-And("toont Berichten hooguit 30 berichten, 10 per pagina, de ongelezen vooraan");
-When("de medewerker naar de laatste pagina bladert, then staan daar 21–30 en is Volgende uit");
+And("toont Berichten hooguit 30 berichten, 5 per pagina (zelfde paginagrootte als Nieuw in de app), de ongelezen vooraan");
+When("de medewerker naar de laatste pagina bladert, then staan daar 26–30 en is Volgende uit");
 And("zet een filterwissel de lijst terug op pagina 1");
 When("de flow voor NOT-H-017 wordt uitgevoerd");
 Then("staat Actueel aan, met alleen berichten die nog gelden");

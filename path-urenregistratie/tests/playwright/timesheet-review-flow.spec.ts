@@ -1,4 +1,4 @@
-import { expect, request as playwrightRequest, test } from '@playwright/test';
+import { expect, request as playwrightRequest, test, type APIRequestContext } from '@playwright/test';
 import { AuthApi } from './api/AuthApi';
 import { TimesheetApi } from './api/TimesheetApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
@@ -69,6 +69,13 @@ function firstWeekendDateInPeriod(period: string): string {
 }
 
 test.describe('timesheet review flow api', () => {
+  async function correctieMeldingenVoorPeriode(request: APIRequestContext, period: string) {
+    const res = await request.get('/server/api/notifications.php?limit=50');
+    const body = await res.json();
+    const items = (body.items ?? []) as Array<{ notification_type: string; period_key: string | null; read_at: string | null; message: string }>;
+    return items.filter((item) => item.notification_type === 'correction_required' && item.period_key === period);
+  }
+
   test('[TS-REV-API-H-005] admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking', async ({ request }) => {
     const authApi = new AuthApi(request);
     const timesheetApi = new TimesheetApi(request);
@@ -208,6 +215,18 @@ test.describe('timesheet review flow api', () => {
       expect(employeeLogin.user.role).toBe('employee');
     });
 
+    await test.step('Then heeft de medewerker een echte, ongelezen "Correctie gevraagd"-melding voor deze periode', async () => {
+      // Vóór deze fix ontstond hier geen enkele meldingsregel: alleen de demoseed kende
+      // "Correctie gevraagd", de echte actie liet de medewerker dit nergens zien (bel of
+      // Berichten bleven leeg). Gevonden door Gio (16 sep) via een verouderde seed-melding
+      // die naar een allang vergrendelde maand wees, omdat er nooit een mechanisme bestond
+      // om zo'n melding aan te maken of op te ruimen.
+      const meldingen = await correctieMeldingenVoorPeriode(request, period);
+      expect(meldingen.length, `precies één ongelezen correctiemelding voor ${period}`).toBe(1);
+      expect(meldingen[0].read_at).toBeNull();
+      expect(meldingen[0].message).toContain('Controleer dag 2');
+    });
+
     await test.step('Then een medewerker mag geen admin-reviewactie uitvoeren', async () => {
       const forbiddenReviewByEmployee = await timesheetApi.requestCorrection({
         action: 'request_correction',
@@ -239,6 +258,13 @@ test.describe('timesheet review flow api', () => {
 
       resubmittedVersion = Number(resubmitted.body.timesheet.version || 0);
       expect(resubmittedVersion).toBeGreaterThan(correctionVersion);
+    });
+
+    await test.step('Then is de "Correctie gevraagd"-melding opgeruimd: de medewerker heeft er al iets aan gedaan', async () => {
+      // Nog steeds in de sessie van de medewerker (die zojuist opnieuw indiende), dus dit
+      // is precies het perspectief waarin de melding eerder voor altijd ongelezen bleef.
+      const meldingen = await correctieMeldingenVoorPeriode(request, period);
+      expect(meldingen.every((item) => item.read_at !== null), 'geen enkele correctiemelding voor deze periode staat nog ongelezen').toBe(true);
     });
 
     await test.step('And de context wisselt opnieuw naar administrator voor goedkeuring', async () => {
@@ -304,6 +330,19 @@ test.describe('timesheet review flow api', () => {
       expect(reopened.body.timesheet.approved_by).toBeNull();
       expect(reopened.body.audit_event).toBe('timesheet.approval_reopened');
       expect(Number(reopened.body.timesheet.version)).toBeGreaterThan(approvedVersion);
+    });
+
+    await test.step('Then krijgt de medewerker ook bij een heropening ná goedkeuring een nieuwe, ongelezen melding', async () => {
+      // Een heropening na goedkeuring (approval_reopened) is voor de medewerker dezelfde
+      // vraag als een gewone correctie: controleer dit en dien opnieuw in. Geen aparte
+      // uitzondering dus in de fix.
+      await authApi.logout();
+      const employeeLogin = await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      expect(employeeLogin.user.role).toBe('employee');
+      const meldingen = await correctieMeldingenVoorPeriode(request, period);
+      const ongelezen = meldingen.filter((item) => item.read_at === null);
+      expect(ongelezen.length, 'precies één nieuwe ongelezen correctiemelding na de heropening').toBe(1);
+      expect(ongelezen[0].message).toContain('afwijking');
     });
 
     await test.step('And cleanup: sessie sluiten voor testisolatie', async () => {

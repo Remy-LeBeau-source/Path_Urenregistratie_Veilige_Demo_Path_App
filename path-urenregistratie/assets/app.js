@@ -9237,7 +9237,11 @@ function toonBerichtenLijst(list, berichten, unreadCount, tellingen = {}) {
 }
 
 const BERICHTEN_MAXIMUM = 30;
-const BERICHTEN_PER_PAGINA = 10;
+// Zelfde paginagrootte als "Nieuw in de app" (NIEUW_PER_PAGINA): eerst de
+// nieuwste 5, dan Vorige/Volgende (opdracht Gio, 16 sep). Bij 10 per pagina
+// bleef de balk verborgen zolang er negen of minder berichten waren -- die
+// stond er dan wel, maar deed niets, wat verwarrender is dan hem niet tonen.
+const BERICHTEN_PER_PAGINA = 5;
 
 function markeerBerichtGelezen(announcementId) {
   const id = Number(announcementId || 0);

@@ -887,6 +887,18 @@ try {
                      )'
                 );
                 $closeCorrection->execute([':timesheet_id' => $timesheetId]);
+                // De "Correctie gevraagd"-melding heeft zijn werk gedaan zodra de
+                // medewerker opnieuw indient: dat is precies het moment waarop de vraag
+                // "controleer dit en dien opnieuw in" is beantwoord, ongeacht of Backoffice
+                // hem straks goedkeurt of nog een keer terugstuurt (dat maakt dan een
+                // nieuwe rij, hierboven). Zonder dit blijft de oude melding voor altijd
+                // ongelezen staan, ook nadat de medewerker er al iets aan heeft gedaan.
+                $pdo->prepare(
+                    "UPDATE notifications
+                     SET read_at = CURRENT_TIMESTAMP
+                     WHERE period_id = :period_id AND notification_type = 'correction_required' AND read_at IS NULL
+                       AND user_id = (SELECT user_id FROM employees WHERE id = :employee_id LIMIT 1)"
+                )->execute([':period_id' => $periodId, ':employee_id' => $employeeId]);
                 $eventType = 'timesheet.resubmitted';
             } elseif ($action === 'submit') {
                 $eventType = 'timesheet.submitted';
@@ -977,6 +989,33 @@ try {
                 ':requested_by' => (int)$currentUser['id'],
                 ':correction_message' => $correctionMessage,
             ]);
+
+            // Zonder dit stond "Correctie gevraagd" alleen in de demoseed: de echte actie
+            // maakte nooit een meldingsregel aan, dus een medewerker zag in de bel of
+            // Berichten helemaal niets van een echt correctieverzoek (gevonden door Gio,
+            // 16 sep: een verouderde seed-melding uit de demodata, wijzend naar een maand
+            // die allang weer vergrendeld was, want er bestond geen echt mechanisme dat
+            // zo'n melding kon opruimen -- die had er nooit een aangemaakt). Nu wél een
+            // echte rij, met de reden die de beheerder net typte, en opgeruimd zodra de
+            // medewerker opnieuw indient (zie de 'submit'-tak hierboven).
+            $employeeUserIdStmt = $pdo->prepare('SELECT user_id FROM employees WHERE id = :id LIMIT 1');
+            $employeeUserIdStmt->execute([':id' => $employeeId]);
+            $employeeUserId = (int)($employeeUserIdStmt->fetchColumn() ?: 0);
+            if ($employeeUserId > 0) {
+                $insertNotification = $pdo->prepare(
+                    'INSERT INTO notifications (company_id, user_id, period_id, notification_type, title, message, target_route)
+                     VALUES (:company_id, :user_id, :period_id, \'correction_required\', :title, :message, \'timesheet\')'
+                );
+                $insertNotification->execute([
+                    ':company_id' => $companyId,
+                    ':user_id' => $employeeUserId,
+                    ':period_id' => $periodId,
+                    // Geen kale mb_substr(): op een PHP-build zonder mbstring stierf het
+                    // versturen van een mededeling ooit precies hierop (zie announcements.php).
+                    ':title' => 'Correctie gevraagd',
+                    ':message' => function_exists('mb_substr') ? mb_substr($correctionMessage, 0, 500) : substr($correctionMessage, 0, 500),
+                ]);
+            }
 
             $eventType = $existingStatus === 'approved'
                 ? 'timesheet.approval_reopened'
