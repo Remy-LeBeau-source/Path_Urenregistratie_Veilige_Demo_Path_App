@@ -119,6 +119,18 @@ async function main() {
     PLAYWRIGHT_ALLOW_DEMO_MIGRATIONS: '1',
   };
 
+  // De kwaliteitsstraat bewaart de bordstand (welke kaart in welke kolom staat)
+  // in een bestand naast de intakewachtrij. Dat bestand overleeft een testrun,
+  // terwijl de database dat niet doet -- een case die een kaart versleept zou
+  // dus de volgende run beïnvloeden. Net als de database begint hij daarom
+  // schoon. Lokaal en in CI staat hij in de tijdelijke map van het systeem;
+  // op TEST staat hij buiten de webroot en komt deze harness er niet aan.
+  const bordStand = path.join(tmpdir(), 'path-kwaliteitsstraat-stand.json');
+  if (existsSync(bordStand)) {
+    rmSync(bordStand, { force: true });
+    console.log(`Bordstand van de kwaliteitsstraat opgeschoond: ${bordStand}`);
+  }
+
   const bootstrapDb = spawnSync(process.execPath, ['scripts/bootstrap-playwright-db.mjs'], {
     stdio: 'inherit',
     env: bootstrapEnv,

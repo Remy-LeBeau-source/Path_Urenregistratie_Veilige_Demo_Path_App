@@ -513,6 +513,7 @@
 | PIPE-H-001 | ui | pipeline-demo.feature | de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin | Datagedreven vergelijking (pagina versus pilot/path-kwaliteitsstraat-data.json) + traceerbaarheid over drie projecties | 38 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin | Happy | 18 | Actueel |
 | PIPE-H-002 | ui | pipeline-demo.feature | opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub | Toestandsovergangtest (aangenomen → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van het wachtrij-antwoord + negatieve controle dat GitHub niet meer wordt benaderd | 42 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub | Happy | 18 | Actueel |
 | PIPE-H-010 | ui | pipeline-demo.feature | een ticket opent als een echte Jira-story: details, beschrijving, traceability, ontwerp en historie | Contractcontrole op de issuepagina (vaste blokken, veld-naar-veldafbeelding naar Jira) + controle dat traceability-cijfers uit de echte case komen en de ERD-link echt bereikbaar is | 28 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | een ticket opent als een echte Jira-story: details, beschrijving, traceability, ontwerp en historie | Happy | 18 | Actueel |
+| PIPE-H-013 | ui | pipeline-demo.feature | een kaart verplaatsen verandert de stand echt en blijft staan na herladen | Toestandsovergangtest op het bord (kolom naar kolom) met controle op de server in plaats van op het scherm + herstelbaarheid na herladen zonder browseropslag + tweede lezer ziet dezelfde stand | 15 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | een kaart verplaatsen verandert de stand echt en blijft staan na herladen | Happy | 18 | Actueel |
 | PIPE-H-012 | ui | pipeline-demo.feature | elk ticket heeft een deelbare link en zichtbare verwijzingen naar Confluence en Zephyr | Navigatietest over de drie werkruimtes via het gedeelde nummer + herstelbaarheid (dezelfde link opent hetzelfde ticket opnieuw) + negatieve inhoudscontrole dat de eigen implementatie (GitHub) nergens meer doorschemert | 20 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | elk ticket heeft een deelbare link en zichtbare verwijzingen naar Confluence en Zephyr | Happy | 18 | Actueel |
 | PIPE-H-011 | ui | pipeline-demo.feature | Releases bundelt de echte versies met hun wensen, cases en assertions | Datagedreven vergelijking (versiegroepering op de pagina versus dezelfde groepering uit de feed) + equivalentieklassen op het releasefilter + navigatiecontrole van release naar bord | 16 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | Releases bundelt de echte versies met hun wensen, cases en assertions | Happy | 18 | Actueel |
 | PIPE-H-009 | ui | pipeline-demo.feature | de koppelingen tonen welke bron geldt en lekken nooit een instelling | Contractcontrole op het koppelingen-endpoint (vorm, statusregels per bron) + negatieve inhoudscontrole dat geen enkele instelling naar buiten lekt | 19 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | de koppelingen tonen welke bron geldt en lekken nooit een instelling | Happy | 18 | Actueel |
@@ -641,9 +642,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 619
+- Playwright executable cases: 620
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 620
+- Totaal unieke executable cases: 621
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32

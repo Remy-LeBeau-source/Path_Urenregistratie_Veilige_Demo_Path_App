@@ -4,6 +4,8 @@
   var STORAGE_KEY = 'path-pipeline-demo-v1';
   var DATA_URL = 'path-kwaliteitsstraat-data.json';
   var INTAKE_URL = 'path-kwaliteitsstraat-intake.php';
+  // Gedeelde opslag van de bordstand (kolom per kaart, met geschiedenis).
+  var STORE_URL = 'path-kwaliteitsstraat-store.php';
   // Het databasemodel hoort bij elke story (wens Gio, 17 sep). Het bestand wordt
   // gegenereerd uit het echte schema (npm run erd) en gaat met de gewone uitrol
   // mee, dus dit blijft vanzelf gelijklopen met de database.
@@ -324,14 +326,48 @@
     return haystack.indexOf(ui.query) >= 0;
   }
 
+  // ---- Stand uit de gedeelde opslag -----------------------------------------
+  // De projectstand (GIO-WENSEN.md) zegt wat er is opgeleverd; de opslag zegt
+  // waar een kaart nu staat als iemand hem verplaatst heeft. De opslag wint,
+  // want dat is de laatste bewuste handeling van een mens -- maar alleen over de
+  // kolom, nooit over de inhoud.
+  var standUitOpslag = {};
+
+  function metStand(ticket) {
+    var opgeslagen = standUitOpslag[ticket.key];
+    if (!opgeslagen || opgeslagen === ticket.status) return ticket;
+    var kopie = Object.assign({}, ticket);
+    kopie.status = opgeslagen;
+    kopie.verplaatst = true;
+    return kopie;
+  }
+
+  function bewaarStand(sleutel, kolom, vanKolom) {
+    standUitOpslag[sleutel] = kolom;
+    return fetch(STORE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: sleutel, status: kolom, from: vanKolom || '', by: 'bord' })
+    }).then(function (antwoord) {
+      if (!antwoord.ok) throw new Error('opslag ' + antwoord.status);
+      return antwoord.json();
+    });
+  }
+
   function boardColumns() {
-    var local = state.customTickets;
-    var done = local.filter(function (t) { return t.status === 'done'; }).concat(deliveredTickets())
-    var open = openTickets();
+    // Eerst alle kaarten verzamelen, dan pas indelen: een kaart die verplaatst
+    // is moet in zijn nieuwe kolom staan, ongeacht waar hij vandaan kwam.
+    var alle = state.customTickets.concat(deliveredTickets(), openTickets()).map(metStand);
+    var inKolom = function (naam) {
+      return alle.filter(function (t) {
+        if (naam === 'todo') return t.status === 'todo' || t.status === 'ingediend';
+        return t.status === naam;
+      }).filter(matchesFilters);
+    };
     return {
-      todo: sorteerOpVolgorde(local.filter(function (t) { return t.status === 'todo' || t.status === 'ingediend'; }).concat(open.filter(function (t) { return t.status === 'todo'; }))).filter(matchesFilters),
-      doing: local.filter(function (t) { return t.status === 'doing'; }).concat(open.filter(function (t) { return t.status === 'doing'; })).filter(matchesFilters),
-      done: done.filter(matchesFilters)
+      todo: sorteerOpVolgorde(inKolom('todo')),
+      doing: inKolom('doing'),
+      done: inKolom('done')
     };
   }
 
@@ -402,10 +438,13 @@
     if (ticket.version && ticket.source === 'feed') meta += '<span class="version-chip">' + escapeHtml(ticket.version) + '</span>';
     if (ticket.platform) meta += '<span>' + escapeHtml(ticket.platform) + '</span>';
     if (ticket.who && ticket.status !== 'done') meta += '<span>' + escapeHtml(ticket.who) + '</span>';
-    // Alleen in Te doen mag de volgorde veranderen (slepen of ▲▼); een kaart tussen
-    // kolommen verplaatsen zou een stand tonen die de keten niet kent.
+    // Sinds 17 sep mag een kaart wél tussen kolommen (opdracht Gio: dit wordt
+    // het product, dus slepen moet de stand echt veranderen). Dat kon eerder
+    // bewust niet, omdat er niets was om de verplaatsing in op te slaan --
+    // je zou een stand tonen die niemand anders ziet. Nu bewaart de gedeelde
+    // opslag hem, met een geschiedenisregel erbij.
     var inTeDoen = ticket.status === 'todo' || ticket.status === 'ingediend';
-    return '<article class="ticket-card' + (ticket.status === 'doing' && isLocal ? ' is-running' : '') + '" data-ticket="' + escapeHtml(ticket.key) + '" data-source="' + escapeHtml(isLocal ? 'local' : ticket.source) + '"' + (inTeDoen ? ' draggable="true"' : '') + '>' +
+    return '<article class="ticket-card' + (ticket.status === 'doing' && isLocal ? ' is-running' : '') + '" data-ticket="' + escapeHtml(ticket.key) + '" data-source="' + escapeHtml(isLocal ? 'local' : ticket.source) + '"' + ' draggable="true"' + '>' +
       (inTeDoen ? '<span class="sleep-handvat" aria-hidden="true" title="Sleep om de volgorde te wijzigen">⋮⋮</span>' : '') +
       '<button type="button" class="card-open" data-open-ticket="' + escapeHtml(ticket.key) + '"><h4>' + escapeHtml(ticket.title) + '</h4></button>' +
       (inTeDoen ? '<span class="verplaats-knoppen"><button type="button" data-verplaats="-1" aria-label="Omhoog in Te doen">▲</button><button type="button" data-verplaats="1" aria-label="Omlaag in Te doen">▼</button></span>' : '') +
@@ -1432,7 +1471,62 @@
     var knop = $('[data-ticket-list="todo"] .ticket-card[data-ticket="' + key + '"] [data-verplaats="' + richting + '"]');
     if (knop) knop.focus();
   }
+  // Welke kaart er op dit moment gesleept wordt, en uit welke kolom hij komt.
+  // Op documentniveau bijgehouden omdat een kaart nu uit elke kolom mag vertrekken.
+  var sleepSleutel = '';
+  var sleepVanKolom = '';
+  document.addEventListener('dragstart', function (event) {
+    var kaart = event.target instanceof Element ? event.target.closest('.ticket-card') : null;
+    if (!kaart) return;
+    sleepSleutel = kaart.getAttribute('data-ticket') || '';
+    var kolom = kaart.closest('[data-ticket-list]');
+    sleepVanKolom = kolom ? kolom.getAttribute('data-ticket-list') : '';
+    kaart.classList.add('is-sleept');
+    if (event.dataTransfer) { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', sleepSleutel); }
+  });
+  document.addEventListener('dragend', function () {
+    sleepSleutel = '';
+    sleepVanKolom = '';
+    $$('.ticket-card.is-sleept, .ticket-card.is-doel').forEach(function (el) { el.classList.remove('is-sleept', 'is-doel'); });
+    $$('.is-doelkolom').forEach(function (el) { el.classList.remove('is-doelkolom'); });
+  });
+
   function koppelSlepen() {
+    // Elke kolom kan nu ontvangen. Te doen houdt daarnaast zijn eigen
+    // volgordelogica, want daar bepaalt de volgorde wat er als eerste wordt
+    // opgepakt; in de andere kolommen gaat het alleen om waar de kaart staat.
+    $$('[data-ticket-list]').forEach(function (kolom) {
+      if (kolom.getAttribute('data-kolom-gekoppeld')) return;
+      kolom.setAttribute('data-kolom-gekoppeld', '1');
+      kolom.addEventListener('dragover', function (event) {
+        if (!sleepSleutel) return;
+        event.preventDefault();
+        kolom.classList.add('is-doelkolom');
+      });
+      kolom.addEventListener('dragleave', function (event) {
+        if (event.target === kolom) kolom.classList.remove('is-doelkolom');
+      });
+      kolom.addEventListener('drop', function (event) {
+        if (!sleepSleutel) return;
+        var naarKolom = kolom.getAttribute('data-ticket-list');
+        kolom.classList.remove('is-doelkolom');
+        if (naarKolom === sleepVanKolom) return; // binnen dezelfde kolom: volgorde, zie hieronder
+        event.preventDefault();
+        var sleutel = sleepSleutel;
+        var vorige = sleepVanKolom;
+        var kaartTekst = { todo: 'Te doen', doing: 'In uitvoering', done: 'Opgeleverd' }[naarKolom] || naarKolom;
+        bewaarStand(sleutel, naarKolom, vorige).then(function () {
+          renderBoard();
+          toast(sleutel + ' staat nu op ' + kaartTekst);
+        }).catch(function (fout) {
+          // Niet doen alsof het gelukt is: terugzetten en eerlijk melden.
+          standUitOpslag[sleutel] = vorige;
+          renderBoard();
+          toast('Verplaatsen mislukt — ' + (fout && fout.message ? fout.message : 'opslag onbereikbaar'));
+        });
+      });
+    });
+
     var lijst = $('[data-ticket-list="todo"]');
     if (!lijst || lijst.getAttribute('data-sleep-gekoppeld')) return;
     lijst.setAttribute('data-sleep-gekoppeld', '1');
@@ -1842,6 +1936,25 @@
       render();
     // De wachtrij wordt pas daarna opgehaald: het samenvoegen moet weten wat er al
     // in de projectstand staat, anders krijgt een opgepakte wens twee kaarten.
+    // De opgeslagen bordstand erbij: welke kaarten heeft iemand verplaatst. Dit
+    // gaat vóór de wachtrij, want de wachtrij voegt kaarten toe en die horen dan
+    // meteen op hun opgeslagen plek te staan.
+    }).then(function () {
+      return fetch(STORE_URL, { cache: 'no-store' }).then(function (antwoord) {
+        if (!antwoord.ok) throw new Error('opslag ' + antwoord.status);
+        return antwoord.json();
+      }).then(function (json) {
+        var items = json && json.items ? json.items : {};
+        Object.keys(items).forEach(function (sleutel) {
+          if (items[sleutel] && items[sleutel].status) standUitOpslag[sleutel] = items[sleutel].status;
+        });
+        document.body.setAttribute('data-stand', 'loaded');
+        render();
+      }).catch(function () {
+        // Zonder opslag blijft het bord gewoon de projectstand tonen; dat is
+        // minder, maar niet fout. Wel zichtbaar maken dat slepen dan niet bewaart.
+        document.body.setAttribute('data-stand', 'offline');
+      });
     }).then(function () {
       return fetch(INTAKE_URL, { cache: 'no-store' });
     }).then(function (response) {

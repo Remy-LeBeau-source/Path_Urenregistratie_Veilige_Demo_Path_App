@@ -426,6 +426,74 @@ test.describe('Path Pipeline TEST-demo', () => {
     });
   });
 
+  test('[PIPE-H-013] een kaart verplaatsen verandert de stand echt en blijft staan na herladen', async ({ page, request }) => {
+    // Opdracht Gio (17 sep): "we kunnen geen kaarten slepen?" Dat kon bewust niet,
+    // omdat er niets was om de verplaatsing in op te slaan -- je zou een stand
+    // tonen die niemand anders ziet. Nu bewaart de gedeelde opslag hem. Dat is
+    // precies het verschil tussen een demo en een product, dus dit wordt getoetst
+    // op wat de server ervan vindt, niet op wat het scherm laat zien.
+    const store = '/pilot/path-kwaliteitsstraat-store.php';
+    await page.goto('/pilot/path-kwaliteitsstraat.html');
+    await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
+    await expect(page.locator('body')).toHaveAttribute('data-stand', 'loaded');
+    await page.getByRole('tab', { name: /Backlog/ }).click();
+
+    const eersteOpgeleverd = page.locator('[data-ticket-list="done"] .ticket-card').first();
+    const sleutel = await eersteOpgeleverd.getAttribute('data-ticket');
+    expect(sleutel, 'er staat een kaart in Opgeleverd').toBeTruthy();
+
+    await test.step('Given de opslag kent deze kaart nog niet', async () => {
+      const stand = await (await request.get(store)).json();
+      expect(stand.items[sleutel!], 'schone start').toBeFalsy();
+    });
+
+    await test.step('When de kaart naar In uitvoering wordt gesleept', async () => {
+      await eersteOpgeleverd.dragTo(page.locator('[data-ticket-list="doing"]'));
+      await expect(page.locator(`[data-ticket-list="doing"] [data-ticket="${sleutel}"]`)).toBeVisible();
+      await expect(page.locator(`[data-ticket-list="done"] [data-ticket="${sleutel}"]`)).toHaveCount(0);
+    });
+
+    await test.step('Then weet de server het, met een geschiedenisregel erbij', async () => {
+      const stand = await (await request.get(store)).json();
+      expect(stand.items[sleutel!].status, 'de server kent de nieuwe kolom').toBe('doing');
+      const regel = stand.historie.find((h: { key: string }) => h.key === sleutel);
+      expect(regel, 'de verplaatsing staat in de geschiedenis').toBeTruthy();
+      expect(regel.from).toBe('done');
+      expect(regel.to).toBe('doing');
+    });
+
+    await test.step('And blijft hij daar na herladen, ook zonder de browseropslag', async () => {
+      // Bewust de browseropslag leeggooien: als de kaart dan nog goed staat,
+      // komt het echt van de server en niet uit deze browser.
+      await page.evaluate(() => localStorage.clear());
+      await page.reload();
+      await expect(page.locator('body')).toHaveAttribute('data-stand', 'loaded');
+      await page.getByRole('tab', { name: /Backlog/ }).click();
+      await expect(page.locator(`[data-ticket-list="doing"] [data-ticket="${sleutel}"]`)).toBeVisible();
+    });
+
+    await test.step('And een tweede lezer ziet dezelfde stand', async () => {
+      // Een verse context zonder gedeelde opslag in de browser: alleen de server
+      // kan hem vertellen waar de kaart staat.
+      const tweede = await page.context().browser()!.newContext();
+      const anderePagina = await tweede.newPage();
+      await anderePagina.goto(new URL('/pilot/path-kwaliteitsstraat.html', page.url()).toString());
+      await expect(anderePagina.locator('body')).toHaveAttribute('data-stand', 'loaded');
+      await anderePagina.getByRole('tab', { name: /Backlog/ }).click();
+      await expect(anderePagina.locator(`[data-ticket-list="doing"] [data-ticket="${sleutel}"]`)).toBeVisible();
+      await tweede.close();
+    });
+
+    await test.step('And de kaart gaat terug, zodat deze case geen sporen achterlaat', async () => {
+      // De opslag is gedeeld en blijft staan tussen cases door -- dat is juist de
+      // winst ervan, maar het betekent ook dat een schrijvende case zijn eigen
+      // rommel opruimt. Zonder dit struikelt de volgende case over een kaart die
+      // hier is verplaatst.
+      const terug = await request.post(store, { data: { key: sleutel, status: 'done', from: 'doing', by: 'opruimen na test' } });
+      expect(terug.status()).toBe(200);
+    });
+  });
+
   test('[PIPE-H-012] elk ticket heeft een deelbare link en zichtbare verwijzingen naar Confluence en Zephyr', async ({ page }) => {
     // Opdracht Gio (17 sep): "we moeten linkjes maken met ID's en van Jira naar
     // Confluence kunnen gaan". Plus: de verwijzing naar ons GitHub-issue moest
@@ -444,10 +512,12 @@ test.describe('Path Pipeline TEST-demo', () => {
       // informatie voor wie het bord leest.
       await expect(page.locator('a[href*="github.com"]')).toHaveCount(0);
       await expect(page.locator('[data-issue-url]')).toHaveCount(0);
-      const knoppenMetGithub = await page.evaluate(() => Array.from(document.querySelectorAll('a, button'))
-        .filter((el) => /github/i.test(el.textContent || ''))
-        .map((el) => (el.textContent || '').trim().slice(0, 60)));
-      expect(knoppenMetGithub, 'geen knop of link verwijst nog naar GitHub').toEqual([]);
+      // Bewust geen tekstcontrole meer. Twee keer geprobeerd, twee keer viel hij
+      // om op onze eigen inhoud: eerst op Gherkin-scenario's die GitHub noemen,
+      // daarna op de changelogregel van precies deze wijziging ("waarom verwijzen
+      // we naar GitHub?"). Die teksten horen er te staan -- het is onze historie.
+      // Wat weg moest is de verwijzing, en dat is structureel te toetsen.
+      await expect(page.locator('.ticket-card a[href]')).toHaveCount(0);
     });
 
     await test.step('And staan in het ticket de verwijzingen met hun echte nummer', async () => {
@@ -755,9 +825,13 @@ test.describe('Path Pipeline TEST-demo', () => {
       await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
       await page.getByRole('tab', { name: /Backlog/ }).click();
       await expect(page.locator('[data-ticket-list="todo"] .ticket-card').nth(0)).toHaveAttribute('data-ticket', tweede!);
-      // Slepen is er alleen binnen Te doen; Opgeleverd kent geen handvat en geen knoppen.
+      // De volgorde-knoppen (▲▼) blijven alleen in Te doen: daar bepaalt de
+      // volgorde wat er als eerste wordt opgepakt. In de andere kolommen zegt de
+      // volgorde niets, dus daar zijn ze er niet.
       await expect(page.locator('[data-ticket-list="done"] [data-verplaats]')).toHaveCount(0);
-      await expect(page.locator('[data-ticket-list="done"] .ticket-card[draggable="true"]')).toHaveCount(0);
+      // Slepen zelf kan sinds 17 sep wél overal: een kaart verplaatsen verandert
+      // de stand echt, want die wordt op de server opgeslagen (zie PIPE-H-013).
+      await expect(page.locator('[data-ticket-list="done"] .ticket-card[draggable="true"]')).not.toHaveCount(0);
     });
 
     await test.step('And bovenin staat hoe vers de stand is en de versie staat in de voet zoals in de urenapp', async () => {

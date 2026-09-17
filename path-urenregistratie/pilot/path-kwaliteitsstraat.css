@@ -641,3 +641,9 @@ tr.toon-meer-rij td { padding: 6px 10px; }
 @media (prefers-reduced-motion: no-preference) {
   .living-doc li { transition: background .3s ease; }
 }
+
+/* Doelkolom tijdens het slepen: sinds 17 sep mag een kaart tussen kolommen,
+   want de verplaatsing wordt nu echt opgeslagen. */
+.ticket-list.is-doelkolom, [data-ticket-list].is-doelkolom { outline: 2px dashed var(--jira); outline-offset: 3px; border-radius: 4px; }
+.ticket-card { cursor: grab; }
+.ticket-card.is-sleept { opacity: .55; cursor: grabbing; }

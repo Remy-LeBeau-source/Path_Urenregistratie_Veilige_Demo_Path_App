@@ -1,8 +1,24 @@
 {
   "appVersion": "2.0.151",
-  "generatedAt": "2026-09-17T14:59:04.872Z",
+  "generatedAt": "2026-09-17T15:38:06.912Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "17 sep",
+      "version": "2.0.151",
+      "wish": "Vraag Gio: 'we kunnen geen kaarten slepen?' Nu wel, en het verandert de stand echt. Slepen tussen kolommen kon bewust niet, omdat er niets was om de verplaatsing in op te slaan -- je zou een stand tonen die niemand anders ziet. Nieuw: pilot/path-kwaliteitsstraat-store.php bewaart per kaart in welke kolom hij staat, met een geschiedenisregel (van, naar, door wie, wanneer) en een exclusieve vergrendeling zodat twee mensen elkaar niet overschrijven. Het bord leest die stand bij het laden; de projectstand blijft over de inhoud gaan, de opslag alleen over de kolom. Waarom (nog) geen database: deze omgeving heeft alleen een MySQL-stuurprogramma, geen SQLite; een eigen database aanmaken vraagt provisioning op de server (kant van Gio) en tabellen in de bestaande database toevoegen betekent migraties die ook op de productie van de urenregistratie draaien -- precies wat de intakewachtrij destijds vermeed. De vorm (items + historie) is al tabelachtig, zodat de overstap een verhuizing wordt en geen herontwerp. PIPE-H-013 toetst op wat de server ervan vindt in plaats van op het scherm, inclusief herladen zonder browseropslag en een tweede lezer in een aparte context. Tegenproef: het opslaan uitgezet -> rood op 'de server kent de nieuwe kolom'; teruggezet -> groen. Bijvangst: de bordstand overleefde een testrun terwijl de database dat niet doet, dus de harnas schoont hem nu op, en de schrijvende case ruimt zijn eigen verplaatsing op. 17/17 PIPE groen.",
+      "cases": [
+        {
+          "id": "PIPE-H-013",
+          "title": "een kaart verplaatsen verandert de stand echt en blijft staan na herladen",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Toestandsovergangtest op het bord (kolom naar kolom) met controle op de server in plaats van op het scherm + herstelbaarheid na herladen zonder browseropslag + tweede lezer ziet dezelfde stand",
+          "assertions": 15,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een kaart verplaatsen verandert de stand echt en blijft staan na herladen\n  Given de opslag kent deze kaart nog niet\n  When de kaart naar In uitvoering wordt gesleept\n  Then weet de server het, met een geschiedenisregel erbij\n  And blijft hij daar na herladen, ook zonder de browseropslag\n  And een tweede lezer ziet dezelfde stand\n  And de kaart gaat terug, zodat deze case geen sporen achterlaat"
+        }
+      ]
+    },
     {
       "date": "17 sep",
       "version": "2.0.151",
@@ -506,7 +522,7 @@
           "technique": "Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst",
           "assertions": 26,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet\n  Given de keuzelijst toont de nice-to-haves uit GIO-WENSEN\n  When de PO een verbetering kiest, then staan samenvatting en waarde ingevuld en blijft het criterium aan hem\n  And zelf typen blijft mogelijk: aanpassen maakt de keuze niet ongedaan, loslaten wel\n  And het type heet Onderhoud, niet Chore\n  And de volgorde in Te doen is met het toetsenbord te wijzigen en blijft na herladen\n  And bovenin staat hoe vers de stand is en de versie staat in de voet zoals in de urenapp\n  Then wordt met Playwright-assertions bevestigd dat de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet"
+          "gherkin": ""
         }
       ]
     },
