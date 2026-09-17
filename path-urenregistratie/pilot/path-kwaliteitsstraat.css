@@ -467,13 +467,30 @@ button, summary { -webkit-tap-highlight-color: transparent; }
 .demo-footer span { max-width: 118ch; }
 
 /* ===================== Smal scherm ===================== */
-@media (max-width: 1100px) {
-  .backlog-layout { grid-template-columns: minmax(0, 1fr); }
-  .create-card { position: static; }
-}
-@media (max-width: 900px) {
+/* Gemeld door Gio (17 sep) op een telefoon met "Bureaubladsite aanvragen" aan:
+   een brede virtuele paginabreedte (rond 980px) op een fysiek smal scherm.
+   Gemeten met echte viewportbreedtes op de ongewijzigde pagina: bij 950 tot
+   1300px viewport bleef de Confluence-documentkolom tussen 61 en 394px breed
+   -- ruim daarbinnen praktisch onleesbaar, met woorden die één voor één op
+   hun eigen regel vielen. Oorzaak: .backlog-layout (Jira-bord) stapelde al
+   bij 1100px, maar .knowledge-layout en .zephyr-layout (met dezelfde soort
+   vaste kolommen van 240px en 330px) stapelden pas bij 900px, en de zijbalk
+   verdween ook pas bij 900px -- dus bleef het volledige driekoloms
+   bureaubladraster tussen 901 en 1100px actief zonder genoeg breedte.
+   Eerste poging zette de drempel op 1100px (zoals .backlog-layout al deed),
+   maar meten na die wijziging liet zien dat de kolom vanaf 1101px tot in de
+   1200px opnieuw naar 204-298px werd geknepen: dezelfde fout, alleen
+   verschoven. Drie vaste kolommen (240 + 330, plus de 240px zijbalk als die
+   nog zichtbaar is) hebben pas vanaf ongeveer 1300px genoeg ruimte over voor
+   een leesbare middenkolom. Nu delen alle onderdelen die drempel van 1300px,
+   gemeten tot een document-kolombreedte van boven de 390px vlak erna. Dit
+   raakt niet alleen "bureaubladsite" op een telefoon: elk browservenster of
+   elke tablet smaller dan 1300px liep tegen precies dezelfde fout aan. */
+@media (max-width: 1200px) {
   body { grid-template-columns: minmax(0, 1fr); grid-template-areas: "top" "main" "footer"; }
   .icon-rail { display: none; }
+  .backlog-layout { grid-template-columns: minmax(0, 1fr); }
+  .create-card { position: static; }
   /* Zonder zijbalk moet invoeren meteen in beeld staan, niet onder het bord. */
   .backlog-layout { display: flex; flex-direction: column; }
   .create-card { order: -1; }

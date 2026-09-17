@@ -70,6 +70,16 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
     And gaat er voor dit alles geen enkel verzoek naar een externe dienst
     Then wordt met Playwright-assertions bevestigd dat het loket stelt zelf een testbaar acceptatiecriterium voor, zonder externe aanroep
 
+  @negative
+  Scenario: [PIPE-N-004] tussen de mobiele en de bureaubladdrempel blijft de Confluence-kolom leesbaar breed
+    # Testtechniek: Grenswaardenanalyse op viewportbreedte (net onder/boven de drempel, plus de standaard testbreedte als vaste regressie) + reproductie van "Bureaubladsite aanvragen"
+    # Aantoonbare Playwright-assertions in deze case: 13
+    Given 1200px (net onder de drempel): de lay-out is gestapeld en breed genoeg om te lezen
+    When de viewport 1px breder wordt (1201px), then komt de zijbalk terug zonder de kolom kapot te knijpen
+    And op 1280px, de standaard testbreedte van deze hele suite, blijft de zijbalk zichtbaar en de kolom leesbaar
+    And ook op een gewoon breed bureaubladscherm (1600px) is de kolom nog steeds leesbaar breed
+    Then wordt met Playwright-assertions bevestigd dat tussen de mobiele en de bureaubladdrempel blijft de Confluence-kolom leesbaar breed
+
   @happy
   Scenario: [PIPE-H-004] zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes
     # Testtechniek: Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole

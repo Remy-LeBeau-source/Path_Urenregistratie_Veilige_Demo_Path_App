@@ -510,6 +510,7 @@
 | PIPE-N-002 | ui | pipeline-demo.feature | de intakewachtrij weigert onvolledige, te grote en verkeerd geadresseerde invoer, en bestaat niet op productie | Foutinjectie op de intake (leeg veld, onleesbare invoer, grensoverschrijding, verkeerde methode) + omgevingsafscherming met tegenproef | 17 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | de intakewachtrij weigert onvolledige, te grote en verkeerd geadresseerde invoer, en bestaat niet op productie | Negative | 18 | Actueel |
 | PIPE-H-007 | ui | pipeline-demo.feature | de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet | Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst | 26 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet | Happy | 18 | Actueel |
 | PIPE-H-008 | ui | pipeline-demo.feature | het loket stelt zelf een testbaar acceptatiecriterium voor, zonder externe aanroep | Beslistabel op het criterium-voorstel (leeg/getal/status/generiek geeft elk een ander Then) + negatieve controle op een extern netwerkverzoek | 12 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | het loket stelt zelf een testbaar acceptatiecriterium voor, zonder externe aanroep | Happy | 18 | Actueel |
+| PIPE-N-004 | ui | pipeline-demo.feature | tussen de mobiele en de bureaubladdrempel blijft de Confluence-kolom leesbaar breed | Grenswaardenanalyse op viewportbreedte (net onder/boven de drempel, plus de standaard testbreedte als vaste regressie) + reproductie van "Bureaubladsite aanvragen" | 13 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | tussen de mobiele en de bureaubladdrempel blijft de Confluence-kolom leesbaar breed | Negative | 18 | Actueel |
 | PIPE-H-004 | ui | pipeline-demo.feature | zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes | Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole | 24 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes | Happy | 18 | Actueel |
 | PIPE-H-003 | ui | pipeline-demo.feature | de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker | Meting van berekende stijl (computed style) in licht en donker kleurschema | 5 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker | Happy | 18 | Actueel |
 | PIPE-H-005 | ui | pipeline-demo.feature | de weergaveknop kiest licht, donker of systeem en onthoudt die keuze | Toestandsovergang over drie weergavestanden + meting van berekende stijl + persistentie na herladen | 13 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | de weergaveknop kiest licht, donker of systeem en onthoudt die keuze | Happy | 18 | Actueel |
@@ -631,9 +632,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 609
+- Playwright executable cases: 610
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 610
+- Totaal unieke executable cases: 611
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32

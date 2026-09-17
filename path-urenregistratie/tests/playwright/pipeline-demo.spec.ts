@@ -451,6 +451,89 @@ test.describe('Path Pipeline TEST-demo', () => {
     });
   });
 
+test('[PIPE-N-004] tussen de mobiele en de bureaubladdrempel blijft de Confluence-kolom leesbaar breed', async ({ page }) => {
+  // Grenswaardenanalyse op viewportbreedte. Gemeld door Gio (17 sep) op een
+  // telefoon met "Bureaubladsite aanvragen" aan (een brede virtuele
+  // paginabreedte, rond 980px, op een fysiek smal scherm): de Confluence-
+  // documentkolom viel terug tot enkele tientallen pixels, met woorden één
+  // voor één op hun eigen regel. Meting op de kapotte pagina liet zien dat dit
+  // elk browservenster tussen 901 en 1300px raakte, niet alleen "bureaubladsite"
+  // op een telefoon -- .backlog-layout stapelde al bij 1100px, maar
+  // .knowledge-layout/.zephyr-layout (met dezelfde vaste kolommen van 240px en
+  // 330px) pas bij 900px. Eerste poging verlegde de gedeelde drempel naar
+  // 1300px, maar dat verstopte de zijbalk óók op 1280px -- de standaard
+  // testbreedte van het "Desktop Chrome"-profiel in playwright.config.ts, en
+  // daarmee de veronderstelling van bijna elke andere case in dit bestand.
+  // Drempel op 1200px gemeten: dekt het hele kapotte bereik af zonder 1280px
+  // te raken (374px document, zijbalk zichtbaar, zoals voorheen).
+  const documentBreedte = async () => page.evaluate(() => {
+    const doc = document.querySelector('.knowledge-document');
+    return doc ? doc.getBoundingClientRect().width : 0;
+  });
+
+  await test.step('Given 1200px (net onder de drempel): de lay-out is gestapeld en breed genoeg om te lezen', async () => {
+    await page.setViewportSize({ width: 1200, height: 1000 });
+    await page.goto('/pilot/path-kwaliteitsstraat.html');
+    await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
+    const breedte = await documentBreedte();
+    expect(breedte, 'bij 1200px hoort de Confluence-kolom nog gestapeld en dus breed te zijn').toBeGreaterThan(390);
+    await expect(page.locator('.icon-rail')).toBeHidden();
+  });
+
+  await test.step('When de viewport 1px breder wordt (1201px), then komt de zijbalk terug zonder de kolom kapot te knijpen', async () => {
+    await page.setViewportSize({ width: 1201, height: 1000 });
+    await page.waitForTimeout(50);
+    const breedte = await documentBreedte();
+    expect(breedte, 'vlak boven de drempel schakelt de zijbalk weer aan; de kolom mag smaller worden, maar niet naar een paar tientallen pixels').toBeGreaterThan(250);
+    await expect(page.locator('.icon-rail')).toBeVisible();
+  });
+
+  await test.step('And op 1280px, de standaard testbreedte van deze hele suite, blijft de zijbalk zichtbaar en de kolom leesbaar', async () => {
+    // Dit is precies de regressie die de eerste poging (drempel op 1300px)
+    // veroorzaakte: PIPE-H-001 en PIPE-H-004 verwachten de zijbalkknoppen op
+    // exact deze breedte. Die aanname hier expliciet vastleggen voorkomt dat
+    // een volgende aanpassing aan deze drempel die aanname weer stilzwijgend
+    // doorbreekt.
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.reload();
+    await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
+    await expect(page.locator('.icon-rail')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Jira Backlog' })).toBeVisible();
+    const breedte = await documentBreedte();
+    expect(breedte, 'op de standaard testbreedte hoort de kolom ruim leesbaar te zijn').toBeGreaterThan(350);
+  });
+
+  await test.step('And bij een brede virtuele paginabreedte zoals "Bureaubladsite aanvragen" (980px) blijft de kolom ruim leesbaar', async () => {
+    // Het exacte scenario van de melding: een brede lay-outviewport op een
+    // fysiek telefoonscherm. isMobile: false + een telefoon-userAgent is
+    // precies wat die Chrome-instelling omzet.
+    const context = await page.context().browser()!.newContext({
+      viewport: { width: 980, height: 1600 },
+      isMobile: false,
+      hasTouch: true,
+      deviceScaleFactor: 2.625,
+      userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36',
+    });
+    const bureaubladPagina = await context.newPage();
+    await bureaubladPagina.goto('/pilot/path-kwaliteitsstraat.html');
+    await expect(bureaubladPagina.locator('body')).toHaveAttribute('data-feed', 'loaded');
+    const breedte = await bureaubladPagina.evaluate(() => {
+      const doc = document.querySelector('.knowledge-document');
+      return doc ? doc.getBoundingClientRect().width : 0;
+    });
+    expect(breedte, '"Bureaubladsite aanvragen" op een telefoon mag de kolom niet tot een paar tientallen pixels terugbrengen').toBeGreaterThan(390);
+    await context.close();
+  });
+
+  await test.step('And ook op een gewoon breed bureaubladscherm (1600px) is de kolom nog steeds leesbaar breed', async () => {
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await page.reload();
+    await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
+    const breedte = await documentBreedte();
+    expect(breedte).toBeGreaterThan(390);
+  });
+});
+
   test('[PIPE-H-004] zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes', async ({ page }) => {
     let feed: Feed;
     await test.step('Given de pipelinepagina met de echte projectstand', async () => {

@@ -1,8 +1,49 @@
 {
-  "appVersion": "2.0.144",
-  "generatedAt": "2026-09-16T23:29:07.247Z",
+  "appVersion": "2.0.146",
+  "generatedAt": "2026-09-17T00:13:23.149Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "17 sep",
+      "version": "2.0.146",
+      "wish": "Gemeld door Gio, op een telefoon met \"Bureaubladsite aanvragen\" aan: de Confluence-kolom op de kwaliteitsstraat viel terug tot enkele tientallen pixels, woorden een voor een op hun eigen regel. Eerste reactie (\"dat is inherent aan bureaubladsite\") was fout -- na nameten bleek het een echte lay-outfout die elk browservenster tussen 901 en 1300px raakte, niet alleen die ene instelling: drie schermdelen (.backlog-layout, .knowledge-layout, .zephyr-layout) deelden niet dezelfde drempel om te stapelen. Grens nu op 1200px voor alle drie, gemeten tot een leesbare kolombreedte erna; 1280px (de standaard testbreedte van de hele suite) blijft bewust in de bureaubladweergave, dat bleek bij de eerste poging (1300px) een echte regressie te geven. PIPE-N-004, tegenproef rood op de oude drempel.",
+      "cases": [
+        {
+          "id": "PIPE-N-004",
+          "title": "tussen de mobiele en de bureaubladdrempel blijft de Confluence-kolom leesbaar breed",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Grenswaardenanalyse op viewportbreedte (net onder/boven de drempel, plus de standaard testbreedte als vaste regressie) + reproductie van \"Bureaubladsite aanvragen\"",
+          "assertions": 13,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: tussen de mobiele en de bureaubladdrempel blijft de Confluence-kolom leesbaar breed\n  Given 1200px (net onder de drempel): de lay-out is gestapeld en breed genoeg om te lezen\n  When de viewport 1px breder wordt (1201px), then komt de zijbalk terug zonder de kolom kapot te knijpen\n  And op 1280px, de standaard testbreedte van deze hele suite, blijft de zijbalk zichtbaar en de kolom leesbaar\n  And ook op een gewoon breed bureaubladscherm (1600px) is de kolom nog steeds leesbaar breed\n  Then wordt met Playwright-assertions bevestigd dat tussen de mobiele en de bureaubladdrempel blijft de Confluence-kolom leesbaar breed"
+        }
+      ]
+    },
+    {
+      "date": "17 sep",
+      "version": "2.0.146",
+      "wish": "Dekkingsronde: SEC-H-007 controleerde alleen dat config.example.php de sleutel \"content_security_policy\" noemt (een tekstmatch die ook bij een LEGE waarde was geslaagd), en de lokale testserver draait zonder security-blok, dus SEC-H-008 kon de CSP-header nooit echt over HTTP meten. Nieuw script scripts/csp-header-check.mjs (broncontrole, zelfde aanpak als manifest-naming-check.mjs): bewaakt dat session.php de header onvoorwaardelijk verstuurt zodra er een waarde is, en dat beide voorbeeldconfig's een echte policy met de vijf kern-directives hebben zonder unsafe-eval. Drie tegenproeven gedaan (lege waarde, voorwaarde weggehaald, unsafe-eval toegevoegd), alle drie rood.",
+      "cases": [
+        {
+          "id": "SEC-H-007",
+          "title": "config voorbeeld bevat voorbereide CSP/CORS/HSTS flags",
+          "feature": "tests/playwright/features/security.feature",
+          "technique": "API-contract + equivalentieklasse",
+          "assertions": 3,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: config voorbeeld bevat voorbereide CSP/CORS/HSTS flags\n  Given authenticatie- en API-beveiliging is voorbereid\n  When de flow voor SEC-H-007 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat config voorbeeld bevat voorbereide CSP/CORS/HSTS flags"
+        },
+        {
+          "id": "SEC-H-008",
+          "title": "draaiende server zet de vaste beveiligingsheaders echt op elk antwoord",
+          "feature": "tests/playwright/features/security.feature",
+          "technique": "API-contract + equivalentieklasse",
+          "assertions": 5,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: draaiende server zet de vaste beveiligingsheaders echt op elk antwoord\n  Given een willekeurig, niet-geauthenticeerd endpoint\n  When de client dat endpoint bevraagt\n  Then staan de vaste beveiligingsheaders echt op het antwoord"
+        }
+      ]
+    },
     {
       "date": "17 sep",
       "version": "2.0.144",
@@ -118,38 +159,6 @@
           "assertions": 11,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: de medewerker ziet alleen de klant/tussenpersoon en mailroutering van zijn eigen opdracht, niet die van een collega\n  Given de beheerder ziet het hele bedrijf (referentiemeting)\n  When de medewerker inlogt en zijn eigen opdracht ophaalt\n  Then staan er alleen de klant en tussenpersoon van zijn eigen opdracht in counterparties\n  And staan er alleen mailroutes van zijn eigen opdracht, niet van collega-opdrachten\n  And zijn eigen klant- en tussenpersoonnaam blijven wel gewoon bruikbaar voor het scherm"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.137",
-      "wish": "Fix op eigen fout: de hernoeming in 2.0.136 was zelf kapot. In de werkboom stonden de titel, de CSS-link en de script-tag al goed op pilot/path-kwaliteitsstraat.html, maar bij het committen zijn die drie regels nooit gestaged (git add miste dit bestand) -- de commit bevatte dus nog de oude, niet meer bestaande path-pipeline.css/.js. Resultaat: een kale, ongestylede pagina zodra 2.0.136 op TEST komt. Gio zag dit meteen via de herontwerp-sessie, nog voor uitrol. Gecorrigeerd en de staging nu wel compleet. PIPE-N-003 uitgebreid: telt echt mislukte eigen netwerkverzoeken (css/js/data) in plaats van alleen DOM-structuur, want dat laatste had dit lek gemist. Tegenproef tweemaal gedaan: alleen css/js-verwijzingen kapot -> rood op precies die twee regels; hersteld -> groen.",
-      "cases": [
-        {
-          "id": "PIPE-N-003",
-          "title": "de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt",
-          "feature": "tests/playwright/features/pipeline-demo.feature",
-          "technique": "Regressiecontrole na hernoeming: oude URL blijft bereikbaar en verwijst door (meta-refresh) naar de nieuwe naam",
-          "assertions": 3,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de flow voor PIPE-N-003 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.136",
-      "wish": "Wens Gio (naam en versie): demo-pagina hernoemd, blijvend binnen pilot/: pilot/path-pipeline.html -> pilot/path-kwaliteitsstraat.html, titel \"Path Kwaliteitsstraat\" (die kop stond al op de pagina en Gio vond hem mooi). Naam bewust niet Jira/Confluence/Zephyr: dat zijn merknamen van Atlassian en dit staat op een publieke pagina onder Path's eigen domein. Oude URL blijft bereikbaar via een doorverwijsbestand (meta-refresh, geen 404 voor een bestaande link). Alle interne verwijzingen mee (scripts, PIPELINE-INTAKE.md, de agentdefinitie, de PIPE-spec); de localStorage-sleutel path-pipeline-demo-v1 bewust ongewijzigd, anders verliest iedereen zijn lokale demostand. PIPE-N-003 nieuw (oude URL -> 200 -> wijst door), 10 van 10 PIPE-cases groen.",
-      "cases": [
-        {
-          "id": "PIPE-N-003",
-          "title": "de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt",
-          "feature": "tests/playwright/features/pipeline-demo.feature",
-          "technique": "Regressiecontrole na hernoeming: oude URL blijft bereikbaar en verwijst door (meta-refresh) naar de nieuwe naam",
-          "assertions": 3,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de flow voor PIPE-N-003 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt"
         }
       ]
     }
