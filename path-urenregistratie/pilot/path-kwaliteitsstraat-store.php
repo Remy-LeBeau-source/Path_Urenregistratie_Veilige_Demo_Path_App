@@ -30,6 +30,7 @@ header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 
 require_once __DIR__ . '/path-kwaliteitsstraat-intake-lib.php';
+require_once __DIR__ . '/path-kwaliteitsstraat-auth-lib.php';
 
 const STORE_MAX_BODY_BYTES = 4096;
 const STORE_MAX_HISTORIE = 500;
@@ -95,6 +96,19 @@ if ($methode === 'GET') {
 if ($methode !== 'POST') {
     header('Allow: GET, POST');
     store_antwoord(405, ['error' => 'Alleen GET en POST.']);
+}
+
+// Schrijven mag alleen ingelogd. Lezen blijft open zolang deze pagina openbaar
+// is en er geen persoons- of klantgegevens in staan; schrijven niet, want
+// anders kan elke voorbijganger het bord van een ander door elkaar gooien.
+// Dat gat ontstond op 17 sep met de eerste versie van deze opslag en is
+// dezelfde dag gedicht.
+$gebruiker = kwaliteitsstraat_gebruiker();
+if ($gebruiker === null) {
+    store_antwoord(401, [
+        'error' => 'niet-ingelogd',
+        'message' => 'Log in bij Uren & Facturatie om een kaart te verplaatsen.',
+    ]);
 }
 
 $ruweBody = file_get_contents('php://input');
@@ -172,7 +186,9 @@ if ($vorige !== $kolom) {
         'key' => $sleutel,
         'from' => $vorige,
         'to' => $kolom,
-        'by' => $door !== '' ? $door : 'onbekend',
+        // Wie het deed komt van de server, niet uit het verzoek: een client die
+        // zijn eigen naam mag invullen maakt de geschiedenis waardeloos.
+        'by' => kwaliteitsstraat_naam($gebruiker),
         'at' => gmdate('c', $nu),
     ]);
     if (count($stand['historie']) > STORE_MAX_HISTORIE) {

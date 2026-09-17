@@ -53,7 +53,8 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
   @happy
   Scenario: [PIPE-H-013] een kaart verplaatsen verandert de stand echt en blijft staan na herladen
     # Testtechniek: Toestandsovergangtest op het bord (kolom naar kolom) met controle op de server in plaats van op het scherm + herstelbaarheid na herladen zonder browseropslag + tweede lezer ziet dezelfde stand
-    # Aantoonbare Playwright-assertions in deze case: 15
+    # Aantoonbare Playwright-assertions in deze case: 19
+    Given anoniem verplaatsen wordt geweigerd
     Given de opslag kent deze kaart nog niet
     When de kaart naar In uitvoering wordt gesleept
     Then weet de server het, met een geschiedenisregel erbij

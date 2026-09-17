@@ -3,6 +3,8 @@ import { rmSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
+import { AuthApi } from './api/AuthApi';
+import { appConfig, requirePassword } from './fixtures/appConfig';
 
 type FeedCase = { id: string; title: string; platform: string; gherkin: string };
 type Feed = { appVersion: string; delivered: Array<{ version: string; wish: string; cases: FeedCase[] }>; open: Array<{ status: string }> };
@@ -433,6 +435,20 @@ test.describe('Path Pipeline TEST-demo', () => {
     // precies het verschil tussen een demo en een product, dus dit wordt getoetst
     // op wat de server ervan vindt, niet op wat het scherm laat zien.
     const store = '/pilot/path-kwaliteitsstraat-store.php';
+
+    await test.step('Given anoniem verplaatsen wordt geweigerd', async () => {
+      // Lezen mag iedereen zolang deze pagina openbaar is; schrijven niet, anders
+      // kan een voorbijganger het bord van een ander door elkaar gooien.
+      const zonderLogin = await request.post(store, { data: { key: 'PATH-000', status: 'doing' } });
+      expect(zonderLogin.status()).toBe(401);
+      expect((await zonderLogin.json()).error).toBe('niet-ingelogd');
+      // De melding moet bruikbaar zijn voor wie hem op het scherm krijgt.
+      expect((await (await request.post(store, { data: { key: 'PATH-000', status: 'doing' } })).json()).message).toMatch(/log in/i);
+    });
+
+    // De sessiecookie van deze login geldt ook voor de pagina zelf: page.request
+    // deelt zijn koekjes met de browsercontext.
+    await new AuthApi(page.request).login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
     await page.goto('/pilot/path-kwaliteitsstraat.html');
     await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
     await expect(page.locator('body')).toHaveAttribute('data-stand', 'loaded');
@@ -460,6 +476,9 @@ test.describe('Path Pipeline TEST-demo', () => {
       expect(regel, 'de verplaatsing staat in de geschiedenis').toBeTruthy();
       expect(regel.from).toBe('done');
       expect(regel.to).toBe('doing');
+      // Wie het deed komt van de server, niet uit het verzoek: anders is de
+      // geschiedenis waardeloos zodra iemand zijn eigen naam mag invullen.
+      expect(regel.by, 'de geschiedenis noemt de ingelogde gebruiker').toBe('Gio Maatsen');
     });
 
     await test.step('And blijft hij daar na herladen, ook zonder de browseropslag', async () => {
@@ -489,7 +508,9 @@ test.describe('Path Pipeline TEST-demo', () => {
       // winst ervan, maar het betekent ook dat een schrijvende case zijn eigen
       // rommel opruimt. Zonder dit struikelt de volgende case over een kaart die
       // hier is verplaatst.
-      const terug = await request.post(store, { data: { key: sleutel, status: 'done', from: 'doing', by: 'opruimen na test' } });
+      // Via de ingelogde context: schrijven mag alleen ingelogd, en dat geldt ook
+      // voor het opruimen.
+      const terug = await page.request.post(store, { data: { key: sleutel, status: 'done', from: 'doing' } });
       expect(terug.status()).toBe(200);
     });
   });

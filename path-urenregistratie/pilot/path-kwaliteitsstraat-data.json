@@ -1,8 +1,24 @@
 {
   "appVersion": "2.0.151",
-  "generatedAt": "2026-09-17T15:57:06.608Z",
+  "generatedAt": "2026-09-17T16:20:18.139Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "17 sep",
+      "version": "2.0.151",
+      "wish": "Inloggen: schrijven kan alleen nog ingelogd. Met de nieuwe opslag ontstond dezelfde dag een gat dat ik zelf maakte: iedereen kon een kaart van een ander verplaatsen. Nu vereist elke schrijfactie een ingelogde gebruiker; lezen blijft open zolang de pagina openbaar is en er geen persoons- of klantgegevens in staan. Advies bijgesteld: eerder stelde ik een eigen accountmodel voor, maar zonder database zou dat neerkomen op wachtwoorden in een bestand. De urenapp heeft al een bewezen en getest inlogmechanisme (sessies, CSRF, snelheidslimiet, wachtwoordherstel) op een echte database, en iedereen die vandaag met de kwaliteitsstraat werkt is een Path-medewerker met zo'n account. Klantaccounts horen niet in de gebruikerstabel van de urenregistratie en wachten op de eigen database en een scheiding per klant. Wie de verplaatsing deed komt van de server, niet uit het verzoek -- anders is de geschiedenis waardeloos zodra iemand zijn eigen naam mag invullen. De melding bij weigering is bruikbaar ('Log in bij Uren & Facturatie om een kaart te verplaatsen') in plaats van een kale foutcode. PIPE-H-013 uitgebreid: anoniem schrijven geeft 401, ingelogd verplaatsen werkt en noemt de echte gebruiker in de geschiedenis. 17/17 PIPE groen.",
+      "cases": [
+        {
+          "id": "PIPE-H-013",
+          "title": "een kaart verplaatsen verandert de stand echt en blijft staan na herladen",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Toestandsovergangtest op het bord (kolom naar kolom) met controle op de server in plaats van op het scherm + herstelbaarheid na herladen zonder browseropslag + tweede lezer ziet dezelfde stand",
+          "assertions": 19,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een kaart verplaatsen verandert de stand echt en blijft staan na herladen\n  Given anoniem verplaatsen wordt geweigerd\n  Given de opslag kent deze kaart nog niet\n  When de kaart naar In uitvoering wordt gesleept\n  Then weet de server het, met een geschiedenisregel erbij\n  And blijft hij daar na herladen, ook zonder de browseropslag\n  And een tweede lezer ziet dezelfde stand\n  And de kaart gaat terug, zodat deze case geen sporen achterlaat"
+        }
+      ]
+    },
     {
       "date": "17 sep",
       "version": "2.0.151",
@@ -13,9 +29,9 @@
           "title": "een kaart verplaatsen verandert de stand echt en blijft staan na herladen",
           "feature": "tests/playwright/features/pipeline-demo.feature",
           "technique": "Toestandsovergangtest op het bord (kolom naar kolom) met controle op de server in plaats van op het scherm + herstelbaarheid na herladen zonder browseropslag + tweede lezer ziet dezelfde stand",
-          "assertions": 15,
+          "assertions": 19,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: een kaart verplaatsen verandert de stand echt en blijft staan na herladen\n  Given de opslag kent deze kaart nog niet\n  When de kaart naar In uitvoering wordt gesleept\n  Then weet de server het, met een geschiedenisregel erbij\n  And blijft hij daar na herladen, ook zonder de browseropslag\n  And een tweede lezer ziet dezelfde stand\n  And de kaart gaat terug, zodat deze case geen sporen achterlaat"
+          "gherkin": "Scenario: een kaart verplaatsen verandert de stand echt en blijft staan na herladen\n  Given anoniem verplaatsen wordt geweigerd\n  Given de opslag kent deze kaart nog niet\n  When de kaart naar In uitvoering wordt gesleept\n  Then weet de server het, met een geschiedenisregel erbij\n  And blijft hij daar na herladen, ook zonder de browseropslag\n  And een tweede lezer ziet dezelfde stand\n  And de kaart gaat terug, zodat deze case geen sporen achterlaat"
         }
       ]
     },
@@ -506,7 +522,7 @@
           "technique": "Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst",
           "assertions": 26,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet\n  Given de keuzelijst toont de nice-to-haves uit GIO-WENSEN\n  When de PO een verbetering kiest, then staan samenvatting en waarde ingevuld en blijft het criterium aan hem\n  And zelf typen blijft mogelijk: aanpassen maakt de keuze niet ongedaan, loslaten wel\n  And het type heet Onderhoud, niet Chore\n  And de volgorde in Te doen is met het toetsenbord te wijzigen en blijft na herladen\n  And bovenin staat hoe vers de stand is en de versie staat in de voet zoals in de urenapp\n  Then wordt met Playwright-assertions bevestigd dat de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet"
+          "gherkin": ""
         }
       ]
     },

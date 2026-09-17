@@ -36,6 +36,7 @@ And("toont Traceability de echte testcases met techniek en assertions");
 And("staan FO, TO en het databasemodel bij de story");
 And("vertelt de historie wat er echt is gebeurd");
 And("zijn de blokken in te klappen zoals in Jira");
+Given("anoniem verplaatsen wordt geweigerd");
 Given("de opslag kent deze kaart nog niet");
 When("de kaart naar In uitvoering wordt gesleept");
 Then("weet de server het, met een geschiedenisregel erbij");

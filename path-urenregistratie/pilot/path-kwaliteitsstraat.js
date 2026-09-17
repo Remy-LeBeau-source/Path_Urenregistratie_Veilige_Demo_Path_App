@@ -349,8 +349,12 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key: sleutel, status: kolom, from: vanKolom || '', by: 'bord' })
     }).then(function (antwoord) {
-      if (!antwoord.ok) throw new Error('opslag ' + antwoord.status);
-      return antwoord.json();
+      if (antwoord.ok) return antwoord.json();
+      // De melding van de server doorgeven in plaats van een kale foutcode: "log
+      // in om een kaart te verplaatsen" is bruikbaar, "opslag 401" niet.
+      return antwoord.json().catch(function () { return {}; }).then(function (json) {
+        throw new Error(json && json.message ? json.message : 'opslag gaf code ' + antwoord.status);
+      });
     });
   }
 
