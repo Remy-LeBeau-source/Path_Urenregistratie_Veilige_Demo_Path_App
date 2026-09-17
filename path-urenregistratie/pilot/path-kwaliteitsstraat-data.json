@@ -1,6 +1,6 @@
 {
-  "appVersion": "2.0.155",
-  "generatedAt": "2026-09-17T22:17:20.687Z",
+  "appVersion": "2.0.156",
+  "generatedAt": "2026-09-17T23:25:44.985Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
@@ -1432,12 +1432,6 @@
       "date": "17 sep",
       "wish": "PATH-201/202, terug naar open na productbesluit Gio: het oorspronkelijke idee (filter op afzendernaam in Berichten) bleek gebouwd op een bestaand lek -- medewerkers zagen via server/api/announcements.php de echte naam van de beheerder die een mededeling stuurde, terwijl het besluit in database/seed-demo-data.sql was dat dit altijd \"Beheerder\" moet tonen. Het lek is gerepareerd (ANN-N-011, tegenproef rood/groen, 2.0.150) los van deze wens. Met het lek dicht heeft \"filter op afzendernaam\" geen waarde meer (er is nog maar één afzenderlabel: Beheerder). Nog te beslissen: wat de wens moet worden nu de oorspronkelijke insteek vervalt -- bijvoorbeeld filteren op onderwerp/type in plaats van op wie het stuurde.",
       "who": "open, wacht op nieuwe richting Gio"
-    },
-    {
-      "date": "16 sep",
-      "wish": "Eigen vondst, niet bevestigd (dekkingsronde): de idempotency-check op mail_enqueue_timesheet_final_approval (en vergelijkbare functies in server/mail/queue.php) is een SELECT-dan-INSERT zonder database-constraint of rijvergrendeling, dus in theorie een race tussen twee gelijktijdige verzoeken. In de praktijk is de enige bekende aanroeper (de approve-actie in timesheets.php) al beschermd door optimistische versievergrendeling op de urenstaat zelf: een tweede gelijktijdige poging krijgt daar al 409 (stale-version) vóórdat de mailfunctie wordt bereikt. Geen discriminerend bewijs dat dit gat echt bereikbaar is; niet gepatcht op een vermoeden (eigen regel). Nog te doen: uitzoeken of er een aanroeppad bestaat dat niet via die versievergrendeling loopt, en zo ja, een UNIQUE-constraint overwegen zoals bij reminder_log.",
-      "who": "main",
-      "status": "open"
     },
     {
       "date": "16 sep",
