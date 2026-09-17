@@ -120,3 +120,11 @@ Feature: Mededelingen versturen, intrekken en verbergen
     Given mededelingen versturen, intrekken en verbergen is voorbereid
     When de flow voor ANN-N-010 wordt uitgevoerd
     Then weigert de server een bericht met beide referenties tegelijk
+
+  @negative
+  Scenario: [ANN-N-011] een medewerker ziet nooit welke beheerder een mededeling stuurde
+    # Testtechniek: Twee-rollentest (beheerder versus medewerker op dezelfde mededeling) + negatieve inhoudscontrole op naamlekken
+    # Aantoonbare Playwright-assertions in deze case: 10
+    Given de administrator (Gio Maatsen) een mededeling stuurt aan een andere testmedewerker (Brian)
+    When de flow voor ANN-N-011 wordt uitgevoerd
+    Then ziet de administrator zelf zijn eigen echte naam als afzender

@@ -59,3 +59,6 @@ Then("krijgt een anonieme aanroep 401");
 And("een ingelogde medewerker mag zelf niets versturen");
 When("de flow voor ANN-N-010 wordt uitgevoerd");
 Then("weigert de server een bericht met beide referenties tegelijk");
+Given("de administrator (Gio Maatsen) een mededeling stuurt aan een andere testmedewerker (Brian)");
+When("de flow voor ANN-N-011 wordt uitgevoerd");
+Then("ziet de administrator zelf zijn eigen echte naam als afzender");

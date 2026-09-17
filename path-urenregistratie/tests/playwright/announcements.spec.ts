@@ -718,4 +718,63 @@ test.describe('announcements api', () => {
     await authApi.logout();
     await ctx.dispose();
   });
+
+  test('[ANN-N-011] een medewerker ziet nooit welke beheerder een mededeling stuurde', async () => {
+    // Gevonden tijdens de bouw van wens PATH-201 (filter op afzender): het besluit
+    // in database/seed-demo-data.sql is dat een medewerker de afzender altijd als
+    // "Beheerder" ziet, nooit een naam. server/api/announcements.php lekte in de
+    // medewerker-tak toch de echte display_name via een join die alleen voor het
+    // beheerderoverzicht hoort te bestaan. Hersteld: de medewerker-tak doet die
+    // join niet meer en stuurt altijd het vaste woord "Beheerder", terwijl de
+    // beheerder zelf de echte naam wél blijft zien (nodig om te weten wie wat
+    // stuurde als er meerdere beheerders zijn).
+    // Bewust NIET appConfig.employeeEmail (Stasjo) als ontvanger: NOT-H-012/017
+    // rekenen daar op een exact seedaantal mededelingen, en dit is een schrijvende
+    // case die een echte, blijvende mededeling toevoegt (TW-1, nog niet opgelost).
+    // Brian is elders nooit voor een tellingsgevoelige mededelingencase gebruikt.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const suffix = Date.now().toString().slice(-7);
+    const title = `Afzendercontrole ${suffix}`;
+    let announcementId = 0;
+
+    await test.step('Given de administrator (Gio Maatsen) een mededeling stuurt aan een andere testmedewerker (Brian)', async () => {
+      const recipientId = await gebruikerIdVanNaam(ctx, 'Brian Hek');
+      const sent = await postAnnouncement(ctx, {
+        action: 'send',
+        title,
+        message: `Bericht voor de afzendercontrole ${suffix}.`,
+        recipient_user_ids: [recipientId],
+      });
+      expect(sent.status).toBe(200);
+      announcementId = Number(sent.body.announcement_id ?? sent.body.id ?? 0);
+      expect(announcementId).toBeGreaterThan(0);
+    });
+
+    await test.step('Then ziet de administrator zelf zijn eigen echte naam als afzender', async () => {
+      const lijst = await listAnnouncements(ctx);
+      expect(lijst.status).toBe(200);
+      const item = (lijst.body.items as Array<{ id: number; created_by: string }>).find(i => i.id === announcementId);
+      expect(item, 'de zojuist verstuurde mededeling moet in het beheerderoverzicht staan').toBeTruthy();
+      expect(item!.created_by).toBe('Gio Maatsen');
+    });
+
+    await authApi.logout();
+
+    await test.step('And ziet de medewerker die het bericht ontvangt uitsluitend "Beheerder", nooit de naam', async () => {
+      await authApi.login('brian@example.invalid', requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+      const lijst = await listAnnouncements(ctx);
+      expect(lijst.status).toBe(200);
+      const item = (lijst.body.items as Array<{ id: number; created_by: string }>).find(i => i.id === announcementId);
+      expect(item, 'de medewerker moet de mededeling ontvangen hebben').toBeTruthy();
+      expect(item!.created_by).toBe('Beheerder');
+      expect(item!.created_by).not.toContain('Gio');
+      expect(item!.created_by).not.toContain('Maatsen');
+      await authApi.logout();
+    });
+
+    await ctx.dispose();
+  });
 });

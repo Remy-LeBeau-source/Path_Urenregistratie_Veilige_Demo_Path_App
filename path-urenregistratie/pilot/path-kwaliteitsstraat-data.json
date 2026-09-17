@@ -1,8 +1,24 @@
 {
-  "appVersion": "2.0.148",
-  "generatedAt": "2026-09-17T02:43:16.173Z",
+  "appVersion": "2.0.150",
+  "generatedAt": "2026-09-17T09:18:33.666Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "17 sep",
+      "version": "2.0.150",
+      "wish": "Eigen vondst tijdens het bouwen van PATH-201: server/api/announcements.php liet een medewerker de echte naam zien van de beheerder die een mededeling stuurde (\"Van Gio Maatsen\"), terwijl het vastgelegde besluit in database/seed-demo-data.sql is dat dit altijd \"Beheerder\" moet zijn -- een niet eerder opgemerkt naamlek. Hersteld: de medewerker-tak doet de naam-join niet meer, de beheerder zelf blijft de echte naam wel zien. ANN-N-011, tegenproef rood (echte naam zichtbaar) -> groen (altijd Beheerder).",
+      "cases": [
+        {
+          "id": "ANN-N-011",
+          "title": "een medewerker ziet nooit welke beheerder een mededeling stuurde",
+          "feature": "tests/playwright/features/announcements.feature",
+          "technique": "Twee-rollentest (beheerder versus medewerker op dezelfde mededeling) + negatieve inhoudscontrole op naamlekken",
+          "assertions": 10,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een medewerker ziet nooit welke beheerder een mededeling stuurde\n  Given de administrator (Gio Maatsen) een mededeling stuurt aan een andere testmedewerker (Brian)\n  When de flow voor ANN-N-011 wordt uitgevoerd\n  Then ziet de administrator zelf zijn eigen echte naam als afzender"
+        }
+      ]
+    },
     {
       "date": "17 sep",
       "version": "2.0.148",
@@ -191,15 +207,14 @@
           "gherkin": "Scenario: Berichten toont \"Nieuw in de app\" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD\n  Given vondsten uit de monkey-verkenning op Klassiek is voorbereid\n  When de flow voor KLV-H-018 wordt uitgevoerd\n  Then staan er lokaal/op TEST 20 updates met datum en tijdstip, nieuwste eerst\n  And staan er 5 per pagina met Vorige en Volgende, tot en met de laatste pagina\n  And staat geen naam of gevoelig gegeven in de teksten\n  And op de PROD-host is het blok weg"
         }
       ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.140",
-      "wish": "Besluit Gio: elke versie krijgt voortaan zonder uitzondering een regel in \"Nieuw in de app\", ook een versie die alleen Backoffice, de kwaliteitsstraat-demo of de testset raakt. De acht ontbrekende versies (2.0.130 t/m 2.0.138) zijn met terugwerkende kracht aangevuld, terug naar twintig regels. PIPELINE-INTAKE.md bijgewerkt.",
-      "cases": []
     }
   ],
   "open": [
+    {
+      "date": "17 sep",
+      "wish": "PATH-201/202, terug naar open na productbesluit Gio: het oorspronkelijke idee (filter op afzendernaam in Berichten) bleek gebouwd op een bestaand lek -- medewerkers zagen via server/api/announcements.php de echte naam van de beheerder die een mededeling stuurde, terwijl het besluit in database/seed-demo-data.sql was dat dit altijd \"Beheerder\" moet tonen. Het lek is gerepareerd (ANN-N-011, tegenproef rood/groen, 2.0.150) los van deze wens. Met het lek dicht heeft \"filter op afzendernaam\" geen waarde meer (er is nog maar één afzenderlabel: Beheerder). Nog te beslissen: wat de wens moet worden nu de oorspronkelijke insteek vervalt -- bijvoorbeeld filteren op onderwerp/type in plaats van op wie het stuurde.",
+      "who": "open, wacht op nieuwe richting Gio"
+    },
     {
       "date": "16 sep",
       "wish": "Eigen vondst, niet bevestigd (dekkingsronde): de idempotency-check op mail_enqueue_timesheet_final_approval (en vergelijkbare functies in server/mail/queue.php) is een SELECT-dan-INSERT zonder database-constraint of rijvergrendeling, dus in theorie een race tussen twee gelijktijdige verzoeken. In de praktijk is de enige bekende aanroeper (de approve-actie in timesheets.php) al beschermd door optimistische versievergrendeling op de urenstaat zelf: een tweede gelijktijdige poging krijgt daar al 409 (stale-version) vóórdat de mailfunctie wordt bereikt. Geen discriminerend bewijs dat dit gat echt bereikbaar is; niet gepatcht op een vermoeden (eigen regel). Nog te doen: uitzoeken of er een aanroeppad bestaat dat niet via die versievergrendeling loopt, en zo ja, een UNIQUE-constraint overwegen zoals bij reminder_log.",
@@ -223,15 +238,14 @@
       "wish": "CI-risico, nog niet opgelost: shard 8 van de tien testshards draait structureel 17-18 minuten terwijl de afbreeklimiet 22 minuten is; de snelste shards doen 2-5 minuten. Gemeten over drie releases (35023441673, 35035388985, 35043135123), zowel bij Validate als bij Promote Test. Oorzaak is de inhoud, niet het aantal: de zware integratiespecs (urenregistratie schrijven, correcties, beveiliging, rollen, teambeheer) vallen samen in één shard. Eerder is ditzelfde voor dashboard.spec.ts opgelost door dat bestand te splitsen. Nog te doen: opnieuw verdelen of splitsen, anders valt een release ooit om op de tijdslimiet.",
       "who": "main",
       "status": "open"
-    },
-    {
-      "date": "16 sep",
-      "wish": "Uitgezocht (TW-2): SKIN-H-029 valt alleen op deze machine om, op WebKit onder Windows, en is groen in CI en op mobiel Chrome. Met metingen uitgesloten: het voorkeurenvenster, het thema, de vormgeving, de viewport en de installatiebanner; er ligt nooit iets over de knop. Het blijft hangen in het naar-beeld-scrollen van de browser zelf. Vervolg: die klik ongevoelig maken voor dat scrollen.",
-      "who": "herontwerp",
-      "status": "open, na go-live"
     }
   ],
   "niceToHave": [
+    {
+      "date": "17 sep",
+      "improvement": "De kwaliteitsstraat-pagina echt live laten meebewegen: de kaart zelf naar In uitvoering laten schuiven en de 1-2-3-4-balk (Ticket, Zephyr-testcase, Automatische test, TEST & Living Doc) echte voortgang tonen in plaats van alleen de dobbelsteen-simulatie. Vraagt een nieuw schrijfbaar statuspunt op de pagina; Gio koos ervoor dat gewoon openbaar schrijfbaar te maken, net als het indienen van een wens zelf (zelfde vertrouwensniveau, geen aparte sleutel).",
+      "why": "Maakt in een keer zichtbaar dat de agent echt aan het werk is, zonder te hoeven wachten op een herlaadbeurt na een push."
+    },
     {
       "date": "16 sep",
       "improvement": "Op het demobord per kaart tonen hoe lang een wens al open staat",

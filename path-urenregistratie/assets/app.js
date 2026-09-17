@@ -9320,8 +9320,13 @@ function renderEmployeeAnnouncementArchive() {
   if (state.announcementArchiveFilter === "unread") zichtbaar = zichtbaar.filter(houdVast);
   if (state.announcementArchiveFilter === "gelezen") zichtbaar = zichtbaar.filter(entry => entry.read && !isIngetrokken(entry));
   if (state.announcementArchiveFilter === "withdrawn") zichtbaar = zichtbaar.filter(entry => entry.item.status === "withdrawn" || announcementKind(entry.item) === "withdrawal");
+  // Bewust "Beheerder", nooit item.createdBy: dat veld draagt de echte naam van
+  // de beheerder die het bericht stuurde (nodig voor het beheerderoverzicht),
+  // maar een medewerker mag nooit zien wélke beheerder dat was (besluit in
+  // database/seed-demo-data.sql). Dit is het lokale/demo-pad zonder server;
+  // het API-pad hierboven krijgt dezelfde afscherming al van de server zelf.
   toonBerichtenLijst(list, zichtbaar.map(({ item, read }) => ({
-    id: item.id, title: item.title, message: item.message, createdAt: item.createdAt, createdBy: item.createdBy,
+    id: item.id, title: item.title, message: item.message, createdAt: item.createdAt, createdBy: "Beheerder",
     unread: !read, ingetrokken: item.status === "withdrawn" || announcementKind(item) === "withdrawal", reden: item.withdrawalReason
   })), unreadAnnouncementCount, tellingen);
 }

@@ -105,16 +105,20 @@ if ($method === 'GET') {
             ];
         }, $rows);
     } else {
-        // Employee sees only sent/non-hidden announcements addressed to them
+        // Employee sees only sent/non-hidden announcements addressed to them.
+        // Bewust GEEN join naar users voor de naam van de afzender: het besluit
+        // in database/seed-demo-data.sql is dat een medewerker altijd "Beheerder"
+        // ziet, nooit welke beheerder het was. Tot 2.0.150 lekte hier per ongeluk
+        // toch de echte display_name (via een join die alleen voor het
+        // beheerderoverzicht hoort te bestaan) -- ANN-N-011 bewijst nu dat dat
+        // niet meer gebeurt, ook niet als er meerdere beheerders zijn.
         $sql = "
             SELECT a.id, a.kind, a.status, a.title, a.message,
                    a.withdrawal_of_id, a.withdrawal_reason,
                    a.created_at, a.updated_at,
-                   u.display_name AS created_by_name,
                    ar.read_at
             FROM announcements a
             INNER JOIN announcement_recipients ar ON ar.announcement_id = a.id AND ar.user_id = :user_id
-            LEFT JOIN users u ON u.id = a.created_by
             WHERE a.company_id = :company_id
               AND a.status IN ('sent', 'withdrawn')
               AND a.hidden_from_employees = 0
@@ -137,7 +141,7 @@ if ($method === 'GET') {
                 'message'          => (string)$r['message'],
                 'withdrawal_of_id' => $r['withdrawal_of_id'] !== null ? (int)$r['withdrawal_of_id'] : null,
                 'withdrawal_reason'=> $r['withdrawal_reason'] ?? null,
-                'created_by'       => (string)($r['created_by_name'] ?? 'Beheerder'),
+                'created_by'       => 'Beheerder',
                 'created_at'       => (string)$r['created_at'],
                 'updated_at'       => (string)($r['updated_at'] ?? $r['created_at']),
                 'read'             => $r['read_at'] !== null,

@@ -381,6 +381,7 @@
 | ANN-N-007 | api | announcements.feature | de lengtegrens telt tekens zoals het invoerveld, ook met accenten en emoji, en legt uit wat er mis is | Negatieve equivalentieklasse + error guessing | 8 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | de lengtegrens telt tekens zoals het invoerveld, ook met accenten en emoji, en legt uit wat er mis is | Negative | 15 | Actueel |
 | ANN-N-006 | api | announcements.feature | een medewerker kan zelf geen mededeling versturen en anoniem is alles dicht | Beslissingstabel rollen en autorisatie | 2 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | een medewerker kan zelf geen mededeling versturen en anoniem is alles dicht | Negative | 15 | Actueel |
 | ANN-N-010 | api | announcements.feature | een bericht kan niet tegelijk correctie en intrekking van iets anders zijn | Decision-table-analyse (combinatie van twee onderling uitsluitende referentievelden) + negatieve equivalentieklasse | 4 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | een bericht kan niet tegelijk correctie en intrekking van iets anders zijn | Negative | 15 | Actueel |
+| ANN-N-011 | api | announcements.feature | een medewerker ziet nooit welke beheerder een mededeling stuurde | Twee-rollentest (beheerder versus medewerker op dezelfde mededeling) + negatieve inhoudscontrole op naamlekken | 10 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | een medewerker ziet nooit welke beheerder een mededeling stuurde | Negative | 15 | Actueel |
 | PWD-H-001 | security | password-reset.feature | request-reset retourneert token in demo-modus | Toestandsovergang | 12 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
 | PWD-H-002 | security | password-reset.feature | onbekend e-mailadres retourneert ook ok=true (geen email-enumeration) | API-contract + equivalentieklasse | 3 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
 | PWD-H-003 | security | password-reset.feature | me.php bevat force_password_change veld | API-contract + equivalentieklasse | 3 | password-reset.steps.ts | password-reset.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 13 | Actueel |
@@ -634,9 +635,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 612
+- Playwright executable cases: 613
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 613
+- Totaal unieke executable cases: 614
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32

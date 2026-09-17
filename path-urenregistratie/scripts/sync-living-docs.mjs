@@ -139,6 +139,7 @@ function suiteFor(definition, testCase) {
 function techniqueFor(definition, testCase) {
   const text = `${testCase.id} ${testCase.title}`.toLowerCase();
   if (definition.spec === 'announcements.spec.ts' && testCase.id === 'ANN-N-010') return 'Decision-table-analyse (combinatie van twee onderling uitsluitende referentievelden) + negatieve equivalentieklasse';
+  if (definition.spec === 'announcements.spec.ts' && testCase.id === 'ANN-N-011') return 'Twee-rollentest (beheerder versus medewerker op dezelfde mededeling) + negatieve inhoudscontrole op naamlekken';
   if (definition.spec === 'accessibility.spec.ts') return 'Toegankelijkheidsinspectie + toetsenbord-use-case';
   if (definition.spec === 'mobile-ui.spec.ts') return 'Responsive viewport + end-to-end use-case';
   if (definition.spec === 'pipeline-demo.spec.ts') {

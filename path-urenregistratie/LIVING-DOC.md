@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 612 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 613 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 612 unieke case-ID's
+- Playwright executable cases: 613 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 613 unieke case-ID's
+- Totaal executable cases: 614 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 666
-- Niet-mobile projectuitvoeringen: 558
+- Uitvoeringen: 667
+- Niet-mobile projectuitvoeringen: 559
 - Mobile functionele cases: 54
 - Pixel 7 / Chromium-uitvoeringen: 54
 - iPhone 13 / WebKit-uitvoeringen: 54
 
-De 54 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 612 Playwright-functionele cases in totaal 666 resultaten op: 558 + (54 x 2) = 666.
+De 54 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 613 Playwright-functionele cases in totaal 667 resultaten op: 559 + (54 x 2) = 667.
 
 ## Documentatieketen
 
@@ -495,7 +495,7 @@ De 54 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 612 Playwri
 
 - Feature: `tests/playwright/features/announcements.feature`
 - Source: `tests/playwright/announcements.spec.ts`
-- Cases: 13
+- Cases: 14
 
 - [ANN-H-001] beheerder verstuurt een mededeling aan een gekozen medewerker — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [ANN-H-002] een concept blijft intern en kan daarna definitief worden verwijderd — Techniek: API-contract + equivalentieklasse · Assertions: 7
@@ -510,6 +510,7 @@ De 54 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 612 Playwri
 - [ANN-N-007] de lengtegrens telt tekens zoals het invoerveld, ook met accenten en emoji, en legt uit wat er mis is — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
 - [ANN-N-006] een medewerker kan zelf geen mededeling versturen en anoniem is alles dicht — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
 - [ANN-N-010] een bericht kan niet tegelijk correctie en intrekking van iets anders zijn — Techniek: Decision-table-analyse (combinatie van twee onderling uitsluitende referentievelden) + negatieve equivalentieklasse · Assertions: 4
+- [ANN-N-011] een medewerker ziet nooit welke beheerder een mededeling stuurde — Techniek: Twee-rollentest (beheerder versus medewerker op dezelfde mededeling) + negatieve inhoudscontrole op naamlekken · Assertions: 10
 
 ### Wachtwoordherstel en misbruikbeveiliging
 
