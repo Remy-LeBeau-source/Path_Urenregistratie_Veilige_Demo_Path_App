@@ -515,6 +515,117 @@ test.describe('Path Pipeline TEST-demo', () => {
     });
   });
 
+  test('[PIPE-N-005] een haperende verbinding kost de pagina geen echte stand, maar drie keer mislukken wordt wel gemeld', async ({ page }) => {
+    // Aanleiding: in een volledige testronde vielen twee cases om op een
+    // projectstand die niet binnenkwam, terwijl dezelfde cases los gewoon groen
+    // waren. Oorzaak was niet de pagina maar de eenvoudige testserver, die
+    // verzoeken een voor een afhandelt terwijl deze pagina er drie tegelijk doet.
+    // Dat kan bij een echte gebruiker net zo goed gebeuren op een trage
+    // verbinding, en een lezer heeft niets aan voorbeelddata: dan staat er een
+    // verzonnen stand op het scherm van de pagina die juist onze echte
+    // administratie hoort te zijn. Vandaar herkansingen met oplopende wachttijd.
+    //
+    // Techniek (TMap/ISTQB): foutinjectie op de netwerklaag met grenswaardeanalyse
+    // op het aantal pogingen -- twee mislukkingen moeten nog goed aflopen (de
+    // grens die net goed is), drie mislukkingen moeten de eerlijke terugvalmelding
+    // geven (de grens die net fout is). Zonder die tweede helft toetst dit alleen
+    // dat het herprobeert, niet dat het ooit nog opgeeft.
+    const feedPad = '**/path-kwaliteitsstraat-data.json*';
+
+    await test.step('Given de projectstand pas bij de derde poging binnenkomt', async () => {
+      let pogingen = 0;
+      await page.route(feedPad, async (route) => {
+        pogingen += 1;
+        if (pogingen <= 2) return route.abort('connectionfailed');
+        return route.continue();
+      });
+      await page.goto('/pilot/path-kwaliteitsstraat.html');
+    });
+
+    await test.step('Then toont de pagina toch de echte stand, niet de voorbeelddata', async () => {
+      await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
+      // Niet alleen het label: er moeten ook echte kaarten staan.
+      await page.getByRole('tab', { name: /Backlog/ }).click();
+      expect(await page.locator('[data-ticket-list="done"] .ticket-card').count()).toBeGreaterThan(0);
+    });
+
+    await test.step('And blijft de pagina het eerlijk melden als het echt niet lukt', async () => {
+      // De andere kant van de grens: herkansen mag nooit betekenen dat een
+      // kapotte verbinding onzichtbaar wordt.
+      await page.unroute(feedPad);
+      await page.route(feedPad, (route) => route.abort('connectionfailed'));
+      await page.goto('/pilot/path-kwaliteitsstraat.html');
+      await expect(page.locator('body')).toHaveAttribute('data-feed', 'fallback');
+    });
+  });
+
+  test('[PIPE-H-016] de opslag vertelt eerlijk waar de stand vandaan komt, zonder verbindingsgegevens', async ({ page, request }) => {
+    // De keuze tussen "bestand" en "eigen tabellen in een database" is een
+    // instelling geworden (zie pilot/path-kwaliteitsstraat-opslag-lib.php), zodat
+    // die keuze later een configuratieregel is en geen verbouwing. Twee dingen
+    // moeten dan kloppen en blijven kloppen:
+    //   1. het antwoord noemt de gebruikte achterkant, zodat een ingestelde maar
+    //      onbereikbare database opvalt in plaats van stil terug te vallen;
+    //   2. het antwoord noemt alleen de achterkant, nooit hoe je erbij komt.
+    // De achterkanten zelf worden functioneel getoetst in
+    // server/scripts/kwaliteitsstraat-opslag-check.php; dat kan hier niet, want
+    // van achterkant wisselen betekent de serverinstelling omzetten terwijl deze
+    // testserver draait.
+    //
+    // Techniek (TMap/ISTQB): beslistabel op het veld `opslag` (drie toegestane
+    // uitkomsten) gecombineerd met een structurele geheimhoudingscontrole op
+    // verboden sleutels -- structureel en niet op woorden, omdat een woordfilter
+    // eerder op onze eigen tekst struikelt dan op een echt lek.
+    const store = '/pilot/path-kwaliteitsstraat-store.php';
+    const toegestaneBronnen = ['bestand', 'mysql', 'bestand (database niet bereikbaar)'];
+    // Alles waarmee je zelf verbinding zou kunnen maken. Staat er ooit een van
+    // deze sleutels in het antwoord, dan lekt de opslag zijn eigen sleutelbos.
+    const verbodenSleutels = ['dsn', 'user', 'username', 'password', 'wachtwoord', 'host', 'database', 'pad', 'path', 'bestand_pad'];
+
+    await test.step('Given het leesantwoord noemt de gebruikte achterkant', async () => {
+      const lees = await request.get(store);
+      expect(lees.status()).toBe(200);
+      const stand = await lees.json();
+      expect(toegestaneBronnen, `onbekende bron: ${stand.opslag}`).toContain(stand.opslag);
+    });
+
+    await test.step('And het leesantwoord bevat geen verbindingsgegevens', async () => {
+      const stand = await (await request.get(store)).json();
+      for (const sleutel of verbodenSleutels) {
+        expect(Object.keys(stand), `het antwoord mag geen ${sleutel} bevatten`).not.toContain(sleutel);
+      }
+      // Ook niet verstopt in de bordinstelling.
+      for (const sleutel of verbodenSleutels) {
+        expect(Object.keys(stand.bord ?? {}), `het bord mag geen ${sleutel} bevatten`).not.toContain(sleutel);
+      }
+    });
+
+    await new AuthApi(page.request).login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    await test.step('When er iets wordt opgeslagen', async () => {
+      const zet = await page.request.post(store, { data: { key: 'PATH-OPSLAG-TOETS', status: 'doing', from: 'todo' } });
+      expect(zet.status()).toBe(200);
+
+      await test.step('Then noemt het schrijfantwoord dezelfde achterkant als het leesantwoord', async () => {
+        const naSchrijven = await zet.json();
+        const naLezen = await (await request.get(store)).json();
+        // Lezen en schrijven via dezelfde laag: gaan die uit elkaar lopen, dan
+        // schrijf je ergens anders dan je leest -- precies de fout die je pas
+        // maanden later ontdekt.
+        expect(naSchrijven.opslag).toBe(naLezen.opslag);
+        expect(toegestaneBronnen).toContain(naSchrijven.opslag);
+      });
+    });
+
+    await test.step('And deze case laat geen kaart achter', async () => {
+      // Deze toetssleutel bestaat niet in de projectstand, dus hij is op het bord
+      // onzichtbaar -- maar hij zou wel in de geschiedenis van de volgende case
+      // blijven staan. Terugzetten naar de beginkolom houdt de stand schoon.
+      const terug = await page.request.post(store, { data: { key: 'PATH-OPSLAG-TOETS', status: 'todo', from: 'doing' } });
+      expect(terug.status()).toBe(200);
+    });
+  });
+
   test('[PIPE-H-015] het bord staat op Kanban, met Scrum klaar om aan te zetten', async ({ page, request }) => {
     // Besluit na de vraag van Gio ("of wil je een andere manier van werken dan
     // sprint? ik ben de naam kwijt"): dat woord is Kanban, en dat is wat we

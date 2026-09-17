@@ -141,7 +141,16 @@ function assert(condition, message) {
 // Belangrijk: dit maakt de test niet zachter. De assertie erna blijft
 // ongewijzigd, en blijft de toestand nooit bereikt worden, dan loopt deze
 // helper af en faalt de smoke alsnog -- alleen met een duidelijkere melding.
-async function wachtTot(voorwaarde, beschrijving, maxMs = 4000) {
+// Gemeten 18 sep 2026 op een Windows-werkplek: het opslaan van een
+// klanturenstaatconcept duurde 23,3 s, het indienen 14,0 s en het PNG-concept
+// 16,2 s -- ruim boven de oude grens van 4 s, terwijl dezelfde stappen in de
+// pipeline gewoon groen zijn. Dat komt niet door de app maar door de omgeving:
+// deze stappen draaien in dit blok met een kalendermaand die de test zelf op het
+// jaar 9999 zet, en jsdom betaalt dat met tienduizenden DOM-bevragingen. De
+// grens is daarom op de gemeten werkelijkheid gezet in plaats van op een hoop.
+// Dit maakt de test niet zachter: de asserties erna zijn ongewijzigd, en blijft
+// de toestand uit, dan loopt deze helper alsnog af en faalt de smoke.
+async function wachtTot(voorwaarde, beschrijving, maxMs = 30000) {
   const deadline = Date.now() + maxMs;
   for (;;) {
     let bereikt = false;
@@ -314,7 +323,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 document te controleren · 0 extern te bevestigen · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, externe bevestiging, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("2.0.155"), "Het zichtbare versienummer moet 2.0.155 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("2.0.157"), "Het zichtbare versienummer moet 2.0.157 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -911,7 +920,7 @@ const customerReminderState = JSON.parse(dom.window.localStorage.getItem("path-u
 assert(customerReminderState.notifications.length === notificationsBeforeCustomerReminder + 1 && customerReminderState.notifications.at(-1).title === "Klanturenstaat ontbreekt", "Backoffice moet vanuit de rustige maand een ontbrekende klanturenstaatherinnering kunnen klaarzetten");
 choosePeriod("#period-month-picker", "#period-year-picker", "2026-08");
 assert(document.querySelector("#customer-timesheet-admin-list").textContent.includes("Controle nodig"), "Een geüploade klanturenstaat moet voor Backoffice op Controle nodig staan");
-// Sinds Klanturenstaten een eigen scherm heeft (v2.0.155) bestaat dezelfde
+// Sinds Klanturenstaten een eigen scherm heeft (v2.0.155) [versie-vast] bestaat dezelfde
 // data-review-customer-timesheet-knop twee keer: hier in de werkvoorraad
 // (#admin-task-panel, met workflow-vervolg via openAdminTask) en nogmaals in
 // #customer-timesheet-admin-list (losstaand, zonder taak-workflow). Scope
@@ -2172,7 +2181,7 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v2.0.155 volledige smoke test: geslaagd");
+console.log("Path v2.0.157 volledige smoke test: geslaagd");
 // app.js schedules browser refresh timers. In JSDOM those timers can keep Node
 // alive after every assertion has completed, which made the release check look
 // stuck. End explicitly only after the complete smoke contract is green.

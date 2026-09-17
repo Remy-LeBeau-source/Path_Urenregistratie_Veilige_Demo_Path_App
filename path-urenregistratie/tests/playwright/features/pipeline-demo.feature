@@ -62,6 +62,25 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
     And een tweede lezer ziet dezelfde stand
     And de kaart gaat terug, zodat deze case geen sporen achterlaat
 
+  @negative
+  Scenario: [PIPE-N-005] een haperende verbinding kost de pagina geen echte stand, maar drie keer mislukken wordt wel gemeld
+    # Testtechniek: Foutinjectie op de netwerklaag met grenswaardeanalyse op het aantal pogingen (twee mislukkingen nog goed, drie mislukkingen geeft de eerlijke terugvalmelding)
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given de projectstand pas bij de derde poging binnenkomt
+    When de flow voor PIPE-N-005 wordt uitgevoerd
+    Then toont de pagina toch de echte stand, niet de voorbeelddata
+    And blijft de pagina het eerlijk melden als het echt niet lukt
+
+  @happy
+  Scenario: [PIPE-H-016] de opslag vertelt eerlijk waar de stand vandaan komt, zonder verbindingsgegevens
+    # Testtechniek: Beslistabel op de gemelde opslagbron (bestand, database, database ingesteld maar onbereikbaar) + structurele geheimhoudingscontrole op verboden sleutels in het antwoord + gelijkheidscontrole tussen lezen en schrijven
+    # Aantoonbare Playwright-assertions in deze case: 8
+    Given het leesantwoord noemt de gebruikte achterkant
+    And het leesantwoord bevat geen verbindingsgegevens
+    When er iets wordt opgeslagen
+    Then noemt het schrijfantwoord dezelfde achterkant als het leesantwoord
+    And deze case laat geen kaart achter
+
   @happy
   Scenario: [PIPE-H-015] het bord staat op Kanban, met Scrum klaar om aan te zetten
     # Testtechniek: Equivalentieklassen op de werkwijze (Kanban, Scrum met einddatum, Scrum zonder einddatum) + negatieve invoercontrole op de server (onbekende werkwijze, kromme datum, anoniem) + herstelbaarheid na herladen

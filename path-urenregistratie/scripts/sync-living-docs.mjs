@@ -153,6 +153,8 @@ function techniqueFor(definition, testCase) {
       'PIPE-H-006': 'Meting van berekende stijl in licht en donker + responsive viewport (intake #45)',
       'PIPE-H-007': 'Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst',
       'PIPE-H-008': 'Beslistabel op het criterium-voorstel (leeg/getal/status/generiek geeft elk een ander Then) + negatieve controle op een extern netwerkverzoek',
+      'PIPE-N-005': 'Foutinjectie op de netwerklaag met grenswaardeanalyse op het aantal pogingen (twee mislukkingen nog goed, drie mislukkingen geeft de eerlijke terugvalmelding)',
+      'PIPE-H-016': 'Beslistabel op de gemelde opslagbron (bestand, database, database ingesteld maar onbereikbaar) + structurele geheimhoudingscontrole op verboden sleutels in het antwoord + gelijkheidscontrole tussen lezen en schrijven',
       'PIPE-H-015': 'Equivalentieklassen op de werkwijze (Kanban, Scrum met einddatum, Scrum zonder einddatum) + negatieve invoercontrole op de server (onbekende werkwijze, kromme datum, anoniem) + herstelbaarheid na herladen',
       'PIPE-H-014': 'Beslistabel op het kaartmenu (welke actie hoort erin, welke bewust niet, en welke is uitgeschakeld in de huidige kolom) + controle op de server dat de actie echt uitgevoerd is',
       'PIPE-H-013': 'Toestandsovergangtest op het bord (kolom naar kolom) met controle op de server in plaats van op het scherm + herstelbaarheid na herladen zonder browseropslag + tweede lezer ziet dezelfde stand',

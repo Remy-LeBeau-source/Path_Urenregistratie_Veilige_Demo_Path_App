@@ -2108,25 +2108,30 @@
   updateGherkinPreview();
   applyHash();
 
-  // Eén herkansing voordat de pagina terugvalt op voorbeelddata. De feed draagt
+  // Twee herkansingen voordat de pagina terugvalt op voorbeelddata. De feed draagt
   // sinds 17 sep de volledige projecthistorie en is daarmee een stuk groter; een
   // enkele mislukte of afgebroken verbinding zette de pagina daardoor stil op
   // "voorbeelddata (feed niet geladen)" terwijl een tweede poging gewoon lukt.
   // Voor een lezer is verouderde-maar-echte stand altijd beter dan voorbeelddata.
-  function haalFeed(pogingen) {
+  // De wachttijd loopt op (250 ms, dan 750 ms): een server die het even druk
+  // heeft is met een tweede poging vlak erachter niet geholpen. Deze pagina haalt
+  // bij het laden drie dingen tegelijk op (projectstand, bordstand, wachtrij), en
+  // een server die verzoeken één voor één afhandelt laat er dan makkelijk eentje
+  // wachten.
+  function haalFeed(pogingen, wacht) {
     return fetch(DATA_URL, { cache: 'no-store' }).then(function (response) {
       if (!response.ok) throw new Error('feed ' + response.status);
       return response.json();
     }).catch(function (fout) {
       if (pogingen <= 1) throw fout;
-      return new Promise(function (klaar) { setTimeout(klaar, 250); }).then(function () {
-        return haalFeed(pogingen - 1);
+      return new Promise(function (klaar) { setTimeout(klaar, wacht); }).then(function () {
+        return haalFeed(pogingen - 1, wacht * 3);
       });
     });
   }
 
   if (window.fetch) {
-    haalFeed(2).then(function (json) {
+    haalFeed(3, 250).then(function (json) {
       feed = { delivered: json.delivered || [], open: json.open || [], niceToHave: json.niceToHave || [], appVersion: json.appVersion || '', generatedAt: json.generatedAt || '', loaded: true };
       document.body.setAttribute('data-feed', 'loaded');
       render();
