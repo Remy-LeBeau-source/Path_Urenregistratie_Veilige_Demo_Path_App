@@ -51,6 +51,16 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
     And zijn de blokken in te klappen zoals in Jira
 
   @happy
+  Scenario: [PIPE-H-011] Releases bundelt de echte versies met hun wensen, cases en assertions
+    # Testtechniek: Datagedreven vergelijking (versiegroepering op de pagina versus dezelfde groepering uit de feed) + equivalentieklassen op het releasefilter + navigatiecontrole van release naar bord
+    # Aantoonbare Playwright-assertions in deze case: 16
+    Given het tabblad Releases
+    When de flow voor PIPE-H-011 wordt uitgevoerd
+    Then staat de nieuwste versie bovenaan met haar echte aantallen
+    And scheidt het filter gereleaste versies van wat nog op een versie wacht
+    And brengt klikken op een versie je naar precies die opleveringen
+
+  @happy
   Scenario: [PIPE-H-009] de koppelingen tonen welke bron geldt en lekken nooit een instelling
     # Testtechniek: Contractcontrole op het koppelingen-endpoint (vorm, statusregels per bron) + negatieve inhoudscontrole dat geen enkele instelling naar buiten lekt
     # Aantoonbare Playwright-assertions in deze case: 19

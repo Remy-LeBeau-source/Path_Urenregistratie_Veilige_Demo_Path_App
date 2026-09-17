@@ -16,7 +16,7 @@
   // werden toegepast -- daardoor zocht de zoekbalk aantoonbaar alleen in de
   // nieuwste tien en was oudere oplevering onvindbaar. Nu: alles filteren, daarna
   // pas afkappen, met "Toon meer" om verder te gaan.
-  var PER_KEER = { todo: 12, doing: 12, done: 12, tests: 25, doc: 12, living: 10 };
+  var PER_KEER = { todo: 12, doing: 12, done: 12, tests: 25, doc: 12, living: 10, releases: 15 };
   var LIVING_DOC_BEWAAR = 25;
   var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var STEP_DELAY = prefersReducedMotion ? 120 : 900;
@@ -24,7 +24,8 @@
   var products = {
     backlog: { logo: 'J', name: 'Jira', scope: 'Path Uren & Facturatie', color: 'var(--jira)' },
     knowledge: { logo: 'C', name: 'Confluence', scope: 'Ruimte Path Kwaliteit', color: 'var(--confluence)' },
-    tests: { logo: 'Z', name: 'Zephyr Scale', scope: 'Testcyclus TC-24', color: 'var(--zephyr)' }
+    tests: { logo: 'Z', name: 'Zephyr Scale', scope: 'Testcyclus TC-24', color: 'var(--zephyr)' },
+    releases: { logo: 'J', name: 'Jira', scope: 'Releases', color: 'var(--jira)' }
   };
 
   // Terugval als de feed niet laadt (bijvoorbeeld rechtstreeks vanaf schijf openen).
@@ -178,7 +179,7 @@
   applyTheme(huidigeTheme());
 
   var feed = { delivered: [], open: [], niceToHave: [], appVersion: '', generatedAt: '', loaded: false };
-  var ui = { view: 'backlog', query: '', type: 'all', source: 'all', status: 'all', sort: '', sortDir: 'asc', expandAll: false, docKey: '', fixedDoc: '', detail: '', keuze: -1, toon: {} };
+  var ui = { view: 'backlog', query: '', type: 'all', source: 'all', status: 'all', sort: '', sortDir: 'asc', expandAll: false, docKey: '', fixedDoc: '', detail: '', keuze: -1, toon: {}, releaseFilter: 'all' };
 
   // Hoeveel er op dit moment van een lijst getekend wordt. Begint op PER_KEER en
   // groeit met "Toon meer"; een nieuw filter of een nieuwe zoekterm zet hem terug,
@@ -508,6 +509,98 @@
     });
   }
 
+  // ---- Releases --------------------------------------------------------------
+  // Een release is een versienummer met alles wat daarin is opgeleverd. Alle
+  // gegevens komen uit de projectstand: nergens een verzonnen datum of status.
+  function releases() {
+    var perVersie = {};
+    var volgorde = [];
+    deliveredTickets().forEach(function (ticket) {
+      var versie = (String(ticket.version || '').match(/\d+\.\d+\.\d+/) || [])[0];
+      if (!versie) return;
+      if (!perVersie[versie]) {
+        perVersie[versie] = { versie: versie, datum: ticket.date || '', wensen: [], cases: 0, assertions: 0 };
+        volgorde.push(versie);
+      }
+      var regel = perVersie[versie];
+      regel.wensen.push(ticket);
+      (ticket.cases || []).forEach(function (c) {
+        regel.cases += 1;
+        regel.assertions += Number(c.assertions || 0);
+      });
+      // De oudste datum binnen een versie is de datum waarop eraan begonnen is.
+      if (!regel.datum) regel.datum = ticket.date || '';
+    });
+    var uit = volgorde.map(function (versie) {
+      var regel = perVersie[versie];
+      // Gereleased = staat op TEST. Een versie zonder testcase is opgeleverd maar
+      // nog niet aantoonbaar; dat verschil hoort zichtbaar te zijn.
+      regel.status = regel.cases > 0 ? 'Gereleased' : 'Zonder eigen case';
+      regel.omschrijving = korteOmschrijving(regel.wensen[0]);
+      return regel;
+    });
+    // Open wensen hebben nog geen versie: die vormen samen de niet-gereleaste rij,
+    // net als "Geen oplevering" in Jira.
+    var open = openTickets();
+    if (open.length) {
+      uit.push({
+        versie: 'Geen oplevering', datum: '', wensen: open, cases: 0, assertions: 0,
+        status: 'Niet gereleased',
+        omschrijving: open.length + ' wens(en) die nog op een versie wachten.'
+      });
+    }
+    return uit;
+  }
+
+  function korteOmschrijving(ticket) {
+    if (!ticket) return '';
+    var tekst = String(ticket.wish || ticket.title || '').replace(/\s+/g, ' ').trim();
+    // Eerste zin, of afgekapt: de tabel moet te scannen zijn, het hele verhaal
+    // staat in het ticket zelf.
+    var punt = tekst.indexOf('. ');
+    if (punt > 30 && punt < 160) return tekst.slice(0, punt + 1);
+    return tekst.length > 160 ? tekst.slice(0, 157) + '…' : tekst;
+  }
+
+  function renderReleases() {
+    var lijst = releases().filter(function (regel) {
+      if (ui.releaseFilter === 'released') return regel.status === 'Gereleased';
+      if (ui.releaseFilter === 'open') return regel.status === 'Niet gereleased';
+      return true;
+    }).filter(function (regel) {
+      if (!ui.query) return true;
+      return [regel.versie, regel.omschrijving, regel.status].join(' ').toLowerCase().indexOf(ui.query) >= 0;
+    });
+
+    var tabel = $('[data-release-table]');
+    if (tabel) {
+      var zichtbaar = lijst.slice(0, toonAantal('releases'));
+      tabel.innerHTML = (zichtbaar.length ? zichtbaar.map(function (regel) {
+        var klaar = regel.wensen.length ? Math.round((regel.wensen.filter(function (t) { return (t.cases || []).length; }).length / regel.wensen.length) * 100) : 0;
+        return '<tr data-release="' + escapeHtml(regel.versie) + '">'
+          + '<td><button type="button" class="row-open" data-release-open="' + escapeHtml(regel.versie) + '">' + escapeHtml(regel.versie) + '</button></td>'
+          + '<td>' + (regel.status === 'Gereleased'
+            ? '<span class="status-pill pass">Gereleased</span>'
+            : '<span class="status-pill open">' + escapeHtml(regel.status) + '</span>') + '</td>'
+          + '<td><span class="voortgang" role="img" aria-label="' + klaar + ' procent van de wensen heeft een testcase">'
+            + '<i style="width:' + klaar + '%"></i></span>'
+            + '<small>' + regel.wensen.length + ' wens(en) · ' + regel.cases + ' case(s) · ' + regel.assertions + ' assertions</small></td>'
+          + '<td>' + escapeHtml(regel.datum || '—') + '</td>'
+          + '<td>' + escapeHtml(regel.omschrijving) + '</td>'
+          + '</tr>';
+      }).join('') : '<tr><td colspan="5"><p class="empty-column">Geen releases met dit filter</p></td></tr>')
+        + (lijst.length > zichtbaar.length ? '<tr class="toon-meer-rij"><td colspan="5">' + toonMeerHtml('releases', lijst.length) + '</td></tr>' : '');
+    }
+
+    var alle = releases();
+    $$('[data-release-count]').forEach(function (el) { el.textContent = String(alle.length); });
+    var meta = $('[data-release-meta]');
+    if (meta) meta.textContent = lijst.length === alle.length ? alle.length + ' releases' : lijst.length + ' van ' + alle.length + ' getoond';
+    $$('[data-release-filter]').forEach(function (knop) {
+      knop.setAttribute('aria-pressed', knop.getAttribute('data-release-filter') === ui.releaseFilter ? 'true' : 'false');
+    });
+  }
+
   function renderLivingDoc() {
     state.livingDoc = state.livingDoc.slice(0, LIVING_DOC_BEWAAR);
     var list = $('[data-living-doc]');
@@ -683,6 +776,7 @@
     renderPhases();
     renderBoard();
     renderTests();
+    renderReleases();
     renderKnowledge();
     renderLivingDoc();
     renderFlowMonitor();
@@ -1374,6 +1468,21 @@
       var lijst = meerKnop.getAttribute('data-toon-meer');
       ui.toon[lijst] = toonAantal(lijst) + (PER_KEER[lijst] || 12);
       render();
+      return;
+    }
+
+    var releaseFilter = target.closest('[data-release-filter]');
+    if (releaseFilter) { ui.releaseFilter = releaseFilter.getAttribute('data-release-filter'); resetToon(); render(); return; }
+
+    // Klikken op een versie toont precies wat er in die release zat, op het bord.
+    var releaseOpen = target.closest('[data-release-open]');
+    if (releaseOpen) {
+      var versie = releaseOpen.getAttribute('data-release-open');
+      ui.query = versie === 'Geen oplevering' ? '' : versie.toLowerCase();
+      var zoekbalk = $('[data-search]');
+      if (zoekbalk) zoekbalk.value = ui.query;
+      ui.type = 'all'; ui.source = 'all'; resetToon();
+      switchTab('backlog', false); render();
       return;
     }
 

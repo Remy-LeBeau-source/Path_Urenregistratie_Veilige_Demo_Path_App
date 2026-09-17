@@ -600,3 +600,23 @@ tr.toon-meer-rij td { padding: 6px 10px; }
 /* Versie in de voet, zoals de urenapp; bovenin de versheid van wat je ziet */
 .demo-footer .demo-versie { margin-left: auto; color: var(--subtle); font-family: var(--mono); font-size: 11px; white-space: nowrap; }
 .feed-version b { color: var(--green); font-weight: 600; }
+
+/* Releases: een versie met alles wat erin is opgeleverd, in de opzet van het
+   Releases-scherm van Jira. Voortgang is hier het aandeel wensen met een echte
+   testcase -- geen schatting, maar te herleiden tot de cases zelf. */
+.release-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
+.release-filters .filter-label { color: var(--subtle); font-size: 11px; font-weight: 700; letter-spacing: .06em; }
+.release-filters button { padding: 4px 10px; border: 1px solid transparent; border-radius: 3px; background: transparent; color: var(--jira); font: inherit; font-size: 12.5px; cursor: pointer; }
+.release-filters button:hover { background: var(--surface-2); }
+.release-filters button[aria-pressed="true"] { background: var(--jira-soft); border-color: var(--jira); font-weight: 600; }
+.release-tabel { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.release-tabel th { padding: 8px 10px 8px 0; border-bottom: 2px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; text-align: left; }
+.release-tabel td { padding: 10px 10px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.release-tabel td small { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
+.voortgang { display: block; width: 130px; max-width: 100%; height: 8px; border-radius: 4px; background: var(--surface-3); overflow: hidden; }
+.voortgang i { display: block; height: 100%; background: var(--green); }
+@media (max-width: 720px) {
+  .release-tabel thead { display: none; }
+  .release-tabel tr { display: block; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .release-tabel td { display: block; padding: 2px 0; border: 0; }
+}

@@ -1,8 +1,42 @@
 {
   "appVersion": "2.0.151",
-  "generatedAt": "2026-09-17T13:29:09.516Z",
+  "generatedAt": "2026-09-17T14:21:33.491Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "17 sep",
+      "version": "2.0.151",
+      "wish": "Releases-pagina (naar het Releases-scherm uit Gio's eigen Jira): een release is bij ons een versienummer met alle wensen die daarin zijn opgeleverd, hun testcases en het totaal aantal assertions. Vierde tabblad naast Kennisbank, Backlog en Testbeheer, met snelfilters (alles/gereleased/niet gereleased) en een voortgangsbalk die het aandeel wensen met een echte testcase toont -- geen schatting, herleidbaar tot de cases zelf. Open wensen zonder versie vormen samen de rij 'Geen oplevering', zoals in Jira. Klikken op een versie filtert het bord op precies die opleveringen. PIPE-H-011, tegenproef: de optelling van assertions op nul gezet -> rood (0 in plaats van 157); teruggezet -> groen. Twee bestaande cases aangepast op het vierde tabblad (PIPE-H-002 leesvolgorde, PIPE-N-001 past nog steeds op een telefoon: Releases eindigt op 381px binnen de 391).",
+      "cases": [
+        {
+          "id": "PIPE-H-011",
+          "title": "Releases bundelt de echte versies met hun wensen, cases en assertions",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Datagedreven vergelijking (versiegroepering op de pagina versus dezelfde groepering uit de feed) + equivalentieklassen op het releasefilter + navigatiecontrole van release naar bord",
+          "assertions": 16,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: Releases bundelt de echte versies met hun wensen, cases en assertions\n  Given het tabblad Releases\n  When de flow voor PIPE-H-011 wordt uitgevoerd\n  Then staat de nieuwste versie bovenaan met haar echte aantallen\n  And scheidt het filter gereleaste versies van wat nog op een versie wacht\n  And brengt klikken op een versie je naar precies die opleveringen"
+        },
+        {
+          "id": "PIPE-H-002",
+          "title": "opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Toestandsovergangtest (aangenomen → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van het wachtrij-antwoord + negatieve controle dat GitHub niet meer wordt benaderd",
+          "assertions": 42,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub\n  Given de pagina opent in Confluence, want daar begint de keten\n  And vanaf het Jira-bord wijst een knop terug naar het loket\n  And een nieuwe wens met acceptatiecriterium\n  When de flow wordt gestart, gaat de wens naar de eigen wachtrij en niet naar GitHub\n  Then meldt de pagina dat hij is aangenomen en staat hij op het bord, ook na herladen\n  And een tweede bezoeker met een schone browser ziet dezelfde wens, want de wachtrij staat op de server\n  And een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc"
+        },
+        {
+          "id": "PIPE-N-001",
+          "title": "de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole",
+          "assertions": 14,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de Kennisbank op de telefoon wordt geopend\n  Then tekent de Living Doc tien regels per keer, lokaal vóór echt, en bewaart hij er hooguit 25\n  And de pagina heeft geen horizontale overflow of gedeelde appcode"
+        }
+      ]
+    },
     {
       "date": "17 sep",
       "version": "2.0.151",
@@ -497,7 +531,7 @@
           "technique": "Toestandsovergangtest (aangenomen → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van het wachtrij-antwoord + negatieve controle dat GitHub niet meer wordt benaderd",
           "assertions": 42,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub\n  Given de pagina opent in Confluence, want daar begint de keten\n  And vanaf het Jira-bord wijst een knop terug naar het loket\n  And een nieuwe wens met acceptatiecriterium\n  When de flow wordt gestart, gaat de wens naar de eigen wachtrij en niet naar GitHub\n  Then meldt de pagina dat hij is aangenomen en staat hij op het bord, ook na herladen\n  And een tweede bezoeker met een schone browser ziet dezelfde wens, want de wachtrij staat op de server\n  And een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc"
+          "gherkin": ""
         },
         {
           "id": "PIPE-N-002",
@@ -506,7 +540,7 @@
           "technique": "Foutinjectie op de intake (leeg veld, onleesbare invoer, grensoverschrijding, verkeerde methode) + omgevingsafscherming met tegenproef",
           "assertions": 17,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de intakewachtrij weigert onvolledige, te grote en verkeerd geadresseerde invoer, en bestaat niet op productie\n  Given de intakewachtrij van de open demo-omgeving\n  When er onvolledige, onleesbare, te grote en verkeerd geadresseerde verzoeken binnenkomen\n  Then staat er van al die pogingen niets in de wachtrij en lekt er geen IP-kenmerk\n  And op een productieomgeving bestaat de wachtrij helemaal niet"
+          "gherkin": ""
         }
       ]
     },

@@ -239,6 +239,9 @@ test.describe('Path Pipeline TEST-demo', () => {
       expect(tabVolgorde.map((t) => t.replace(/\s+/g, ' ').trim())).toEqual([
         expect.stringContaining('Confluence'),
         expect.stringContaining('Jira'),
+        // Releases hoort bij Jira en staat daarom achter de Backlog, niet tussen
+        // Confluence en Jira in: de leesvolgorde van de keten blijft leidend.
+        expect.stringContaining('Releases'),
         expect.stringContaining('Zephyr'),
       ]);
       // Deze pagina mag openbaar staan onder één voorwaarde, en die voorwaarde
@@ -420,6 +423,68 @@ test.describe('Path Pipeline TEST-demo', () => {
       await expect(page.locator('[data-detail-traceability]')).toBeHidden();
       await kop.click();
       await expect(page.locator('[data-detail-traceability]')).toBeVisible();
+    });
+  });
+
+  test('[PIPE-H-011] Releases bundelt de echte versies met hun wensen, cases en assertions', async ({ page }) => {
+    // Opdracht Gio (17 sep, naar het Releases-scherm van zijn eigen Jira): een
+    // release is bij ons een versienummer met alles wat daarin is opgeleverd.
+    // Alle cijfers moeten herleidbaar zijn tot de projectstand -- een voortgangs-
+    // balk die iets anders vertelt dan de onderliggende cases is erger dan geen balk.
+    await page.goto('/pilot/path-kwaliteitsstraat.html');
+    await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
+    const feed = await feedVanServer(page);
+
+    // Zelfde groepering als de pagina: versies uit de opleveringen, nieuwste eerst.
+    const versies: string[] = [];
+    const perVersie = new Map<string, { wensen: number; cases: number; assertions: number }>();
+    for (const rij of feed.delivered) {
+      const versie = (rij.version.match(/\d+\.\d+\.\d+/) || [])[0];
+      if (!versie) continue;
+      if (!perVersie.has(versie)) { perVersie.set(versie, { wensen: 0, cases: 0, assertions: 0 }); versies.push(versie); }
+      const stand = perVersie.get(versie)!;
+      stand.wensen += 1;
+      stand.cases += rij.cases.length;
+      stand.assertions += rij.cases.reduce((som, c) => som + Number(c.assertions || 0), 0);
+    }
+    expect(versies.length, 'er zijn meerdere versies opgeleverd').toBeGreaterThan(3);
+
+    await test.step('Given het tabblad Releases', async () => {
+      await page.getByRole('tab', { name: /Releases/ }).click();
+      await expect(page.locator('#panel-releases')).toBeVisible();
+      // Plus één rij voor de open wensen zonder versie ("Geen oplevering").
+      await expect(page.locator('[data-release-count]').first()).toHaveText(String(versies.length + (feed.open.length ? 1 : 0)));
+    });
+
+    await test.step('Then staat de nieuwste versie bovenaan met haar echte aantallen', async () => {
+      const eerste = page.locator('[data-release-table] tr').first();
+      const verwacht = perVersie.get(versies[0])!;
+      await expect(eerste).toContainText(versies[0]);
+      await expect(eerste).toContainText(`${verwacht.wensen} wens(en)`);
+      await expect(eerste).toContainText(`${verwacht.cases} case(s)`);
+      await expect(eerste).toContainText(`${verwacht.assertions} assertions`);
+    });
+
+    await test.step('And scheidt het filter gereleaste versies van wat nog op een versie wacht', async () => {
+      await page.locator('[data-release-filter="open"]').click();
+      const open = page.locator('[data-release-table] tr:not(.toon-meer-rij)');
+      await expect(open).toHaveCount(feed.open.length ? 1 : 0);
+      if (feed.open.length) {
+        await expect(open.first()).toContainText('Niet gereleased');
+        await expect(open.first()).toContainText(`${feed.open.length} wens(en)`);
+      }
+      await page.locator('[data-release-filter="released"]').click();
+      await expect(page.locator('[data-release-table]')).not.toContainText('Niet gereleased');
+      await page.locator('[data-release-filter="all"]').click();
+    });
+
+    await test.step('And brengt klikken op een versie je naar precies die opleveringen', async () => {
+      await page.locator(`[data-release-open="${versies[1]}"]`).click();
+      await expect(page.locator('#panel-backlog')).toBeVisible();
+      await expect(page.locator('[data-search]')).toHaveValue(versies[1]);
+      const kaarten = page.locator('[data-ticket-list="done"] .ticket-card');
+      await expect(kaarten).not.toHaveCount(0);
+      await expect(page.locator('[data-ticket-list="done"]')).toContainText(versies[1]);
     });
   });
 
@@ -969,10 +1034,13 @@ test('[PIPE-N-004] tussen de mobiele en de bureaubladdrempel blijft de Confluenc
           .map(item => `${item.element}.${String(item.className)} [${Math.round(item.rect.left)}, ${Math.round(item.rect.right)}]`),
       }));
       expect(breedte.document, `Elementen buiten beeld: ${breedte.buitenBeeld.join(', ')}`).toBeLessThanOrEqual(breedte.viewport + 1);
-      // Alle drie de werkruimtes moeten op een telefoon zichtbaar naast elkaar passen.
+      // Alle werkruimtes moeten op een telefoon zichtbaar naast elkaar passen.
+      // Sinds 17 sep is Releases erbij gekomen (vier tabbladen); het vaste aantal
+      // staat hier zodat een vijfde tab een bewuste keuze blijft en niet stil de
+      // balk buiten beeld duwt.
       const tabs = await page.evaluate(() => Array.from(document.querySelectorAll('[role="tab"]'))
         .map((tab) => ({ naam: (tab.textContent || '').replace(/\s+/g, ' ').trim(), rechts: Math.round(tab.getBoundingClientRect().right) })));
-      expect(tabs).toHaveLength(3);
+      expect(tabs).toHaveLength(4);
       const buitenBeeld = tabs.filter((tab) => tab.rechts > 391);
       expect(buitenBeeld, `Tabbladen buiten beeld: ${buitenBeeld.map((t) => t.naam).join(', ')}`).toEqual([]);
       await expect(page.locator('script[src*="assets/app.js"], link[href*="assets/styles.css"]')).toHaveCount(0);

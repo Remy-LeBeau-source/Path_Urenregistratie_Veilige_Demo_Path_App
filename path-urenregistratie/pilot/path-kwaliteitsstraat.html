@@ -167,6 +167,9 @@
       <button id="tab-backlog" role="tab" type="button" aria-selected="false" aria-controls="panel-backlog" tabindex="-1" data-tab="backlog">
         <span aria-hidden="true">▦</span><span><small>Jira</small>Backlog</span><b data-backlog-count>0</b>
       </button>
+      <button id="tab-releases" role="tab" type="button" aria-selected="false" aria-controls="panel-releases" tabindex="-1" data-tab="releases">
+        <span aria-hidden="true">⚑</span><span><small>Jira</small>Releases</span><b data-release-count>0</b>
+      </button>
       <button id="tab-tests" role="tab" type="button" aria-selected="false" aria-controls="panel-tests" tabindex="-1" data-tab="tests">
         <span aria-hidden="true">✓</span><span><small>Zephyr</small>Testbeheer</span><b data-test-count>0</b>
       </button>
@@ -330,6 +333,32 @@
     </section>
 
     <!-- ============ ZEPHYR SCALE ============ -->
+    <!-- ============ RELEASES ============ -->
+    <!-- Een release is bij ons een versienummer: alle wensen die in dezelfde
+         versie zijn opgeleverd horen erbij, met hun testcases. Dat is precies
+         wat een Jira-versie is, en we hebben het al -- er hoefde niets verzonnen
+         te worden. -->
+    <section id="panel-releases" class="tab-panel" role="tabpanel" aria-labelledby="tab-releases" data-panel-view="releases" hidden>
+      <div class="test-surface">
+        <div class="section-head">
+          <div><p class="product-label jira">JIRA · RELEASES</p><h2>Releases</h2></div>
+          <span data-release-meta></span>
+        </div>
+        <div class="release-filters">
+          <span class="filter-label">QUICK FILTERS:</span>
+          <button type="button" data-release-filter="all" aria-pressed="true">Alles</button>
+          <button type="button" data-release-filter="released" aria-pressed="false">Gereleased</button>
+          <button type="button" data-release-filter="open" aria-pressed="false">Niet gereleased</button>
+        </div>
+        <table class="release-tabel">
+          <thead>
+            <tr><th>Versie</th><th>Status</th><th>Voortgang</th><th>Datum</th><th>Omschrijving</th></tr>
+          </thead>
+          <tbody data-release-table></tbody>
+        </table>
+      </div>
+    </section>
+
     <section id="panel-tests" class="tab-panel" role="tabpanel" aria-labelledby="tab-tests" data-panel-view="tests" hidden>
       <div class="zephyr-layout">
         <aside class="page-tree" aria-label="Zephyr mappenboom">
