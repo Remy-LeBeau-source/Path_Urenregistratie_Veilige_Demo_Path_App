@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 616 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 624 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 616 unieke case-ID's
+- Playwright executable cases: 624 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 617 unieke case-ID's
-- Playwright features: 32
+- Totaal executable cases: 625 unieke case-ID's
+- Playwright features: 33
 - Database features: 1
-- Playwright steps mappings: 32
+- Playwright steps mappings: 33
 - Database steps mappings: 1
-- Uitvoeringen: 671
-- Niet-mobile projectuitvoeringen: 561
+- Uitvoeringen: 679
+- Niet-mobile projectuitvoeringen: 569
 - Mobile functionele cases: 55
 - Pixel 7 / Chromium-uitvoeringen: 55
 - iPhone 13 / WebKit-uitvoeringen: 55
 
-De 55 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 616 Playwright-functionele cases in totaal 671 resultaten op: 561 + (55 x 2) = 671.
+De 55 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 624 Playwright-functionele cases in totaal 679 resultaten op: 569 + (55 x 2) = 679.
 
 ## Documentatieketen
 
@@ -138,9 +138,24 @@ De 55 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 616 Playwri
 - [AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 19
 - [AUTH-H-020] elke medewerker ziet na inloggen de eigen naam, nooit die van een collega — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [AUTH-H-021] elke beheerder ziet na inloggen de eigen naam, nooit die van een collega — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
-- [AUTH-H-024] avatar-initialen slaan Nederlandse tussenvoegsels over — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 4
+- [AUTH-H-024] avatar-initialen slaan Nederlandse tussenvoegsels over — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 5
 - [AUTH-H-022] in productiemodus toont de app de naam van de ingelogde gebruiker — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 2
 - [AUTH-H-025] de medewerker-snelkeuze vult het juiste, per-persoon echte adres in, niet dat van een andere genoemde tester — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
+
+### Avatarkiezer in het profielmenu
+
+- Feature: `tests/playwright/features/avatar-picker.feature`
+- Source: `tests/playwright/avatar-picker.spec.ts`
+- Cases: 8
+
+- [AVATAR-H-001] een medewerker met een vaste naam krijgt automatisch zijn toegewezen avatar, zonder zelf te kiezen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
+- [AVATAR-H-002] een beheerder met een vaste naam krijgt automatisch zijn toegewezen avatar — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 1
+- [AVATAR-H-003] de avatarkiezer opent naast de ongewijzigde menu-items en testfunctiebalk — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 12
+- [AVATAR-H-004] bladeren eindigt op precies vijf avatars met een uitgeschakelde volgende-knop — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 7
+- [AVATAR-H-005] een avatar kiezen is direct zichtbaar, sluit het menu niet, en blijft staan na een echte paginaherlading — Techniek: Toestandsovergang · Assertions: 6
+- [AVATAR-N-001] het vinkje op de gekozen avatar is navy op mint, nooit wit — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
+- [AVATAR-H-006] namen buiten de vaste lijst krijgen elk een eigen, stabiele avatar, zonder geslacht te raden — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
+- [AVATAR-H-007] de avatarkiezer werkt identiek in de Nieuw-vormgeving (Modern) — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
 
 ### Bedrijfsketens van medewerker tot Backoffice
 
@@ -234,7 +249,7 @@ De 55 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 616 Playwri
 - [DASH-H-031] het verloop van een maand klapt open in Mijn maanden en overleeft een hertekening — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 19
 - [DASH-H-032] Mijn uren noemt onderin hoeveel werkdagen nog leeg zijn, inclusief dagen die nog moeten komen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 12
 - [DASH-H-033] de verloopstappen in Klassiek tonen ✓ en • in de bol, leesbaar in licht en donker — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 14
-- [DASH-H-034] de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 32
+- [DASH-H-034] de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 33
 - [DASH-H-035] Mijn uren op desktop toont alleen Ma–Vr, de datum boven elk veld, 0/8/9 eronder en het weektotaal rechts — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
 - [DASH-N-031] de volgende actie is één zin zonder aangeplakte maand, en de maand staat in de regel eronder — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [DASH-H-036] Vandaag gebruikt in Klassiek de ene kopkaart op desktop en de Wild-opbouw op telefoon — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 45

@@ -1,8 +1,33 @@
 {
-  "appVersion": "2.0.154",
-  "generatedAt": "2026-09-17T14:50:21.329Z",
+  "appVersion": "2.0.155",
+  "generatedAt": "2026-09-17T22:17:20.687Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "17 sep",
+      "version": "2.0.155",
+      "wish": "Avatarkiezer in het profielmenu, op verzoek: een knopkop met eigen avatar/naam/rol die uitklapt naar een raster van twaalf afbeeldingen (113 in totaal, ‹ › paginering, teller 1/10 t/m 10/10), voor elke rol (medewerker, backoffice, beheer) en in beide vormgevingen. Kiezen is direct, geen aparte opslaan-stap, blijft lokaal per browser bewaard (zelfde aanpak als de bestaande profielfoto-upload). Zeven collega's hebben een vaste toewijzing gekregen; iedereen daarbuiten krijgt een van zijn naam afgeleide, stabiele avatar (geen geslacht geraden) en kan die zelf wijzigen. Onderweg één bestaande regressietest gecorrigeerd: die verwachtte nog initialen-tekst waar nu standaard al een avatarfoto staat. AVATAR-H-001 t/m -007 en AVATAR-N-001 nieuw, beide vormgevingen en rollen gedekt.",
+      "cases": [
+        {
+          "id": "AVATAR-H-001",
+          "title": "een medewerker met een vaste naam krijgt automatisch zijn toegewezen avatar, zonder zelf te kiezen",
+          "feature": "tests/playwright/features/avatar-picker.feature",
+          "technique": "Beslissingstabel rollen en autorisatie",
+          "assertions": 1,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een medewerker met een vaste naam krijgt automatisch zijn toegewezen avatar, zonder zelf te kiezen\n  Given de medewerker inlogt zonder ooit een avatar gekozen te hebben\n  When de flow voor AVATAR-H-001 wordt uitgevoerd\n  Then toont het profielmenu meteen zijn vaste, toegewezen avatar (nummer 1)"
+        },
+        {
+          "id": "AVATAR-N-001",
+          "title": "het vinkje op de gekozen avatar is navy op mint, nooit wit",
+          "feature": "tests/playwright/features/avatar-picker.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 4,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: het vinkje op de gekozen avatar is navy op mint, nooit wit\n  Given avatarkiezer in het profielmenu is voorbereid\n  When de flow voor AVATAR-N-001 wordt uitgevoerd\n  Then is de achtergrond van het vinkje mint en de tekstkleur navy, geen wit"
+        }
+      ]
+    },
     {
       "date": "17 sep",
       "version": "2.0.154",
@@ -13,7 +38,7 @@
           "title": "de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee",
           "feature": "tests/playwright/features/dashboard.feature",
           "technique": "End-to-end use-case + visuele contractasserties",
-          "assertions": 32,
+          "assertions": 33,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee\n  Given een lege kaart met kiezen, foto en zelf gemaild\n  When een verkeerd bestandstype wordt gekozen, dan blijft de kaart leeg met uitleg\n  When een PDF wordt gekozen, dan toont de kaart naam, grootte, kruisje en de verstuurknop\n  And het kruisje brengt de kaart terug naar leeg\n  When het bestand als bijlage wordt verstuurd, dan gaat precies dat bestand mee naar de indienroute\n  And na een weigering blijft het gekozen bestand staan\n  Then wordt met Playwright-assertions bevestigd dat de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee"
         }
@@ -478,7 +503,7 @@
           "technique": "Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst",
           "assertions": 26,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet\n  Given de keuzelijst toont de nice-to-haves uit GIO-WENSEN\n  When de PO een verbetering kiest, then staan samenvatting en waarde ingevuld en blijft het criterium aan hem\n  And zelf typen blijft mogelijk: aanpassen maakt de keuze niet ongedaan, loslaten wel\n  And het type heet Onderhoud, niet Chore\n  And de volgorde in Te doen is met het toetsenbord te wijzigen en blijft na herladen\n  And bovenin staat hoe vers de stand is en de versie staat in de voet zoals in de urenapp\n  Then wordt met Playwright-assertions bevestigd dat de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet"
+          "gherkin": ""
         },
         {
           "id": "PIPE-H-001",
@@ -487,7 +512,7 @@
           "technique": "Datagedreven vergelijking (pagina versus pilot/path-kwaliteitsstraat-data.json) + traceerbaarheid over drie projecties",
           "assertions": 38,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin\n  Given de zelfstandige TEST-only pipelinepagina met de echte projectstand\n  When de pagina is geladen, staan de vier fasen en de eerste echte opleveringen op het bord\n  And de zoekbalk vindt ook een oplevering die buiten de eerste lading valt\n  And Kennisbank en Testbeheer projecteren dezelfde echte cases, met paginering in plaats van een afkap\n  Then wordt met Playwright-assertions bevestigd dat de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin"
+          "gherkin": ""
         }
       ]
     },

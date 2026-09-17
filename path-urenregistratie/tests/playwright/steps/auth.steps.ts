@@ -62,7 +62,7 @@ When("de flow voor AUTH-H-021 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat elke beheerder ziet na inloggen de eigen naam, nooit die van een collega");
 Given("Stasjo van Bakel bestaat als testmedewerker met een tussenvoegsel in de naam");
 When("Stasjo van Bakel inlogt en de app de avatar tekent");
-Then("tonen beide avatars SB, niet SV");
+Then("tonen beide avatars een afbeelding, geen tekst -- Stasjo heeft sinds de avatarkiezer (17 sep) een vaste, toegewezen pop, niet meer de initialen-fallback");
 And("de initialen-functie klopt over de klassen namen heen");
 When("de flow voor AUTH-H-022 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat in productiemodus toont de app de naam van de ingelogde gebruiker");

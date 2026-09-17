@@ -1634,13 +1634,32 @@ html:not([data-skin="new"]) .button-primary:active:not(:disabled) { transform: s
 .notification-item small { margin-top: 6px; color: var(--teal); font-size: 9px; }
 .notification-empty { color: var(--muted); font-size: 11px; line-height: 1.5; padding: 26px 18px; text-align: center; }
 .profile-menu { width: 270px; padding: 8px; }
-.profile-menu-person { display: flex; align-items: center; gap: 11px; margin-bottom: 5px; border-radius: 12px; background: var(--green-light); padding: 12px; }
+.profile-menu-person { display: flex; align-items: center; gap: 11px; width: 100%; margin-bottom: 5px; border: 0; border-radius: 12px; background: var(--green-light); padding: 12px; cursor: pointer; font: inherit; text-align: left; }
+.profile-menu-person:hover { background: var(--vlak-zacht); }
 .profile-menu-person strong, .profile-menu-person small { display: block; }
 .profile-menu-person strong { font-size: 11px; }
 .profile-menu-person small { margin-top: 3px; color: var(--muted); font-size: 9px; }
 .profile-menu > button { width: 100%; border: 0; border-radius: 9px; background: transparent; color: var(--ink); cursor: pointer; font-size: 11px; padding: 10px 11px; text-align: left; }
 .profile-menu > button:hover { background: var(--vlak-zacht); }
 .profile-menu .danger-menu-item { margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; color: var(--danger); }
+
+/* Avatarkiezer in het profielmenu (17 sep, handoff). Klappen doet
+   #avatar-picker-panel open/dicht; kiezen is direct (geen los opslaan) en
+   sluit het paneel niet -- alleen de knop zelf (#avatar-picker-trigger)
+   bepaalt of het menu openblijft, zodat je meteen kunt doorbladeren. */
+.avatar-picker-panel { margin-bottom: 6px; border-radius: 12px; background: var(--vlak-zacht); padding: 10px; }
+.avatar-picker-panel[hidden] { display: none; }
+.avatar-picker-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.avatar-picker-optie { position: relative; border: 2px solid transparent; border-radius: 9px; padding: 2px; background: transparent; cursor: pointer; aspect-ratio: 1; }
+.avatar-picker-optie img { width: 100%; height: 100%; border-radius: 7px; display: block; object-fit: cover; }
+.avatar-picker-optie:hover { border-color: var(--line); }
+.avatar-picker-optie.is-gekozen { border-color: var(--mint); }
+.avatar-picker-optie .avatar-picker-vink { position: absolute; top: -5px; right: -5px; width: 16px; height: 16px; border-radius: 50%; background: var(--mint); color: var(--navy); display: grid; place-items: center; font-size: 10px; font-weight: 900; line-height: 1; box-shadow: 0 0 0 2px var(--surface); }
+.avatar-picker-nav { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 8px; }
+.avatar-picker-nav button { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); cursor: pointer; width: 28px; height: 28px; font-size: 15px; line-height: 1; }
+.avatar-picker-nav button:hover { background: var(--green-light); }
+.avatar-picker-nav button:disabled { opacity: .4; cursor: default; }
+.avatar-picker-nav span { color: var(--muted); font-size: 10px; font-weight: 700; min-width: 30px; text-align: center; }
 
 /* Het medewerkerdashboard krijgt een bovengrens in de breedte. Waarde exact uit
    de desktopreferentie (handoff/medewerker-gui.html): de dashboardkolom staat
