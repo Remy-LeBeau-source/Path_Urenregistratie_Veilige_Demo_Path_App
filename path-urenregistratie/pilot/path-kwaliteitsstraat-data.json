@@ -1,6 +1,6 @@
 {
-  "appVersion": "2.0.151",
-  "generatedAt": "2026-09-17T12:01:14.464Z",
+  "appVersion": "2.0.152",
+  "generatedAt": "2026-09-17T12:41:48.832Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
@@ -1405,8 +1405,8 @@
       "status": "route"
     },
     {
-      "date": "16 sep",
-      "wish": "CI-risico, nog niet opgelost: shard 8 van de tien testshards draait structureel 17-18 minuten terwijl de afbreeklimiet 22 minuten is; de snelste shards doen 2-5 minuten. Gemeten over drie releases (35023441673, 35035388985, 35043135123), zowel bij Validate als bij Promote Test. Oorzaak is de inhoud, niet het aantal: de zware integratiespecs (urenregistratie schrijven, correcties, beveiliging, rollen, teambeheer) vallen samen in één shard. Eerder is ditzelfde voor dashboard.spec.ts opgelost door dat bestand te splitsen. Nog te doen: opnieuw verdelen of splitsen, anders valt een release ooit om op de tijdslimiet.",
+      "date": "17 sep",
+      "wish": "CI-risico, nog niet opgelost -- aanname bijgesteld na onderzoek: shard 8 van de tien testshards draait structureel 17-18 minuten terwijl de afbreeklimiet 22 minuten is (gemeten over drie releases: 35023441673, 35035388985, 35043135123). Uitgezocht welk bestand de oorzaak is: business-workflows-e2e.spec.ts (acht volledige browserflows, geen API-snelkoppelingen) duurt alléén al 5,8 minuut lokaal, ruim zwaarder per case dan zijn buurbestanden. In de veronderstelling dat \"net als bij dashboard.spec.ts\" zou werken is het gesplitst in business-workflows-e2e.spec.ts (E2E-H-001/002/003/006) en business-workflows-e2e-approvals.spec.ts (E2E-H-004/005/007/008). Die aanname bleek niet te kloppen: Playwright's `--shard` deelt een platte, alfabetisch-geordende lijst testbestanden in vaste, even grote stukken (`filterForShard` in node_modules/playwright/lib/runner/index.js) -- geen duurgestuurde herverdeling, en een nieuw bestand dat alfabetisch vlak naast het oude komt te staan landt domweg in dezelfde shard (lokaal bevestigd: shard 8 bleef exact 126 tests, alleen het aantal bestanden ging van 17 naar 18). Een naam die wél elders in het alfabet valt zou kunnen helpen, maar botst dan met de expliciete waarschuwing in playwright.config.ts over dashboard.spec.ts: een specbestand buiten een letterlijk `/business-workflows-*.spec.ts`-patroon verliest stilzwijgend zijn mobiele dekking (dat gebeurde al eens echt, 40 cases weg zonder rode test). Geprobeerd en teruggedraaid omdat de tijd ontbrak om dat veilig te verifiëren. De splitsing zelf blijft staan (kleinere, overzichtelijkere bestanden, nul regressie, 24/24 cases groen), maar lost de doorlooptijd niet op. Nog te doen: een echte oplossing vraagt ofwel een bewuste, geverifieerde alfabetische herpositionering (met bijbehorende testMatch-update) ofwel een eigen duurgestuurde shardverdeling (`PWTEST_SHARD_WEIGHTS` bestaat al als hook in Playwright zelf) -- allebei groter dan in deze zet past.",
       "who": "main",
       "status": "open"
     },
