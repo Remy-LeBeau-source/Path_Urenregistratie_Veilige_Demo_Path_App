@@ -620,3 +620,24 @@ tr.toon-meer-rij td { padding: 6px 10px; }
   .release-tabel tr { display: block; padding: 8px 0; border-bottom: 1px solid var(--line); }
   .release-tabel td { display: block; padding: 2px 0; border: 0; }
 }
+
+/* Kruisverwijzingen in het detail: Jira → Confluence → Zephyr, met het echte
+   nummer zichtbaar. Een verwijzing zonder nummer dwingt tot zoeken en is dus
+   geen verwijzing (opdracht Gio, 17 sep). */
+.detail-links { display: flex; flex-wrap: wrap; align-items: stretch; gap: 6px; margin: 0 0 14px; }
+.detail-links small { display: block; color: var(--subtle); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.link-groep, .link-knop { display: flex; flex-direction: column; gap: 1px; padding: 5px 9px; border: 1px solid var(--line); border-radius: 3px; background: var(--surface-2); font-size: 12px; text-align: left; }
+.link-knop { cursor: pointer; color: var(--jira); }
+.link-knop:hover { background: var(--jira-soft); border-color: var(--jira); }
+.link-knop.kopieer { margin-left: auto; color: var(--muted); }
+.link-groep code { font-family: var(--mono); font-size: 12px; }
+.link-pijl { align-self: center; color: var(--subtle); font-size: 12px; }
+.issue-link { border: 0; background: transparent; color: var(--jira); font: inherit; font-size: 12px; cursor: pointer; padding: 0; }
+.issue-link:hover { text-decoration: underline; }
+
+/* De regel in de Living Doc waar je vanuit een ticket naartoe springt, kort
+   gemarkeerd: anders sta je in een lijst van tientallen regels de jouwe te zoeken. */
+.living-doc li.is-aangewezen { background: var(--confluence-soft); box-shadow: inset 3px 0 0 var(--confluence); }
+@media (prefers-reduced-motion: no-preference) {
+  .living-doc li { transition: background .3s ease; }
+}

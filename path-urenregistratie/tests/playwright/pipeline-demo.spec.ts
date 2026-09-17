@@ -426,6 +426,74 @@ test.describe('Path Pipeline TEST-demo', () => {
     });
   });
 
+  test('[PIPE-H-012] elk ticket heeft een deelbare link en zichtbare verwijzingen naar Confluence en Zephyr', async ({ page }) => {
+    // Opdracht Gio (17 sep): "we moeten linkjes maken met ID's en van Jira naar
+    // Confluence kunnen gaan". Plus: de verwijzing naar ons GitHub-issue moest
+    // weg -- dat is onze eigen implementatie en geen informatie voor wie het bord
+    // leest, zeker niet zodra een klant meekijkt.
+    await page.goto('/pilot/path-kwaliteitsstraat.html');
+    await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
+    const feed = await feedVanServer(page);
+    const metCase = feed.delivered.find((row) => row.cases.length)!;
+    const sleutel = metCase.cases[0].id;
+
+    await test.step('Then stuurt geen enkele knop of link de lezer nog naar GitHub', async () => {
+      // Bewust op links en knoppen toetsen, niet op het woord: onze eigen
+      // projecthistorie noemt GitHub gewoon, want zo is het toen opgeschreven.
+      // Wat weg moest is de verwijzing zelf -- onze implementatie is geen
+      // informatie voor wie het bord leest.
+      await expect(page.locator('a[href*="github.com"]')).toHaveCount(0);
+      await expect(page.locator('[data-issue-url]')).toHaveCount(0);
+      const knoppenMetGithub = await page.evaluate(() => Array.from(document.querySelectorAll('a, button'))
+        .filter((el) => /github/i.test(el.textContent || ''))
+        .map((el) => (el.textContent || '').trim().slice(0, 60)));
+      expect(knoppenMetGithub, 'geen knop of link verwijst nog naar GitHub').toEqual([]);
+    });
+
+    await test.step('And staan in het ticket de verwijzingen met hun echte nummer', async () => {
+      await page.getByRole('tab', { name: /Backlog/ }).click();
+      await page.locator(`[data-ticket-list="done"] [data-open-ticket="${sleutel}"]`).first().click();
+      const links = page.locator('[data-detail-links]');
+      await expect(links).toContainText('Jira');
+      await expect(links).toContainText(sleutel);
+      await expect(links).toContainText('Confluence');
+      await expect(links).toContainText('Zephyr');
+      // Het nummer moet zichtbaar zijn: een verwijzing zonder nummer dwingt tot zoeken.
+      await expect(links.locator(`[data-open-case="${metCase.cases[0].id}"]`)).toBeVisible();
+    });
+
+    await test.step('And is de link naar dit ticket deelbaar', async () => {
+      // De URL wijst nu naar het geopende ticket.
+      expect(new URL(page.url()).hash).toBe(`#ticket/${sleutel}`);
+      const deelbaar = page.url();
+      await page.locator('[data-detail-close]').click();
+      await expect(page.locator('[data-detail-drawer]')).toBeHidden();
+      // Opnieuw openen via alleen die link moet hetzelfde ticket tonen.
+      await page.goto(deelbaar);
+      await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
+      await expect(page.locator('[data-detail-drawer]')).toBeVisible();
+      await expect(page.locator('[data-detail-key]')).toHaveText(sleutel);
+    });
+
+    await test.step('And wijst de keten door naar de uitkomst in de Living Doc', async () => {
+      // Vraag Gio: kom je op enig moment ook bij de Living Doc uit? Die stond er
+      // wel, maar was vanuit een ticket niet te bereiken.
+      await page.locator('[data-detail-links] [data-naar-living]').click();
+      await expect(page.locator('#panel-knowledge')).toBeVisible();
+      const regel = page.locator(`[data-living-key="${sleutel}"]`);
+      await expect(regel).toBeVisible();
+      await expect(regel).toContainText(sleutel);
+    });
+
+    await test.step('And brengt de Confluence-verwijzing je naar de pagina van hetzelfde nummer', async () => {
+      await page.goto(`/pilot/path-kwaliteitsstraat.html#ticket/${sleutel}`);
+      await expect(page.locator('[data-detail-drawer]')).toBeVisible();
+      await page.locator('[data-detail-links] [data-detail-doc-ontwerp]').click();
+      await expect(page.locator('#panel-knowledge')).toBeVisible();
+      await expect(page.locator('[data-doc-title]')).toContainText(sleutel);
+    });
+  });
+
   test('[PIPE-H-011] Releases bundelt de echte versies met hun wensen, cases en assertions', async ({ page }) => {
     // Opdracht Gio (17 sep, naar het Releases-scherm van zijn eigen Jira): een
     // release is bij ons een versienummer met alles wat daarin is opgeleverd.

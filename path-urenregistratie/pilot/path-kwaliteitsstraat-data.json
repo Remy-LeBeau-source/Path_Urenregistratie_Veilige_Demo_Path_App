@@ -1,8 +1,24 @@
 {
   "appVersion": "2.0.151",
-  "generatedAt": "2026-09-17T14:21:33.491Z",
+  "generatedAt": "2026-09-17T14:59:04.872Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "17 sep",
+      "version": "2.0.151",
+      "wish": "Vragen Gio: waarom verwijzen we naar GitHub, en waar zijn de links met ID's? Beide terecht. De verwijzing naar ons GitHub-issue is weg van de kaart en uit de foutmelding: dat is onze eigen implementatie en geen informatie voor wie het bord leest, zeker niet als een klant meekijkt. In plaats daarvan onze eigen sleutel, die in alle werkruimtes dezelfde is. Nieuw: elk ticket heeft een deelbare link (#ticket/PATH-nnn) met een kopieerknop, en een verwijzingsbalk Jira -> Confluence -> Zephyr -> Living Doc met het echte nummer erin. Klikken op de Living Doc-verwijzing markeert de regel van dat ticket, anders zoek je in tientallen regels naar de jouwe. Twee echte fouten daarbij gevonden: (1) een gedeelde link opende niets, doordat switchTab bij het laden zijn eigen tabnaam in de adresbalk schrijft voordat applyHash de ticketverwijzing ooit leest -- de binnenkomende link wordt nu meteen bij het laden uitgelezen en vastgehouden tot de projectstand binnen is; (2) de adresbalk bleef een geopend ticket claimen nadat je het sloot, dus een teruggebladerde link wees naar iets dat niet op het scherm stond. Los daarvan beantwoord: PATH-201 staat terecht niet in Zephyr (nooit gebouwd, teruggezet naar open), en na 'Simuleer de flow' verschijnt er wel een gesimuleerde case -- die simulatie verdwijnt zodra dit een product wordt. PIPE-H-012, tegenproef via de mislukte deel-link zelf (rood vóór de fix, groen erna). 16/16 PIPE groen.",
+      "cases": [
+        {
+          "id": "PIPE-H-012",
+          "title": "elk ticket heeft een deelbare link en zichtbare verwijzingen naar Confluence en Zephyr",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Navigatietest over de drie werkruimtes via het gedeelde nummer + herstelbaarheid (dezelfde link opent hetzelfde ticket opnieuw) + negatieve inhoudscontrole dat de eigen implementatie (GitHub) nergens meer doorschemert",
+          "assertions": 20,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: elk ticket heeft een deelbare link en zichtbare verwijzingen naar Confluence en Zephyr\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de flow voor PIPE-H-012 wordt uitgevoerd\n  Then stuurt geen enkele knop of link de lezer nog naar GitHub\n  And staan in het ticket de verwijzingen met hun echte nummer\n  And is de link naar dit ticket deelbaar\n  And wijst de keten door naar de uitkomst in de Living Doc\n  And brengt de Confluence-verwijzing je naar de pagina van hetzelfde nummer"
+        }
+      ]
+    },
     {
       "date": "17 sep",
       "version": "2.0.151",
@@ -506,7 +522,7 @@
           "technique": "Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst",
           "assertions": 26,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet\n  Given de keuzelijst toont de nice-to-haves uit GIO-WENSEN\n  When de PO een verbetering kiest, then staan samenvatting en waarde ingevuld en blijft het criterium aan hem\n  And zelf typen blijft mogelijk: aanpassen maakt de keuze niet ongedaan, loslaten wel\n  And het type heet Onderhoud, niet Chore\n  And de volgorde in Te doen is met het toetsenbord te wijzigen en blijft na herladen\n  And bovenin staat hoe vers de stand is en de versie staat in de voet zoals in de urenapp\n  Then wordt met Playwright-assertions bevestigd dat de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet"
+          "gherkin": ""
         },
         {
           "id": "PIPE-H-001",
@@ -515,7 +531,7 @@
           "technique": "Datagedreven vergelijking (pagina versus pilot/path-kwaliteitsstraat-data.json) + traceerbaarheid over drie projecties",
           "assertions": 38,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin\n  Given de zelfstandige TEST-only pipelinepagina met de echte projectstand\n  When de pagina is geladen, staan de vier fasen en de eerste echte opleveringen op het bord\n  And de zoekbalk vindt ook een oplevering die buiten de eerste lading valt\n  And Kennisbank en Testbeheer projecteren dezelfde echte cases, met paginering in plaats van een afkap\n  Then wordt met Playwright-assertions bevestigd dat de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin"
+          "gherkin": ""
         }
       ]
     },

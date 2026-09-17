@@ -71,7 +71,7 @@
     },
     intake: {
       key: 'INTAKE', title: 'Intake en werkwijze', leftLabel: 'Loket', leftTitle: 'Deze pagina',
-      leftText: 'Een wens die hier wordt ingediend, wordt een GitHub-issue met label pipeline-intake. De agent in VS Code pakt dat issue op en loopt de keten af.',
+      leftText: 'Een wens die hier wordt ingediend krijgt meteen een eigen nummer (PATH-nnn) en komt in de wachtrij. Dat nummer is overal hetzelfde: op het bord, op deze pagina en bij de testcase.',
       rightLabel: 'Keten', rightTitle: 'Acht stappen tot TEST',
       rightText: 'GIO-WENSEN → feature + spec + steps → impactregressie → LIVING-DOC → versie → push → CI → TEST, en daarna de wens naar "Klaar".',
       fo: 'De pagina toont geen verzonnen data: de opleveringen, cases, technieken en assertions komen uit GIO-WENSEN.md en de feature-bestanden, via scripts/pipeline-demo-data.mjs.',
@@ -417,7 +417,11 @@
         '<span class="card-avatar" title="' + escapeHtml(toegewezen(ticket).naam) + '">' + escapeHtml(toegewezen(ticket).initialen) + '</span>' +
       '</div>' +
       (ticket.gherkin ? '<details class="gherkin"' + (ui.expandAll ? ' open' : '') + '><summary>Gherkin</summary><pre>' + escapeHtml(ticket.gherkin) + '</pre></details>' : '') +
-      (ticket.status === 'ingediend' ? '<div class="ticket-card-foot"><a class="issue-link" href="' + escapeHtml(issueSearchUrl()) + '" target="_blank" rel="noopener">Bekijk issue op GitHub ↗</a></div>' : '') +
+      // 17 sep: hier stond een link naar het GitHub-issue. Dat is onze eigen
+      // implementatie en geen informatie voor wie het bord leest -- zeker niet
+      // zodra een klant meekijkt. In plaats daarvan onze eigen verwijzing: de
+      // sleutel van het ticket, die overal in de drie werkruimtes dezelfde is.
+      (ticket.status === 'ingediend' ? '<div class="ticket-card-foot"><button type="button" class="issue-link" data-open-ticket="' + escapeHtml(ticket.key) + '">Bekijk ' + escapeHtml(ticket.key) + ' →</button></div>' : '') +
       (canRun ? '<div class="ticket-card-foot"><button type="button" class="card-run" data-run-ticket="' + escapeHtml(ticket.key) + '">Simuleer de flow</button></div>' : '') +
       '</article>';
   }
@@ -840,6 +844,31 @@
     return tekst === '' ? (terugval || '—') : tekst;
   }
 
+  function vulLinks(ticket) {
+    var doel = $('[data-detail-links]');
+    if (!doel) return;
+    var cases = ticket.cases || [];
+    var delen = [
+      '<span class="link-groep"><small>Jira</small><code>' + escapeHtml(ticket.key) + '</code></span>',
+      '<span class="link-pijl" aria-hidden="true">→</span>',
+      '<button type="button" class="link-knop" data-detail-doc-ontwerp><small>Confluence</small><span>Pagina van ' + escapeHtml(ticket.key) + '</span></button>'
+    ];
+    if (cases.length) {
+      delen.push('<span class="link-pijl" aria-hidden="true">→</span>');
+      delen.push('<button type="button" class="link-knop" data-open-case="' + escapeHtml(cases[0].id) + '"><small>Zephyr</small><span>'
+        + escapeHtml(cases.length === 1 ? cases[0].id : cases[0].id + ' +' + (cases.length - 1)) + '</span></button>');
+    }
+    // De Living Doc is het sluitstuk van de keten: daar staat de uitkomst van de
+    // oplevering. Hij was alleen via Confluence te vinden, dus vanuit een ticket
+    // kwam je er nooit -- terwijl dat juist de plek is waar je hem wilt hebben.
+    if (ticket.status === 'done') {
+      delen.push('<span class="link-pijl" aria-hidden="true">→</span>');
+      delen.push('<button type="button" class="link-knop" data-naar-living="' + escapeHtml(ticket.key) + '"><small>Living Doc</small><span>Uitkomst</span></button>');
+    }
+    delen.push('<button type="button" class="link-knop kopieer" data-kopieer-link="' + escapeHtml(ticket.key) + '"><small>Link</small><span>Kopieer</span></button>');
+    doel.innerHTML = delen.join('');
+  }
+
   function vulBeschrijving(ticket, isLocal) {
     var doel = $('[data-detail-beschrijving]');
     if (!doel) return;
@@ -997,6 +1026,7 @@
     // Het Jira-blok hoort bij het vorige ticket; bij een nieuw ticket weer dicht.
     var jiraBlok = $('[data-detail-blok="jira"]');
     if (jiraBlok) jiraBlok.hidden = true;
+    vulLinks(ticket);
     vulBeschrijving(ticket, isLocal);
     vulTraceability(ticket);
     vulOntwerp(ticket, isLocal);
@@ -1005,6 +1035,8 @@
     setText('[data-detail-gherkin]', ticket.gherkin || 'Geen Gherkin bij dit ticket.');
     var run = $('[data-detail-run]');
     if (run) run.hidden = !(isLocal && (ticket.status === 'todo' || ticket.status === 'ingediend'));
+    // De URL wijst nu naar dit ticket, zodat hij te delen en te bookmarken is.
+    try { history.replaceState(null, '', '#ticket/' + encodeURIComponent(ticket.key)); } catch (_fout) { /* geen geschiedenis */ }
     $('[data-detail-drawer]').hidden = false;
     $('[data-detail-backdrop]').hidden = false;
     var close = $('[data-detail-close]');
@@ -1012,6 +1044,12 @@
   }
 
   function closeDetail() {
+    // De adresbalk mag geen geopend ticket blijven claimen nadat je het hebt
+    // gesloten: dan wijst een gedeelde of teruggebladerde link naar iets dat niet
+    // op het scherm staat.
+    if (ui.detail) {
+      try { history.replaceState(null, '', '#' + ui.view); } catch (_fout) { /* geen geschiedenis */ }
+    }
     ui.detail = '';
     $('[data-detail-drawer]').hidden = true;
     $('[data-detail-backdrop]').hidden = true;
@@ -1184,9 +1222,11 @@
       }, 'local'), form);
       if (feedback) {
         feedback.classList.add('is-blocked');
+        // Geen uitwijk naar GitHub meer: dat is onze eigen keuken en lost voor de
+        // indiener niets op. Eerlijk melden wat er is gebeurd en wat hij kan doen.
         feedback.innerHTML = '<b>Niet in de wachtrij gezet.</b> ' + escapeHtml(String(fout && fout.message ? fout.message : fout))
           + ' ' + escapeHtml(key) + ' staat daarom alleen in deze browser; niemand anders ziet hem. '
-          + '<a href="' + escapeHtml(issueUrlFor(state.customTickets[0])) + '" target="_blank" rel="noopener" data-issue-url>Toch zelf als GitHub-issue indienen.</a>';
+          + 'Probeer het zo opnieuw — de tekst blijft staan.';
       }
       toast('Opslaan mislukt — ' + key + ' staat alleen lokaal');
     }).then(function () {
@@ -1545,6 +1585,21 @@
 
     if (target.closest('[data-detail-jira]')) { toonAlsJiraTicket(ui.detail); return; }
 
+    var kopieer = target.closest('[data-kopieer-link]');
+    if (kopieer) {
+      var adres = window.location.href.split('#')[0] + '#ticket/' + encodeURIComponent(kopieer.getAttribute('data-kopieer-link'));
+      // Het klembord kan geweigerd worden (geen toestemming, of geen veilige
+      // verbinding). Dan de link tonen in plaats van doen alsof het gelukt is.
+      var klaar = function () { toast('Link gekopieerd'); };
+      var mislukt = function () { toast(adres); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(adres).then(klaar, mislukt);
+      } else {
+        mislukt();
+      }
+      return;
+    }
+
     // Blokken in- en uitklappen, zoals de secties op een Jira-issuepagina.
     var blokKop = target.closest('[data-blok-toggle]');
     if (blokKop) {
@@ -1612,6 +1667,25 @@
       if (veld) { veld.focus(); veld.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'center' }); }
       return;
     }
+    // Vanuit een ticket naar de uitkomst in de Living Doc, met de regel van dat
+    // ticket gemarkeerd -- anders sta je in een lijst van tientallen regels te
+    // zoeken naar de jouwe.
+    var naarLiving = target.closest('[data-naar-living]');
+    if (naarLiving) {
+      var livingSleutel = naarLiving.getAttribute('data-naar-living');
+      closeDetail();
+      switchTab('knowledge', false);
+      render();
+      var regel = $('[data-living-key="' + livingSleutel + '"]');
+      var doelLiving = regel || $('#living-doc');
+      if (doelLiving) doelLiving.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'center' });
+      if (regel) {
+        regel.classList.add('is-aangewezen');
+        window.setTimeout(function () { regel.classList.remove('is-aangewezen'); }, 2400);
+      }
+      return;
+    }
+
     if (target.closest('[data-jump-living]')) {
       switchTab('knowledge', false);
       var living = $('#living-doc');
@@ -1690,10 +1764,39 @@
   var form = $('[data-ticket-form]');
   if (form) form.addEventListener('submit', function (event) { event.preventDefault(); addTicket(form); });
 
+  // De binnenkomende link wordt hier meteen gelezen, vóór de eerste switchTab.
+  // Die schrijft namelijk zijn eigen tabnaam in de adresbalk, en bij het openen
+  // van de pagina gebeurt dat al voordat applyHash() ooit aan bod komt -- de
+  // ticketverwijzing was dan allang overschreven. Blijft staan tot het ticket
+  // echt geopend is, want de projectstand is bij het laden nog niet binnen.
+  var wachtOpTicket = (function () {
+    var eerste = String(window.location.hash || '').replace('#', '').split('/');
+    return eerste[0] === 'ticket' && eerste[1] ? decodeURIComponent(eerste[1]) : '';
+  })();
+
   function applyHash() {
     var hash = String(window.location.hash || '').replace('#', '');
     if (!hash) return;
     var parts = hash.split('/');
+    // Deelbare link naar één ticket: #ticket/PATH-201 opent dat ticket meteen,
+    // waar het ook in de drie werkruimtes staat. Zonder zo'n link kun je een
+    // collega alleen "zoek even op PATH-201" sturen, en dat is geen verwijzing.
+    //
+    // De sleutel wordt apart onthouden omdat switchTab() de hash overschrijft met
+    // zijn eigen tabnaam. Bij het openen van de pagina is de projectstand nog niet
+    // binnen, dus de eerste poging vindt het ticket niet; tegen de tijd dat de
+    // feed er is, stond er alleen nog "#backlog" in de adresbalk en was de
+    // verwijzing weg. Vandaar dat hij hier blijft staan tot hij gelukt is.
+    if (parts[0] === 'ticket' && parts[1]) {
+      wachtOpTicket = decodeURIComponent(parts[1]);
+    }
+    if (wachtOpTicket) {
+      switchTab('backlog', false);
+      render();
+      openDetail(wachtOpTicket);
+      if (ui.detail === wachtOpTicket) wachtOpTicket = '';
+      return;
+    }
     if (products[parts[0]]) {
       if (parts[1]) { ui.docKey = decodeURIComponent(parts[1]); ui.fixedDoc = ''; }
       switchTab(parts[0], false);
