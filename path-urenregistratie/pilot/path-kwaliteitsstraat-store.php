@@ -89,6 +89,9 @@ if ($methode === 'GET') {
         'items' => $stand['items'],
         // Alleen het recente deel: de volledige geschiedenis hoort bij het item,
         // niet bij elke paginalading.
+        // Werkwijze van het bord: Kanban (standaard, wat we feitelijk doen) of
+        // Scrum. Gedeeld, want als de een schakelt moet de ander hetzelfde zien.
+        'bord' => $stand['bord'] ?? ['modus' => 'kanban', 'wip' => 0, 'sprint' => '', 'sprint_eind' => ''],
         'historie' => array_slice($stand['historie'], 0, 50),
     ]);
 }
@@ -121,6 +124,63 @@ if (strlen($ruweBody) > STORE_MAX_BODY_BYTES) {
 $invoer = json_decode($ruweBody, true);
 if (!is_array($invoer)) {
     store_antwoord(400, ['error' => 'Onleesbare invoer.']);
+}
+
+// Bordinstellingen (werkwijze, WIP-limiet, sprint) lopen via dezelfde opslag,
+// want het is dezelfde gedeelde stand: als de een naar Scrum schakelt, ziet de
+// ander dat ook. Een aparte vorm dan een kaartverplaatsing, vandaar de eigen tak.
+if (($invoer['action'] ?? '') === 'bord') {
+    $modus = intake_tekst($invoer['modus'] ?? '', 10);
+    if (!in_array($modus, ['kanban', 'scrum'], true)) {
+        store_antwoord(422, ['error' => 'Onbekende werkwijze. Toegestaan: kanban, scrum.']);
+    }
+    $wip = isset($invoer['wip']) ? (int)$invoer['wip'] : 0;
+    // 0 betekent geen limiet; boven de 50 is het geen limiet meer maar een getal.
+    $wip = max(0, min(50, $wip));
+    $sprintNaam = intake_tekst($invoer['sprint'] ?? '', 60);
+    // Een sprint zonder einddatum blijft bewust open staan (vraag Gio): dan is het
+    // feitelijk Kanban met een sprintnaam, en dat mag -- zolang het zichtbaar is.
+    $sprintEind = intake_tekst($invoer['sprint_eind'] ?? '', 10);
+    if ($sprintEind !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $sprintEind)) {
+        store_antwoord(422, ['error' => 'Een einddatum hoort als jjjj-mm-dd.']);
+    }
+
+    $map = dirname($pad);
+    if (!is_dir($map) || !is_writable($map)) {
+        store_antwoord(503, ['error' => 'De opslag is nu niet beschikbaar.']);
+    }
+    $slot = fopen($pad, 'c+');
+    if ($slot === false || !flock($slot, LOCK_EX)) {
+        if (is_resource($slot)) {
+            fclose($slot);
+        }
+        store_antwoord(503, ['error' => 'De opslag is nu niet beschikbaar.']);
+    }
+    $inhoud = stream_get_contents($slot);
+    $stand = is_string($inhoud) && trim($inhoud) !== '' ? (json_decode($inhoud, true) ?: store_leeg()) : store_leeg();
+    if (!isset($stand['items']) || !is_array($stand['items'])) {
+        $stand = store_leeg();
+    }
+    $stand['bord'] = [
+        'modus' => $modus,
+        'wip' => $wip,
+        'sprint' => $sprintNaam,
+        'sprint_eind' => $sprintEind,
+        'updated_at' => gmdate('c'),
+    ];
+    $nieuw = json_encode($stand, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if ($nieuw === false) {
+        flock($slot, LOCK_UN);
+        fclose($slot);
+        store_antwoord(500, ['error' => 'De instelling kon niet worden opgeslagen.']);
+    }
+    rewind($slot);
+    ftruncate($slot, 0);
+    fwrite($slot, $nieuw . "\n");
+    fflush($slot);
+    flock($slot, LOCK_UN);
+    fclose($slot);
+    store_antwoord(200, ['environment' => $omgeving, 'bord' => $stand['bord']]);
 }
 
 $sleutel = intake_tekst($invoer['key'] ?? '', 40);

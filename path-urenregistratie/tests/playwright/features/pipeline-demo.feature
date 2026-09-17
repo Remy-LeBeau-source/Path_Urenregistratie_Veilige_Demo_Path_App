@@ -63,6 +63,18 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
     And de kaart gaat terug, zodat deze case geen sporen achterlaat
 
   @happy
+  Scenario: [PIPE-H-015] het bord staat op Kanban, met Scrum klaar om aan te zetten
+    # Testtechniek: Equivalentieklassen op de werkwijze (Kanban, Scrum met einddatum, Scrum zonder einddatum) + negatieve invoercontrole op de server (onbekende werkwijze, kromme datum, anoniem) + herstelbaarheid na herladen
+    # Aantoonbare Playwright-assertions in deze case: 16
+    Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid
+    When de flow voor PIPE-H-015 wordt uitgevoerd
+    Then staat Kanban aan als standaard
+    And zegt Scrum zonder einddatum eerlijk dat de sprint doorloopt
+    And telt hij met een einddatum wel echt af
+    And weigert de server onzin en anonieme wijzigingen
+    And het bord gaat terug naar Kanban, zodat deze case geen sporen achterlaat
+
+  @happy
   Scenario: [PIPE-H-014] de rechtermuisknop op een kaart geeft alleen acties die echt iets doen
     # Testtechniek: Beslistabel op het kaartmenu (welke actie hoort erin, welke bewust niet, en welke is uitgeschakeld in de huidige kolom) + controle op de server dat de actie echt uitgevoerd is
     # Aantoonbare Playwright-assertions in deze case: 14

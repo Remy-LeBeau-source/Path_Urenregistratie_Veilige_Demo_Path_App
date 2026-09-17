@@ -189,6 +189,18 @@
               <span class="board-meta"><i></i> <span data-board-meta>Actuele demo</span></span>
             </div>
           </div>
+          <!-- Werkwijze van het bord. Kanban is de standaard omdat dat is wat we
+               feitelijk doen: wensen komen binnen, worden opgepakt, gaan eruit als
+               opgeleverd, zonder timeboxen. Scrum staat klaar om aan te zetten;
+               een sprint zonder einddatum blijft bewust open (vraag Gio), en dat
+               staat er dan ook zo bij in plaats van een verzonnen aftelling. -->
+          <div class="bord-modus" data-bord-modus>
+            <span class="filter-label">WERKWIJZE:</span>
+            <button type="button" data-modus="kanban" aria-pressed="true">Kanban</button>
+            <button type="button" data-modus="scrum" aria-pressed="false">Scrum</button>
+            <span class="bord-modus-uitleg" data-modus-uitleg></span>
+          </div>
+
           <div class="board-columns">
             <section class="board-column" aria-labelledby="todo-heading">
               <header><h3 id="todo-heading">Te doen</h3><span data-count="todo">0</span></header>

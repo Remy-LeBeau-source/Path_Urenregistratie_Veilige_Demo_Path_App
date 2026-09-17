@@ -515,6 +515,61 @@ test.describe('Path Pipeline TEST-demo', () => {
     });
   });
 
+  test('[PIPE-H-015] het bord staat op Kanban, met Scrum klaar om aan te zetten', async ({ page, request }) => {
+    // Besluit na de vraag van Gio ("of wil je een andere manier van werken dan
+    // sprint? ik ben de naam kwijt"): dat woord is Kanban, en dat is wat we
+    // feitelijk doen -- wensen komen binnen, worden opgepakt, gaan eruit als
+    // opgeleverd, zonder timeboxen. Scrum staat klaar om te proberen. Zijn eigen
+    // idee (een sprint zonder einddatum blijft open staan) klopt technisch, en de
+    // pagina benoemt dat dan ook eerlijk in plaats van een aftelling te verzinnen.
+    const store = '/pilot/path-kwaliteitsstraat-store.php';
+    await new AuthApi(page.request).login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    await page.goto('/pilot/path-kwaliteitsstraat.html');
+    await expect(page.locator('body')).toHaveAttribute('data-stand', 'loaded');
+    await page.getByRole('tab', { name: /Backlog/ }).click();
+
+    await test.step('Then staat Kanban aan als standaard', async () => {
+      await expect(page.locator('[data-modus="kanban"]')).toHaveAttribute('aria-pressed', 'true');
+      await expect(page.locator('[data-modus="scrum"]')).toHaveAttribute('aria-pressed', 'false');
+      await expect(page.locator('[data-modus-uitleg]')).toContainText('geen timeboxen');
+    });
+
+    await test.step('And zegt Scrum zonder einddatum eerlijk dat de sprint doorloopt', async () => {
+      const gezet = await page.request.post(store, { data: { action: 'bord', modus: 'scrum', sprint: 'Proefsprint', sprint_eind: '' } });
+      expect(gezet.status()).toBe(200);
+      await page.reload();
+      await expect(page.locator('body')).toHaveAttribute('data-stand', 'loaded');
+      await page.getByRole('tab', { name: /Backlog/ }).click();
+      await expect(page.locator('[data-modus="scrum"]')).toHaveAttribute('aria-pressed', 'true');
+      await expect(page.locator('[data-modus-uitleg]')).toContainText('Proefsprint');
+      await expect(page.locator('[data-modus-uitleg]')).toContainText('geen einddatum, loopt door');
+    });
+
+    await test.step('And telt hij met een einddatum wel echt af', async () => {
+      const overTienDagen = new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10);
+      await page.request.post(store, { data: { action: 'bord', modus: 'scrum', sprint: 'Sprint 1', sprint_eind: overTienDagen } });
+      await page.reload();
+      await expect(page.locator('body')).toHaveAttribute('data-stand', 'loaded');
+      await page.getByRole('tab', { name: /Backlog/ }).click();
+      await expect(page.locator('[data-modus-uitleg]')).toContainText('Sprint 1');
+      await expect(page.locator('[data-modus-uitleg]')).toContainText(/nog 1[01] dag/);
+    });
+
+    await test.step('And weigert de server onzin en anonieme wijzigingen', async () => {
+      const anoniem = await request.post(store, { data: { action: 'bord', modus: 'scrum' } });
+      expect(anoniem.status()).toBe(401);
+      const onbekend = await page.request.post(store, { data: { action: 'bord', modus: 'waterval' } });
+      expect(onbekend.status()).toBe(422);
+      const kromDatum = await page.request.post(store, { data: { action: 'bord', modus: 'scrum', sprint_eind: '31-12-2026' } });
+      expect(kromDatum.status()).toBe(422);
+    });
+
+    await test.step('And het bord gaat terug naar Kanban, zodat deze case geen sporen achterlaat', async () => {
+      const terug = await page.request.post(store, { data: { action: 'bord', modus: 'kanban', sprint: '', sprint_eind: '' } });
+      expect(terug.status()).toBe(200);
+    });
+  });
+
   test('[PIPE-H-014] de rechtermuisknop op een kaart geeft alleen acties die echt iets doen', async ({ page, request }) => {
     // Opdracht Gio (17 sep, met een schermafdruk van het Jira-bordmenu): zulke
     // functies moet je ook kennen. Overgenomen is wat hier betekenis heeft;

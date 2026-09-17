@@ -609,6 +609,66 @@
     return tekst.length > 160 ? tekst.slice(0, 157) + '…' : tekst;
   }
 
+  // ---- Werkwijze van het bord (Kanban of Scrum) ------------------------------
+  // Kanban is de standaard omdat dat is wat we feitelijk doen. Scrum staat klaar
+  // om aan te zetten; wat er dan bij komt is de sprintregel, niet meer dan dat.
+  // Bewust geen story points of velocity: die houden we niet bij, en een
+  // verzonnen getal ondermijnt precies waar deze pagina voor bedoeld is.
+  var bordInstelling = { modus: 'kanban', wip: 0, sprint: '', sprint_eind: '' };
+
+  function dagenTot(datum) {
+    var eind = Date.parse(datum + 'T23:59:59');
+    if (isNaN(eind)) return null;
+    return Math.ceil((eind - Date.now()) / 86400000);
+  }
+
+  function renderBordModus() {
+    $$('[data-modus]').forEach(function (knop) {
+      knop.setAttribute('aria-pressed', knop.getAttribute('data-modus') === bordInstelling.modus ? 'true' : 'false');
+    });
+    var uitleg = $('[data-modus-uitleg]');
+    if (!uitleg) return;
+    if (bordInstelling.modus === 'scrum') {
+      var naam = bordInstelling.sprint || 'naamloze sprint';
+      if (bordInstelling.sprint_eind) {
+        var dagen = dagenTot(bordInstelling.sprint_eind);
+        uitleg.textContent = dagen === null
+          ? naam
+          : (dagen >= 0 ? naam + ' · nog ' + dagen + ' dag(en)' : naam + ' · ' + Math.abs(dagen) + ' dag(en) over tijd');
+      } else {
+        // Eerlijk benoemen wat dit is in plaats van een aftelling te verzinnen.
+        uitleg.textContent = naam + ' · geen einddatum, loopt door';
+      }
+    } else {
+      uitleg.textContent = bordInstelling.wip > 0
+        ? 'Doorlopende stroom, hooguit ' + bordInstelling.wip + ' tegelijk in uitvoering'
+        : 'Doorlopende stroom, geen timeboxen';
+    }
+  }
+
+  function bewaarBordModus(modus) {
+    var vorige = bordInstelling.modus;
+    bordInstelling.modus = modus;
+    renderBordModus();
+    return fetch(STORE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'bord', modus: modus, wip: bordInstelling.wip,
+        sprint: bordInstelling.sprint, sprint_eind: bordInstelling.sprint_eind
+      })
+    }).then(function (antwoord) {
+      if (antwoord.ok) return antwoord.json();
+      return antwoord.json().catch(function () { return {}; }).then(function (json) {
+        throw new Error(json && json.message ? json.message : 'opslag gaf code ' + antwoord.status);
+      });
+    }).catch(function (fout) {
+      bordInstelling.modus = vorige;
+      renderBordModus();
+      throw fout;
+    });
+  }
+
   function renderReleases() {
     var lijst = releases().filter(function (regel) {
       if (ui.releaseFilter === 'released') return regel.status === 'Gereleased';
@@ -824,6 +884,7 @@
     renderBoard();
     renderTests();
     renderReleases();
+    renderBordModus();
     renderKnowledge();
     renderLivingDoc();
     renderFlowMonitor();
@@ -1734,6 +1795,16 @@
       return;
     }
 
+    var modusKnop = target.closest('[data-modus]');
+    if (modusKnop) {
+      bewaarBordModus(modusKnop.getAttribute('data-modus')).then(function () {
+        toast('Werkwijze staat op ' + (bordInstelling.modus === 'scrum' ? 'Scrum' : 'Kanban'));
+      }).catch(function (fout) {
+        toast('Wijzigen mislukt — ' + (fout && fout.message ? fout.message : 'opslag onbereikbaar'));
+      });
+      return;
+    }
+
     var releaseFilter = target.closest('[data-release-filter]');
     if (releaseFilter) { ui.releaseFilter = releaseFilter.getAttribute('data-release-filter'); resetToon(); render(); return; }
 
@@ -2077,6 +2148,7 @@
         Object.keys(items).forEach(function (sleutel) {
           if (items[sleutel] && items[sleutel].status) standUitOpslag[sleutel] = items[sleutel].status;
         });
+        if (json && json.bord) bordInstelling = Object.assign(bordInstelling, json.bord);
         document.body.setAttribute('data-stand', 'loaded');
         render();
       }).catch(function () {

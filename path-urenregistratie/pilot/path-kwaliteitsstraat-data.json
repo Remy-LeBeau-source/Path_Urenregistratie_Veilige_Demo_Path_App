@@ -1,8 +1,24 @@
 {
   "appVersion": "2.0.151",
-  "generatedAt": "2026-09-17T17:00:40.426Z",
+  "generatedAt": "2026-09-17T17:18:36.503Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "17 sep",
+      "version": "2.0.151",
+      "wish": "Werkwijze-schakelaar op het bord: Kanban of Scrum. Vraag Gio: 'wil je een andere manier van werken dan sprint? ik ben de naam kwijt' -- dat woord is Kanban, en dat is wat we feitelijk doen: wensen komen binnen, worden opgepakt, gaan eruit als opgeleverd, zonder timeboxen. Kanban staat daarom als standaard aan; Scrum staat klaar om te proberen, gedeeld via de opslag zodat iedereen dezelfde stand ziet. Zijn eigen idee klopt technisch: een sprint zonder einddatum blijft open staan -- en de pagina zegt dat dan ook eerlijk ('geen einddatum, loopt door') in plaats van een aftelling te verzinnen; mét einddatum telt hij echt af, ook over tijd. Bewust niet nagebouwd: story points, velocity en werklog, want die houden we niet bij. De server weigert een onbekende werkwijze, een kromme datum en anonieme wijzigingen. PIPE-H-015, tegenproef: de eerlijke melding vervangen door een verzonnen 'nog 14 dagen' -> rood; teruggezet -> groen. 19/19 PIPE groen.",
+      "cases": [
+        {
+          "id": "PIPE-H-015",
+          "title": "het bord staat op Kanban, met Scrum klaar om aan te zetten",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Equivalentieklassen op de werkwijze (Kanban, Scrum met einddatum, Scrum zonder einddatum) + negatieve invoercontrole op de server (onbekende werkwijze, kromme datum, anoniem) + herstelbaarheid na herladen",
+          "assertions": 16,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: het bord staat op Kanban, met Scrum klaar om aan te zetten\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de flow voor PIPE-H-015 wordt uitgevoerd\n  Then staat Kanban aan als standaard\n  And zegt Scrum zonder einddatum eerlijk dat de sprint doorloopt\n  And telt hij met een einddatum wel echt af\n  And weigert de server onzin en anonieme wijzigingen\n  And het bord gaat terug naar Kanban, zodat deze case geen sporen achterlaat"
+        }
+      ]
+    },
     {
       "date": "17 sep",
       "version": "2.0.151",
@@ -506,7 +522,7 @@
           "technique": "Regressiecontrole na hernoeming: oude URL blijft bereikbaar en verwijst door (meta-refresh) naar de nieuwe naam",
           "assertions": 6,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de flow voor PIPE-N-003 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt"
+          "gherkin": ""
         }
       ]
     },
