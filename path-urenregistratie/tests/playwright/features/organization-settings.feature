@@ -173,6 +173,25 @@ Feature: Organisatie-instellingen beheren
     Then wordt met Playwright-assertions bevestigd dat een onmogelijk uurtarief wordt geweigerd en het oude tarief blijft staan
 
   @negative
+  Scenario: [ADM-WR-N-010] de enige actieve beheerder van een bedrijf kan zichzelf niet deactiveren via het beheerdersformulier
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given organisatie-instellingen beheren is voorbereid
+    When de enige beheerder zichzelf via upsert_admin op inactief zet, then weigert de server dat
+    And staat de beheerder in de database nog steeds actief
+    Then wordt met Playwright-assertions bevestigd dat de enige actieve beheerder van een bedrijf kan zichzelf niet deactiveren via het beheerdersformulier
+
+  @negative
+  Scenario: [ADM-WR-N-011] een naam wijzigen op een al inactieve beheerder mag ook als er nog maar één andere actieve beheerder is
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given organisatie-instellingen beheren is voorbereid
+    When de enige actieve beheerder alleen de naam van de al inactieve beheerder wijzigt, then slaagt dat gewoon
+    And staat de naam bijgewerkt en blijft de beheerder inactief
+    And blijft de andere beheerder gewoon actief
+    Then wordt met Playwright-assertions bevestigd dat een naam wijzigen op een al inactieve beheerder mag ook als er nog maar één andere actieve beheerder is
+
+  @negative
   Scenario: [ADM-WR-N-008] lengtegrenzen tellen tekens, niet bytes: een naam vol accenten mag tot de volle lengte
     # Testtechniek: Negatieve equivalentieklasse + error guessing
     # Aantoonbare Playwright-assertions in deze case: 6

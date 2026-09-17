@@ -69,6 +69,13 @@ When("er één euro boven de grens wordt opgeslagen, then weigert de server dat 
 And("wordt ook een typefout als 8500 geweigerd in plaats van stil bewaard");
 And("staat het eerder bewaarde tarief er nog ongewijzigd");
 Then("wordt met Playwright-assertions bevestigd dat een onmogelijk uurtarief wordt geweigerd en het oude tarief blijft staan");
+When("de enige beheerder zichzelf via upsert_admin op inactief zet, then weigert de server dat");
+And("staat de beheerder in de database nog steeds actief");
+Then("wordt met Playwright-assertions bevestigd dat de enige actieve beheerder van een bedrijf kan zichzelf niet deactiveren via het beheerdersformulier");
+When("de enige actieve beheerder alleen de naam van de al inactieve beheerder wijzigt, then slaagt dat gewoon");
+And("staat de naam bijgewerkt en blijft de beheerder inactief");
+And("blijft de andere beheerder gewoon actief");
+Then("wordt met Playwright-assertions bevestigd dat een naam wijzigen op een al inactieve beheerder mag ook als er nog maar één andere actieve beheerder is");
 When("een medewerker met 160 tekens in de naam wordt opgeslagen");
 Then("wordt de naam volledig bewaard, zonder afkappen");
 Given("de administrator is ingelogd en Teambeheer heeft geopend");

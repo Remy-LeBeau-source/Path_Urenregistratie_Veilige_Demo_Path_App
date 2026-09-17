@@ -1,8 +1,37 @@
+import { execSync } from 'node:child_process';
 import { expect, request as playwrightRequest, test } from '@playwright/test';
+import mysql from 'mysql2/promise';
 import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 import { LoginPage } from './pages/LoginPage';
 import { klikTestknop } from './fixtures/testknoppen';
+
+// Zelfde databasetoegang als database-integrity.spec.ts: puur voor het opzetten
+// van een geïsoleerd wegwerpbedrijf, nooit voor het lezen of wijzigen van de
+// gedeelde seed van andere specs.
+function dbConfig() {
+  const database = String(
+    process.env.PATH_APP_DB_NAME || process.env.PLAYWRIGHT_DB_NAME || process.env.DB_NAME || '',
+  ).trim();
+  return {
+    host: process.env.PATH_APP_DB_HOST || process.env.PLAYWRIGHT_DB_HOST || process.env.DB_HOST || '127.0.0.1',
+    port: Number(process.env.PATH_APP_DB_PORT || process.env.PLAYWRIGHT_DB_PORT || process.env.DB_PORT || 3306),
+    user: process.env.PATH_APP_DB_USER || process.env.PLAYWRIGHT_DB_USER || process.env.DB_USER || 'root',
+    password: process.env.PATH_APP_DB_PASSWORD || process.env.PLAYWRIGHT_DB_PASSWORD || process.env.DB_PASSWORD || 'root',
+    database,
+  };
+}
+
+async function withDb<T>(fn: (conn: mysql.Connection) => Promise<T>): Promise<T> {
+  const cfg = dbConfig();
+  expect(cfg.database.toLowerCase().endsWith('_test'), `databasenaam moet op _test eindigen, is "${cfg.database}"`).toBe(true);
+  const conn = await mysql.createConnection(cfg);
+  try {
+    return await fn(conn);
+  } finally {
+    await conn.end();
+  }
+}
 
 async function getCSRF(ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>) {
   const r = await ctx.get('/server/auth/csrf.php');
@@ -1211,6 +1240,139 @@ Uren: {uren} uur.`;
 
     await test.step('And staat het eerder bewaarde tarief er nog ongewijzigd', async () => {
       expect(await bewaardTarief(), 'een geweigerde opslag mag niets veranderd hebben').toBe(1000);
+    });
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
+  test('[ADM-WR-N-010] de enige actieve beheerder van een bedrijf kan zichzelf niet deactiveren via het beheerdersformulier', async () => {
+    // De losse deactiveerknop in Teambeheer (server/api/users.php) heeft twee
+    // grendels: je kunt jezelf niet aanraken, en de laatste actieve beheerder
+    // kan niet worden gedeactiveerd. Het "Beheerder opslaan"-formulier stuurt
+    // dezelfde active-vlag naar een ander endpoint (staff.php, upsert_admin) en
+    // liep tot deze fix buiten beide grendels om. Live bewezen tegen een
+    // geïsoleerd wegwerpbedrijf: de enige beheerder kon zichzelf via dit
+    // formulier op active=false zetten en zo het hele bedrijf permanent op
+    // slot zetten -- niemand kon nog inloggen om dat terug te draaien.
+    const unique = Date.now().toString().slice(-7);
+    const slug = `rn-adm-lock-${unique}`;
+    const email = `rn-adm-lock-${unique}@example.invalid`;
+    const wachtwoord = `Proef${unique}TeamAdmin`;
+
+    const userId = await withDb(async conn => {
+      // Wachtwoord via env-var i.p.v. inline in de shellstring: op Windows botst
+      // JSON.stringify-quoting met de dubbele aanhalingstekens van `php -r "..."`.
+      const hash = execSync('php -r "echo password_hash(getenv(\'RN_ADM_LOCK_PW\'), PASSWORD_DEFAULT);"', {
+        env: { ...process.env, RN_ADM_LOCK_PW: wachtwoord },
+      }).toString();
+      const [companyResult] = await conn.query(
+        'INSERT INTO companies (slug, legal_name, trade_name, chamber_of_commerce_number) VALUES (?, ?, ?, ?)',
+        [slug, `RN-ADM-LOCK ${unique} BV`, `RN-ADM-LOCK ${unique} BV`, '12345678']
+      );
+      const companyId = (companyResult as mysql.ResultSetHeader).insertId;
+      const [userResult] = await conn.query(
+        'INSERT INTO users (company_id, email, display_name, role, active, password_hash, force_password_change) VALUES (?, ?, ?, "administrator", 1, ?, 0)',
+        [companyId, email, `RN-ADM-LOCK Admin ${unique}`, hash]
+      );
+      return (userResult as mysql.ResultSetHeader).insertId;
+    });
+
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(email, wachtwoord);
+
+    await test.step('When de enige beheerder zichzelf via upsert_admin op inactief zet, then weigert de server dat', async () => {
+      const poging = await postJson(ctx, '/server/api/staff.php', {
+        action: 'upsert_admin',
+        admin: { dbUserId: userId, name: `RN-ADM-LOCK Admin ${unique}`, email, active: false },
+      });
+      expect(poging.status, JSON.stringify(poging.body)).toBe(409);
+      expect(poging.body.error).toBe('cannot-modify-self');
+    });
+
+    await test.step('And staat de beheerder in de database nog steeds actief', async () => {
+      const nogActief = await withDb(async conn => {
+        const [rows] = await conn.query('SELECT active FROM users WHERE id = ?', [userId]);
+        return Number((rows as Array<{ active: number }>)[0]?.active ?? 0);
+      });
+      expect(nogActief).toBe(1);
+    });
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
+  test('[ADM-WR-N-011] een naam wijzigen op een al inactieve beheerder mag ook als er nog maar één andere actieve beheerder is', async () => {
+    // Tegenhanger van ADM-WR-N-010: het formulier stuurt altijd de huidige
+    // active-vlag mee, dus het opslaan van alleen een naamwijziging op een
+    // reeds inactieve beheerder herstuurt ook active=false. Zonder de
+    // "was deze al inactief"-uitzondering in de laatste-beheerder-check zou
+    // die onschuldige opslag ten onrechte worden geblokkeerd zodra er nog maar
+    // één andere actieve beheerder in het bedrijf over is -- er wordt hier
+    // niemand gedeactiveerd, dus er is ook geen lockoutrisico.
+    const unique = Date.now().toString().slice(-7);
+    const slug = `rn-adm-noop-${unique}`;
+    const actieveEmail = `rn-adm-noop-actief-${unique}@example.invalid`;
+    const inactieveEmail = `rn-adm-noop-inactief-${unique}@example.invalid`;
+    const wachtwoord = `Proef${unique}TeamAdmin`;
+
+    const { actieveId, inactieveId } = await withDb(async conn => {
+      const hash = execSync('php -r "echo password_hash(getenv(\'RN_ADM_LOCK_PW\'), PASSWORD_DEFAULT);"', {
+        env: { ...process.env, RN_ADM_LOCK_PW: wachtwoord },
+      }).toString();
+      const [companyResult] = await conn.query(
+        'INSERT INTO companies (slug, legal_name, trade_name, chamber_of_commerce_number) VALUES (?, ?, ?, ?)',
+        [slug, `RN-ADM-NOOP ${unique} BV`, `RN-ADM-NOOP ${unique} BV`, '12345678']
+      );
+      const companyId = (companyResult as mysql.ResultSetHeader).insertId;
+      const [actieveResult] = await conn.query(
+        'INSERT INTO users (company_id, email, display_name, role, active, password_hash, force_password_change) VALUES (?, ?, ?, "administrator", 1, ?, 0)',
+        [companyId, actieveEmail, `RN-ADM-NOOP Actief ${unique}`, hash]
+      );
+      const [inactieveResult] = await conn.query(
+        'INSERT INTO users (company_id, email, display_name, role, active, password_hash, force_password_change) VALUES (?, ?, ?, "administrator", 0, ?, 0)',
+        [companyId, inactieveEmail, `RN-ADM-NOOP Inactief ${unique}`, hash]
+      );
+      return {
+        actieveId: (actieveResult as mysql.ResultSetHeader).insertId,
+        inactieveId: (inactieveResult as mysql.ResultSetHeader).insertId,
+      };
+    });
+
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(actieveEmail, wachtwoord);
+
+    await test.step('When de enige actieve beheerder alleen de naam van de al inactieve beheerder wijzigt, then slaagt dat gewoon', async () => {
+      const poging = await postJson(ctx, '/server/api/staff.php', {
+        action: 'upsert_admin',
+        admin: {
+          dbUserId: inactieveId,
+          name: `RN-ADM-NOOP Inactief ${unique} Bijgewerkt`,
+          email: inactieveEmail,
+          active: false,
+        },
+      });
+      expect(poging.status, JSON.stringify(poging.body)).toBe(200);
+      expect(poging.body.ok).toBe(true);
+    });
+
+    await test.step('And staat de naam bijgewerkt en blijft de beheerder inactief', async () => {
+      const rij = await withDb(async conn => {
+        const [rows] = await conn.query('SELECT display_name, active FROM users WHERE id = ?', [inactieveId]);
+        return (rows as Array<{ display_name: string; active: number }>)[0];
+      });
+      expect(rij.display_name).toBe(`RN-ADM-NOOP Inactief ${unique} Bijgewerkt`);
+      expect(Number(rij.active)).toBe(0);
+    });
+
+    await test.step('And blijft de andere beheerder gewoon actief', async () => {
+      const rij = await withDb(async conn => {
+        const [rows] = await conn.query('SELECT active FROM users WHERE id = ?', [actieveId]);
+        return (rows as Array<{ active: number }>)[0];
+      });
+      expect(Number(rij.active)).toBe(1);
     });
 
     await authApi.logout();

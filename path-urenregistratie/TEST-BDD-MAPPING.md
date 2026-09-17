@@ -45,6 +45,8 @@
 | ADM-WR-H-010 | api | organization-settings.feature | server-led aangemaakte beheerder en medewerker overleven een echte paginaherlading | Beslissingstabel rollen en autorisatie | 7 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | server-led aangemaakte beheerder en medewerker overleven een echte paginaherlading | Happy | 2 | Actueel |
 | ADM-WR-H-011 | api | organization-settings.feature | een echte paginaherlading blijft op het geopende scherm i.p.v. terug te springen naar Dashboard | API-contract + equivalentieklasse | 5 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | een echte paginaherlading blijft op het geopende scherm i.p.v. terug te springen naar Dashboard | Happy | 2 | Actueel |
 | ADM-WR-N-009 | api | organization-settings.feature | een onmogelijk uurtarief wordt geweigerd en het oude tarief blijft staan | Grenswaardenanalyse op het uurtarief (op de grens, erboven, typefout) + persistentiecontrole | 8 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | een onmogelijk uurtarief wordt geweigerd en het oude tarief blijft staan | Negative | 2 | Actueel |
+| ADM-WR-N-010 | api | organization-settings.feature | de enige actieve beheerder van een bedrijf kan zichzelf niet deactiveren via het beheerdersformulier | Toestandsovergang | 3 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | de enige actieve beheerder van een bedrijf kan zichzelf niet deactiveren via het beheerdersformulier | Negative | 2 | Actueel |
+| ADM-WR-N-011 | api | organization-settings.feature | een naam wijzigen op een al inactieve beheerder mag ook als er nog maar één andere actieve beheerder is | Negatieve equivalentieklasse + error guessing | 5 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | een naam wijzigen op een al inactieve beheerder mag ook als er nog maar één andere actieve beheerder is | Negative | 2 | Actueel |
 | ADM-WR-N-008 | api | organization-settings.feature | lengtegrenzen tellen tekens, niet bytes: een naam vol accenten mag tot de volle lengte | Negatieve equivalentieklasse + error guessing | 6 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | lengtegrenzen tellen tekens, niet bytes: een naam vol accenten mag tot de volle lengte | Negative | 2 | Actueel |
 | ADM-WR-N-005 | api | organization-settings.feature | een al bestaande naam blokkeert of waarschuwt niet: alleen het e-mailadres moet uniek zijn | Negatieve equivalentieklasse + error guessing | 5 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | een al bestaande naam blokkeert of waarschuwt niet: alleen het e-mailadres moet uniek zijn | Negative | 2 | Actueel |
 | ADM-WR-N-006 | api | organization-settings.feature | dubbele naam is toegestaan, maar een al gebruikt e-mailadres wordt hard geblokkeerd | Negatieve equivalentieklasse + error guessing | 8 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | dubbele naam is toegestaan, maar een al gebruikt e-mailadres wordt hard geblokkeerd | Negative | 2 | Actueel |
@@ -634,9 +636,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 612
+- Playwright executable cases: 614
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 613
+- Totaal unieke executable cases: 615
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32

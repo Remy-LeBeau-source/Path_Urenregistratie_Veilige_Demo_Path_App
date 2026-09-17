@@ -1,8 +1,33 @@
 {
-  "appVersion": "2.0.148",
-  "generatedAt": "2026-09-17T02:43:16.173Z",
+  "appVersion": "2.0.149",
+  "generatedAt": "2026-09-17T03:33:27.015Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "17 sep",
+      "version": "2.0.149",
+      "wish": "Dekkingsronde (Teambeheer): de losse deactiveerknop in Teambeheer (server/api/users.php) heeft twee grendels -- niet jezelf, niet de laatste actieve beheerder. Het \"Beheerder opslaan\"-formulier stuurt dezelfde active-vlag naar een ander endpoint (server/api/staff.php, upsert_admin) en liep tot nu buiten beide grendels om. Live bewezen tegen een geïsoleerd wegwerpbedrijf (los aangemaakte company + één beheerder, buiten de gedeelde seed om): de enige beheerder kon zichzelf via dit formulier op inactief zetten en zo het hele bedrijf permanent op slot zetten, zonder dat er nog iemand kon inloggen om het terug te draaien. Nu dezelfde twee checks (eigen account, laatste actieve beheerder) ook in upsert_admin. ADM-WR-N-010 nieuw, tegenproef gedaan: rood (HTTP 200, account daadwerkelijk gedeactiveerd) vóór de fix, groen (HTTP 409 cannot-modify-self) erna. Bijvangst bij het bouwen van de fix zelf gevonden (geen apart gemeld gat, wel meteen gecorrigeerd): het formulier stuurt de huidige active-vlag altijd mee, dus een kale naamwijziging op een reeds inactieve beheerder herstuurt ook active=false -- de laatste-beheerder-telling zou die onschuldige opslag ten onrechte blokkeren zodra er nog maar één andere actieve beheerder over is. Uitzondering toegevoegd (telt alleen bij een echte overgang van actief naar inactief), ADM-WR-N-011 nieuw, tegenproef gedaan: rood (HTTP 409) zonder de uitzondering, groen (HTTP 200) ermee.",
+      "cases": [
+        {
+          "id": "ADM-WR-N-010",
+          "title": "de enige actieve beheerder van een bedrijf kan zichzelf niet deactiveren via het beheerdersformulier",
+          "feature": "tests/playwright/features/organization-settings.feature",
+          "technique": "Toestandsovergang",
+          "assertions": 3,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de enige actieve beheerder van een bedrijf kan zichzelf niet deactiveren via het beheerdersformulier\n  Given organisatie-instellingen beheren is voorbereid\n  When de enige beheerder zichzelf via upsert_admin op inactief zet, then weigert de server dat\n  And staat de beheerder in de database nog steeds actief\n  Then wordt met Playwright-assertions bevestigd dat de enige actieve beheerder van een bedrijf kan zichzelf niet deactiveren via het beheerdersformulier"
+        },
+        {
+          "id": "ADM-WR-N-011",
+          "title": "een naam wijzigen op een al inactieve beheerder mag ook als er nog maar één andere actieve beheerder is",
+          "feature": "tests/playwright/features/organization-settings.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 5,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een naam wijzigen op een al inactieve beheerder mag ook als er nog maar één andere actieve beheerder is\n  Given organisatie-instellingen beheren is voorbereid\n  When de enige actieve beheerder alleen de naam van de al inactieve beheerder wijzigt, then slaagt dat gewoon\n  And staat de naam bijgewerkt en blijft de beheerder inactief\n  And blijft de andere beheerder gewoon actief\n  Then wordt met Playwright-assertions bevestigd dat een naam wijzigen op een al inactieve beheerder mag ook als er nog maar één andere actieve beheerder is"
+        }
+      ]
+    },
     {
       "date": "17 sep",
       "version": "2.0.148",
@@ -191,12 +216,6 @@
           "gherkin": "Scenario: Berichten toont \"Nieuw in de app\" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD\n  Given vondsten uit de monkey-verkenning op Klassiek is voorbereid\n  When de flow voor KLV-H-018 wordt uitgevoerd\n  Then staan er lokaal/op TEST 20 updates met datum en tijdstip, nieuwste eerst\n  And staan er 5 per pagina met Vorige en Volgende, tot en met de laatste pagina\n  And staat geen naam of gevoelig gegeven in de teksten\n  And op de PROD-host is het blok weg"
         }
       ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.140",
-      "wish": "Besluit Gio: elke versie krijgt voortaan zonder uitzondering een regel in \"Nieuw in de app\", ook een versie die alleen Backoffice, de kwaliteitsstraat-demo of de testset raakt. De acht ontbrekende versies (2.0.130 t/m 2.0.138) zijn met terugwerkende kracht aangevuld, terug naar twintig regels. PIPELINE-INTAKE.md bijgewerkt.",
-      "cases": []
     }
   ],
   "open": [

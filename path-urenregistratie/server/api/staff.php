@@ -329,6 +329,47 @@ if ($action === 'upsert_admin') {
         ], 409);
     }
 
+    // Deze pagina slaat een beheerder op via dezelfde active-vlag als de losse
+    // deactiveerknop in Teambeheer (server/api/users.php), maar liep tot hier
+    // buiten diens twee grendels om: geen eigen-account-check en geen
+    // laatste-actieve-beheerder-check. Live bewezen (RN008-proef): de enige
+    // beheerder van een geïsoleerd testbedrijf kon zichzelf via dit formulier
+    // op active=false zetten en het bedrijf zo permanent op slot zetten -- geen
+    // andere beheerder kan dan nog inloggen om het terug te draaien.
+    if ($dbUserId > 0 && $active === 0) {
+        if ($dbUserId === $actorId) {
+            auth_send_json([
+                'ok' => false,
+                'error' => 'cannot-modify-self',
+                'message' => 'Je kunt je eigen actieve beheerdersaccount hier niet deactiveren.',
+            ], 409);
+        }
+        // Alleen tellen als dit een echte overgang van actief naar inactief is.
+        // Het formulier stuurt de huidige active-vlag altijd mee, dus een naam-
+        // of e-mailwijziging op een reeds inactieve beheerder herstuurt ook
+        // active=false -- zonder deze check zou dat ten onrechte worden
+        // geblokkeerd zodra er nog maar één andere actieve beheerder over is,
+        // terwijl er niets wordt gedeactiveerd.
+        $targetActiveStmt = $pdo->prepare(
+            'SELECT active FROM users WHERE id = :id AND company_id = :company_id LIMIT 1'
+        );
+        $targetActiveStmt->execute([':id' => $dbUserId, ':company_id' => $companyId]);
+        $targetWasActive = (int)($targetActiveStmt->fetchColumn() ?: 0) === 1;
+        if ($targetWasActive) {
+            $activeAdminStmt = $pdo->prepare(
+                "SELECT COUNT(*) FROM users WHERE company_id = :company_id AND role = 'administrator' AND active = 1"
+            );
+            $activeAdminStmt->execute([':company_id' => $companyId]);
+            if ((int)$activeAdminStmt->fetchColumn() <= 1) {
+                auth_send_json([
+                    'ok' => false,
+                    'error' => 'last-active-administrator',
+                    'message' => 'De laatste actieve beheerder kan niet worden gedeactiveerd.',
+                ], 409);
+            }
+        }
+    }
+
     $createdUser = false;
     $invitationQueued = false;
     try {
