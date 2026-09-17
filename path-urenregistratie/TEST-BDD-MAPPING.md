@@ -475,6 +475,7 @@
 | SEC-N-007 | security | security.feature | logout-endpoint weigert GET | Negatieve equivalentieklasse + error guessing | 2 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 5 | Actueel |
 | SEC-H-005 | security | security.feature | sessiecode bevat expliciete timeout-check en sliding expiration | API-contract + equivalentieklasse | 3 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
 | SEC-H-006 | security | security.feature | herhaalde mislukte loginpogingen maken security-audit event | API-contract + equivalentieklasse | 4 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
+| SEC-H-013 | security | security.feature | het drempel-audit-event verschijnt precies bij drie mislukkingen, één keer, met de juiste inhoud | Grenswaardenanalyse op de drempel (twee mag nog niet, drie wel) + idempotentiecontrole (geen tweede event binnen hetzelfde venster) + inhoudscontrole van het event_data-veld | 16 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
 | SEC-H-007 | security | security.feature | config voorbeeld bevat voorbereide CSP/CORS/HSTS flags | API-contract + equivalentieklasse | 3 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
 | SEC-H-008 | security | security.feature | draaiende server zet de vaste beveiligingsheaders echt op elk antwoord | API-contract + equivalentieklasse | 5 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
 | SEC-N-008 | security | security.feature | cors weerspiegelt alleen een toegestane origin, nooit een onbekende | Negatieve equivalentieklasse + error guessing | 7 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 5 | Actueel |
@@ -633,9 +634,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 611
+- Playwright executable cases: 612
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 612
+- Totaal unieke executable cases: 613
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32

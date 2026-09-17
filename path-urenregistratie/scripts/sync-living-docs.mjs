@@ -209,6 +209,7 @@ function techniqueFor(definition, testCase) {
   if (testCase.id === 'ANN-N-009') return 'Beslistabel (handeling x brontoestand) op wanneer een bericht als gelezen telt';
   if (testCase.id === 'ADM-WR-N-009') return 'Grenswaardenanalyse op het uurtarief (op de grens, erboven, typefout) + persistentiecontrole';
   if (testCase.id === 'CTS-API-H-018') return 'Equivalentieklassen op de schrijfwijze van een PDF-woordenboek (met en zonder spatie) + negatieve controle dat een nep-PDF geweigerd blijft';
+  if (testCase.id === 'SEC-H-013') return 'Grenswaardenanalyse op de drempel (twee mag nog niet, drie wel) + idempotentiecontrole (geen tweede event binnen hetzelfde venster) + inhoudscontrole van het event_data-veld';
   if (testCase.id === 'SAFE-H-009') return 'Equivalentieklassen + toestandsovergang';
   if (testCase.id === 'SAFE-H-011') return 'Toestandsovergang + foutinjectie + beslissingstabel';
   if (/gelijktijd|optimistic|tweede lock|immutable/.test(text)) return 'Concurrency + toestandsovergang';

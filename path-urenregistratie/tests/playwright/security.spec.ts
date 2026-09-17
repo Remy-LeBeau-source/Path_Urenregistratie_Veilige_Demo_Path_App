@@ -201,6 +201,94 @@ test('[SEC-H-006] herhaalde mislukte loginpogingen maken security-audit event', 
   expect(Number(eventsBody.count)).toBeGreaterThan(0);
 });
 
+// Dekkingsronde (kritisch): SEC-H-006 hierboven controleerde alleen dat er
+// "meer dan nul" auth.failed_login_threshold-events bestaan na drie
+// mislukte pogingen -- dat blijft ook groen als de dedup-logica in
+// auth_maybe_log_failed_login_alert() (login.php) stuk is en bij elke
+// mislukte poging een nieuw event wegschrijft, of als de drempel per ongeluk
+// op 2 in plaats van 3 staat. Geen van beide zou hier zijn opgevallen.
+test('[SEC-H-013] het drempel-audit-event verschijnt precies bij drie mislukkingen, één keer, met de juiste inhoud', async ({ request }) => {
+  // auth_maybe_log_failed_login_alert() slaat het event over zolang er geen
+  // company_id is (login.php geeft die alleen mee als de gebruiker echt
+  // bestaat) -- een verzonnen adres logt dus stilzwijgend NIETS. Vandaar een
+  // echt geseed account, niet elders gebruikt voor mislukte pogingen (zie
+  // SEEDED_EMPLOYEES in auth.spec.ts: alleen voor succesvolle logins).
+  const account = 'shawn@example.invalid';
+  const authApi = new AuthApi(request);
+
+  const failedLogin = async () => {
+    const csrf = await request.get('/server/auth/csrf.php');
+    const csrfBody = await csrf.json();
+    return request.post('/server/auth/login.php', {
+      headers: { 'X-CSRF-Token': csrfBody.csrf_token },
+      data: { email: account, password: 'definitely-wrong-password' },
+    });
+  };
+
+  const thresholdEventsFor = async (email: string) => {
+    const res = await request.get(
+      `/server/api/audit-log.php?event_type=auth.failed_login_threshold&entity_id=${encodeURIComponent(email)}&limit=20`,
+    );
+    expect(res.status()).toBe(200);
+    const body = await res.json();
+    expect(body.ok).toBe(true);
+    return body.items as Array<{ entity_id: string; event_data: Record<string, unknown> | null }>;
+  };
+
+  await test.step('Given een geseed medewerkersaccount dat nergens anders mislukte pogingen krijgt', async () => {
+    // Los van SEC-H-006 (joyce@example.invalid): binnen hetzelfde 15-minuten-
+    // venster tellen mislukte pogingen per e-mailadres op, dus twee cases op
+    // hetzelfde account zouden elkaars telling verstoren.
+  });
+
+  await test.step('When er twee keer mislukt wordt ingelogd (net onder de drempel)', async () => {
+    const first = await failedLogin();
+    const second = await failedLogin();
+    expect([401, 429]).toContain(first.status());
+    expect([401, 429]).toContain(second.status());
+  });
+
+  await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+  await test.step('Then bestaat er nog geen drempel-event (de grens ligt bij drie, niet twee)', async () => {
+    const events = await thresholdEventsFor(account);
+    expect(events.length).toBe(0);
+  });
+  await authApi.logout();
+
+  await test.step('When een derde mislukte poging de drempel haalt', async () => {
+    const third = await failedLogin();
+    expect([401, 429]).toContain(third.status());
+  });
+
+  await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+  await test.step('Then verschijnt precies één event, met het juiste account en de juiste inhoud', async () => {
+    const events = await thresholdEventsFor(account);
+    expect(events.length).toBe(1);
+    expect(events[0].entity_id).toBe(account);
+    expect(events[0].event_data).not.toBeNull();
+    expect(events[0].event_data?.email).toBe(account);
+    expect(events[0].event_data?.failed_count).toBe(3);
+    expect(events[0].event_data?.window_minutes).toBe(15);
+  });
+  await authApi.logout();
+
+  await test.step('When nog drie mislukte pogingen volgen binnen hetzelfde venster (de zesde triggert de eigen rate-limit, zie AUTH-N-008/PWD-N-018: vijf mag, zes niet)', async () => {
+    const fourth = await failedLogin();
+    const fifth = await failedLogin();
+    const sixth = await failedLogin();
+    expect(fourth.status()).toBe(401);
+    expect(fifth.status()).toBe(401);
+    expect(sixth.status()).toBe(429);
+  });
+
+  await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+  await test.step('Then blijft het nog steeds precies één event: de dedup-guard voorkomt een tweede', async () => {
+    const events = await thresholdEventsFor(account);
+    expect(events.length).toBe(1);
+  });
+  await authApi.logout();
+});
+
 test('[SEC-H-007] config voorbeeld bevat voorbereide CSP/CORS/HSTS flags', async () => {
   const src = await readFile(join(process.cwd(), 'server', 'config.example.php'), 'utf8');
   expect(src).toContain("'cors_allowed_origins'");

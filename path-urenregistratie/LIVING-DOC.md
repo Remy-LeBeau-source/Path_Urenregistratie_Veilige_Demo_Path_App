@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 611 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 612 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 611 unieke case-ID's
+- Playwright executable cases: 612 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 612 unieke case-ID's
+- Totaal executable cases: 613 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 665
-- Niet-mobile projectuitvoeringen: 557
+- Uitvoeringen: 666
+- Niet-mobile projectuitvoeringen: 558
 - Mobile functionele cases: 54
 - Pixel 7 / Chromium-uitvoeringen: 54
 - iPhone 13 / WebKit-uitvoeringen: 54
 
-De 54 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 611 Playwright-functionele cases in totaal 665 resultaten op: 557 + (54 x 2) = 665.
+De 54 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 612 Playwright-functionele cases in totaal 666 resultaten op: 558 + (54 x 2) = 666.
 
 ## Documentatieketen
 
@@ -638,7 +638,7 @@ De 54 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 611 Playwri
 
 - Feature: `tests/playwright/features/security.feature`
 - Source: `tests/playwright/security.spec.ts`
-- Cases: 20
+- Cases: 21
 
 - [SEC-H-001] csrf token endpoint werkt — Techniek: API-contract + equivalentieklasse · Assertions: 4
 - [SEC-H-002] login met csrf werkt — Techniek: API-contract + equivalentieklasse · Assertions: 2
@@ -653,6 +653,7 @@ De 54 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 611 Playwri
 - [SEC-N-007] logout-endpoint weigert GET — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 - [SEC-H-005] sessiecode bevat expliciete timeout-check en sliding expiration — Techniek: API-contract + equivalentieklasse · Assertions: 3
 - [SEC-H-006] herhaalde mislukte loginpogingen maken security-audit event — Techniek: API-contract + equivalentieklasse · Assertions: 4
+- [SEC-H-013] het drempel-audit-event verschijnt precies bij drie mislukkingen, één keer, met de juiste inhoud — Techniek: Grenswaardenanalyse op de drempel (twee mag nog niet, drie wel) + idempotentiecontrole (geen tweede event binnen hetzelfde venster) + inhoudscontrole van het event_data-veld · Assertions: 16
 - [SEC-H-007] config voorbeeld bevat voorbereide CSP/CORS/HSTS flags — Techniek: API-contract + equivalentieklasse · Assertions: 3
 - [SEC-H-008] draaiende server zet de vaste beveiligingsheaders echt op elk antwoord — Techniek: API-contract + equivalentieklasse · Assertions: 5
 - [SEC-N-008] cors weerspiegelt alleen een toegestane origin, nooit een onbekende — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 7

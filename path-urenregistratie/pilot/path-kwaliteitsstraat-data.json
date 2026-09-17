@@ -1,8 +1,33 @@
 {
-  "appVersion": "2.0.146",
-  "generatedAt": "2026-09-17T00:31:55.330Z",
+  "appVersion": "2.0.147",
+  "generatedAt": "2026-09-17T01:58:09.639Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "17 sep",
+      "version": "2.0.147",
+      "wish": "Kritische dekkingsronde (op verzoek Gio): de mail-acceptatieconsole en de auditlog bleken al breed getest (rol, CSRF, expliciete bevestiging, geen wachtwoorden/tokens in event_data). Wel een echt gat gevonden in de bestaande SEC-H-006: die controleerde alleen dat er \"meer dan nul\" beveiligingsevents bestonden na drie mislukte inlogpogingen -- dat bleef ook groen als de drempel per ongeluk op twee stond, of als de dedup-bescherming in login.php stuk was en bij elke mislukking een nieuw event wegschreef (ruis in de auditlog). Nieuwe case SEC-H-013 pint nu de exacte drempel (twee mag nog niet, drie wel), de inhoud van het event (welk account, hoeveel mislukkingen, welk venster) en de idempotentie (nog twee mislukkingen erna blijft het één event). Tegenproef gedaan: dedup-guard tijdelijk uitgezet -> drie events in plaats van een -> rood; teruggezet -> groen.",
+      "cases": [
+        {
+          "id": "SEC-H-006",
+          "title": "herhaalde mislukte loginpogingen maken security-audit event",
+          "feature": "tests/playwright/features/security.feature",
+          "technique": "API-contract + equivalentieklasse",
+          "assertions": 4,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: herhaalde mislukte loginpogingen maken security-audit event\n  Given authenticatie- en API-beveiliging is voorbereid\n  When de flow voor SEC-H-006 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat herhaalde mislukte loginpogingen maken security-audit event"
+        },
+        {
+          "id": "SEC-H-013",
+          "title": "het drempel-audit-event verschijnt precies bij drie mislukkingen, één keer, met de juiste inhoud",
+          "feature": "tests/playwright/features/security.feature",
+          "technique": "Grenswaardenanalyse op de drempel (twee mag nog niet, drie wel) + idempotentiecontrole (geen tweede event binnen hetzelfde venster) + inhoudscontrole van het event_data-veld",
+          "assertions": 16,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: het drempel-audit-event verschijnt precies bij drie mislukkingen, één keer, met de juiste inhoud\n  Given een geseed medewerkersaccount dat nergens anders mislukte pogingen krijgt\n  When er twee keer mislukt wordt ingelogd (net onder de drempel)\n  Then bestaat er nog geen drempel-event (de grens ligt bij drie, niet twee)\n  When een derde mislukte poging de drempel haalt\n  Then verschijnt precies één event, met het juiste account en de juiste inhoud\n  When nog drie mislukte pogingen volgen binnen hetzelfde venster (de zesde triggert de eigen rate-limit, zie AUTH-N-008/PWD-N-018: vijf mag, zes niet)\n  Then blijft het nog steeds precies één event: de dedup-guard voorkomt een tweede"
+        }
+      ]
+    },
     {
       "date": "17 sep",
       "version": "2.0.146",
@@ -161,22 +186,6 @@
           "assertions": 4,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: een bericht kan niet tegelijk correctie en intrekking van iets anders zijn\n  Given mededelingen versturen, intrekken en verbergen is voorbereid\n  When de flow voor ANN-N-010 wordt uitgevoerd\n  Then weigert de server een bericht met beide referenties tegelijk"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.138",
-      "wish": "Bevestigd en vastgelegd met een regressiecase (wens Gio via het wensenloket, PATH-200, issue #46): de maandtotalen boven de werkvoorraad (#hero-task-months, #hero-task-owners) blijven ongewijzigd als de gebruiker wisselt tussen de filters \"bij Backoffice\" en \"wacht op medewerkers\" -- dat klopte al, maar stond nog niet vast met een assertie (DASH-H-052, tegenproef rood).",
-      "cases": [
-        {
-          "id": "DASH-H-052",
-          "title": "de maandtotalen boven de werkvoorraad blijven gelijk als de gebruiker wisselt tussen Backoffice en medewerkers",
-          "feature": "tests/playwright/features/dashboard.feature",
-          "technique": "Equivalentieklassen op de eigenaarfilter (Backoffice/medewerkers/alle) + regressie op stabiele maandtotalen",
-          "assertions": 14,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: de maandtotalen boven de werkvoorraad blijven gelijk als de gebruiker wisselt tussen Backoffice en medewerkers\n  Given het dashboard met een gevulde werkvoorraad over meerdere maanden\n  When de flow voor DASH-H-052 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de maandtotalen boven de werkvoorraad blijven gelijk als de gebruiker wisselt tussen Backoffice en medewerkers"
         }
       ]
     }
