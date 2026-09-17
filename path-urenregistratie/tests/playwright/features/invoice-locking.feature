@@ -101,3 +101,11 @@ Feature: Facturen definitief maken en vergrendelen
     Given een administrator een factuur heeft gefinaliseerd
     When een anonieme gebruiker de factuur-PDF probeert te downloaden
     Then wordt met Playwright-assertions bevestigd dat anonieme gebruiker kan factuur-PDF niet downloaden
+
+  @negative
+  Scenario: [INV-N-027] vergrendelen zonder gecontroleerde conceptfactuur wordt geweigerd zodra mail echt verstuurt
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given facturen definitief maken en vergrendelen is voorbereid
+    When de flow voor INV-N-027 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat vergrendelen zonder gecontroleerde conceptfactuur wordt geweigerd zodra mail echt verstuurt

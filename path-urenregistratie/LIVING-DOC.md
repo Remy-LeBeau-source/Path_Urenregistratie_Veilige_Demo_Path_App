@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 608 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 609 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 608 unieke case-ID's
+- Playwright executable cases: 609 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 609 unieke case-ID's
+- Totaal executable cases: 610 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 661
-- Niet-mobile projectuitvoeringen: 555
+- Uitvoeringen: 662
+- Niet-mobile projectuitvoeringen: 556
 - Mobile functionele cases: 53
 - Pixel 7 / Chromium-uitvoeringen: 53
 - iPhone 13 / WebKit-uitvoeringen: 53
 
-De 53 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 608 Playwright-functionele cases in totaal 661 resultaten op: 555 + (53 x 2) = 661.
+De 53 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 609 Playwright-functionele cases in totaal 662 resultaten op: 556 + (53 x 2) = 662.
 
 ## Documentatieketen
 
@@ -361,7 +361,7 @@ De 53 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 608 Playwri
 
 - Feature: `tests/playwright/features/invoice-locking.feature`
 - Source: `tests/playwright/invoice-lock.spec.ts`
-- Cases: 11
+- Cases: 12
 
 - [INV-H-004] admin lockt approved timesheet naar definitieve immutable factuur — Techniek: Concurrency + toestandsovergang · Assertions: 26
 - [INV-N-015] definitief gefactureerde uren kunnen niet voor correctie worden heropend — Techniek: Toestandsovergang · Assertions: 9
@@ -374,6 +374,7 @@ De 53 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 608 Playwri
 - [INV-N-026] rechtstreeks gemaild blijft geblokkeerd tot Backoffice extern bevestigt — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [INV-N-012] gelijktijdige lock-requests leveren exact één winnaar — Techniek: Concurrency + toestandsovergang · Assertions: 1
 - [INV-N-013] anonieme gebruiker kan factuur-PDF niet downloaden — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 2
+- [INV-N-027] vergrendelen zonder gecontroleerde conceptfactuur wordt geweigerd zodra mail echt verstuurt — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 
 ### Facturerende onderneming en handelsnaam
 
@@ -486,7 +487,7 @@ De 53 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 608 Playwri
 - [NOT-H-012] medewerker ziet ingetrokken mededelingen ingeklapt met label, de reden bij openen, en het filter toont precies die — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 16
 - [NOT-H-013] een melding in de bel brengt de medewerker direct naar de plek waar iets te doen is — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
 - [NOT-H-014] Alles gelezen in Berichten leest alleen de mededelingen en laat de bel met rust — Techniek: API-contract + equivalentieklasse · Assertions: 8
-- [NOT-H-016] bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 10, de bel hooguit 10 — Techniek: Grenswaardenanalyse · Assertions: 18
+- [NOT-H-016] bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 5, de bel hooguit 10 — Techniek: Grenswaardenanalyse · Assertions: 17
 - [NOT-H-017] Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 20
 
 ### Mededelingen versturen, intrekken en verbergen
@@ -760,7 +761,7 @@ De 53 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 608 Playwri
 - Source: `tests/playwright/timesheet-review-flow.spec.ts`
 - Cases: 5
 
-- [TS-REV-API-H-005] admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking — Techniek: Concurrency + toestandsovergang · Assertions: 70
+- [TS-REV-API-H-005] admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking — Techniek: Concurrency + toestandsovergang · Assertions: 77
 - [TS-REV-API-H-006] gelijktijdige approve-requests door twee beheerders leveren exact één winnaar — Techniek: Concurrency + toestandsovergang · Assertions: 7
 - [TS-REV-API-H-007] jaarwisseling december naar januari verwerkt urenstaten correct over de jaargrens — Techniek: API-contract + equivalentieklasse · Assertions: 7
 - [TS-REV-API-N-002] elke verboden statusovergang wordt geweigerd en laat de urenstaat ongemoeid — Techniek: Toestandsovergang · Assertions: 19

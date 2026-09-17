@@ -51,3 +51,5 @@ Then("wordt met Playwright-assertions bevestigd dat gelijktijdige lock-requests 
 Given("een administrator een factuur heeft gefinaliseerd");
 When("een anonieme gebruiker de factuur-PDF probeert te downloaden");
 Then("wordt met Playwright-assertions bevestigd dat anonieme gebruiker kan factuur-PDF niet downloaden");
+When("de flow voor INV-N-027 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat vergrendelen zonder gecontroleerde conceptfactuur wordt geweigerd zodra mail echt verstuurt");

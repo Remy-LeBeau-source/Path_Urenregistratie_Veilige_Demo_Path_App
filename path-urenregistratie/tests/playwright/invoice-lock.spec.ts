@@ -1,3 +1,6 @@
+import { execFileSync } from 'node:child_process';
+import { writeFileSync, unlinkSync } from 'node:fs';
+import { join } from 'node:path';
 import { expect, request as playwrightRequest, test, type APIRequestContext } from '@playwright/test';
 import { AuthApi } from './api/AuthApi';
 import { InvoiceApi } from './api/InvoiceApi';
@@ -530,5 +533,56 @@ test('[INV-N-013] anonieme gebruiker kan factuur-PDF niet downloaden', async ({ 
       await isolated.dispose();
     }
   });
+});
+
+test('[INV-N-027] vergrendelen zonder gecontroleerde conceptfactuur wordt geweigerd zodra mail echt verstuurt', async () => {
+  // Zonder de door de browser gecontroleerde jsPDF-conceptfactuur (concept_pdf_base64)
+  // valt de server terug op simple_pdf, een kaal, ongebrand noodplan. Onschuldig zolang
+  // mail niet echt verstuurt (lokaal/TEST-standaard is dry-run), maar op een omgeving met
+  // echte maillevering ging diezelfde platte PDF vroeger gewoon naar de echte inbox van
+  // de klant of tussenpersoon -- dit is al meermaals misgegaan (geheugennotitie
+  // invoice-pdf-must-be-jspdf). De enige bestaande bescherming was een statische scan van
+  // testbestanden (scripts/smoke-test.mjs), die een rechtstreekse API-aanroep op een
+  // echte omgeving niet kan vangen.
+  //
+  // Deze case beproeft de beslissing (invoices_lock_requires_concept_pdf(), puur en
+  // zonder bijwerkingen) rechtstreeks via de PHP CLI. We laden bewust niet het hele
+  // server/api/invoices.php -- dat bestand handelt bij het inladen meteen een verzoek
+  // af (sessie starten, database verbinden), en dat is precies de I/O die deze proef
+  // wil vermijden. In plaats daarvan knippen we alleen de functiedefinitie uit de bron,
+  // zodat we nooit een echte mailconfiguratie of database hoeven aan te raken.
+  const projectRoot = join(__dirname, '..', '..');
+  const bron = require('node:fs').readFileSync(join(projectRoot, 'server', 'api', 'invoices.php'), 'utf8');
+  const match = bron.match(/function invoices_lock_requires_concept_pdf\([\s\S]*?\n\}/);
+  expect(match, 'de functie invoices_lock_requires_concept_pdf is niet gevonden in invoices.php').not.toBeNull();
+
+  const proefBestand = join(projectRoot, 'zz-inv-n-027-proef.php');
+  writeFileSync(
+    proefBestand,
+    [
+      '<?php',
+      "require 'server/mail/config.php';",
+      match![0],
+      'echo json_encode([',
+      "  'zonder_concept_dry_run' => invoices_lock_requires_concept_pdf(null, ['mail' => ['enabled' => false]]),",
+      "  'zonder_concept_echte_mail' => invoices_lock_requires_concept_pdf(null, ['mail' => ['enabled' => true]]),",
+      "  'met_concept_echte_mail' => invoices_lock_requires_concept_pdf('%PDF-1.4 dummy', ['mail' => ['enabled' => true]]),",
+      "  'met_concept_dry_run' => invoices_lock_requires_concept_pdf('%PDF-1.4 dummy', ['mail' => ['enabled' => false]]),",
+      ']);',
+    ].join('\n'),
+  );
+
+  let uitkomst: Record<string, boolean>;
+  try {
+    const raw = execFileSync('php', [proefBestand], { cwd: projectRoot, encoding: 'utf8' });
+    uitkomst = JSON.parse(raw);
+  } finally {
+    unlinkSync(proefBestand);
+  }
+
+  expect(uitkomst.zonder_concept_dry_run, 'lokaal/TEST-standaard blijft werken zonder concept-PDF').toBe(false);
+  expect(uitkomst.zonder_concept_echte_mail, 'op een echte-mailomgeving moet dit geweigerd worden').toBe(true);
+  expect(uitkomst.met_concept_echte_mail, 'met een echte conceptfactuur mag het altijd').toBe(false);
+  expect(uitkomst.met_concept_dry_run, 'met concept en dry-run mag het altijd').toBe(false);
 });
 

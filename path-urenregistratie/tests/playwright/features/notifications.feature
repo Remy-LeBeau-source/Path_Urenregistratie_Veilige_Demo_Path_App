@@ -144,13 +144,13 @@ Feature: Meldingen beheren
     Then zijn de mededelingen gelezen en blijft de statusmelding in de bel ongelezen
 
   @happy
-  Scenario: [NOT-H-016] bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 10, de bel hooguit 10
+  Scenario: [NOT-H-016] bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 5, de bel hooguit 10
     # Testtechniek: Grenswaardenanalyse
-    # Aantoonbare Playwright-assertions in deze case: 18
+    # Aantoonbare Playwright-assertions in deze case: 17
     Given meldingen beheren is voorbereid
     Then toont de bel 10 van de 15 ongelezen meldingen, met een regel voor de rest
-    And toont Berichten hooguit 30 berichten, 10 per pagina, de ongelezen vooraan
-    When de medewerker naar de laatste pagina bladert, then staan daar 21–30 en is Volgende uit
+    And toont Berichten hooguit 30 berichten, 5 per pagina (zelfde paginagrootte als Nieuw in de app), de ongelezen vooraan
+    When de medewerker naar de laatste pagina bladert, then staan daar 26–30 en is Volgende uit
     And zet een filterwissel de lijst terug op pagina 1
 
   @happy

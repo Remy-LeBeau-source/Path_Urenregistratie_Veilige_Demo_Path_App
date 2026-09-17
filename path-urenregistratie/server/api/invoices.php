@@ -536,6 +536,16 @@ function invoices_read(PDO $pdo, array $currentUser, array $periodFilter): void
     ]);
 }
 
+/**
+ * Puur en zonder bijwerkingen (geen database, geen mail-I/O): waar of niet waar,
+ * verder niets. Bewust apart van invoices_lock() zodat een test deze beslissing
+ * rechtstreeks kan beproeven zonder een echte mailconfiguratie te hoeven laden.
+ */
+function invoices_lock_requires_concept_pdf(?string $conceptPdfBytes, array $config): bool
+{
+    return $conceptPdfBytes === null && !mail_is_dry_run($config);
+}
+
 function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $config = []): void
 {
     if ((string)$currentUser['role'] !== 'administrator') {
@@ -576,6 +586,28 @@ function invoices_lock(PDO $pdo, array $currentUser, array $payload, array $conf
             ], 400);
         }
         $conceptPdfBytes = $decodedPdf;
+    }
+
+    // Zonder de door de browser gecontroleerde jsPDF-conceptfactuur valt de server terug
+    // op simple_pdf, een kaal, ongebrande noodplan zonder echt gebruikerspad (zie
+    // invoices_generate_and_store_pdf hieronder). Dat is onschuldig zolang mail niet
+    // echt verstuurt, maar op een omgeving met echte maillevering (production_mode of
+    // de TEST-acceptatiesandbox) gaat diezelfde platte PDF dan gewoon naar een echte
+    // inbox van de klant of tussenpersoon -- dit is precies zo al meermaals misgegaan
+    // (zie geheugennotitie invoice-pdf-must-be-jspdf). De enige bestaande bescherming
+    // was een statische scan van testbestanden (scripts/smoke-test.mjs); die vangt een
+    // vergeten concept_pdf_base64 in een test, maar niets bij een rechtstreekse
+    // API-aanroep op een echte omgeving. Fail-closed in plaats van stil terugvallen.
+    //
+    // De voorwaarde staat in een pure, losse functie (geen database, geen mail-I/O) zodat
+    // een test hem rechtstreeks kan aanroepen zonder ooit een echte mailconfiguratie aan
+    // te hoeven raken -- precies de voorzichtigheid die dit stuk code verdient.
+    if (invoices_lock_requires_concept_pdf($conceptPdfBytes, $config)) {
+        auth_send_json([
+            'ok' => false,
+            'error' => 'concept-pdf-required',
+            'message' => 'Een factuur kan hier niet worden vergrendeld zonder de gecontroleerde conceptfactuur-PDF: deze omgeving verstuurt e-mail echt, en de kale serverfactuur mag nooit bij een echte ontvanger belanden.',
+        ], 422);
     }
 
     $pdo->beginTransaction();

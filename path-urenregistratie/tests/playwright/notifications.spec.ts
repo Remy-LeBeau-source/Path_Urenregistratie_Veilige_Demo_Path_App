@@ -711,7 +711,7 @@ test.describe('notifications api', () => {
     });
   });
 
-  test('[NOT-H-016] bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 10, de bel hooguit 10', async ({ page }) => {
+  test('[NOT-H-016] bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 5, de bel hooguit 10', async ({ page }) => {
     // Gio 15 sep: "op een gegeven moment raken de meldingen tot 100, alleen de laatste 30
     // doen ofzo?" Grenswaarden: 35 mededelingen (boven de 30) en 15 statusmeldingen (boven
     // de 10 in de bel). Ongelezen blijven vooraan, dus nooit voorbij de grens verstopt.
@@ -739,25 +739,25 @@ test.describe('notifications api', () => {
 
     const lijst = page.locator('#employee-announcement-list');
     const nav = page.locator('#berichten-paginering');
-    await test.step('And toont Berichten hooguit 30 berichten, 10 per pagina, de ongelezen vooraan', async () => {
+    await test.step('And toont Berichten hooguit 30 berichten, 5 per pagina (zelfde paginagrootte als Nieuw in de app), de ongelezen vooraan', async () => {
       await page.locator('button[data-view="employee-announcements"]').click();
       await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen · 3');
       await expect(lijst.locator('.employee-announcement-card')).toHaveCount(30);
-      await expect(lijst.locator('.employee-announcement-card:visible')).toHaveCount(10);
+      await expect(lijst.locator('.employee-announcement-card:visible')).toHaveCount(5);
       await expect(lijst.locator('.berichten-afgekapt')).toHaveText('Alleen de laatste 30 berichten staan hier.');
       await expect(nav).toBeVisible();
-      await expect(nav.locator('[data-pagina-stand]')).toHaveText('1–10 van 30');
+      await expect(nav.locator('[data-pagina-stand]')).toHaveText('1–5 van 30');
       await expect(nav.locator('[data-pagina-vorige]')).toBeDisabled();
       const eerste = await lijst.locator('.employee-announcement-card:visible').evaluateAll(els => els.slice(0, 3).map(el => el.classList.contains('is-unread')));
       expect(eerste, 'de drie ongelezen staan bovenaan op pagina 1').toEqual([true, true, true]);
     });
 
-    await test.step('When de medewerker naar de laatste pagina bladert, then staan daar 21–30 en is Volgende uit', async () => {
-      await nav.locator('[data-pagina-volgende]').click();
-      await expect(nav.locator('[data-pagina-stand]')).toHaveText('11–20 van 30');
-      await nav.locator('[data-pagina-volgende]').click();
-      await expect(nav.locator('[data-pagina-stand]')).toHaveText('21–30 van 30');
-      await expect(lijst.locator('.employee-announcement-card:visible')).toHaveCount(10);
+    await test.step('When de medewerker naar de laatste pagina bladert, then staan daar 26–30 en is Volgende uit', async () => {
+      for (const verwacht of ['6–10 van 30', '11–15 van 30', '16–20 van 30', '21–25 van 30', '26–30 van 30']) {
+        await nav.locator('[data-pagina-volgende]').click();
+        await expect(nav.locator('[data-pagina-stand]')).toHaveText(verwacht);
+      }
+      await expect(lijst.locator('.employee-announcement-card:visible')).toHaveCount(5);
       await expect(nav.locator('[data-pagina-volgende]')).toBeDisabled();
     });
 
@@ -766,7 +766,7 @@ test.describe('notifications api', () => {
       await expect(lijst.locator('.employee-announcement-card:visible')).toHaveCount(3);
       await expect(nav, 'met 3 berichten is er geen tweede pagina').toBeHidden();
       await page.locator('[data-announcement-archive-filter="all"]').click();
-      await expect(nav.locator('[data-pagina-stand]')).toHaveText('1–10 van 30');
+      await expect(nav.locator('[data-pagina-stand]')).toHaveText('1–5 van 30');
     });
   });
 
@@ -802,9 +802,9 @@ test.describe('notifications api', () => {
       await expect(lijst.locator('.employee-announcement-card')).toHaveCount(6);
       await page.locator('[data-announcement-archive-filter="all"]').click();
       await expect(lijst.locator('.employee-announcement-card')).toHaveCount(15);
-      // 15 berichten: onder Alles een tweede pagina (10 per pagina), zoals Gio wilde kunnen testen.
-      await expect(lijst.locator('.employee-announcement-card:visible')).toHaveCount(10);
-      await expect(page.locator('#berichten-paginering [data-pagina-stand]')).toHaveText('1–10 van 15');
+      // 15 berichten: onder Alles meerdere pagina's (5 per pagina), zoals Gio wilde kunnen testen.
+      await expect(lijst.locator('.employee-announcement-card:visible')).toHaveCount(5);
+      await expect(page.locator('#berichten-paginering [data-pagina-stand]')).toHaveText('1–5 van 15');
     });
 
     await test.step('And vat een ingetrokken bericht de reden samen, niet de tekst die niet meer geldt', async () => {

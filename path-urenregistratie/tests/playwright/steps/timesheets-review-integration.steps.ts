@@ -29,6 +29,7 @@ Then("een verouderde approve-aanvraag wordt geblokkeerd met stale-version");
 When("de administrator met juiste versie goedkeurt");
 Then("read-back toont approved status met volledige audit- en correctiehistorie");
 And("een goedkeuring zonder factuur server-side kan worden heropend voor correctie");
+Then("krijgt de medewerker ook bij een heropening ná goedkeuring een nieuwe, ongelezen melding");
 And("cleanup: sessie sluiten voor testisolatie");
 Given("een medewerker een urenstaat heeft ingediend in een schrijfbare testperiode");
 When("twee beheerders tegelijk dezelfde urenstaat proberen goed te keuren");

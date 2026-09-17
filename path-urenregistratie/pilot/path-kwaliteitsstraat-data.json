@@ -1,8 +1,42 @@
 {
-  "appVersion": "2.0.142",
-  "generatedAt": "2026-09-16T22:09:48.631Z",
+  "appVersion": "2.0.145",
+  "generatedAt": "2026-09-16T23:58:45.739Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "16 sep",
+      "version": "2.0.145",
+      "wish": "Twee dingen die Gio zelf op zijn telefoon vond, gebruiksvriendelijker gemaakt. (1) Facturatie: de idempotency-check bij het vergrendelen van een factuur was SELECT-dan-INSERT zonder databaseslot; zonder de door de browser gecontroleerde jsPDF-conceptfactuur viel de server terug op een kale, ongebrande PDF en verstuurde die gewoon echt als mail niet in dry-run stond -- exact het probleem dat al 4+ keer eerder is misgegaan (geheugennotitie invoice-pdf-must-be-jspdf). Nu een fail-closed slot (invoices_lock_requires_concept_pdf), puur getest via de PHP CLI zonder ooit een echte mailconfiguratie te laden (INV-N-027, tegenproef rood/groen). (2) \"Correctie gevraagd\" bleek uitsluitend in de demoseed te bestaan: de echte request_correction-actie maakte nooit een meldingsregel aan, dus een medewerker zag in de bel of Berichten nooit een echt correctieverzoek, en een oude seed-melding kon nooit worden opgeruimd omdat er nooit een mechanisme was dat er een had aangemaakt. Nu een echte notificatie bij het vragen van een correctie (met de tekst die Backoffice typte), opgeruimd zodra de medewerker opnieuw indient, en een nieuwe bij een heropening na goedkeuring (TS-REV-API-H-005 uitgebreid, tegenproef rood/groen op alle drie de momenten). Bijvangst: Berichten toonde geen Vorige/Volgende bij negen of minder berichten omdat de paginagrootte op 10 stond; nu 5, gelijk aan \"Nieuw in de app\" (NOT-H-016/017 bijgewerkt).",
+      "cases": [
+        {
+          "id": "INV-N-027",
+          "title": "vergrendelen zonder gecontroleerde conceptfactuur wordt geweigerd zodra mail echt verstuurt",
+          "feature": "tests/playwright/features/invoice-locking.feature",
+          "technique": "Beslissingstabel rollen en autorisatie",
+          "assertions": 5,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: vergrendelen zonder gecontroleerde conceptfactuur wordt geweigerd zodra mail echt verstuurt\n  Given facturen definitief maken en vergrendelen is voorbereid\n  When de flow voor INV-N-027 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat vergrendelen zonder gecontroleerde conceptfactuur wordt geweigerd zodra mail echt verstuurt"
+        },
+        {
+          "id": "TS-REV-API-H-005",
+          "title": "admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking",
+          "feature": "tests/playwright/features/correction-approval-workflow.feature",
+          "technique": "Concurrency + toestandsovergang",
+          "assertions": 77,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking\n  Given de medewerker is ingelogd en heeft een schrijfbare testperiode\n  When de medewerker een concept opslaat en daarna indient\n  And de reviewcontext wisselt naar administrator\n  Then een verouderde correctie-aanvraag wordt geblokkeerd met stale-version\n  Then een correctie-aanvraag zonder toelichting wordt door de server geweigerd (sectie 20: UI-verbergen is geen autorisatie)\n  When de administrator een geldige correctie-aanvraag uitvoert\n  Then een tweede correctie op dezelfde versie wordt geweigerd\n  And de context wisselt terug naar medewerker voor herindiening\n  Then een medewerker mag geen admin-reviewactie uitvoeren\n  When de medewerker na correctie opnieuw indient\n  And de context wisselt opnieuw naar administrator voor goedkeuring\n  Then een verouderde approve-aanvraag wordt geblokkeerd met stale-version\n  When de administrator met juiste versie goedkeurt\n  Then read-back toont approved status met volledige audit- en correctiehistorie\n  And een goedkeuring zonder factuur server-side kan worden heropend voor correctie\n  Then krijgt de medewerker ook bij een heropening ná goedkeuring een nieuwe, ongelezen melding\n  And cleanup: sessie sluiten voor testisolatie"
+        },
+        {
+          "id": "NOT-H-016",
+          "title": "bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 5, de bel hooguit 10",
+          "feature": "tests/playwright/features/notifications.feature",
+          "technique": "Grenswaardenanalyse",
+          "assertions": 17,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 5, de bel hooguit 10\n  Given meldingen beheren is voorbereid\n  Then toont de bel 10 van de 15 ongelezen meldingen, met een regel voor de rest\n  And toont Berichten hooguit 30 berichten, 5 per pagina (zelfde paginagrootte als Nieuw in de app), de ongelezen vooraan\n  When de medewerker naar de laatste pagina bladert, then staan daar 26–30 en is Volgende uit\n  And zet een filterwissel de lijst terug op pagina 1"
+        }
+      ]
+    },
     {
       "date": "17 sep",
       "version": "2.0.142",
@@ -125,22 +159,6 @@
       "date": "16 sep",
       "version": "2.0.135",
       "wish": "Keuzelijst in het wensenloket (basisregel Gio): verbeteringen die wij zelf zien staan in dit bestand onder \"Nice to have\" en het formulier toont ze als klikbare chips met het waarom erbij. Kiezen vult Samenvatting en Gewenste waarde voor en zet de cursor in het acceptatiecriterium; aanpassen mag altijd en \"Zelf typen\" maakt de keuze los zonder iets te wissen (PIPE-H-007, tegenproef rood op de oude pagina).",
-      "cases": [
-        {
-          "id": "PIPE-H-007",
-          "title": "de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet",
-          "feature": "tests/playwright/features/pipeline-demo.feature",
-          "technique": "Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst",
-          "assertions": 26,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet\n  Given de keuzelijst toont de nice-to-haves uit GIO-WENSEN\n  When de PO een verbetering kiest, then staan samenvatting en waarde ingevuld en blijft het criterium aan hem\n  And zelf typen blijft mogelijk: aanpassen maakt de keuze niet ongedaan, loslaten wel\n  And het type heet Onderhoud, niet Chore\n  And de volgorde in Te doen is met het toetsenbord te wijzigen en blijft na herladen\n  And bovenin staat hoe vers de stand is en de versie staat in de voet zoals in de urenapp\n  Then wordt met Playwright-assertions bevestigd dat de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet"
-        }
-      ]
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.135",
-      "wish": "Kaarten op het demobord: slepen binnen Te doen (met handvat, en ▲▼ voor het toetsenbord), volgorde blijft na F5; niet tussen kolommen. In uitvoering vult zich vanaf nu op de echte stand, want wie een wens oppakt zet hem hier op bezig (werkafspraak) (PIPE-H-007).",
       "cases": [
         {
           "id": "PIPE-H-007",
