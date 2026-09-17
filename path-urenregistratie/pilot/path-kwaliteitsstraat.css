@@ -295,6 +295,16 @@ button, summary { -webkit-tap-highlight-color: transparent; }
 .board-column header span { min-width: 20px; padding: 0 6px; border-radius: 10px; background: var(--surface-3); color: var(--muted); font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; text-align: center; }
 .ticket-list { display: flex; flex-direction: column; gap: 6px; min-height: 40px; }
 .empty-column { margin: 0; padding: 18px 8px; border-radius: 3px; color: var(--subtle); text-align: center; font-size: 12px; }
+
+/* "Toon meer": de lijsten dragen nu de volledige projecthistorie, dus er hoort
+   een zichtbare, aanklikbare uitbreiding onder in plaats van een stille afkap. */
+.toon-meer { display: block; width: 100%; margin-top: 8px; padding: 9px 12px; border: 1px dashed var(--line-strong); border-radius: 4px; background: transparent; color: var(--jira); font: inherit; font-size: 12px; cursor: pointer; }
+.toon-meer:hover { background: var(--surface-2); border-style: solid; }
+.toon-meer:focus-visible { outline: 2px solid var(--jira); outline-offset: 2px; }
+.toon-meer b { font-weight: 600; color: var(--subtle); }
+.toon-meer-rij { list-style: none; }
+.toon-meer-rij .toon-meer { margin-top: 4px; }
+tr.toon-meer-rij td { padding: 6px 10px; }
 .ticket-card { padding: 10px 12px; border-radius: 3px; background: var(--surface); box-shadow: var(--shadow-card); }
 .ticket-card:hover { background: var(--surface-2); }
 .ticket-card.is-running { box-shadow: 0 0 0 2px var(--amber); }
@@ -367,7 +377,12 @@ button, summary { -webkit-tap-highlight-color: transparent; }
 /* Confluence is het loket: de paginaboom, het document en rechts het
    wensenformulier. Gio vult daar in, slaat op, en is klaar. */
 .knowledge-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr) 330px; gap: 16px; align-items: start; }
-.page-tree { position: sticky; top: 72px; padding: 14px 10px; }
+/* De paginaboom draagt sinds 17 sep de volledige historie plus zeven vaste
+   pagina's en werd daarmee hoger dan het scherm. Omdat hij meescrolt (sticky)
+   viel de onderkant buiten beeld en waren de vaste pagina's niet meer aan te
+   klikken -- gevonden doordat een testcase de knop "Teststrategie" wel vond maar
+   niet kon aanklikken. Een eigen schuifbalk houdt de hele boom bereikbaar. */
+.page-tree { position: sticky; top: 72px; max-height: calc(100vh - 88px); overflow-y: auto; overscroll-behavior: contain; padding: 14px 10px; }
 .tree-space { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 0 4px; font-size: 14px; font-weight: 600; }
 .tree-space span { width: 26px; height: 26px; border-radius: 4px; display: grid; place-items: center; background: var(--confluence); color: #fff; font-size: 11px; font-weight: 700; }
 .tree-section-title { margin: 12px 4px 4px; color: var(--subtle); font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }

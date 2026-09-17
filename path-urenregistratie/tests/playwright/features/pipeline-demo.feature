@@ -11,7 +11,7 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
   @negative
   Scenario: [PIPE-N-003] de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt
     # Testtechniek: Regressiecontrole na hernoeming: oude URL blijft bereikbaar en verwijst door (meta-refresh) naar de nieuwe naam
-    # Aantoonbare Playwright-assertions in deze case: 3
+    # Aantoonbare Playwright-assertions in deze case: 6
     Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid
     When de flow voor PIPE-N-003 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt
@@ -19,10 +19,11 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
   @happy
   Scenario: [PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin
     # Testtechniek: Datagedreven vergelijking (pagina versus pilot/path-kwaliteitsstraat-data.json) + traceerbaarheid over drie projecties
-    # Aantoonbare Playwright-assertions in deze case: 28
+    # Aantoonbare Playwright-assertions in deze case: 38
     Given de zelfstandige TEST-only pipelinepagina met de echte projectstand
-    When de pagina is geladen, staan de vier fasen en de laatste tien echte opleveringen op het bord
-    And Kennisbank en Testbeheer projecteren dezelfde echte cases en de Living Doc toont hooguit tien
+    When de pagina is geladen, staan de vier fasen en de eerste echte opleveringen op het bord
+    And de zoekbalk vindt ook een oplevering die buiten de eerste lading valt
+    And Kennisbank en Testbeheer projecteren dezelfde echte cases, met paginering in plaats van een afkap
     Then wordt met Playwright-assertions bevestigd dat de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin
 
   @happy
@@ -36,6 +37,16 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
     Then meldt de pagina dat hij is aangenomen en staat hij op het bord, ook na herladen
     And een tweede bezoeker met een schone browser ziet dezelfde wens, want de wachtrij staat op de server
     And een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc
+
+  @happy
+  Scenario: [PIPE-H-009] de koppelingen tonen welke bron geldt en lekken nooit een instelling
+    # Testtechniek: Contractcontrole op het koppelingen-endpoint (vorm, statusregels per bron) + negatieve inhoudscontrole dat geen enkele instelling naar buiten lekt
+    # Aantoonbare Playwright-assertions in deze case: 19
+    Given het koppelingen-endpoint van de open demo-omgeving
+    When de flow voor PIPE-H-009 wordt uitgevoerd
+    Then geldt onze eigen bron en staan de drie klantbronnen klaar
+    And staat er nergens een instelling in het antwoord
+    And legt de Kennisbank uit wat er per koppeling nodig is
 
   @negative
   Scenario: [PIPE-N-002] de intakewachtrij weigert onvolledige, te grote en verkeerd geadresseerde invoer, en bestaat niet op productie
@@ -83,7 +94,7 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
   @happy
   Scenario: [PIPE-H-004] zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes
     # Testtechniek: Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole
-    # Aantoonbare Playwright-assertions in deze case: 24
+    # Aantoonbare Playwright-assertions in deze case: 26
     Given de pipelinepagina met de echte projectstand
     When er wordt gezocht, gefilterd, gesorteerd en een kaart wordt geopend
     Then tonen bord, kennisbank en testbeheer telkens de bijbehorende selectie
@@ -105,12 +116,12 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
     Then blijft de keuze staan na herladen
 
   @negative
-  Scenario: [PIPE-N-001] de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon
+  Scenario: [PIPE-N-001] de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon
     # Testtechniek: Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole
-    # Aantoonbare Playwright-assertions in deze case: 12
+    # Aantoonbare Playwright-assertions in deze case: 14
     Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid
     When de Kennisbank op de telefoon wordt geopend
-    Then toont de Living Doc precies tien regels, lokaal vóór echt, en bewaart hij er tien
+    Then tekent de Living Doc tien regels per keer, lokaal vóór echt, en bewaart hij er hooguit 25
     And de pagina heeft geen horizontale overflow of gedeelde appcode
 
   @happy

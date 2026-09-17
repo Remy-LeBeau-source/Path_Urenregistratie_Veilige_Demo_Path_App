@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 613 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 614 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 613 unieke case-ID's
+- Playwright executable cases: 614 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 614 unieke case-ID's
+- Totaal executable cases: 615 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 667
+- Uitvoeringen: 669
 - Niet-mobile projectuitvoeringen: 559
-- Mobile functionele cases: 54
-- Pixel 7 / Chromium-uitvoeringen: 54
-- iPhone 13 / WebKit-uitvoeringen: 54
+- Mobile functionele cases: 55
+- Pixel 7 / Chromium-uitvoeringen: 55
+- iPhone 13 / WebKit-uitvoeringen: 55
 
-De 54 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 613 Playwright-functionele cases in totaal 667 resultaten op: 559 + (54 x 2) = 667.
+De 55 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 614 Playwright-functionele cases in totaal 669 resultaten op: 559 + (55 x 2) = 669.
 
 ## Documentatieketen
 
@@ -697,19 +697,20 @@ De 54 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 613 Playwri
 
 - Feature: `tests/playwright/features/pipeline-demo.feature`
 - Source: `tests/playwright/pipeline-demo.spec.ts`
-- Cases: 12
+- Cases: 13
 
-- [PIPE-N-003] de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt — Techniek: Regressiecontrole na hernoeming: oude URL blijft bereikbaar en verwijst door (meta-refresh) naar de nieuwe naam · Assertions: 3
-- [PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin — Techniek: Datagedreven vergelijking (pagina versus pilot/path-kwaliteitsstraat-data.json) + traceerbaarheid over drie projecties · Assertions: 28
+- [PIPE-N-003] de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt — Techniek: Regressiecontrole na hernoeming: oude URL blijft bereikbaar en verwijst door (meta-refresh) naar de nieuwe naam · Assertions: 6
+- [PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin — Techniek: Datagedreven vergelijking (pagina versus pilot/path-kwaliteitsstraat-data.json) + traceerbaarheid over drie projecties · Assertions: 38
 - [PIPE-H-002] opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub — Techniek: Toestandsovergangtest (aangenomen → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van het wachtrij-antwoord + negatieve controle dat GitHub niet meer wordt benaderd · Assertions: 42
+- [PIPE-H-009] de koppelingen tonen welke bron geldt en lekken nooit een instelling — Techniek: Contractcontrole op het koppelingen-endpoint (vorm, statusregels per bron) + negatieve inhoudscontrole dat geen enkele instelling naar buiten lekt · Assertions: 19
 - [PIPE-N-002] de intakewachtrij weigert onvolledige, te grote en verkeerd geadresseerde invoer, en bestaat niet op productie — Techniek: Foutinjectie op de intake (leeg veld, onleesbare invoer, grensoverschrijding, verkeerde methode) + omgevingsafscherming met tegenproef · Assertions: 17
 - [PIPE-H-007] de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet — Techniek: Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst · Assertions: 26
 - [PIPE-H-008] het loket stelt zelf een testbaar acceptatiecriterium voor, zonder externe aanroep — Techniek: Beslistabel op het criterium-voorstel (leeg/getal/status/generiek geeft elk een ander Then) + negatieve controle op een extern netwerkverzoek · Assertions: 12
 - [PIPE-N-004] tussen de mobiele en de bureaubladdrempel blijft de Confluence-kolom leesbaar breed — Techniek: Grenswaardenanalyse op viewportbreedte (net onder/boven de drempel, plus de standaard testbreedte als vaste regressie) + reproductie van "Bureaubladsite aanvragen" · Assertions: 13
-- [PIPE-H-004] zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes — Techniek: Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole · Assertions: 24
+- [PIPE-H-004] zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes — Techniek: Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole · Assertions: 26
 - [PIPE-H-003] de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker — Techniek: Meting van berekende stijl (computed style) in licht en donker kleurschema · Assertions: 5
 - [PIPE-H-005] de weergaveknop kiest licht, donker of systeem en onthoudt die keuze — Techniek: Toestandsovergang over drie weergavestanden + meting van berekende stijl + persistentie na herladen · Assertions: 13
-- [PIPE-N-001] de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon — Techniek: Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole · Assertions: 12
+- [PIPE-N-001] de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon — Techniek: Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole · Assertions: 14
 - [PIPE-H-006] de Living Doc leest op vijftien pixels, in licht en in donker — Techniek: Meting van berekende stijl in licht en donker + responsive viewport (intake #45) · Assertions: 5
 
 ### Vormgevingsschakelaar (klassiek / nieuw)

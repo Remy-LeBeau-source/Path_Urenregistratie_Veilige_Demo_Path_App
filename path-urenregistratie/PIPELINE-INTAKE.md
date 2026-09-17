@@ -30,7 +30,18 @@ alleen een wegwijzer ernaartoe.
 ```
 npm run intake                 # de wachtrij op TEST, met per wens wat je nodig hebt
 npm run intake -- --lokaal     # dezelfde wachtrij op de lokale server
+npm run intake:watch           # blijft kijken en maakt bij een nieuwe wens zelf het issue aan
+npm run intake:watch -- --droog --eenmalig   # één ronde, zonder iets aan te maken
 ```
+
+**De wachter (17 sep).** Tot nu toe gebeurde er na het indienen niets tot iemand
+handmatig `npm run intake` draaide — voor de PO voelde dat als "ik heb ingediend
+en het blijft stil". `scripts/pipeline-intake-watch.mjs` dicht dat gat: hij kijkt
+periodiek in de wachtrij en maakt bij een nieuwe wens meteen het GitHub-issue aan,
+zodat het spoor bestaat en het werk zichtbaar klaarstaat. Hij schrijft **bewust
+niet** in de repository: geen regel in GIO-WENSEN.md, geen commit, geen push. Dat
+blijft werk met een beoordeling erbij — een wachter die ongezien in een repository
+schrijft is precies het soort automatisering dat je later niet meer kunt navertellen.
 
 Daarna maak je zelf het issue aan, zodat het spoor in GitHub blijft:
 
@@ -78,12 +89,16 @@ Per issue, in deze volgorde (elk punt is een bestaande afspraak uit de MD's):
 
 ## 3. Wat de pagina daarna toont
 
-`scripts/pipeline-demo-data.mjs` bouwt `pilot/path-kwaliteitsstraat-data.json` uit GIO-WENSEN.md (laatste 10 "Klaar",
-laatste 5 "Open en bezig"), de feature-bestanden (Gherkin, techniek, assertions) en LIVING-DOC.md. De pagina
-toont daaruit **de laatste 10 opleveringen in alle drie de werkruimtes** — op het Jira-bord, in de Confluence
-paginaboom en in Testbeheer — plus de laatste 10 in de Living Doc. Komt er een nieuwe bij, dan valt de oudste
-eraf. Dat blijft staan na F5, want het komt uit dit bestand en niet uit de browser. `npm run check` faalt als
-dat bestand achterloopt.
+`scripts/pipeline-demo-data.mjs` bouwt `pilot/path-kwaliteitsstraat-data.json` uit GIO-WENSEN.md, de
+feature-bestanden (Gherkin, techniek, assertions) en LIVING-DOC.md. **Sinds 17 sep staat de volledige
+projecthistorie in dat bestand** (opdracht Gio: dit is onze eigen administratie, geen etalage met de laatste
+tien). Eerder stonden hier caps van 10 "Klaar" en 5 "Open en bezig"; die werden vóór het filteren toegepast,
+waardoor de zoekbalk aantoonbaar alleen in de nieuwste tien zocht en oudere opleveringen onvindbaar waren.
+De pagina toont nu alles in alle drie de werkruimtes — Jira-bord, Confluence-paginaboom en Testbeheer — en
+tekent per keer een deel met een "Toon meer"-knop eronder. Het Gherkin-blok wordt alleen bij de nieuwste 25
+opleveringen meegeschreven, zodat het bestand niet groeit voor historie die niemand meer uitklapt. Dat blijft
+staan na F5, want het komt uit dit bestand en niet uit de browser. `npm run check` faalt als dat bestand
+achterloopt.
 
 **De kaart verschuift mee met de echte stand, niemand sleept hem daarheen.** Een wens staat in "Te doen" zolang
 hij alleen in de wachtrij staat; zodra hij in GIO-WENSEN.md onder "Open en bezig" verschijnt komt hij uit de

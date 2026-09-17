@@ -6,10 +6,14 @@
   var INTAKE_URL = 'path-kwaliteitsstraat-intake.php';
   var REPO_URL = 'https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App';
   var INTAKE_LABEL = 'pipeline-intake';
-  var LIVING_DOC_CAP = 10;
-  var BOARD_DONE_CAP = 10;
-  var DOC_TREE_CAP = 10;
-  var TEST_CAP = 20;
+  // Opdracht Gio (17 sep): dit is onze eigen administratie, geen etalage. De
+  // volledige projecthistorie zit in de feed; deze getallen bepalen alleen hoeveel
+  // er per keer wordt getekend. Eerder waren het harde caps die vóór het filteren
+  // werden toegepast -- daardoor zocht de zoekbalk aantoonbaar alleen in de
+  // nieuwste tien en was oudere oplevering onvindbaar. Nu: alles filteren, daarna
+  // pas afkappen, met "Toon meer" om verder te gaan.
+  var PER_KEER = { todo: 12, doing: 12, done: 12, tests: 25, doc: 12, living: 10 };
+  var LIVING_DOC_BEWAAR = 25;
   var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var STEP_DELAY = prefersReducedMotion ? 120 : 900;
 
@@ -70,6 +74,67 @@
       criterion: 'Wat hier staat, is terug te vinden in de repository.',
       gherkin: 'Scenario: Een wens loopt van het loket tot TEST\n  Given Gio dient een wens in op deze pagina\n  When de agent het issue met label pipeline-intake oppakt\n  Then ontstaan er een feature, een spec en een groene regressie\n  And staat de oplevering daarna in de Living Doc en op TEST',
       summary: 'Hoe een wens op deze pagina uiteindelijk op TEST terechtkomt.', author: 'Bron: PIPELINE-INTAKE.md', updated: 'Vaste pagina', trace: 'Vast', testId: 'PIPE-H-002'
+    },
+    // Toegevoegd 17 sep op verzoek van Gio: de kennisbank moet onze échte
+    // werkwijze bevatten, niet drie losse pagina's. Bewust met de hand geschreven
+    // en niet automatisch uit de MD-bestanden gegenereerd: die bevatten echte
+    // e-mailadressen, serverdetails en zelfs een testwachtwoord, en deze pagina is
+    // openbaar zonder inloggen (besluit Gio 16 sep: geen persoons- of
+    // klantgegevens zolang dat zo is).
+    dekkingsronde: {
+      key: 'DEKKINGSRONDE', title: 'Dekkingsronde', leftLabel: 'Aanleiding', leftTitle: 'Niet wachten tot iets stukgaat',
+      leftText: 'Een dekkingsronde loopt elk scherm en elke flow langs en legt dat naast wat de regressieset werkelijk afdekt. Een scenario zonder inhoudelijke assertie telt daarbij niet als dekking.',
+      rightLabel: 'Twee soorten gaten', rightTitle: 'Geen case, of een te zwakke case',
+      rightText: 'Gedrag zonder case is het eerste soort. Het tweede is verraderlijker: een case die groen blijft terwijl het gedrag stuk is, bijvoorbeeld omdat hij alleen telt dat er "meer dan nul" van iets is.',
+      fo: 'Per gat: een vrij case-nummer, één scenario in het passende feature-bestand, een spec met echte assertions, en waar het onderdeel op een telefoon zichtbaar is ook een mobiele case.',
+      to: 'Raakt het gat de database, dan controleert de case de opgeslagen rij terug via de lees-API, niet alleen wat het scherm toont. Alles wat aantoonbaar niet te automatiseren is, wordt expliciet als handwerk benoemd in plaats van stil overgeslagen.',
+      criterion: 'Elk gevonden gat is óf gedicht met een groene case, óf expliciet vastgelegd als bewuste keuze.',
+      gherkin: 'Scenario: Een zwakke case wordt als gat behandeld\n  Given een bestaande case dekt gedrag alleen oppervlakkig af\n  When de dekkingsronde die case naast het echte gedrag legt\n  Then telt hij als gat, ook al is hij groen\n  And wordt hij vervangen door een case met een tegenproef die rood is op de oude code',
+      summary: 'Hoe we systematisch zoeken naar wat de testset nog niet bewijst.', author: 'Bron: DEKKINGSRONDE.md', updated: 'Vaste pagina', trace: 'Vast', testId: 'n.v.t.'
+    },
+    gegevens: {
+      key: 'GEGEVENS', title: 'Gegevens en zichtbaarheid', leftLabel: 'Uitgangspunt', leftTitle: 'Iedereen ziet alleen wat hij nodig heeft',
+      leftText: 'Een medewerker ziet zijn eigen uren, zijn eigen opdracht en de mededelingen die aan hem gericht zijn. Tarieven, klant- en tussenpersoongegevens en mailroutering van collega\'s horen daar niet bij, ook niet verstopt in een antwoord van de server.',
+      rightLabel: 'Afzender', rightTitle: 'Altijd "Beheerder", nooit een naam',
+      rightText: 'Bij een mededeling ziet een medewerker de neutrale aanduiding Beheerder. Welke beheerder het bericht stuurde is iets wat beheerders onderling zien, niet iets wat de ontvanger nodig heeft.',
+      fo: 'Deze regel geldt ook voor wat de server meestuurt en niet toont: een veld dat geen scherm gebruikt maar wel in het antwoord zit, is alsnog zichtbaar voor wie kijkt.',
+      to: 'Releasenotities in de app worden geschreven vanuit wat er nu goed gaat, niet vanuit wat er mis was — een notitie mag nooit verraden dat er iets is dichtgezet dat eerder openstond. Geen namen, geen bedragen.',
+      criterion: 'Geen enkel veld bereikt een rol die het niet nodig heeft, ook niet ongebruikt in een antwoord.',
+      gherkin: 'Scenario: De ontvanger ziet geen naam van de afzender\n  Given een beheerder stuurt een mededeling aan een medewerker\n  When de medewerker die mededeling opent\n  Then staat er "Beheerder" als afzender\n  And is de echte naam nergens in het antwoord van de server te vinden',
+      summary: 'Welke gegevens welke rol mag zien, en waarom dat ook voor verborgen velden geldt.', author: 'Bron: BESLISTABEL.md en de rollen-cases in de regressieset', updated: 'Vaste pagina', trace: 'Vast', testId: 'ANN-N-011'
+    },
+    poorten: {
+      key: 'POORTEN', title: 'Kwaliteitspoorten', leftLabel: 'Lokaal', leftTitle: 'Impactregressie vóór het pushen',
+      leftText: 'Niet de hele suite, maar de set die uit de wijziging zelf volgt: de geraakte specs, de gedeelde functies eromheen en de schermen die dezelfde gegevens tonen. Die set wordt per wijziging afgeleid, niet uit het hoofd gekozen.',
+      rightLabel: 'CI', rightTitle: 'De volledige suite, verdeeld over shards',
+      rightText: 'De volledige regressie draait in de pijplijn, verdeeld over tien parallelle delen met elk een eigen database. Pas bij groen volgt de uitrol naar TEST.',
+      fo: 'Naast de browsertests draait er een reeks controles die geen browser nodig hebben: een structuurcontrole op de app-bundel, taalcontrole op serverberichten, contrastmeting in licht en donker, en broncontracten die bewaken dat beveiligingsinstellingen aanwezig en niet leeg zijn.',
+      to: 'Sommige controles kunnen niet over HTTP: een instelling die per omgeving verschilt is lokaal niet te meten zonder een gedeeld configuratiebestand aan te passen. Die worden dan als broncontrole uitgevoerd, met een tegenproef die bewijst dat de controle echt iets meet.',
+      criterion: 'Niets gaat naar TEST zonder een groene volledige run in de pijplijn.',
+      gherkin: 'Scenario: Een rode controle houdt de uitrol tegen\n  Given een wijziging is gepusht\n  When een van de tien delen van de regressie rood wordt\n  Then stopt de pijplijn vóór de uitrol naar TEST\n  And blijft de vorige versie op TEST staan',
+      summary: 'Welke controles wanneer draaien, en wat er gebeurt als er één rood wordt.', author: 'Bron: de pijplijndefinitie en de controlescripts in de repository', updated: 'Vaste pagina', trace: 'Vast', testId: 'n.v.t.'
+    },
+    koppelingen: {
+      key: 'KOPPELINGEN', title: 'Koppelingen', leftLabel: 'Twee smaken', leftTitle: 'Onze omgeving of die van de klant',
+      leftText: 'De keten is dezelfde, alleen de bron verschilt. Standaard draait alles op onze eigen administratie. Heeft een klant al Jira, Confluence of Zephyr, dan kan de bron per onderdeel worden omgezet naar hun omgeving zonder dat de werkwijze verandert.',
+      rightLabel: 'Stand vandaag', rightTitle: 'Eigen bron operationeel, klantbronnen voorbereid',
+      rightText: 'De eigen bron levert nu tickets, documenten en testcases. De drie klantkoppelingen staan klaar qua vorm en instelling, maar zijn nog niet aangesloten: dat vraagt per klant echte gegevens en een afspraak over rechten.',
+      fo: 'Wat we van een klant nodig hebben staat vast per koppeling: voor Jira de basis-URL, de projectsleutel en een API-token van een serviceaccount; voor Confluence dezelfde omgeving plus de ruimtesleutel; voor Zephyr Scale een eigen API-token, want dat staat los van het Atlassian-token.',
+      to: 'Die gegevens staan in de serverconfiguratie buiten de webroot, nooit in de pagina zelf: deze pagina is openbaar en zonder inloggen bereikbaar. Het koppelingen-endpoint vertelt daarom alleen WELKE bron aan staat en of hij volledig is ingesteld, nooit waarmee.',
+      criterion: 'Een klantkoppeling is pas "gekoppeld" als hij aan staat en zowel een basis-URL als een token heeft; anders meldt hij zichzelf eerlijk als voorbereid of onvolledig.',
+      gherkin: 'Scenario: Een halve instelling meldt zich niet als gekoppeld\n  Given een klantkoppeling staat aan maar mist een token\n  When de pagina de koppelingen opvraagt\n  Then meldt die bron zich als onvolledig ingesteld\n  And staat er nergens een waarde uit de instelling in het antwoord',
+      summary: 'Hoe dezelfde keten werkt op onze eigen omgeving of op die van een klant.', author: 'Bron: pilot/path-kwaliteitsstraat-koppelingen.php', updated: 'Vaste pagina', trace: 'Vast', testId: 'PIPE-H-009'
+    },
+    tegenproef: {
+      key: 'TEGENPROEF', title: 'De tegenproef', leftLabel: 'Waarom', leftTitle: 'Een groene test bewijst niets uit zichzelf',
+      leftText: 'Een test die groen is op zowel de kapotte als de gerepareerde code meet niet wat hij beweert te meten. De tegenproef is de enige manier om dat verschil hard te maken.',
+      rightLabel: 'Hoe', rightTitle: 'Rood op de oude code, groen op de nieuwe',
+      rightText: 'De fix wordt tijdelijk teruggedraaid, de case wordt gedraaid en moet rood zijn met een melding die de fout benoemt. Daarna wordt de fix teruggezet en is dezelfde case groen.',
+      fo: 'Bij een vondst zonder fix — gedrag dat al goed was maar nog niet vastlag — wordt de code tijdelijk expres kapotgemaakt om dezelfde zekerheid te krijgen, en daarna aantoonbaar teruggezet.',
+      to: 'De uitkomst van beide runs wordt vastgelegd bij de oplevering, inclusief de exacte foutmelding waarop de rode run viel. Zonder dat spoor is "getest" een bewering.',
+      criterion: 'Elke opgeleverde case heeft een aantoonbaar rode run op de oude situatie.',
+      gherkin: 'Scenario: Een nieuwe case bewijst zichzelf\n  Given een fix met een bijbehorende nieuwe case\n  When de fix tijdelijk wordt teruggedraaid\n  Then valt de case om met een melding die de fout benoemt\n  And is dezelfde case groen zodra de fix terugstaat',
+      summary: 'Waarom elke case eerst rood moet zijn geweest voordat hij meetelt.', author: 'Bron: de vaste werkwijze uit GIO-WENSEN.md', updated: 'Vaste pagina', trace: 'Vast', testId: 'n.v.t.'
     }
   };
 
@@ -109,7 +174,23 @@
   applyTheme(huidigeTheme());
 
   var feed = { delivered: [], open: [], niceToHave: [], appVersion: '', generatedAt: '', loaded: false };
-  var ui = { view: 'backlog', query: '', type: 'all', source: 'all', status: 'all', sort: '', sortDir: 'asc', expandAll: false, docKey: '', fixedDoc: '', detail: '', keuze: -1 };
+  var ui = { view: 'backlog', query: '', type: 'all', source: 'all', status: 'all', sort: '', sortDir: 'asc', expandAll: false, docKey: '', fixedDoc: '', detail: '', keuze: -1, toon: {} };
+
+  // Hoeveel er op dit moment van een lijst getekend wordt. Begint op PER_KEER en
+  // groeit met "Toon meer"; een nieuw filter of een nieuwe zoekterm zet hem terug,
+  // anders staat een lange lijst open terwijl er nog maar drie treffers zijn.
+  function toonAantal(naam) {
+    return ui.toon[naam] || PER_KEER[naam] || 12;
+  }
+  function toonMeerHtml(naam, totaal) {
+    var zichtbaar = toonAantal(naam);
+    if (totaal <= zichtbaar) return '';
+    var rest = totaal - zichtbaar;
+    return '<button type="button" class="toon-meer" data-toon-meer="' + naam + '">Toon meer <b>(' + rest + ')</b></button>';
+  }
+  function resetToon() {
+    ui.toon = {};
+  }
 
   function initialState() {
     return { schemaVersion: 3, sequence: 198, customTickets: [], customTests: [], livingDoc: [], activePhase: 0, activeTicket: '' };
@@ -123,7 +204,7 @@
         stored.livingDoc = stored.livingDoc.filter(function (entry) { return !/^PATH-19[1-7]$/.test(entry.key); });
         stored.schemaVersion = 3;
       }
-      stored.livingDoc = stored.livingDoc.slice(0, LIVING_DOC_CAP);
+      stored.livingDoc = stored.livingDoc.slice(0, LIVING_DOC_BEWAAR);
       stored.activePhase = 0;
       stored.activeTicket = '';
       stored.customTickets.forEach(function (ticket) { if (ticket.status === 'doing') ticket.status = 'todo'; });
@@ -240,7 +321,7 @@
 
   function boardColumns() {
     var local = state.customTickets;
-    var done = local.filter(function (t) { return t.status === 'done'; }).concat(deliveredTickets()).slice(0, BOARD_DONE_CAP);
+    var done = local.filter(function (t) { return t.status === 'done'; }).concat(deliveredTickets())
     var open = openTickets();
     return {
       todo: sorteerOpVolgorde(local.filter(function (t) { return t.status === 'todo' || t.status === 'ingediend'; }).concat(open.filter(function (t) { return t.status === 'todo'; }))).filter(matchesFilters),
@@ -250,7 +331,7 @@
   }
 
   function docTickets() {
-    return state.customTickets.filter(function (t) { return t.status !== 'todo'; }).concat(deliveredTickets()).slice(0, DOC_TREE_CAP);
+    return state.customTickets.filter(function (t) { return t.status !== 'todo'; }).concat(deliveredTickets());
   }
 
   function allTests() {
@@ -265,7 +346,7 @@
         rows.push({ id: c.id, title: c.title, platform: c.platform, result: 'pass', gherkin: c.gherkin, technique: c.technique, assertions: c.assertions, feature: c.feature, folder: folderFor(c.id), ticketKey: ticket.key });
       });
     });
-    return rows.slice(0, TEST_CAP);
+    return rows;
   }
 
   function folderFor(id) {
@@ -295,7 +376,7 @@
     var real = deliveredTickets().map(function (t) {
       return { key: t.key, text: t.title, result: t.source === 'feed' ? 'Opgeleverd · ' + t.version : 'Geslaagd', time: t.livingTime };
     });
-    return state.livingDoc.concat(real).slice(0, LIVING_DOC_CAP);
+    return state.livingDoc.concat(real);
   }
 
   // ===================== Weergave =====================
@@ -341,22 +422,26 @@
     ['todo', 'doing', 'done'].forEach(function (column) {
       var list = $('[data-ticket-list="' + column + '"]');
       if (!list) return;
-      list.innerHTML = columns[column].length ? columns[column].map(ticketHtml).join('')
+      var alles = columns[column];
+      var zichtbaar = alles.slice(0, toonAantal(column));
+      list.innerHTML = alles.length ? zichtbaar.map(ticketHtml).join('') + toonMeerHtml(column, alles.length)
         : '<p class="empty-column">' + (ui.query || ui.type !== 'all' || ui.source !== 'all' ? 'Geen resultaten met dit filter' : 'Geen tickets') + '</p>';
+      // De kolomteller telt de hele kolom, niet alleen wat er nu getekend staat --
+      // anders lijkt een kolom te krimpen zodra je hem nog niet hebt uitgeklapt.
       var count = $('[data-count="' + column + '"]');
-      if (count) count.textContent = String(columns[column].length);
+      if (count) count.textContent = String(alles.length);
     });
     koppelSlepen();
     var total = columns.todo.length + columns.doing.length + columns.done.length;
     var badge = $('[data-backlog-count]');
     if (badge) badge.textContent = String(total);
     var meta = $('[data-board-meta]');
-    if (meta) meta.textContent = ui.query || ui.type !== 'all' || ui.source !== 'all' ? total + ' van ' + (boardTotalOngefilterd()) + ' getoond' : 'Actuele demo';
+    if (meta) meta.textContent = ui.query || ui.type !== 'all' || ui.source !== 'all' ? total + ' van ' + (boardTotalOngefilterd()) + ' getoond' : total + ' in de hele backlog';
   }
 
   function boardTotalOngefilterd() {
     var local = state.customTickets;
-    return local.filter(function (t) { return t.status === 'done'; }).concat(deliveredTickets()).slice(0, BOARD_DONE_CAP).length
+    return local.filter(function (t) { return t.status === 'done'; }).concat(deliveredTickets()).length
       + local.filter(function (t) { return t.status !== 'done'; }).length + openTickets().length;
   }
 
@@ -375,10 +460,11 @@
   }
 
   function renderTests() {
-    var rows = visibleTests();
+    var alleRijen = visibleTests();
+    var rows = alleRijen.slice(0, toonAantal('tests'));
     var table = $('[data-test-table]');
     if (table) {
-      table.innerHTML = rows.length ? rows.map(function (row) {
+      table.innerHTML = (rows.length ? rows.map(function (row) {
         var detail = row.assertions ? '<small>' + escapeHtml(row.technique) + ' · ' + row.assertions + ' assertions</small>' : '';
         return '<tr data-testcase="' + escapeHtml(row.id) + '">' +
           '<td><button type="button" class="row-open" data-open-ticket="' + escapeHtml(row.ticketKey) + '">' + escapeHtml(row.id) + '</button></td>' +
@@ -387,7 +473,8 @@
           '<td class="assert-count">' + (row.assertions || '—') + '</td>' +
           '<td>' + resultPill(row.result) + '</td>' +
           '<td><details class="gherkin"' + (ui.expandAll ? ' open' : '') + '><summary>Gherkin</summary><pre>' + escapeHtml(row.gherkin) + '</pre></details></td></tr>';
-      }).join('') : '<tr><td colspan="6"><p class="empty-column">Geen testcases met dit filter</p></td></tr>';
+      }).join('') : '<tr><td colspan="6"><p class="empty-column">Geen testcases met dit filter</p></td></tr>')
+        + (alleRijen.length > rows.length ? '<tr class="toon-meer-rij"><td colspan="6">' + toonMeerHtml('tests', alleRijen.length) + '</td></tr>' : '');
     }
     var alle = allTests();
     var passed = alle.filter(function (r) { return r.result === 'pass'; }).length;
@@ -418,13 +505,14 @@
   }
 
   function renderLivingDoc() {
-    state.livingDoc = state.livingDoc.slice(0, LIVING_DOC_CAP);
+    state.livingDoc = state.livingDoc.slice(0, LIVING_DOC_BEWAAR);
     var list = $('[data-living-doc]');
     if (!list) return;
-    list.innerHTML = livingDocEntries().map(function (entry) {
+    var alle = livingDocEntries();
+    list.innerHTML = alle.slice(0, toonAantal('living')).map(function (entry) {
       return '<li data-living-key="' + escapeHtml(entry.key) + '" class="' + (entry.key === lastCompletedKey ? 'is-new' : '') + '">' +
         '<code>' + escapeHtml(entry.key) + '</code><p>' + escapeHtml(entry.text) + ' · ' + escapeHtml(entry.result) + '</p><time>' + escapeHtml(entry.time) + '</time></li>';
-    }).join('');
+    }).join('') + (alle.length > toonAantal('living') ? '<li class="toon-meer-rij">' + toonMeerHtml('living', alle.length) + '</li>' : '');
   }
 
   function setText(selector, value) {
@@ -475,12 +563,20 @@
     var tickets = docTickets();
     var tree = $('[data-doc-tree]');
     if (tree) {
-      tree.innerHTML = tickets.map(function (t) {
+      // De geselecteerde pagina blijft altijd in de boom staan, ook als hij verder
+      // naar achteren staat dan wat er nu getekend is -- anders verdwijnt de pagina
+      // die je aan het lezen bent uit de navigatie.
+      var zichtbaar = tickets.slice(0, toonAantal('doc'));
+      if (!ui.fixedDoc && ui.docKey && !zichtbaar.some(function (t) { return t.key === ui.docKey; })) {
+        var huidige = tickets.find(function (t) { return t.key === ui.docKey; });
+        if (huidige) zichtbaar = zichtbaar.concat([huidige]);
+      }
+      tree.innerHTML = zichtbaar.map(function (t) {
         return '<li class="' + (!ui.fixedDoc && t.key === ui.docKey ? 'is-current' : '') + '"><button type="button" data-doc-select="' + escapeHtml(t.key) + '"><code>' + escapeHtml(t.key) + '</code><span>' + escapeHtml(t.title) + '</span></button></li>';
-      }).join('');
+      }).join('') + (tickets.length > zichtbaar.length ? '<li class="toon-meer-rij">' + toonMeerHtml('doc', tickets.length) + '</li>' : '');
     }
-    var docCount = $('[data-doc-count]');
-    if (docCount) docCount.textContent = String(tickets.length);
+    // Twee plekken tonen dit getal: het tabblad-badge en de kop boven de boom.
+    $$('[data-doc-count]').forEach(function (el) { el.textContent = String(tickets.length); });
     $$('[data-doc-fixed]').forEach(function (button) {
       button.classList.toggle('is-current', ui.fixedDoc === button.getAttribute('data-doc-fixed'));
     });
@@ -704,7 +800,7 @@
     var testCase = state.customTests.find(function (item) { return item.key === key; });
     if (testCase) testCase.result = result;
     state.livingDoc.unshift({ key: ticket.key, text: ticket.title, result: result === 'pass' ? 'Geslaagd (simulatie)' : 'Aandacht in CI (simulatie)', time: nowLabel() });
-    state.livingDoc = state.livingDoc.slice(0, LIVING_DOC_CAP);
+    state.livingDoc = state.livingDoc.slice(0, LIVING_DOC_BEWAAR);
     state.activePhase = 5;
     state.activeTicket = '';
     lastCompletedKey = ticket.key;
@@ -1121,14 +1217,22 @@
       return;
     }
 
+    var meerKnop = target.closest('[data-toon-meer]');
+    if (meerKnop) {
+      var lijst = meerKnop.getAttribute('data-toon-meer');
+      ui.toon[lijst] = toonAantal(lijst) + (PER_KEER[lijst] || 12);
+      render();
+      return;
+    }
+
     var typeFilter = target.closest('[data-type]');
-    if (typeFilter) { ui.type = typeFilter.getAttribute('data-type'); render(); return; }
+    if (typeFilter) { ui.type = typeFilter.getAttribute('data-type'); resetToon(); render(); return; }
     var sourceFilter = target.closest('[data-sourcefilter]');
-    if (sourceFilter) { ui.source = sourceFilter.getAttribute('data-sourcefilter'); render(); return; }
+    if (sourceFilter) { ui.source = sourceFilter.getAttribute('data-sourcefilter'); resetToon(); render(); return; }
     var statusFilter = target.closest('[data-status]');
-    if (statusFilter) { ui.status = statusFilter.getAttribute('data-status'); render(); return; }
+    if (statusFilter) { ui.status = statusFilter.getAttribute('data-status'); resetToon(); render(); return; }
     var folderButton = target.closest('[data-folder]');
-    if (folderButton) { ui.folder = folderButton.getAttribute('data-folder'); render(); return; }
+    if (folderButton) { ui.folder = folderButton.getAttribute('data-folder'); resetToon(); render(); return; }
 
     var sortButton = target.closest('[data-sort]');
     if (sortButton) {
@@ -1263,6 +1367,7 @@
     var target = event.target;
     if (target && target.matches('[data-search]')) {
       ui.query = String(target.value || '').trim().toLowerCase();
+      resetToon();
       render();
       return;
     }
@@ -1317,11 +1422,25 @@
   updateGherkinPreview();
   applyHash();
 
-  if (window.fetch) {
-    fetch(DATA_URL, { cache: 'no-store' }).then(function (response) {
+  // Eén herkansing voordat de pagina terugvalt op voorbeelddata. De feed draagt
+  // sinds 17 sep de volledige projecthistorie en is daarmee een stuk groter; een
+  // enkele mislukte of afgebroken verbinding zette de pagina daardoor stil op
+  // "voorbeelddata (feed niet geladen)" terwijl een tweede poging gewoon lukt.
+  // Voor een lezer is verouderde-maar-echte stand altijd beter dan voorbeelddata.
+  function haalFeed(pogingen) {
+    return fetch(DATA_URL, { cache: 'no-store' }).then(function (response) {
       if (!response.ok) throw new Error('feed ' + response.status);
       return response.json();
-    }).then(function (json) {
+    }).catch(function (fout) {
+      if (pogingen <= 1) throw fout;
+      return new Promise(function (klaar) { setTimeout(klaar, 250); }).then(function () {
+        return haalFeed(pogingen - 1);
+      });
+    });
+  }
+
+  if (window.fetch) {
+    haalFeed(2).then(function (json) {
       feed = { delivered: json.delivered || [], open: json.open || [], niceToHave: json.niceToHave || [], appVersion: json.appVersion || '', generatedAt: json.generatedAt || '', loaded: true };
       document.body.setAttribute('data-feed', 'loaded');
       render();

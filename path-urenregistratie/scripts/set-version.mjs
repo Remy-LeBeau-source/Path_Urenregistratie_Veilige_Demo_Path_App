@@ -29,6 +29,12 @@ const BESTANDEN = [
   { pad: "index.html" },
   { pad: "scripts/smoke-test.mjs" },
   { pad: "tests/playwright/auth.spec.ts" },
+  // De kwaliteitsstraat laadde zijn eigen stylesheet en script zonder
+  // versieparameter. Daardoor hield een browser (en zeker een geopend tabblad)
+  // de oude versie vast na een uitrol -- exact hetzelfde probleem dat index.html
+  // eerder had ("ik zie geen verschil in de nieuwe versie"). Gevonden doordat een
+  // testcase in de volledige run op de oude, gecachte JS viel en los wél slaagde.
+  { pad: "pilot/path-kwaliteitsstraat.html" },
 ];
 
 function huidigeVersie() {

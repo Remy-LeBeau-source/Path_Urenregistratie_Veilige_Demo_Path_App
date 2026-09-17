@@ -5,7 +5,11 @@ import { dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
 const fixture = mkdtempSync(join(tmpdir(), "path-version-check-"));
-const files = ["package.json", "package-lock.json", "index.html", "scripts/smoke-test.mjs", "tests/playwright/auth.spec.ts"];
+// Deze lijst moet gelijk lopen met BESTANDEN in set-version.mjs: het script
+// leest elk bestand uit die lijst, dus een bestand dat daar wel staat en hier
+// niet laat de controle vallen op een ontbrekend bestand in plaats van op het
+// gedrag dat hij hoort te toetsen.
+const files = ["package.json", "package-lock.json", "index.html", "scripts/smoke-test.mjs", "tests/playwright/auth.spec.ts", "pilot/path-kwaliteitsstraat.html"];
 const write = (file, value) => {
   const target = join(fixture, file);
   mkdirSync(dirname(target), { recursive: true });
@@ -20,6 +24,14 @@ try {
   const notitie = '<li><span class="nieuw-versie">0.0.1</span></li>\r\n';
   write("index.html", 'v0.0.1 ?v=0.0.1 "0.0.1" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n' + notitie);
   copyFileSync(new URL("set-version.mjs", import.meta.url), join(fixture, "scripts/set-version.mjs"));
+  // De twee lijsten moeten gelijk lopen. Zonder deze controle valt de test bij een
+  // vergeten regel om op een ontbrekend bestand (ENOENT) in plaats van op een
+  // begrijpelijke melding -- precies wat er gebeurde toen pilot/path-kwaliteitsstraat.html
+  // aan set-version.mjs werd toegevoegd.
+  const bron = readFileSync(new URL("set-version.mjs", import.meta.url), "utf8");
+  const blok = bron.slice(bron.indexOf("const BESTANDEN = ["), bron.indexOf("];", bron.indexOf("const BESTANDEN = [")));
+  const genoemd = [...blok.matchAll(/pad:\s*"([^"]+)"/g)].map(m => m[1]);
+  assert.deepEqual(genoemd, files, "set-version.mjs en set-version-check.mjs noemen niet dezelfde bestanden");
   const changed = run("0.0.2");
   assert.equal(changed.status, 0, changed.stderr);
   for (const file of files.slice(3)) assert.equal(readFileSync(join(fixture, file), "utf8"), 'v0.0.2 ?v=0.0.2 "0.0.2" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n');

@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { rmSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 
@@ -14,9 +15,17 @@ async function feedVanServer(page: Page): Promise<Feed> {
   return response.json();
 }
 
-function verwachteSleutels(feed: Feed): string[] {
+// Hoeveel kaarten/regels de pagina per keer tekent (PER_KEER in
+// pilot/path-kwaliteitsstraat.js). De feed bevat sinds 17 sep de volledige
+// historie; deze getallen gaan alleen over wat er zonder "Toon meer" staat.
+const PER_KEER_DONE = 12;
+const PER_KEER_DOC = 12;
+const PER_KEER_TESTS = 25;
+const PER_KEER_LIVING = 10;
+
+function verwachteSleutels(feed: Feed, aantal: number = PER_KEER_DONE): string[] {
   const gebruikt = new Set<string>();
-  return feed.delivered.slice(0, 10).map((row) => {
+  return feed.delivered.slice(0, aantal).map((row) => {
     const versie = row.version.match(/\d+\.\d+\.\d+/);
     const basis = row.cases[0]?.id ?? (versie ? versie[0] : (row.version.split(/[\s(]/)[0] || 'oplevering').toUpperCase());
     let sleutel = basis;
@@ -88,6 +97,28 @@ test.describe('Path Pipeline TEST-demo', () => {
     // gedraaid: met die oude verwijzingen terug geeft deze assertie exact deze twee
     // regels als mislukt, en niets anders.
     expect(mislukteEigenVerzoeken, 'geen enkel eigen verzoek (css/js/data) mag 404 of een andere foutstatus geven').toEqual([]);
+
+    // 17 sep: de pagina laadde zijn eigen stylesheet en script zónder
+    // versieparameter, waardoor een browser na een uitrol de oude versie bleef
+    // gebruiken -- hetzelfde probleem dat index.html eerder had. Gevonden doordat
+    // een testcase in de volledige run op gecachte JS viel en los wél slaagde.
+    // set-version.mjs schrijft dit nummer nu mee, dus het volgt automatisch de app.
+    const verwachteVersie = JSON.parse(
+      await readFile(join(process.cwd(), 'package.json'), 'utf8'),
+    ).version as string;
+    const eigenAssets = await page.evaluate(() => ({
+      css: Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+        .map((el) => el.getAttribute('href') || '')
+        .filter((href) => href.includes('path-kwaliteitsstraat')),
+      js: Array.from(document.querySelectorAll('script[src]'))
+        .map((el) => el.getAttribute('src') || '')
+        .filter((src) => src.includes('path-kwaliteitsstraat')),
+    }));
+    expect(eigenAssets.css, 'de pagina laadt zijn eigen stylesheet').toHaveLength(1);
+    expect(eigenAssets.js, 'de pagina laadt zijn eigen script').toHaveLength(1);
+    for (const verwijzing of [...eigenAssets.css, ...eigenAssets.js]) {
+      expect(verwijzing, `${verwijzing} hoort de huidige appversie als cache-buster te dragen`).toContain(`?v=${verwachteVersie}`);
+    }
   });
 
   test('[PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin', async ({ page }) => {
@@ -102,14 +133,43 @@ test.describe('Path Pipeline TEST-demo', () => {
       await expect(page.locator('footer [data-demo-versie]')).toContainText(`versie ${feed.appVersion}`);
     });
 
-    await test.step('When de pagina is geladen, staan de vier fasen en de laatste tien echte opleveringen op het bord', async () => {
+    await test.step('When de pagina is geladen, staan de vier fasen en de eerste echte opleveringen op het bord', async () => {
       await expect(page.locator('body')).toHaveAttribute('data-pilot-design', 'path-kwaliteitsstraat');
       await expect(page.locator('[data-phase]')).toHaveCount(4);
-      await expect(page.locator('[data-ticket-list="done"] .ticket-card')).toHaveCount(10);
+      await expect(page.locator('[data-ticket-list="done"] .ticket-card')).toHaveCount(PER_KEER_DONE);
       await expect(page.locator('[data-ticket-list="done"] .issue-key')).toHaveText(verwachteSleutels(feed!));
-      await expect(page.locator('[data-ticket-list="done"] [data-source="feed"]')).toHaveCount(10);
-      const metGherkin = feed!.delivered.slice(0, 10).filter((row) => row.cases.length).length;
+      await expect(page.locator('[data-ticket-list="done"] [data-source="feed"]')).toHaveCount(PER_KEER_DONE);
+      const metGherkin = feed!.delivered.slice(0, PER_KEER_DONE).filter((row) => row.cases.some((c) => c.gherkin)).length;
       await expect(page.locator('[data-ticket-list="done"] .gherkin')).toHaveCount(metGherkin);
+      // De kolomteller telt de hele kolom, niet alleen wat getekend is -- anders
+      // lijkt de historie te krimpen zolang je niet hebt uitgeklapt.
+      await expect(page.locator('[data-count="done"]')).toHaveText(String(feed!.delivered.length));
+    });
+
+    await test.step('And "Toon meer" haalt de rest van de historie erbij in plaats van hem af te kappen', async () => {
+      // De pagina landt op Confluence (besluit 2.0.134); klikken kan pas als het
+      // bord echt zichtbaar is. De tellingen hierboven werken ook verborgen.
+      await page.getByRole('tab', { name: /Backlog/ }).click();
+      const totaal = feed!.delivered.length;
+      expect(totaal, 'de feed draagt de volledige historie, niet alleen de laatste tien').toBeGreaterThan(PER_KEER_DONE);
+      const meer = page.locator('[data-ticket-list="done"] [data-toon-meer="done"]');
+      await expect(meer).toContainText(String(totaal - PER_KEER_DONE));
+      await meer.click();
+      await expect(page.locator('[data-ticket-list="done"] .ticket-card')).toHaveCount(Math.min(totaal, PER_KEER_DONE * 2));
+    });
+
+    await test.step('And de zoekbalk vindt ook een oplevering die buiten de eerste lading valt', async () => {
+      // Dit is precies wat vóór 17 sep niet kon: de afkap stond vóór het filteren,
+      // dus alles ouder dan de nieuwste tien was onvindbaar via zoeken.
+      const oud = feed!.delivered[feed!.delivered.length - 1];
+      const oudeSleutel = verwachteSleutels(feed!, feed!.delivered.length).slice(-1)[0];
+      expect(oud, 'er is een oudste oplevering').toBeTruthy();
+      const zoekterm = (oud.version.match(/\d+\.\d+\.\d+/) || [oudeSleutel])[0];
+      await page.locator('[data-search]').fill(zoekterm);
+      await expect(page.locator('[data-ticket-list="done"] .ticket-card')).not.toHaveCount(0);
+      await expect(page.locator('[data-ticket-list="done"]')).toContainText(zoekterm);
+      await page.locator('[data-search]').fill('');
+      await expect(page.locator('[data-ticket-list="done"] .ticket-card')).toHaveCount(PER_KEER_DONE);
       const openOpBord = feed!.open.length;
       const todo = Number(await page.locator('[data-count="todo"]').textContent());
       const doing = Number(await page.locator('[data-count="doing"]').textContent());
@@ -119,32 +179,36 @@ test.describe('Path Pipeline TEST-demo', () => {
       await expect(page.getByRole('button', { name: 'Zephyr Testbeheer' })).toBeVisible();
     });
 
-    await test.step('And Kennisbank en Testbeheer projecteren dezelfde echte cases en de Living Doc toont hooguit tien', async () => {
+    await test.step('And Kennisbank en Testbeheer projecteren dezelfde echte cases, met paginering in plaats van een afkap', async () => {
       const eersteMetCase = feed!.delivered.find((row) => row.cases.length)!;
       const uniekeCases = new Map<string, FeedCase>();
       feed!.delivered.forEach((row) => row.cases.forEach((c) => { if (!uniekeCases.has(c.id)) uniekeCases.set(c.id, c); }));
 
       await page.getByRole('tab', { name: /Kennisbank/ }).click();
-      await expect(page.locator('[data-doc-tree] li')).toHaveCount(10);
+      // 12 pagina's plus de "Toon meer"-regel eronder.
+      await expect(page.locator('[data-doc-tree] li:not(.toon-meer-rij)')).toHaveCount(PER_KEER_DOC);
+      await expect(page.locator('[data-doc-tree] [data-toon-meer="doc"]')).toBeVisible();
       await page.locator(`[data-doc-select="${eersteMetCase.cases[0].id}"]`).click();
       await expect(page.locator('[data-doc-title]')).toContainText(eersteMetCase.cases[0].id);
       await expect(page.locator('[data-doc-page]')).toContainText('FUNCTIONEEL ONTWERP');
       await expect(page.locator('[data-doc-page]')).toContainText('TECHNISCH ONTWERP');
       await expect(page.locator('[data-doc-to]')).toContainText(eersteMetCase.cases[0].id);
       await expect(page.locator('[data-doc-gherkin]')).toContainText(eersteMetCase.cases[0].gherkin.split('\n')[0]);
-      await expect(page.locator('[data-living-doc] li')).toHaveCount(Math.min(10, feed!.delivered.length));
+      await expect(page.locator('[data-living-doc] li:not(.toon-meer-rij)')).toHaveCount(Math.min(PER_KEER_LIVING, feed!.delivered.length));
       await expect(page.locator('[data-living-doc] li').first()).toContainText(verwachteSleutels(feed!)[0]);
       // Een wens mag een link bevatten, maar in de leesbare projectie hoort geen kale URL.
       await expect(page.locator('[data-doc-page]')).not.toContainText('https://');
 
       await page.getByRole('tab', { name: /Testbeheer/ }).click();
-      const verwachtAantal = Math.min(20, uniekeCases.size);
-      await expect(page.locator('[data-test-table] tr')).toHaveCount(verwachtAantal);
+      const verwachtAantal = Math.min(PER_KEER_TESTS, uniekeCases.size);
+      await expect(page.locator('[data-test-table] tr:not(.toon-meer-rij)')).toHaveCount(verwachtAantal);
       for (const c of [...uniekeCases.values()].slice(0, verwachtAantal)) {
         await expect(page.locator(`[data-testcase="${c.id}"]`)).toContainText(c.title.slice(0, 40));
       }
       await expect(page.locator('[data-test-table] .gherkin')).toHaveCount(verwachtAantal);
-      await expect(page.locator('[data-test-metrics]')).toContainText(`Geslaagd${verwachtAantal}`);
+      // De metriek telt álle cases uit de historie, niet alleen de getekende rijen.
+      await expect(page.locator('[data-test-metrics]')).toContainText(`Geslaagd${uniekeCases.size}`);
+      await expect(page.locator('[data-test-count]')).toHaveText(String(uniekeCases.size));
     });
   });
 
@@ -256,7 +320,7 @@ test.describe('Path Pipeline TEST-demo', () => {
       await expect(page.locator('[data-living-doc] li').first()).toContainText(sleutel);
       await expect(page.locator('[data-living-doc] li').first()).toHaveClass(/is-new/);
       await expect(page.locator('[data-living-doc] li').first()).toContainText('simulatie');
-      await expect(page.locator('[data-living-doc] li')).toHaveCount(10);
+      await expect(page.locator('[data-living-doc] li:not(.toon-meer-rij)')).toHaveCount(PER_KEER_LIVING);
       await expect(page.locator('[data-flow-monitor]')).toContainText('volledig verwerkt (simulatie)');
       await expect(page.locator('[data-doc-title]')).toContainText(sleutel);
       await expect(page.locator('[data-doc-story]')).toContainText('Als Backoffice');
@@ -267,7 +331,92 @@ test.describe('Path Pipeline TEST-demo', () => {
 
       await page.getByRole('tab', { name: /Backlog/ }).click();
       await expect(page.locator(`[data-ticket-list="done"] [data-ticket="${sleutel}"]`)).toBeVisible();
-      await expect(page.locator('[data-ticket-list="done"] .ticket-card')).toHaveCount(10);
+      await expect(page.locator('[data-ticket-list="done"] .ticket-card')).toHaveCount(PER_KEER_DONE);
+    });
+  });
+
+  test('[PIPE-H-009] de koppelingen tonen welke bron geldt en lekken nooit een instelling', async ({ page, request }) => {
+    // Opdracht Gio (17 sep): naast onze eigen omgeving moet een klant zijn eigen
+    // Jira, Confluence of Zephyr kunnen koppelen. Dit pint de vorm daarvan vast
+    // vóór de eerste echte koppeling bestaat, want het gevaarlijke deel is niet
+    // het koppelen zelf maar wat er dan zichtbaar wordt: deze pagina is openbaar
+    // en zonder inloggen bereikbaar, dus een basis-URL of token van een klant
+    // mag er nooit in het antwoord staan.
+    const url = '/pilot/path-kwaliteitsstraat-koppelingen.php';
+    let body: {
+      environment: string;
+      actief: string;
+      bronnen: Array<{ sleutel: string; label: string; soort: string; status: string; levert: string[]; benodigd: string[] }>;
+    };
+
+    await test.step('Given het koppelingen-endpoint van de open demo-omgeving', async () => {
+      const antwoord = await request.get(url);
+      expect(antwoord.status()).toBe(200);
+      body = await antwoord.json();
+      expect(body.environment).not.toBe('production');
+    });
+
+    await test.step('Then geldt onze eigen bron en staan de drie klantbronnen klaar', async () => {
+      expect(body.actief).toBe('eigen');
+      expect(body.bronnen.map((b) => b.sleutel)).toEqual(['eigen', 'jira', 'confluence', 'zephyr']);
+
+      const eigen = body.bronnen.find((b) => b.sleutel === 'eigen')!;
+      expect(eigen.soort).toBe('intern');
+      expect(eigen.status).toBe('operationeel');
+      expect(eigen.levert).toEqual(['tickets', 'documenten', 'testcases']);
+
+      // Lokaal is er niets ingesteld, dus de drie externe bronnen horen zich
+      // eerlijk als "voorbereid" te melden -- niet als gekoppeld.
+      for (const sleutel of ['jira', 'confluence', 'zephyr']) {
+        const bron = body.bronnen.find((b) => b.sleutel === sleutel)!;
+        expect(bron.soort, `${sleutel} is een externe bron`).toBe('extern');
+        expect(bron.status, `${sleutel} is nog niet aangesloten`).toBe('voorbereid');
+        expect(bron.benodigd.length, `${sleutel} vertelt wat we van de klant nodig hebben`).toBeGreaterThan(1);
+      }
+      // Zephyr heeft een eigen token, los van Atlassian: dat staat er expliciet in,
+      // anders wordt dat bij de eerste echte koppeling gegarandeerd vergeten.
+      const zephyr = body.bronnen.find((b) => b.sleutel === 'zephyr')!;
+      expect(zephyr.benodigd.join(' ')).toMatch(/eigen Zephyr Scale API-token/i);
+    });
+
+    await test.step('And staat er nergens een instelling in het antwoord', async () => {
+      // Niet op losse woorden toetsen: de uitleg mag "API-token" gewoon noemen,
+      // dat beschrijft juist wat we van een klant nodig hebben. Wat nooit mag, is
+      // een instelling zelf -- dus getoetst op de vorm: geen configuratiesleutels
+      // in de objecten, en geen enkele waarde die eruitziet als een adres of een
+      // sleutel. Zodra het endpoint ooit base_url of token meestuurt, valt dit om.
+      const verbodenSleutels = ['base_url', 'token', 'api_key', 'apikey', 'password', 'secret', 'email'];
+      const controleer = (waarde: unknown, pad: string): void => {
+        if (Array.isArray(waarde)) {
+          waarde.forEach((item, i) => controleer(item, `${pad}[${i}]`));
+          return;
+        }
+        if (waarde && typeof waarde === 'object') {
+          for (const [sleutel, inhoud] of Object.entries(waarde)) {
+            expect(verbodenSleutels, `${pad}.${sleutel} is een configuratiesleutel en hoort niet in een openbaar antwoord`)
+              .not.toContain(sleutel.toLowerCase());
+            controleer(inhoud, `${pad}.${sleutel}`);
+          }
+          return;
+        }
+        if (typeof waarde === 'string') {
+          expect(waarde, `${pad} bevat een adres`).not.toMatch(/https?:\/\//i);
+          expect(waarde, `${pad} bevat een omgevingsnaam van een klant`).not.toMatch(/atlassian\.net/i);
+        }
+      };
+      controleer(body, 'antwoord');
+    });
+
+    await test.step('And legt de Kennisbank uit wat er per koppeling nodig is', async () => {
+      await page.goto('/pilot/path-kwaliteitsstraat.html');
+      await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
+      await page.getByRole('tab', { name: /Kennisbank/ }).click();
+      await page.locator('[data-doc-fixed="koppelingen"]').click();
+      await expect(page.locator('[data-doc-title]')).toContainText('Koppelingen');
+      await expect(page.locator('[data-doc-page]')).toContainText('projectsleutel');
+      await expect(page.locator('[data-doc-page]')).toContainText('serviceaccount');
+      // Ook hier: de uitleg mag geen echte omgeving van een klant noemen.
+      await expect(page.locator('[data-doc-page]')).not.toContainText('atlassian.net');
     });
   });
 
@@ -564,7 +713,7 @@ test('[PIPE-N-004] tussen de mobiele en de bureaubladdrempel blijft de Confluenc
       await expect(page.locator('[data-filter-summary]')).toContainText('eigen demo-wensen');
       await expect(page.locator('[data-ticket-list="done"] .ticket-card')).toHaveCount(0);
       await page.locator('[data-sourcefilter="all"]').click();
-      await expect(page.locator('[data-ticket-list="done"] .ticket-card')).toHaveCount(10);
+      await expect(page.locator('[data-ticket-list="done"] .ticket-card')).toHaveCount(PER_KEER_DONE);
       await page.locator('#page-title').click();
       await expect(page.locator('[data-panel="filters"]')).toBeHidden();
     });
@@ -590,19 +739,27 @@ test('[PIPE-N-004] tussen de mobiele en de bureaubladdrempel blijft de Confluenc
       // Zephyr: mappenboom, sorteren op assertions en filteren op status.
       await page.getByRole('tab', { name: /Testbeheer/ }).click();
       expect(await page.locator('[data-test-folders] button').count()).toBeGreaterThan(1);
+      // Sinds de tabel de volledige historie draagt en per 25 rijen tekent, is de
+      // aflopende lijst niet langer de omgekeerde van de oplopende: je ziet in
+      // beide gevallen een venster van 25 uit dezelfde 79. Getoetst wordt daarom
+      // dat elk venster écht gesorteerd is, en dat de twee vensters van de
+      // tegenovergestelde kant van de reeks komen.
       await page.locator('[data-sort="assertions"]').click();
       const oplopend = (await page.locator('[data-test-table] .assert-count').allTextContents()).map(Number);
-      expect(oplopend.slice().sort((a, b) => a - b)).toEqual(oplopend);
+      expect(oplopend.slice().sort((a, b) => a - b), 'oplopend venster is echt oplopend').toEqual(oplopend);
       await page.locator('[data-sort="assertions"]').click();
       const aflopend = (await page.locator('[data-test-table] .assert-count').allTextContents()).map(Number);
-      expect(aflopend).toEqual(oplopend.slice().reverse());
+      expect(aflopend.slice().sort((a, b) => b - a), 'aflopend venster is echt aflopend').toEqual(aflopend);
+      expect(aflopend[0], 'aflopend begint bij het hoogste aantal assertions').toBeGreaterThanOrEqual(oplopend[oplopend.length - 1]);
+      expect(oplopend[0], 'oplopend begint bij het laagste aantal assertions').toBeLessThanOrEqual(aflopend[aflopend.length - 1]);
       await page.locator('[data-expand-all]').click();
-      const rijen = await page.locator('[data-test-table] tr').count();
+      // De "Toon meer"-regel is een rij zonder Gherkin en telt dus niet mee.
+      const rijen = await page.locator('[data-test-table] tr:not(.toon-meer-rij)').count();
       await expect(page.locator('[data-test-table] details[open]')).toHaveCount(rijen);
       await page.locator('[data-status="fail"]').click();
       await expect(page.locator('[data-test-table]')).toContainText('Geen testcases met dit filter');
       await page.locator('[data-status="all"]').click();
-      await expect(page.locator('[data-test-table] tr')).toHaveCount(rijen);
+      await expect(page.locator('[data-test-table] tr:not(.toon-meer-rij)')).toHaveCount(rijen);
     });
   });
 
@@ -675,7 +832,7 @@ test('[PIPE-N-004] tussen de mobiele en de bureaubladdrempel blijft de Confluenc
     });
   });
 
-  test('[PIPE-N-001] de demo blijft lokaal, begrenst de Living Doc op tien en past op een telefoon', async ({ page }) => {
+  test('[PIPE-N-001] de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon', async ({ page }) => {
     await page.addInitScript(([key]) => {
       localStorage.setItem(key, JSON.stringify({
         schemaVersion: 3,
@@ -684,7 +841,7 @@ test('[PIPE-N-004] tussen de mobiele en de bureaubladdrempel blijft de Confluenc
         customTests: [],
         activePhase: 0,
         activeTicket: '',
-        livingDoc: Array.from({ length: 14 }, (_, index) => ({
+        livingDoc: Array.from({ length: 30 }, (_, index) => ({
           key: `PATH-${300 + index}`,
           text: `Lokale demoregel ${index + 1}`,
           result: 'Geslaagd (simulatie)',
@@ -700,12 +857,17 @@ test('[PIPE-N-004] tussen de mobiele en de bureaubladdrempel blijft de Confluenc
       await page.getByRole('tab', { name: /Kennisbank/ }).click();
     });
 
-    await test.step('Then toont de Living Doc precies tien regels, lokaal vóór echt, en bewaart hij er tien', async () => {
-      await expect(page.locator('[data-living-doc] li')).toHaveCount(10);
+    await test.step('Then tekent de Living Doc tien regels per keer, lokaal vóór echt, en bewaart hij er hooguit 25', async () => {
+      await expect(page.locator('[data-living-doc] li:not(.toon-meer-rij)')).toHaveCount(PER_KEER_LIVING);
       await expect(page.locator('[data-living-doc] li').first()).toContainText('PATH-300');
       await expect(page.locator('[data-living-doc]')).not.toContainText('PATH-310');
+      // De lokale simulatiehistorie in de browser blijft begrensd (25), zodat de
+      // opslag niet ongelimiteerd groeit bij herhaald simuleren.
       const bewaard = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) || '{}').livingDoc.length, STORAGE_KEY);
-      expect(bewaard).toBe(10);
+      expect(bewaard).toBe(25);
+      await page.locator('[data-living-doc] [data-toon-meer="living"]').click();
+      await expect(page.locator('[data-living-doc] li:not(.toon-meer-rij)')).toHaveCount(PER_KEER_LIVING * 2);
+      await expect(page.locator('[data-living-doc]')).toContainText('PATH-310');
     });
 
     await test.step('And de pagina heeft geen horizontale overflow of gedeelde appcode', async () => {

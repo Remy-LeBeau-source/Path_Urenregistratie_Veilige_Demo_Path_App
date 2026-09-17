@@ -10,11 +10,15 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(root, 'pilot', 'path-kwaliteitsstraat-data.json');
 const CASE_ID = /\b[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-[HN]-\d{3}\b/g;
-const MAX_DELIVERED = 10;
-const MAX_OPEN = 5;
-// Basisregel van Gio (16 sep): verbeteringen die wij zelf zien staan in GIO-WENSEN.md
-// onder "Nice to have" en het wensformulier toont ze als keuzelijst.
-const MAX_NICE_TO_HAVE = 8;
+// Opdracht Gio (17 sep): de kwaliteitsstraat moet onze échte administratie zijn,
+// geen etalage met de laatste tien. Daarom staat de volledige projecthistorie in
+// het bestand en beslist de pagina zelf wat hij per keer toont (zoeken, filteren,
+// "toon meer"). De oude caps stonden hier op 10/5/8 en maakten het bord
+// aantoonbaar onvolledig: 81 opleveringen werden er 10.
+// Het Gherkin-blok is het zwaarste veld; dat blijft alleen bij de nieuwste
+// opleveringen staan, zodat het bestand niet onnodig groeit voor historie die
+// niemand meer uitklapt. GHERKIN_VOLLEDIG_TOT telt vanaf de nieuwste.
+const GHERKIN_VOLLEDIG_TOT = 25;
 
 // Feature-bestanden en MD's wisselen tussen LF en CRLF: altijd normaliseren,
 // anders laat een trailing \r de Scenario-regex stilletjes mislukken.
@@ -66,15 +70,19 @@ function build() {
   const wishes = read('GIO-WENSEN.md');
   const features = featureIndex();
   const pkg = JSON.parse(read('package.json'));
-  const delivered = tableRows(wishes, 'Klaar').slice(0, MAX_DELIVERED).map(([date, wish, version]) => {
+  const delivered = tableRows(wishes, 'Klaar').map(([date, wish, version], index) => {
     const ids = [...new Set(wish.match(CASE_ID) || [])].filter((id) => features.has(id));
+    const volledig = index < GHERKIN_VOLLEDIG_TOT;
     return {
       date, version, wish,
-      cases: ids.map((id) => features.get(id))
+      cases: ids.map((id) => {
+        const c = features.get(id);
+        return volledig ? c : { ...c, gherkin: '' };
+      })
     };
   });
-  const open = tableRows(wishes, 'Open en bezig').slice(0, MAX_OPEN).map(([date, wish, who, status]) => ({ date, wish, who, status }));
-  const niceToHave = tableRows(wishes, 'Nice to have').slice(0, MAX_NICE_TO_HAVE).map(([date, improvement, why]) => ({ date, improvement, why }));
+  const open = tableRows(wishes, 'Open en bezig').map(([date, wish, who, status]) => ({ date, wish, who, status }));
+  const niceToHave = tableRows(wishes, 'Nice to have').map(([date, improvement, why]) => ({ date, improvement, why }));
   // generatedAt vertelt de pagina hoe vers de stand is; een PO heeft daar meer aan dan
   // aan een kaal versienummer bovenin (het nummer zelf staat in de voettekst).
   return { appVersion: pkg.version, generatedAt: new Date().toISOString(), source: 'GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md', delivered, open, niceToHave };
