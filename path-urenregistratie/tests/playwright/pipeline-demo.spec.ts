@@ -505,7 +505,28 @@ test.describe('Path Pipeline TEST-demo', () => {
     const metCase = feed.delivered.find((row) => row.cases.length)!;
     const sleutel = metCase.cases[0].id;
 
-    await test.step('Then stuurt geen enkele knop of link de lezer nog naar GitHub', async () => {
+    await test.step('Then claimt de pagina geen gereedschap dat we niet gebruiken', async () => {
+      // Gevonden op 17 sep na een vraag van Gio: de fasestrook zei "Playwright ·
+      // Cypress · API" terwijl er geen Cypress in dit project zit -- geen
+      // afhankelijkheid, geen map, geen configuratie. Op een pagina waarvan het
+      // hele punt is dat alles klopt, is zo'n claim het gevaarlijkste wat erop kan
+      // staan. Deze controle vergelijkt met wat package.json echt kent.
+      const pkg = JSON.parse(await readFile(join(process.cwd(), 'package.json'), 'utf8'));
+      const afhankelijk = Object.keys({ ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) });
+      const paginaTekst = (await page.locator('body').textContent()) || '';
+      for (const gereedschap of ['Cypress', 'Selenium', 'Jest', 'Vitest', 'Puppeteer']) {
+        const gebruiktHet = afhankelijk.some((naam) => naam.toLowerCase().includes(gereedschap.toLowerCase()));
+        if (!gebruiktHet) {
+          expect(paginaTekst, `de pagina noemt ${gereedschap} terwijl het niet in package.json staat`)
+            .not.toMatch(new RegExp(`\\b${gereedschap}\\b`));
+        }
+      }
+      // En wat we wél gebruiken hoort er te staan.
+      expect(afhankelijk.some((naam) => naam.includes('playwright'))).toBe(true);
+      expect(paginaTekst).toMatch(/\bPlaywright\b/);
+    });
+
+    await test.step('And stuurt geen enkele knop of link de lezer nog naar GitHub', async () => {
       // Bewust op links en knoppen toetsen, niet op het woord: onze eigen
       // projecthistorie noemt GitHub gewoon, want zo is het toen opgeschreven.
       // Wat weg moest is de verwijzing zelf -- onze implementatie is geen

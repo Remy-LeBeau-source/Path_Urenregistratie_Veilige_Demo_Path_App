@@ -1,6 +1,6 @@
 {
   "appVersion": "2.0.151",
-  "generatedAt": "2026-09-17T15:38:06.912Z",
+  "generatedAt": "2026-09-17T15:57:06.608Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
@@ -29,9 +29,9 @@
           "title": "elk ticket heeft een deelbare link en zichtbare verwijzingen naar Confluence en Zephyr",
           "feature": "tests/playwright/features/pipeline-demo.feature",
           "technique": "Navigatietest over de drie werkruimtes via het gedeelde nummer + herstelbaarheid (dezelfde link opent hetzelfde ticket opnieuw) + negatieve inhoudscontrole dat de eigen implementatie (GitHub) nergens meer doorschemert",
-          "assertions": 20,
+          "assertions": 23,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: elk ticket heeft een deelbare link en zichtbare verwijzingen naar Confluence en Zephyr\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de flow voor PIPE-H-012 wordt uitgevoerd\n  Then stuurt geen enkele knop of link de lezer nog naar GitHub\n  And staan in het ticket de verwijzingen met hun echte nummer\n  And is de link naar dit ticket deelbaar\n  And wijst de keten door naar de uitkomst in de Living Doc\n  And brengt de Confluence-verwijzing je naar de pagina van hetzelfde nummer"
+          "gherkin": "Scenario: elk ticket heeft een deelbare link en zichtbare verwijzingen naar Confluence en Zephyr\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de flow voor PIPE-H-012 wordt uitgevoerd\n  Then claimt de pagina geen gereedschap dat we niet gebruiken\n  And stuurt geen enkele knop of link de lezer nog naar GitHub\n  And staan in het ticket de verwijzingen met hun echte nummer\n  And is de link naar dit ticket deelbaar\n  And wijst de keten door naar de uitkomst in de Living Doc\n  And brengt de Confluence-verwijzing je naar de pagina van hetzelfde nummer"
         }
       ]
     },

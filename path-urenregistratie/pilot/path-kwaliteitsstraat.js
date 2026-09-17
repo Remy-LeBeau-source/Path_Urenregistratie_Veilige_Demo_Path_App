@@ -228,7 +228,7 @@
   var phaseCopy = {
     1: { title: 'Vraag en acceptatiecriterium vastgelegd', status: 'Het ticket staat in Jira en Confluence vertaalt de vraag naar een leesbaar Gherkin-scenario.' },
     2: { title: 'Testcase staat in Zephyr', status: 'De traceerbare testcase is toegevoegd en gekoppeld aan hetzelfde ticket.' },
-    3: { title: 'Automatische controles draaien lokaal', status: 'Playwright, Cypress en de API-controle simuleren het bewijs vóór een push.' },
+    3: { title: 'Automatische controles draaien lokaal', status: 'Playwright, de API-controles en de databasecontrole leveren het bewijs vóór een push.' },
     4: { title: 'CI verwerkt de feedback op TEST', status: 'Het resultaat wordt gepubliceerd en als nieuwste bewijsregel aan de Living Doc toegevoegd.' }
   };
 

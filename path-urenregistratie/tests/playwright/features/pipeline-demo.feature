@@ -64,10 +64,11 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
   @happy
   Scenario: [PIPE-H-012] elk ticket heeft een deelbare link en zichtbare verwijzingen naar Confluence en Zephyr
     # Testtechniek: Navigatietest over de drie werkruimtes via het gedeelde nummer + herstelbaarheid (dezelfde link opent hetzelfde ticket opnieuw) + negatieve inhoudscontrole dat de eigen implementatie (GitHub) nergens meer doorschemert
-    # Aantoonbare Playwright-assertions in deze case: 20
+    # Aantoonbare Playwright-assertions in deze case: 23
     Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid
     When de flow voor PIPE-H-012 wordt uitgevoerd
-    Then stuurt geen enkele knop of link de lezer nog naar GitHub
+    Then claimt de pagina geen gereedschap dat we niet gebruiken
+    And stuurt geen enkele knop of link de lezer nog naar GitHub
     And staan in het ticket de verwijzingen met hun echte nummer
     And is de link naar dit ticket deelbaar
     And wijst de keten door naar de uitkomst in de Living Doc
