@@ -234,7 +234,7 @@ De 61 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 622 Playwri
 - [DASH-H-031] het verloop van een maand klapt open in Mijn maanden en overleeft een hertekening — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 19
 - [DASH-H-032] Mijn uren noemt onderin hoeveel werkdagen nog leeg zijn, inclusief dagen die nog moeten komen — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 12
 - [DASH-H-033] de verloopstappen in Klassiek tonen ✓ en • in de bol, leesbaar in licht en donker — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 14
-- [DASH-H-034] de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 32
+- [DASH-H-034] de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 33
 - [DASH-H-035] Mijn uren op desktop toont alleen Ma–Vr, de datum boven elk veld, 0/8/9 eronder en het weektotaal rechts — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
 - [DASH-N-031] de volgende actie is één zin zonder aangeplakte maand, en de maand staat in de regel eronder — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [DASH-H-036] Vandaag gebruikt in Klassiek de ene kopkaart op desktop en de Wild-opbouw op telefoon — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 45

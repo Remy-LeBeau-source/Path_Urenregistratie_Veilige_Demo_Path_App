@@ -230,7 +230,7 @@ Feature: Dashboard en open werkvoorraad
   @happy
   Scenario: [DASH-H-034] de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 32
+    # Aantoonbare Playwright-assertions in deze case: 33
     Given een lege kaart met kiezen, foto en zelf gemaild
     When een verkeerd bestandstype wordt gekozen, dan blijft de kaart leeg met uitleg
     When een PDF wordt gekozen, dan toont de kaart naam, grootte, kruisje en de verstuurknop

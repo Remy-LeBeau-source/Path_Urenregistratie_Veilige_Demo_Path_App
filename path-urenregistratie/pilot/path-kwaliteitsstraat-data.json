@@ -1,6 +1,6 @@
 {
-  "appVersion": "2.0.154",
-  "generatedAt": "2026-09-17T17:33:21.596Z",
+  "appVersion": "2.0.155",
+  "generatedAt": "2026-09-17T17:36:22.685Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
@@ -143,7 +143,7 @@
           "title": "de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee",
           "feature": "tests/playwright/features/dashboard.feature",
           "technique": "End-to-end use-case + visuele contractasserties",
-          "assertions": 32,
+          "assertions": 33,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee\n  Given een lege kaart met kiezen, foto en zelf gemaild\n  When een verkeerd bestandstype wordt gekozen, dan blijft de kaart leeg met uitleg\n  When een PDF wordt gekozen, dan toont de kaart naam, grootte, kruisje en de verstuurknop\n  And het kruisje brengt de kaart terug naar leeg\n  When het bestand als bijlage wordt verstuurd, dan gaat precies dat bestand mee naar de indienroute\n  And na een weigering blijft het gekozen bestand staan\n  Then wordt met Playwright-assertions bevestigd dat de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee"
         }
