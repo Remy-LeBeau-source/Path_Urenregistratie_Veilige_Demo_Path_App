@@ -43,6 +43,18 @@ function nu() {
   return new Date().toLocaleTimeString('nl-NL', { timeZone: 'Europe/Amsterdam' });
 }
 
+// Bewust zonder shell. Met `shell: true` knipt de Windows-shell elk argument met
+// een spatie in stukken: een titel als "PATH-202 In Berichten een filter" kwam bij
+// gh binnen als tien losse argumenten en het aanmaken faalde met "please quote all
+// values that have spaces". Zonder shell geeft Node de argumenten ongewijzigd door,
+// maar dan moet de naam op Windows wel de .exe dragen -- daar doet Node geen
+// PATHEXT-aanvulling.
+const GH = process.platform === 'win32' ? 'gh.exe' : 'gh';
+
+function gh(argumenten) {
+  return spawnSync(GH, argumenten, { cwd: projectMap, encoding: 'utf8', shell: false });
+}
+
 function leesStand() {
   if (!existsSync(STAND)) return { afgehandeld: [] };
   try {
@@ -81,11 +93,7 @@ function staatInWensenlijst(sleutel) {
 }
 
 function bestaandIssue(sleutel) {
-  const resultaat = spawnSync('gh', ['issue', 'list', '--search', sleutel, '--state', 'all', '--json', 'number,title'], {
-    cwd: projectMap,
-    encoding: 'utf8',
-    shell: process.platform === 'win32',
-  });
+  const resultaat = gh(['issue', 'list', '--search', sleutel, '--state', 'all', '--json', 'number,title']);
   if (resultaat.status !== 0) return null;
   try {
     const gevonden = JSON.parse(resultaat.stdout || '[]');
@@ -112,11 +120,7 @@ function maakIssue(wens) {
     return 'droog';
   }
 
-  const resultaat = spawnSync('gh', ['issue', 'create', '--label', 'pipeline-intake', '--title', titel, '--body', tekst], {
-    cwd: projectMap,
-    encoding: 'utf8',
-    shell: process.platform === 'win32',
-  });
+  const resultaat = gh(['issue', 'create', '--label', 'pipeline-intake', '--title', titel, '--body', tekst]);
   if (resultaat.status !== 0) {
     console.error(`  issue aanmaken mislukt: ${(resultaat.stderr || '').trim()}`);
     return null;

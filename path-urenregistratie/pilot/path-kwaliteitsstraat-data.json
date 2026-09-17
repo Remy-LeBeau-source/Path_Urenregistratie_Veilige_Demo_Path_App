@@ -1,6 +1,6 @@
 {
   "appVersion": "2.0.151",
-  "generatedAt": "2026-09-17T12:01:14.464Z",
+  "generatedAt": "2026-09-17T13:18:53.790Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
@@ -1383,7 +1383,7 @@
   "open": [
     {
       "date": "17 sep",
-      "wish": "PATH-201/202, terug naar open na productbesluit Gio: het oorspronkelijke idee (filter op afzendernaam in Berichten) bleek gebouwd op een bestaand lek -- medewerkers zagen via server/api/announcements.php de echte naam van de beheerder die een mededeling stuurde, terwijl het besluit in database/seed-demo-data.sql was dat dit altijd \"Beheerder\" moet tonen. Het lek is gerepareerd (ANN-N-011, tegenproef rood/groen, 2.0.150) los van deze wens. Met het lek dicht heeft \"filter op afzendernaam\" geen waarde meer (er is nog maar één afzenderlabel: Beheerder). Nog te beslissen: wat de wens moet worden nu de oorspronkelijke insteek vervalt -- bijvoorbeeld filteren op onderwerp/type in plaats van op wie het stuurde.",
+      "wish": "PATH-201 (en de dubbele indiening PATH-202), terug naar open na productbesluit Gio: het oorspronkelijke idee (filter op afzendernaam in Berichten) bleek gebouwd op een bestaand lek -- medewerkers zagen via server/api/announcements.php de echte naam van de beheerder die een mededeling stuurde, terwijl het besluit in database/seed-demo-data.sql was dat dit altijd \"Beheerder\" moet tonen. Het lek is gerepareerd (ANN-N-011, tegenproef rood/groen, 2.0.150) los van deze wens. Met het lek dicht heeft \"filter op afzendernaam\" geen waarde meer (er is nog maar één afzenderlabel: Beheerder). Nog te beslissen: wat de wens moet worden nu de oorspronkelijke insteek vervalt -- bijvoorbeeld filteren op onderwerp/type in plaats van op wie het stuurde.",
       "who": "open, wacht op nieuwe richting Gio"
     },
     {
