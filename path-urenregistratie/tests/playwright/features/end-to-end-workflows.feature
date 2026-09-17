@@ -40,6 +40,38 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
     Then zijn de originele bytes en het opslagbestand ongewijzigd
 
   @happy
+  Scenario: [E2E-H-004] goedkeuring vervangt urencontrole door factuurverzending voor hetzelfde dossier
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given Backoffice een ingediende urenstaat uit de vaste herstelbasis opent
+    When Backoffice die urenstaat goedkeurt
+    Then verdwijnt alleen de urencontrole en verschijnt een factuuractie voor hetzelfde dossier
+
+  @happy
+  Scenario: [E2E-H-005] klanturenstaatcontrole wordt een brokeractie zonder taakverlies
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 13
+    Given Backoffice een ontvangen klanturenstaat in de vaste herstelbasis heeft
+    When Backoffice het ontvangen klantdocument goedkeurt
+    Then staat hetzelfde dossier klaar voor de broker en blijft het globale totaal stabiel
+
+  @happy
+  Scenario: [E2E-H-007] taakgestuurde goedkeuring blijft na serververversing afgerond
+    # Testtechniek: Toestandsovergang
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given een servergestuurde urencontrole in de Backoffice-werkvoorraad staat
+    When Backoffice via de taakmodal goedkeurt
+    Then blijft de controle na volledige server-readback weg en staat de factuurtaak open
+
+  @happy
+  Scenario: [E2E-H-008] urencontrole vraagt na oude versie opnieuw op en maakt daarna toch goedkeuren af
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given een urencontrole eerst met een oude lokale versie opent
+    When Backoffice de confirm drukt na het vrijgeven van de versieverversing
+    Then wordt de urencontrole goedgekeurd en verdwijnt de taak
+
+  @happy
   Scenario: [E2E-H-001] herstelbasis houdt globale werkvoorraad stabiel bij maand- en filterwissels
     # Testtechniek: Equivalentieklassen
     # Aantoonbare Playwright-assertions in deze case: 11
@@ -67,22 +99,6 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
     Then krijgt Backoffice direct de vervolgcontrole zonder verlies van het globale totaal
 
   @happy
-  Scenario: [E2E-H-004] goedkeuring vervangt urencontrole door factuurverzending voor hetzelfde dossier
-    # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 5
-    Given Backoffice een ingediende urenstaat uit de vaste herstelbasis opent
-    When Backoffice die urenstaat goedkeurt
-    Then verdwijnt alleen de urencontrole en verschijnt een factuuractie voor hetzelfde dossier
-
-  @happy
-  Scenario: [E2E-H-005] klanturenstaatcontrole wordt een brokeractie zonder taakverlies
-    # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 13
-    Given Backoffice een ontvangen klanturenstaat in de vaste herstelbasis heeft
-    When Backoffice het ontvangen klantdocument goedkeurt
-    Then staat hetzelfde dossier klaar voor de broker en blijft het globale totaal stabiel
-
-  @happy
   Scenario: [E2E-H-006] eenmalige wachtwoordlink geeft toegang en blokkeert hergebruik
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 13
@@ -90,22 +106,6 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
     When de medewerker via de link een sterk nieuw wachtwoord instelt
     Then werkt het nieuwe wachtwoord en is dezelfde link niet opnieuw bruikbaar
     And het gedeelde demo-account is niet aangeraakt
-
-  @happy
-  Scenario: [E2E-H-007] taakgestuurde goedkeuring blijft na serververversing afgerond
-    # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 5
-    Given een servergestuurde urencontrole in de Backoffice-werkvoorraad staat
-    When Backoffice via de taakmodal goedkeurt
-    Then blijft de controle na volledige server-readback weg en staat de factuurtaak open
-
-  @happy
-  Scenario: [E2E-H-008] urencontrole vraagt na oude versie opnieuw op en maakt daarna toch goedkeuren af
-    # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 4
-    Given een urencontrole eerst met een oude lokale versie opent
-    When Backoffice de confirm drukt na het vrijgeven van de versieverversing
-    Then wordt de urencontrole goedgekeurd en verdwijnt de taak
 
   @negative
   Scenario: [E2E-N-019] een mislukte factuurpoging laat niets half achter en opnieuw proberen levert één factuur

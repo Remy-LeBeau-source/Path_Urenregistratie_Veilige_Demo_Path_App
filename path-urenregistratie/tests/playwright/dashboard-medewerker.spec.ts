@@ -1645,7 +1645,19 @@ test('[DASH-H-034] de klanturenstaatkaart loopt van leeg via bestand gekozen naa
     await expect(zichtbareStand).toHaveCount(1);
     await expect(zichtbareStand).toContainText('PDF, JPG of PNG, maximaal 2 MB.');
     await expect(kaart.getByRole('button', { name: 'Bestand kiezen' })).toBeVisible();
-    await expect(kaart.getByRole('button', { name: 'Foto maken' })).toBeVisible();
+    // Foto maken gebruikt capture="environment", dat alleen op een toestel met
+    // een cameraprimaat (coarse pointer) iets anders doet dan het gewone
+    // bestandenvenster (gemeld door TEST-tester Marc de Roon, 17 sep, op zijn
+    // pc gaf de knop hetzelfde venster als Bestand kiezen, alleen zonder PDF).
+    // Op een muis-toestel (desktop-chromium) hoort de knop dus verborgen te
+    // zijn; op een echt of geëmuleerd aanraakscherm (mobile-chrome/-safari)
+    // blijft hij staan.
+    const isCoarsePointer = await page.evaluate(() => window.matchMedia('(pointer: coarse)').matches);
+    if (isCoarsePointer) {
+      await expect(kaart.getByRole('button', { name: 'Foto maken' })).toBeVisible();
+    } else {
+      await expect(kaart.getByRole('button', { name: 'Foto maken' })).toBeHidden();
+    }
     await expect(page.locator('#employee-customer-timesheet-skip')).toHaveText('Die heb ik al gemaild');
     await expect(page.locator('#employee-customer-timesheet-photo')).toHaveAttribute('capture', 'environment');
   });

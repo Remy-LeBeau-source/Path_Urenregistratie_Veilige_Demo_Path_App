@@ -19,13 +19,13 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" href="assets/styles.css?v=2.0.151">
+  <link rel="stylesheet" href="assets/styles.css?v=2.0.154">
   <!-- Met versieparameter, net als styles.css hierboven. Zonder die parameter
        houdt de browser (en een geïnstalleerde app helemaal) de oude New-skin
        vast na een release: de versiebadge springt vooruit en Klassiek
        vernieuwt, terwijl de hele Nieuw-vormgeving op de vorige versie blijft
        staan. Gemeld als "ik zie geen verschil in de nieuwe versie". -->
-  <link rel="stylesheet" href="assets/styles-new.css?v=2.0.151">
+  <link rel="stylesheet" href="assets/styles-new.css?v=2.0.154">
 </head>
 <body class="auth-booting">
   <section class="login-screen" id="login-screen" aria-labelledby="login-title">
@@ -103,7 +103,7 @@
       </form>
       <p class="login-note" id="auth-mode-indicator">Controle van auth-sessie wordt uitgevoerd.</p>
       <p class="login-note" id="local-login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze lokale versie bewaart ze alleen in deze browser en e-mailverzending is uitgeschakeld.</p>
-      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 2.0.151</span></footer>
+      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 2.0.154</span></footer>
     </div>
   </section>
 
@@ -192,7 +192,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 2.0.151</span>
+      <span class="demo-badge">Versie 2.0.154</span>
       </div>
     </aside>
 
@@ -219,7 +219,7 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
-          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 2.0.151</span><span class="environment-badge" id="environment-badge" hidden></span></span>
+          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 2.0.154</span><span class="environment-badge" id="environment-badge" hidden></span></span>
         </div>
         <div class="topbar-actions">
           <!-- Zelfde knip als de Klassieke zijbalk (Werkvoorraad/Organisatie, zie de
@@ -734,7 +734,7 @@
           <button class="text-button" data-go="customer-timesheet-admin">Bekijk klanturenstaten &rarr;</button>
         </section>
 
-        <!-- Ingang naar de procesmeter, die sinds v2.0.151 op een eigen scherm
+        <!-- Ingang naar de procesmeter, die sinds v2.0.154 op een eigen scherm
              staat. Het percentage blijft hier zichtbaar, zodat je de stand nog
              steeds in één blik hebt zonder het hele paneel op het Dashboard. -->
         <section class="panel workflow-teaser" id="workflow-teaser">
@@ -1064,6 +1064,9 @@
         <section class="panel nieuw-in-de-app" id="nieuw-in-de-app" aria-labelledby="nieuw-in-de-app-kop" hidden>
           <div class="panel-heading"><div><span class="section-label">Alleen in de testomgeving</span><h3 id="nieuw-in-de-app-kop">Nieuw in de app</h3></div><small>Laatste 20 updates</small></div>
           <ol class="nieuw-in-de-app-lijst" id="nieuw-in-de-app-lijst">
+            <li><span class="nieuw-versie">2.0.154</span><div class="nieuw-tekst"><strong>Klanturenstaat opslaan opgeruimd op desktop</strong><p>De knop "Foto maken" bij het opslaan van een klanturenstaat staat alleen nog op een toestel met een camera. Op een computer volstaat "Bestand kiezen" toch al voor alles.</p></div><time datetime="2026-09-17T16:49">17 sep · 16:49</time></li>
+            <li><span class="nieuw-versie">2.0.153</span><div class="nieuw-tekst"><strong>Standaardweek klopt weer voor iedereen</strong><p>Voor een aantal medewerkers met een afwijkend rooster (bijvoorbeeld een kortere vrijdag) is het eigen werkpatroon bijgewerkt, zodat "Standaardweek vullen" precies hun eigen uren per dag invult.</p></div><time datetime="2026-09-17T15:48">17 sep · 15:48</time></li>
+            <li><span class="nieuw-versie">2.0.152</span><div class="nieuw-tekst"><strong>Testset overzichtelijker ingedeeld</strong><p>Een grote reeks testcases achter de schermen is opgesplitst in kleinere, overzichtelijkere bestanden.</p></div><time datetime="2026-09-17T14:40">17 sep · 14:40</time></li>
             <li><span class="nieuw-versie">2.0.151</span><div class="nieuw-tekst"><strong>Interne kwaliteitspagina toont de volledige historie</strong><p>De interne pagina waarop we wensen en opleveringen bijhouden laat nu alles zien in plaats van alleen de nieuwste, en is in zijn geheel doorzoekbaar.</p></div><time datetime="2026-09-17T13:20">17 sep · 13:20</time></li>
             <li><span class="nieuw-versie">2.0.150</span><div class="nieuw-tekst"><strong>Berichten en goedkeuringsmail verbeterd</strong><p>In Berichten staat overal dezelfde, neutrale aanduiding voor wie een mededeling stuurde, en de bevestigingsmail na het goedkeuren van een urenstaat is uitgebreider getest.</p></div><time datetime="2026-09-17T12:36">17 sep · 12:36</time></li>
             <li><span class="nieuw-versie">2.0.149</span><div class="nieuw-tekst"><strong>Beheerdersaccount extra beschermd</strong><p>Het opslaan van een beheerder gebruikt nu dezelfde twee veiligheidscontroles als de deactiveerknop: je kunt jezelf niet uitschakelen en de laatste actieve beheerder blijft altijd toegang houden.</p></div><time datetime="2026-09-17T05:20">17 sep · 05:20</time></li>
@@ -1081,9 +1084,6 @@
             <li><span class="nieuw-versie">2.0.137</span><div class="nieuw-tekst"><strong>Kwaliteitsstraat weer met de juiste opmaak</strong><p>De interne kwaliteitsstraat-pagina toont weer de juiste opmaak.</p></div><time datetime="2026-09-16T21:05">16 sep · 21:05</time></li>
             <li><span class="nieuw-versie">2.0.136</span><div class="nieuw-tekst"><strong>Kwaliteitsstraat heeft een eigen naam</strong><p>De interne testpagina voor kwaliteitscontrole heet voortaan Path Kwaliteitsstraat.</p></div><time datetime="2026-09-16T20:48">16 sep · 20:48</time></li>
             <li><span class="nieuw-versie">2.0.135</span><div class="nieuw-tekst"><strong>Wensenloket toont voorstellen</strong><p>Het interne wensenloket toont nu voorstellen om uit te kiezen en laat je openstaande wensen zelf ordenen.</p></div><time datetime="2026-09-16T19:56">16 sep · 19:56</time></li>
-            <li><span class="nieuw-versie">2.0.134</span><div class="nieuw-tekst"><strong>Wensenloket rechtstreeks</strong><p>Het interne wensenloket verstuurt een nieuwe wens voortaan rechtstreeks, zonder tussenstap.</p></div><time datetime="2026-09-16T19:48">16 sep · 19:48</time></li>
-            <li><span class="nieuw-versie">2.0.132</span><div class="nieuw-tekst"><strong>Testomgeving verder verbeterd</strong><p>Achter de schermen is het herstellen van de testomgeving verder verbeterd.</p></div><time datetime="2026-09-16T18:58">16 sep · 18:58</time></li>
-            <li><span class="nieuw-versie">2.0.131</span><div class="nieuw-tekst"><strong>Nieuw in de app weer bijgewerkt</strong><p>De laatste versies ontbraken in deze lijst. Ze zijn aangevuld, zodat je weer ziet wat er sinds je vorige bezoek is veranderd.</p></div><time datetime="2026-09-16T18:05">16 sep · 18:05</time></li>
           </ol>
           <nav class="lijst-paginering" id="nieuw-in-de-app-paginering" aria-label="Meer updates" hidden>
             <button class="button button-ghost" type="button" data-pagina-vorige>‹ Vorige</button>
@@ -1315,7 +1315,7 @@
       <footer class="app-footer" aria-label="Applicatie-informatie">
         <span>© 2026 Path Consultancy IT</span>
         <span>Ontwikkeld en beheerd door Team Path.</span>
-        <span class="app-footer-version">Versie 2.0.151</span>
+        <span class="app-footer-version">Versie 2.0.154</span>
       </footer>
     </main>
   </div>
@@ -1375,7 +1375,7 @@
   </div>
   <script vite-ignore defer src="assets/jspdf.umd.min.js"></script>
   <script vite-ignore defer src="assets/invoice-fonts.js"></script>
-  <script vite-ignore defer src="assets/app.js?v=2.0.151"></script>
-  <script vite-ignore defer src="assets/pwa-install.js?v=2.0.151"></script>
+  <script vite-ignore defer src="assets/app.js?v=2.0.154"></script>
+  <script vite-ignore defer src="assets/pwa-install.js?v=2.0.154"></script>
 </body>
 </html>

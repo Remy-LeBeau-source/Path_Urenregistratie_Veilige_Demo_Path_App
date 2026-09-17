@@ -151,14 +151,14 @@ De 61 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 622 Playwri
 - [E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF — Techniek: Equivalentieklassen · Assertions: 27
 - [E2E-N-020] een medewerker kan de Backoffice-keten niet uitvoeren en een weigering verandert niets — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
 - [E2E-N-018] documentlinks accepteren geen ongeautoriseerde gebruiker, clientpad of vrije bestandsnaam — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 21
+- [E2E-H-004] goedkeuring vervangt urencontrole door factuurverzending voor hetzelfde dossier — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
+- [E2E-H-005] klanturenstaatcontrole wordt een brokeractie zonder taakverlies — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
+- [E2E-H-007] taakgestuurde goedkeuring blijft na serververversing afgerond — Techniek: Toestandsovergang · Assertions: 5
+- [E2E-H-008] urencontrole vraagt na oude versie opnieuw op en maakt daarna toch goedkeuren af — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 9
 - [E2E-H-001] herstelbasis houdt globale werkvoorraad stabiel bij maand- en filterwissels — Techniek: Equivalentieklassen · Assertions: 11
 - [E2E-H-002] rolwissel werkt zonder F5 en herstel blijft beschikbaar voor iedere rol op LOCAL/TEST — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [E2E-H-003] herindiening verplaatst dezelfde actie van medewerker naar Backoffice — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 15
-- [E2E-H-004] goedkeuring vervangt urencontrole door factuurverzending voor hetzelfde dossier — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
-- [E2E-H-005] klanturenstaatcontrole wordt een brokeractie zonder taakverlies — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
 - [E2E-H-006] eenmalige wachtwoordlink geeft toegang en blokkeert hergebruik — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
-- [E2E-H-007] taakgestuurde goedkeuring blijft na serververversing afgerond — Techniek: Toestandsovergang · Assertions: 5
-- [E2E-H-008] urencontrole vraagt na oude versie opnieuw op en maakt daarna toch goedkeuren af — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [E2E-N-019] een mislukte factuurpoging laat niets half achter en opnieuw proberen levert één factuur — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 20
 - [E2E-H-016] ieder wijzigbaar Teambeheerveld heeft een aantoonbaar opslag- of uitzonderingscontract — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 32
 - [E2E-H-019] dubbel klikken maakt nooit dubbele statussen, facturen of mails — Techniek: Toestandsovergang · Assertions: 24
