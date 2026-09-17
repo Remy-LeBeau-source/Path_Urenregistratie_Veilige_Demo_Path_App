@@ -1,7 +1,43 @@
 import { expect, request as playwrightRequest, test, type APIRequestContext } from '@playwright/test';
+import mysql from 'mysql2/promise';
 import { AuthApi } from './api/AuthApi';
 import { TimesheetApi } from './api/TimesheetApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
+
+// Zelfde databasetoegang als database-integrity.spec.ts: puur om een telling te
+// bevestigen die geen enkele API-respons blootlegt (aantal mailwachtrij-rijen
+// per kanaal), nooit om schrijvend in te grijpen.
+function dbConfig() {
+  const database = String(
+    process.env.PATH_APP_DB_NAME || process.env.PLAYWRIGHT_DB_NAME || process.env.DB_NAME || '',
+  ).trim();
+  return {
+    host: process.env.PATH_APP_DB_HOST || process.env.PLAYWRIGHT_DB_HOST || process.env.DB_HOST || '127.0.0.1',
+    port: Number(process.env.PATH_APP_DB_PORT || process.env.PLAYWRIGHT_DB_PORT || process.env.DB_PORT || 3306),
+    user: process.env.PATH_APP_DB_USER || process.env.PLAYWRIGHT_DB_USER || process.env.DB_USER || 'root',
+    password: process.env.PATH_APP_DB_PASSWORD || process.env.PLAYWRIGHT_DB_PASSWORD || process.env.DB_PASSWORD || 'root',
+    database,
+  };
+}
+
+// Geschud op dezelfde (timesheet_id, timesheet_version)-sleutel als de echte
+// idempotency-check in mail_enqueue_timesheet_final_approval zelf: een urenstaat
+// die eerder is goedgekeurd, heropend en opnieuw ingediend deelt zijn
+// timesheet_id met die eerdere goedkeuring (zelfde rij, hoger versienummer), dus
+// een telling zonder de versie erbij zou een legitieme tweede, latere
+// goedkeuringsmail ten onrechte als duplicaat lezen.
+async function finalApprovalMailCount(timesheetId: number, timesheetVersion: number): Promise<number> {
+  const conn = await mysql.createConnection(dbConfig());
+  try {
+    const [rows] = await conn.query(
+      "SELECT COUNT(*) AS aantal FROM email_deliveries WHERE timesheet_id = ? AND timesheet_version = ? AND channel = 'timesheet_final_approval'",
+      [timesheetId, timesheetVersion]
+    );
+    return Number((rows as Array<{ aantal: number }>)[0]?.aantal ?? 0);
+  } finally {
+    await conn.end();
+  }
+}
 
 const CANDIDATE_PERIODS = Array.from({ length: 240 }, (_, index) => {
   const year = 2110 + Math.floor(index / 12);
@@ -273,6 +309,8 @@ test.describe('timesheet review flow api', () => {
       expect(adminLogin.user.role).toBe('administrator');
     });
 
+    let reviewTimesheetId = 0;
+
     await test.step('Then een verouderde approve-aanvraag wordt geblokkeerd met stale-version', async () => {
       const staleApprove = await timesheetApi.approve({
         period,
@@ -282,6 +320,25 @@ test.describe('timesheet review flow api', () => {
       expect(staleApprove.status).toBe(409);
       expect(staleApprove.body.ok).toBe(false);
       expect(staleApprove.body.error).toBe('stale-version');
+    });
+
+    await test.step('And heeft de geweigerde poging geen goedkeuringsmail in de wachtrij gezet', async () => {
+      // Sluit de open GIO-WENSEN-vraag af: mail_enqueue_timesheet_final_approval
+      // is een SELECT-dan-INSERT zonder eigen databaseslot, dus in theorie een
+      // race als hij ooit buiten de versievergrendeling om bereikbaar zou zijn.
+      // Er is precies één aanroeper in de hele server (timesheets.php, na de
+      // versiegeslote UPDATE) -- deze stap bewijst dat de geweigerde, verouderde
+      // poging hierboven de mailfunctie nooit bereikte: nul rijen in de
+      // wachtrij voor dit kanaal, ook al gaf de server al 409 terug.
+      // Geteld op de versie die de echte goedkeuring hieronder zal opleveren
+      // (huidige versie + 1, want de UPDATE zet version = version + 1): een
+      // eerdere, andere goedkeuringscyclus van dezelfde urenstaat (heropend en
+      // opnieuw ingediend) deelt de timesheet_id maar niet dit versienummer, en
+      // moet dus niet als vals-positief meetellen.
+      const readAfterStale = await timesheetApi.read(period, employeeId);
+      reviewTimesheetId = Number(readAfterStale.body.timesheet.id || 0);
+      expect(reviewTimesheetId).toBeGreaterThan(0);
+      expect(await finalApprovalMailCount(reviewTimesheetId, resubmittedVersion + 1)).toBe(0);
     });
 
     await test.step('When de administrator met juiste versie goedkeurt', async () => {
@@ -298,6 +355,10 @@ test.describe('timesheet review flow api', () => {
       expect(Number(approved.body.timesheet.version)).toBeGreaterThan(resubmittedVersion);
       expect(approved.body.audit_event).toBe('timesheet.approved');
       approvedVersion = Number(approved.body.timesheet.version);
+    });
+
+    await test.step('And staat er nu precies één goedkeuringsmail in de wachtrij voor déze goedkeuringsversie', async () => {
+      expect(await finalApprovalMailCount(reviewTimesheetId, approvedVersion)).toBe(1);
     });
 
     await test.step('Then read-back toont approved status met volledige audit- en correctiehistorie', async () => {
@@ -418,6 +479,22 @@ test.describe('timesheet review flow api', () => {
 
         const winner = resA.status === 200 ? resA : resB;
         expect(winner.body.timesheet.status).toBe('approved');
+
+        // Sluit de open GIO-WENSEN-vraag af onder échte gelijktijdigheid (niet
+        // alleen na elkaar zoals TS-REV-API-H-005): mail_enqueue_timesheet_final_approval
+        // is zelf een SELECT-dan-INSERT zonder eigen databaseslot, maar de enige
+        // aanroeper in de server ligt achter de versiegesloten UPDATE hierboven.
+        // Twee tegelijk verstuurde verzoeken met dezelfde expected_version mogen
+        // dus nooit allebei een goedkeuringsmail voor deze exacte, net ontstane
+        // versie in de wachtrij zetten. Geteld op (timesheet_id, versie) samen,
+        // niet op timesheet_id alleen: de eerste gekozen periode in een lokale
+        // volledige suite kan al een eerdere, legitieme goedkeuringscyclus van
+        // een vorige case hebben gehad, met een eigen, andere versie.
+        const timesheetId = Number(winner.body.timesheet.id || 0);
+        const winnerVersion = Number(winner.body.timesheet.version || 0);
+        expect(timesheetId).toBeGreaterThan(0);
+        expect(winnerVersion).toBeGreaterThan(0);
+        expect(await finalApprovalMailCount(timesheetId, winnerVersion)).toBe(1);
       } finally {
         await ctxA.dispose();
         await ctxB.dispose();

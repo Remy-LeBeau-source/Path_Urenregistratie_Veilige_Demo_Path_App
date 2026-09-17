@@ -1,6 +1,6 @@
 {
   "appVersion": "2.0.151",
-  "generatedAt": "2026-09-17T11:44:16.056Z",
+  "generatedAt": "2026-09-17T12:01:14.464Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
@@ -84,6 +84,56 @@
           "assertions": 10,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: een medewerker ziet nooit welke beheerder een mededeling stuurde\n  Given de administrator (Gio Maatsen) een mededeling stuurt aan een andere testmedewerker (Brian)\n  When de flow voor ANN-N-011 wordt uitgevoerd\n  Then ziet de administrator zelf zijn eigen echte naam als afzender"
+        }
+      ]
+    },
+    {
+      "date": "17 sep",
+      "version": "2.0.150",
+      "wish": "Eigen openstaande vraag afgesloten (was: \"niet bevestigd, geen discriminerend bewijs\"): de idempotency-check op mail_enqueue_timesheet_final_approval is inderdaad een SELECT-dan-INSERT zonder eigen databaseslot. Uitgezocht welk aanroeppad dit bereikt: er is in de hele server precies één aanroeper (de approve-actie in timesheets.php), en die ligt volledig achter de optimistisch-versiegesloten UPDATE (WHERE id=... AND version=...) op de urenstaat zelf -- een verouderde of verliezende poging krijgt daar al 409 en stopt (auth_send_json roept exit aan) voordat de mailfunctie ooit wordt bereikt. Geen ander aanroeppad gevonden, dus geen UNIQUE-constraint toegevoegd op een vermoeden (eigen regel blijft staan). Twee valse alarmen onderweg, allebei in de tegenproef zelf en niet in de productiecode: (1) een weesserverproces van eerder in de sessie dat nog op poort 8000 luisterde en een vervuilde database deelde met een nieuwe testrun; (2) de telling was aanvankelijk op timesheet_id alleen, terwijl een urenstaat die al eerder is goedgekeurd, heropend en opnieuw ingediend dezelfde timesheet_id maar een ander versienummer heeft -- twee legitieme, verschillende goedkeuringsmails voor twee verschillende versies werden zo ten onrechte als duplicaat gelezen. Rechtgezet door te tellen op (timesheet_id, timesheet_version) samen, exact de sleutel die de echte functie zelf ook gebruikt. TS-REV-API-H-005 uitgebreid met een expliciete telling (0 na de geweigerde verouderde poging, 1 na de echte goedkeuring, beide op de juiste versie) en TS-REV-API-H-006 (twee bewust gelijktijdige verzoeken) met dezelfde telling na de winnaar -- dit is nu de permanente regressiedekking voor deze vraag, niet alleen een eenmalige conclusie.",
+      "cases": [
+        {
+          "id": "TS-REV-API-H-005",
+          "title": "admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking",
+          "feature": "tests/playwright/features/correction-approval-workflow.feature",
+          "technique": "Concurrency + toestandsovergang",
+          "assertions": 80,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking\n  Given de medewerker is ingelogd en heeft een schrijfbare testperiode\n  When de medewerker een concept opslaat en daarna indient\n  And de reviewcontext wisselt naar administrator\n  Then een verouderde correctie-aanvraag wordt geblokkeerd met stale-version\n  Then een correctie-aanvraag zonder toelichting wordt door de server geweigerd (sectie 20: UI-verbergen is geen autorisatie)\n  When de administrator een geldige correctie-aanvraag uitvoert\n  Then een tweede correctie op dezelfde versie wordt geweigerd\n  And de context wisselt terug naar medewerker voor herindiening\n  Then een medewerker mag geen admin-reviewactie uitvoeren\n  When de medewerker na correctie opnieuw indient\n  And de context wisselt opnieuw naar administrator voor goedkeuring\n  Then een verouderde approve-aanvraag wordt geblokkeerd met stale-version\n  And heeft de geweigerde poging geen goedkeuringsmail in de wachtrij gezet\n  When de administrator met juiste versie goedkeurt\n  And staat er nu precies één goedkeuringsmail in de wachtrij voor déze goedkeuringsversie\n  Then read-back toont approved status met volledige audit- en correctiehistorie\n  And een goedkeuring zonder factuur server-side kan worden heropend voor correctie\n  Then krijgt de medewerker ook bij een heropening ná goedkeuring een nieuwe, ongelezen melding\n  And cleanup: sessie sluiten voor testisolatie"
+        },
+        {
+          "id": "TS-REV-API-H-006",
+          "title": "gelijktijdige approve-requests door twee beheerders leveren exact één winnaar",
+          "feature": "tests/playwright/features/correction-approval-workflow.feature",
+          "technique": "Concurrency + toestandsovergang",
+          "assertions": 10,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: gelijktijdige approve-requests door twee beheerders leveren exact één winnaar\n  Given een medewerker een urenstaat heeft ingediend in een schrijfbare testperiode\n  When twee beheerders tegelijk dezelfde urenstaat proberen goed te keuren\n  Then wordt met Playwright-assertions bevestigd dat gelijktijdige approve-requests door twee beheerders leveren exact één winnaar"
+        }
+      ]
+    },
+    {
+      "date": "17 sep",
+      "version": "2.0.149",
+      "wish": "Dekkingsronde (Teambeheer): de losse deactiveerknop in Teambeheer (server/api/users.php) heeft twee grendels -- niet jezelf, niet de laatste actieve beheerder. Het \"Beheerder opslaan\"-formulier stuurt dezelfde active-vlag naar een ander endpoint (server/api/staff.php, upsert_admin) en liep tot nu buiten beide grendels om. Live bewezen tegen een geïsoleerd wegwerpbedrijf (los aangemaakte company + één beheerder, buiten de gedeelde seed om): de enige beheerder kon zichzelf via dit formulier op inactief zetten en zo het hele bedrijf permanent op slot zetten, zonder dat er nog iemand kon inloggen om het terug te draaien. Nu dezelfde twee checks (eigen account, laatste actieve beheerder) ook in upsert_admin. ADM-WR-N-010 nieuw, tegenproef gedaan: rood (HTTP 200, account daadwerkelijk gedeactiveerd) vóór de fix, groen (HTTP 409 cannot-modify-self) erna. Bijvangst bij het bouwen van de fix zelf gevonden (geen apart gemeld gat, wel meteen gecorrigeerd): het formulier stuurt de huidige active-vlag altijd mee, dus een kale naamwijziging op een reeds inactieve beheerder herstuurt ook active=false -- de laatste-beheerder-telling zou die onschuldige opslag ten onrechte blokkeren zodra er nog maar één andere actieve beheerder over is. Uitzondering toegevoegd (telt alleen bij een echte overgang van actief naar inactief), ADM-WR-N-011 nieuw, tegenproef gedaan: rood (HTTP 409) zonder de uitzondering, groen (HTTP 200) ermee.",
+      "cases": [
+        {
+          "id": "ADM-WR-N-010",
+          "title": "de enige actieve beheerder van een bedrijf kan zichzelf niet deactiveren via het beheerdersformulier",
+          "feature": "tests/playwright/features/organization-settings.feature",
+          "technique": "Toestandsovergang",
+          "assertions": 3,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de enige actieve beheerder van een bedrijf kan zichzelf niet deactiveren via het beheerdersformulier\n  Given organisatie-instellingen beheren is voorbereid\n  When de enige beheerder zichzelf via upsert_admin op inactief zet, then weigert de server dat\n  And staat de beheerder in de database nog steeds actief\n  Then wordt met Playwright-assertions bevestigd dat de enige actieve beheerder van een bedrijf kan zichzelf niet deactiveren via het beheerdersformulier"
+        },
+        {
+          "id": "ADM-WR-N-011",
+          "title": "een naam wijzigen op een al inactieve beheerder mag ook als er nog maar één andere actieve beheerder is",
+          "feature": "tests/playwright/features/organization-settings.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 5,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een naam wijzigen op een al inactieve beheerder mag ook als er nog maar één andere actieve beheerder is\n  Given organisatie-instellingen beheren is voorbereid\n  When de enige actieve beheerder alleen de naam van de al inactieve beheerder wijzigt, then slaagt dat gewoon\n  And staat de naam bijgewerkt en blijft de beheerder inactief\n  And blijft de andere beheerder gewoon actief\n  Then wordt met Playwright-assertions bevestigd dat een naam wijzigen op een al inactieve beheerder mag ook als er nog maar één andere actieve beheerder is"
         }
       ]
     },
@@ -229,9 +279,9 @@
           "title": "admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking",
           "feature": "tests/playwright/features/correction-approval-workflow.feature",
           "technique": "Concurrency + toestandsovergang",
-          "assertions": 77,
+          "assertions": 80,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking\n  Given de medewerker is ingelogd en heeft een schrijfbare testperiode\n  When de medewerker een concept opslaat en daarna indient\n  And de reviewcontext wisselt naar administrator\n  Then een verouderde correctie-aanvraag wordt geblokkeerd met stale-version\n  Then een correctie-aanvraag zonder toelichting wordt door de server geweigerd (sectie 20: UI-verbergen is geen autorisatie)\n  When de administrator een geldige correctie-aanvraag uitvoert\n  Then een tweede correctie op dezelfde versie wordt geweigerd\n  And de context wisselt terug naar medewerker voor herindiening\n  Then een medewerker mag geen admin-reviewactie uitvoeren\n  When de medewerker na correctie opnieuw indient\n  And de context wisselt opnieuw naar administrator voor goedkeuring\n  Then een verouderde approve-aanvraag wordt geblokkeerd met stale-version\n  When de administrator met juiste versie goedkeurt\n  Then read-back toont approved status met volledige audit- en correctiehistorie\n  And een goedkeuring zonder factuur server-side kan worden heropend voor correctie\n  Then krijgt de medewerker ook bij een heropening ná goedkeuring een nieuwe, ongelezen melding\n  And cleanup: sessie sluiten voor testisolatie"
+          "gherkin": "Scenario: admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking\n  Given de medewerker is ingelogd en heeft een schrijfbare testperiode\n  When de medewerker een concept opslaat en daarna indient\n  And de reviewcontext wisselt naar administrator\n  Then een verouderde correctie-aanvraag wordt geblokkeerd met stale-version\n  Then een correctie-aanvraag zonder toelichting wordt door de server geweigerd (sectie 20: UI-verbergen is geen autorisatie)\n  When de administrator een geldige correctie-aanvraag uitvoert\n  Then een tweede correctie op dezelfde versie wordt geweigerd\n  And de context wisselt terug naar medewerker voor herindiening\n  Then een medewerker mag geen admin-reviewactie uitvoeren\n  When de medewerker na correctie opnieuw indient\n  And de context wisselt opnieuw naar administrator voor goedkeuring\n  Then een verouderde approve-aanvraag wordt geblokkeerd met stale-version\n  And heeft de geweigerde poging geen goedkeuringsmail in de wachtrij gezet\n  When de administrator met juiste versie goedkeurt\n  And staat er nu precies één goedkeuringsmail in de wachtrij voor déze goedkeuringsversie\n  Then read-back toont approved status met volledige audit- en correctiehistorie\n  And een goedkeuring zonder factuur server-side kan worden heropend voor correctie\n  Then krijgt de medewerker ook bij een heropening ná goedkeuring een nieuwe, ongelezen melding\n  And cleanup: sessie sluiten voor testisolatie"
         },
         {
           "id": "NOT-H-016",
@@ -468,7 +518,7 @@
           "technique": "Equivalentieklasse op de vorm van de payload (dubbele datum) + consistentiecontrole tussen maandtotaal en dagregels",
           "assertions": 9,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: dezelfde dag twee keer in één opslag wordt geweigerd en laat de maand ongemoeid\n  Given de medewerker is ingelogd met een eigen maand\n  When hij dezelfde dag twee keer meestuurt, then weigert de server dat met uitleg\n  And blijft het maandtotaal gelijk aan de som van de dagen\n  And wordt dezelfde maand met enkele dagregels wél gewoon bewaard\n  Then wordt met Playwright-assertions bevestigd dat dezelfde dag twee keer in één opslag wordt geweigerd en laat de maand ongemoeid"
+          "gherkin": ""
         }
       ]
     },

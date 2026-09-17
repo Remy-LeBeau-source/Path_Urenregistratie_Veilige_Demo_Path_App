@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 614 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 616 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 614 unieke case-ID's
+- Playwright executable cases: 616 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 615 unieke case-ID's
+- Totaal executable cases: 617 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 669
-- Niet-mobile projectuitvoeringen: 559
+- Uitvoeringen: 671
+- Niet-mobile projectuitvoeringen: 561
 - Mobile functionele cases: 55
 - Pixel 7 / Chromium-uitvoeringen: 55
 - iPhone 13 / WebKit-uitvoeringen: 55
 
-De 55 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 614 Playwright-functionele cases in totaal 669 resultaten op: 559 + (55 x 2) = 669.
+De 55 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 616 Playwright-functionele cases in totaal 671 resultaten op: 561 + (55 x 2) = 671.
 
 ## Documentatieketen
 
@@ -47,7 +47,7 @@ De 55 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 614 Playwri
 
 - Feature: `tests/playwright/features/organization-settings.feature`
 - Source: `tests/playwright/admin-writes.spec.ts`
-- Cases: 31
+- Cases: 33
 
 - [ADM-WR-H-019] latere startdatum vraagt bevestiging en vermeldt dat historie bewaard blijft — Techniek: API-contract + equivalentieklasse · Assertions: 9
 - [ADM-WR-H-020] server berekent echte historische impact vóór een latere startdatum wordt opgeslagen — Techniek: API-contract + equivalentieklasse · Assertions: 12
@@ -69,6 +69,8 @@ De 55 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 614 Playwri
 - [ADM-WR-H-010] server-led aangemaakte beheerder en medewerker overleven een echte paginaherlading — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
 - [ADM-WR-H-011] een echte paginaherlading blijft op het geopende scherm i.p.v. terug te springen naar Dashboard — Techniek: API-contract + equivalentieklasse · Assertions: 5
 - [ADM-WR-N-009] een onmogelijk uurtarief wordt geweigerd en het oude tarief blijft staan — Techniek: Grenswaardenanalyse op het uurtarief (op de grens, erboven, typefout) + persistentiecontrole · Assertions: 8
+- [ADM-WR-N-010] de enige actieve beheerder van een bedrijf kan zichzelf niet deactiveren via het beheerdersformulier — Techniek: Toestandsovergang · Assertions: 3
+- [ADM-WR-N-011] een naam wijzigen op een al inactieve beheerder mag ook als er nog maar één andere actieve beheerder is — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
 - [ADM-WR-N-008] lengtegrenzen tellen tekens, niet bytes: een naam vol accenten mag tot de volle lengte — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [ADM-WR-N-005] een al bestaande naam blokkeert of waarschuwt niet: alleen het e-mailadres moet uniek zijn — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
 - [ADM-WR-N-006] dubbele naam is toegestaan, maar een al gebruikt e-mailadres wordt hard geblokkeerd — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
@@ -133,7 +135,7 @@ De 55 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 614 Playwri
 - [AUTH-N-007] vijf mislukte logins tonen een servergestuurde aftelling — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 - [AUTH-N-008] de inlogblokkade en aftelling blijven zichtbaar na herladen — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [AUTH-N-009] geen loginflits: login-scherm en app-shell blijven verborgen tijdens auth-bootstrap na F5 — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 9
-- [AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 19
+- [AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 20
 - [AUTH-H-020] elke medewerker ziet na inloggen de eigen naam, nooit die van een collega — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [AUTH-H-021] elke beheerder ziet na inloggen de eigen naam, nooit die van een collega — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [AUTH-H-024] avatar-initialen slaan Nederlandse tussenvoegsels over — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 4
@@ -766,8 +768,8 @@ De 55 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 614 Playwri
 - Source: `tests/playwright/timesheet-review-flow.spec.ts`
 - Cases: 5
 
-- [TS-REV-API-H-005] admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking — Techniek: Concurrency + toestandsovergang · Assertions: 77
-- [TS-REV-API-H-006] gelijktijdige approve-requests door twee beheerders leveren exact één winnaar — Techniek: Concurrency + toestandsovergang · Assertions: 7
+- [TS-REV-API-H-005] admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking — Techniek: Concurrency + toestandsovergang · Assertions: 80
+- [TS-REV-API-H-006] gelijktijdige approve-requests door twee beheerders leveren exact één winnaar — Techniek: Concurrency + toestandsovergang · Assertions: 10
 - [TS-REV-API-H-007] jaarwisseling december naar januari verwerkt urenstaten correct over de jaargrens — Techniek: API-contract + equivalentieklasse · Assertions: 7
 - [TS-REV-API-N-002] elke verboden statusovergang wordt geweigerd en laat de urenstaat ongemoeid — Techniek: Toestandsovergang · Assertions: 19
 - [TS-REV-API-N-001] server weigert een dagregel op zaterdag of zondag, ook als de aanroep de client omzeilt — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
