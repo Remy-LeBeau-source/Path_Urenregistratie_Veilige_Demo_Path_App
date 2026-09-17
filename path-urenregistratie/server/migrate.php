@@ -212,6 +212,13 @@ function migration_plan(bool $allowDemoMigrations): array
         'id' => '038_demo_employee_day_hours_pattern.sql',
         'path' => __DIR__ . '/migrations/038_demo_employee_day_hours_pattern.sql',
     ];
+    $plan[] = [
+        // Bewust buiten de demo-naamgeving: dit zijn de echte, blijvende
+        // werkpatronen van deze medewerkers en horen ook op production de
+        // standaard te zijn zodra zij daar een account hebben.
+        'id' => '039_employee_day_hours_pattern_update.sql',
+        'path' => __DIR__ . '/migrations/039_employee_day_hours_pattern_update.sql',
+    ];
     return $plan;
 }
 

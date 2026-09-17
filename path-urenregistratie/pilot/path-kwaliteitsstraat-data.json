@@ -1,8 +1,14 @@
 {
-  "appVersion": "2.0.152",
-  "generatedAt": "2026-09-17T12:41:48.832Z",
+  "appVersion": "2.0.153",
+  "generatedAt": "2026-09-17T13:49:25.567Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "17 sep",
+      "version": "2.0.153",
+      "wish": "Marc de Roon gaf zelf door (Path Testteam-chat) dat hij ma/di/wo/do 8 uur werkt en vrijdag 4 uur; hij kon in de urenstaat alleen kiezen uit 0, 8 en 9, en vroeg wat handig was. Het invoerveld accepteerde altijd al elk getal (ook 4), maar zijn eigen werkpatroon stond nog niet ingesteld, dus \"Standaardweek vullen\" gaf hem nog de generieke 0/8/9-snelkeuzes in plaats van zijn eigen uren. Nieuwe migratie (039, bewust geen \"_demo_\" in de naam) zet zijn eigen patroon vast, plus een correctie voor Stasjo van Bakel, Brian Hek en Shawn-Douglas Nahar (allen ma/di/wo/do 9 uur, vrijdag vrij -- voor Shawn stond dit in een eerdere migratie nog op maandag vrij, nu gecorrigeerd). Geldt ook voor productie zodra deze mensen daar een account hebben. Onderweg een fout in de migratie zelf gevonden en gefixt (een leesteken in een commentaarregel brak de manier waarop dit systeem SQL-bestanden inleest) en de echte database-waarden na afloop gecontroleerd. Volledige smoke-test groen.",
+      "cases": []
+    },
     {
       "date": "17 sep",
       "version": "2.0.151",
