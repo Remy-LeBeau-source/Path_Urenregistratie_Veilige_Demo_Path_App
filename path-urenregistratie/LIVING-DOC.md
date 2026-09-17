@@ -766,8 +766,8 @@ De 54 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 614 Playwri
 - Source: `tests/playwright/timesheet-review-flow.spec.ts`
 - Cases: 5
 
-- [TS-REV-API-H-005] admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking — Techniek: Concurrency + toestandsovergang · Assertions: 77
-- [TS-REV-API-H-006] gelijktijdige approve-requests door twee beheerders leveren exact één winnaar — Techniek: Concurrency + toestandsovergang · Assertions: 7
+- [TS-REV-API-H-005] admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking — Techniek: Concurrency + toestandsovergang · Assertions: 80
+- [TS-REV-API-H-006] gelijktijdige approve-requests door twee beheerders leveren exact één winnaar — Techniek: Concurrency + toestandsovergang · Assertions: 10
 - [TS-REV-API-H-007] jaarwisseling december naar januari verwerkt urenstaten correct over de jaargrens — Techniek: API-contract + equivalentieklasse · Assertions: 7
 - [TS-REV-API-N-002] elke verboden statusovergang wordt geweigerd en laat de urenstaat ongemoeid — Techniek: Toestandsovergang · Assertions: 19
 - [TS-REV-API-N-001] server weigert een dagregel op zaterdag of zondag, ook als de aanroep de client omzeilt — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6

@@ -9,7 +9,7 @@ Feature: Correctie- en goedkeuringsproces
   @happy
   Scenario: [TS-REV-API-H-005] admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking
     # Testtechniek: Concurrency + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 77
+    # Aantoonbare Playwright-assertions in deze case: 80
     Given de medewerker is ingelogd en heeft een schrijfbare testperiode
     When de medewerker een concept opslaat en daarna indient
     And de reviewcontext wisselt naar administrator
@@ -22,7 +22,9 @@ Feature: Correctie- en goedkeuringsproces
     When de medewerker na correctie opnieuw indient
     And de context wisselt opnieuw naar administrator voor goedkeuring
     Then een verouderde approve-aanvraag wordt geblokkeerd met stale-version
+    And heeft de geweigerde poging geen goedkeuringsmail in de wachtrij gezet
     When de administrator met juiste versie goedkeurt
+    And staat er nu precies één goedkeuringsmail in de wachtrij voor déze goedkeuringsversie
     Then read-back toont approved status met volledige audit- en correctiehistorie
     And een goedkeuring zonder factuur server-side kan worden heropend voor correctie
     Then krijgt de medewerker ook bij een heropening ná goedkeuring een nieuwe, ongelezen melding
@@ -31,7 +33,7 @@ Feature: Correctie- en goedkeuringsproces
   @happy
   Scenario: [TS-REV-API-H-006] gelijktijdige approve-requests door twee beheerders leveren exact één winnaar
     # Testtechniek: Concurrency + toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 7
+    # Aantoonbare Playwright-assertions in deze case: 10
     Given een medewerker een urenstaat heeft ingediend in een schrijfbare testperiode
     When twee beheerders tegelijk dezelfde urenstaat proberen goed te keuren
     Then wordt met Playwright-assertions bevestigd dat gelijktijdige approve-requests door twee beheerders leveren exact één winnaar
