@@ -1,8 +1,33 @@
 {
-  "appVersion": "2.0.147",
-  "generatedAt": "2026-09-17T01:58:09.639Z",
+  "appVersion": "2.0.148",
+  "generatedAt": "2026-09-17T02:43:16.173Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "17 sep",
+      "version": "2.0.148",
+      "wish": "Eigen fout, direct gevonden door CI: SEC-H-013 (hierboven) joeg per ongeluk shawn@example.invalid tot zes mislukte pogingen -- ruim over de eigen inlogdrempel van vijf -- waardoor het account voor de rest van het CI-venster echt geblokkeerd bleef. AUTH-H-020 gebruikt datzelfde geseede account verderop in dezelfde shard voor een echte login en faalde daardoor. Niet lokaal gezien (los gedraaid, geen botsing), wel meteen rood in CI. Hersteld: de nieuwe case blijft nu op vier mislukkingen (ruim onder de drempel van vijf) en bewijst de dedup-bescherming daarmee net zo goed. security.spec.ts + auth.spec.ts samen gedraaid om de botsing na te bootsen -- 72/72 groen.",
+      "cases": [
+        {
+          "id": "SEC-H-013",
+          "title": "het drempel-audit-event verschijnt precies bij drie mislukkingen, één keer, met de juiste inhoud",
+          "feature": "tests/playwright/features/security.feature",
+          "technique": "Grenswaardenanalyse op de drempel (twee mag nog niet, drie wel) + idempotentiecontrole (geen tweede event binnen hetzelfde venster) + inhoudscontrole van het event_data-veld",
+          "assertions": 14,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: het drempel-audit-event verschijnt precies bij drie mislukkingen, één keer, met de juiste inhoud\n  Given een geseed medewerkersaccount dat nergens anders mislukte pogingen krijgt\n  When er twee keer mislukt wordt ingelogd (net onder de drempel)\n  Then bestaat er nog geen drempel-event (de grens ligt bij drie, niet twee)\n  When een derde mislukte poging de drempel haalt\n  Then verschijnt precies één event, met het juiste account en de juiste inhoud\n  When nog een mislukte poging volgt binnen hetzelfde venster (blijft ruim onder de eigen inlogdrempel van vijf, zie AUTH-N-008/PWD-N-018 -- dit account wordt hierna door andere cases nog echt gebruikt om in te loggen)\n  Then blijft het nog steeds precies één event: de dedup-guard voorkomt een tweede"
+        },
+        {
+          "id": "AUTH-H-020",
+          "title": "elke medewerker ziet na inloggen de eigen naam, nooit die van een collega",
+          "feature": "tests/playwright/features/auth.feature",
+          "technique": "Beslissingstabel rollen en autorisatie",
+          "assertions": 1,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: elke medewerker ziet na inloggen de eigen naam, nooit die van een collega\n  Given inloggen, uitloggen en sessiebeheer is voorbereid\n  When de flow voor AUTH-H-020 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat elke medewerker ziet na inloggen de eigen naam, nooit die van een collega"
+        }
+      ]
+    },
     {
       "date": "17 sep",
       "version": "2.0.147",
@@ -22,9 +47,9 @@
           "title": "het drempel-audit-event verschijnt precies bij drie mislukkingen, één keer, met de juiste inhoud",
           "feature": "tests/playwright/features/security.feature",
           "technique": "Grenswaardenanalyse op de drempel (twee mag nog niet, drie wel) + idempotentiecontrole (geen tweede event binnen hetzelfde venster) + inhoudscontrole van het event_data-veld",
-          "assertions": 16,
+          "assertions": 14,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: het drempel-audit-event verschijnt precies bij drie mislukkingen, één keer, met de juiste inhoud\n  Given een geseed medewerkersaccount dat nergens anders mislukte pogingen krijgt\n  When er twee keer mislukt wordt ingelogd (net onder de drempel)\n  Then bestaat er nog geen drempel-event (de grens ligt bij drie, niet twee)\n  When een derde mislukte poging de drempel haalt\n  Then verschijnt precies één event, met het juiste account en de juiste inhoud\n  When nog drie mislukte pogingen volgen binnen hetzelfde venster (de zesde triggert de eigen rate-limit, zie AUTH-N-008/PWD-N-018: vijf mag, zes niet)\n  Then blijft het nog steeds precies één event: de dedup-guard voorkomt een tweede"
+          "gherkin": "Scenario: het drempel-audit-event verschijnt precies bij drie mislukkingen, één keer, met de juiste inhoud\n  Given een geseed medewerkersaccount dat nergens anders mislukte pogingen krijgt\n  When er twee keer mislukt wordt ingelogd (net onder de drempel)\n  Then bestaat er nog geen drempel-event (de grens ligt bij drie, niet twee)\n  When een derde mislukte poging de drempel haalt\n  Then verschijnt precies één event, met het juiste account en de juiste inhoud\n  When nog een mislukte poging volgt binnen hetzelfde venster (blijft ruim onder de eigen inlogdrempel van vijf, zie AUTH-N-008/PWD-N-018 -- dit account wordt hierna door andere cases nog echt gebruikt om in te loggen)\n  Then blijft het nog steeds precies één event: de dedup-guard voorkomt een tweede"
         }
       ]
     },
@@ -172,22 +197,6 @@
       "version": "2.0.140",
       "wish": "Besluit Gio: elke versie krijgt voortaan zonder uitzondering een regel in \"Nieuw in de app\", ook een versie die alleen Backoffice, de kwaliteitsstraat-demo of de testset raakt. De acht ontbrekende versies (2.0.130 t/m 2.0.138) zijn met terugwerkende kracht aangevuld, terug naar twintig regels. PIPELINE-INTAKE.md bijgewerkt.",
       "cases": []
-    },
-    {
-      "date": "16 sep",
-      "version": "2.0.141",
-      "wish": "Dekkingsronde (vervolg op de kritische controleronde): sessie/CSRF, uploadvalidatie klanturenstaten en de urenstaat-toestandsmachine (indienen/corrigeren/goedkeuren/vergrendelen) doorgelicht -- alle drie al degelijk gebouwd, geen gat gevonden. Wel één klein gat via decision-table-analyse in announcements.php: een bericht met zowel `correction_of_id` als `withdrawal_of_id` werd zonder klagen aangenomen (kind werd 'withdrawal', maar `correction_of_id` bleef ook staan en de ontvangerslijst kwam van de correctie-tak, een innerlijk tegenstrijdige rij). Niet bereikbaar via de app zelf (geverifieerd: assets/app.js stuurt bij versturen nooit `withdrawal_of_id` mee, alleen `correction_of_id`), dus verdediging op API-niveau, geen gebruikersgevaar. ANN-N-010 nieuw, tegenproef gedaan (rood zonder de validatie).",
-      "cases": [
-        {
-          "id": "ANN-N-010",
-          "title": "een bericht kan niet tegelijk correctie en intrekking van iets anders zijn",
-          "feature": "tests/playwright/features/announcements.feature",
-          "technique": "Decision-table-analyse (combinatie van twee onderling uitsluitende referentievelden) + negatieve equivalentieklasse",
-          "assertions": 4,
-          "platform": "desktop-chromium",
-          "gherkin": "Scenario: een bericht kan niet tegelijk correctie en intrekking van iets anders zijn\n  Given mededelingen versturen, intrekken en verbergen is voorbereid\n  When de flow voor ANN-N-010 wordt uitgevoerd\n  Then weigert de server een bericht met beide referenties tegelijk"
-        }
-      ]
     }
   ],
   "open": [

@@ -52,7 +52,7 @@ When("er twee keer mislukt wordt ingelogd (net onder de drempel)");
 Then("bestaat er nog geen drempel-event (de grens ligt bij drie, niet twee)");
 When("een derde mislukte poging de drempel haalt");
 Then("verschijnt precies één event, met het juiste account en de juiste inhoud");
-When("nog drie mislukte pogingen volgen binnen hetzelfde venster (de zesde triggert de eigen rate-limit, zie AUTH-N-008/PWD-N-018: vijf mag, zes niet)");
+When("nog een mislukte poging volgt binnen hetzelfde venster (blijft ruim onder de eigen inlogdrempel van vijf, zie AUTH-N-008/PWD-N-018 -- dit account wordt hierna door andere cases nog echt gebruikt om in te loggen)");
 Then("blijft het nog steeds precies één event: de dedup-guard voorkomt een tweede");
 When("de flow voor SEC-H-007 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat config voorbeeld bevat voorbereide CSP/CORS/HSTS flags");

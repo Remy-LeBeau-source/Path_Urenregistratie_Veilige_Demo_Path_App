@@ -113,13 +113,13 @@ Feature: Authenticatie- en API-beveiliging
   @happy
   Scenario: [SEC-H-013] het drempel-audit-event verschijnt precies bij drie mislukkingen, één keer, met de juiste inhoud
     # Testtechniek: Grenswaardenanalyse op de drempel (twee mag nog niet, drie wel) + idempotentiecontrole (geen tweede event binnen hetzelfde venster) + inhoudscontrole van het event_data-veld
-    # Aantoonbare Playwright-assertions in deze case: 16
+    # Aantoonbare Playwright-assertions in deze case: 14
     Given een geseed medewerkersaccount dat nergens anders mislukte pogingen krijgt
     When er twee keer mislukt wordt ingelogd (net onder de drempel)
     Then bestaat er nog geen drempel-event (de grens ligt bij drie, niet twee)
     When een derde mislukte poging de drempel haalt
     Then verschijnt precies één event, met het juiste account en de juiste inhoud
-    When nog drie mislukte pogingen volgen binnen hetzelfde venster (de zesde triggert de eigen rate-limit, zie AUTH-N-008/PWD-N-018: vijf mag, zes niet)
+    When nog een mislukte poging volgt binnen hetzelfde venster (blijft ruim onder de eigen inlogdrempel van vijf, zie AUTH-N-008/PWD-N-018 -- dit account wordt hierna door andere cases nog echt gebruikt om in te loggen)
     Then blijft het nog steeds precies één event: de dedup-guard voorkomt een tweede
 
   @happy

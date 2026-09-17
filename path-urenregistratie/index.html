@@ -19,13 +19,13 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" href="assets/styles.css?v=2.0.147">
+  <link rel="stylesheet" href="assets/styles.css?v=2.0.148">
   <!-- Met versieparameter, net als styles.css hierboven. Zonder die parameter
        houdt de browser (en een geïnstalleerde app helemaal) de oude New-skin
        vast na een release: de versiebadge springt vooruit en Klassiek
        vernieuwt, terwijl de hele Nieuw-vormgeving op de vorige versie blijft
        staan. Gemeld als "ik zie geen verschil in de nieuwe versie". -->
-  <link rel="stylesheet" href="assets/styles-new.css?v=2.0.147">
+  <link rel="stylesheet" href="assets/styles-new.css?v=2.0.148">
 </head>
 <body class="auth-booting">
   <section class="login-screen" id="login-screen" aria-labelledby="login-title">
@@ -103,7 +103,7 @@
       </form>
       <p class="login-note" id="auth-mode-indicator">Controle van auth-sessie wordt uitgevoerd.</p>
       <p class="login-note" id="local-login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze lokale versie bewaart ze alleen in deze browser en e-mailverzending is uitgeschakeld.</p>
-      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 2.0.147</span></footer>
+      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 2.0.148</span></footer>
     </div>
   </section>
 
@@ -192,7 +192,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 2.0.147</span>
+      <span class="demo-badge">Versie 2.0.148</span>
       </div>
     </aside>
 
@@ -219,7 +219,7 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
-          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 2.0.147</span><span class="environment-badge" id="environment-badge" hidden></span></span>
+          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 2.0.148</span><span class="environment-badge" id="environment-badge" hidden></span></span>
         </div>
         <div class="topbar-actions">
           <!-- Zelfde knip als de Klassieke zijbalk (Werkvoorraad/Organisatie, zie de
@@ -734,7 +734,7 @@
           <button class="text-button" data-go="customer-timesheet-admin">Bekijk klanturenstaten &rarr;</button>
         </section>
 
-        <!-- Ingang naar de procesmeter, die sinds v2.0.147 op een eigen scherm
+        <!-- Ingang naar de procesmeter, die sinds v2.0.148 op een eigen scherm
              staat. Het percentage blijft hier zichtbaar, zodat je de stand nog
              steeds in één blik hebt zonder het hele paneel op het Dashboard. -->
         <section class="panel workflow-teaser" id="workflow-teaser">
@@ -1064,6 +1064,7 @@
         <section class="panel nieuw-in-de-app" id="nieuw-in-de-app" aria-labelledby="nieuw-in-de-app-kop" hidden>
           <div class="panel-heading"><div><span class="section-label">Alleen in de testomgeving</span><h3 id="nieuw-in-de-app-kop">Nieuw in de app</h3></div><small>Laatste 20 updates</small></div>
           <ol class="nieuw-in-de-app-lijst" id="nieuw-in-de-app-lijst">
+            <li><span class="nieuw-versie">2.0.148</span><div class="nieuw-tekst"><strong>Testset opgeschoond</strong><p>Een interne testcase deelde per ongeluk een testaccount met een andere test, wat op de achtergrond tot ruis kon leiden. Losgekoppeld zodat beide onafhankelijk blijven werken.</p></div><time datetime="2026-09-17T04:35">17 sep · 04:35</time></li>
             <li><span class="nieuw-versie">2.0.147</span><div class="nieuw-tekst"><strong>Inlogbeveiliging preciezer getest</strong><p>Het beveiligingssignaal bij herhaalde mislukte inlogpogingen is uitgebreider getest, zodat het precies één keer afgaat en niet te vroeg of te vaak.</p></div><time datetime="2026-09-17T03:52">17 sep · 03:52</time></li>
             <li><span class="nieuw-versie">2.0.146</span><div class="nieuw-tekst"><strong>Interne wensentool leesbaar op elk schermformaat</strong><p>De interne kwaliteitsstraat-pagina blijft nu ook op een tussenmaat scherm (zoals een tablet of een breed browservenster) leesbaar in plaats van samen te knijpen.</p></div><time datetime="2026-09-17T02:10">17 sep · 02:10</time></li>
             <li><span class="nieuw-versie">2.0.145</span><div class="nieuw-tekst"><strong>Beveiligingsheaders extra bewaakt</strong><p>Er is een extra controle bijgekomen die bewaakt dat de app op elke omgeving dezelfde strenge beveiligingsheaders blijft versturen.</p></div><time datetime="2026-09-17T01:40">17 sep · 01:40</time></li>
@@ -1083,7 +1084,6 @@
             <li><span class="nieuw-versie">2.0.130</span><div class="nieuw-tekst"><strong>Ingetrokken bericht blijft ongelezen</strong><p>Een ingetrokken bericht blijft ongelezen totdat je het zelf opent.</p></div><time datetime="2026-09-16T17:51">16 sep · 17:51</time></li>
             <li><span class="nieuw-versie">2.0.129</span><div class="nieuw-tekst"><strong>Voorlezen meldt ook wat niet is opgeslagen</strong><p>Werk je met een schermlezer, dan hoor je nu ook de melding dat een dag met te veel uren niet is bewaard.</p></div><time datetime="2026-09-16T17:25">16 sep · 17:25</time></li>
             <li><span class="nieuw-versie">2.0.128</span><div class="nieuw-tekst"><strong>Klanturenstaat accepteert weer elke PDF</strong><p>Een gewone PDF werd soms onterecht geweigerd als beschadigd. Dat kwam door een te strenge controle en is opgelost.</p></div><time datetime="2026-09-16T14:40">16 sep · 14:40</time></li>
-            <li><span class="nieuw-versie">2.0.124</span><div class="nieuw-tekst"><strong>Je scherm laadt alleen je eigen gegevens</strong><p>Bij het inloggen haalt de app voortaan alleen op wat je in je eigen scherm gebruikt.</p></div><time datetime="2026-09-16T12:05">16 sep · 12:05</time></li>
           </ol>
           <nav class="lijst-paginering" id="nieuw-in-de-app-paginering" aria-label="Meer updates" hidden>
             <button class="button button-ghost" type="button" data-pagina-vorige>‹ Vorige</button>
@@ -1315,7 +1315,7 @@
       <footer class="app-footer" aria-label="Applicatie-informatie">
         <span>© 2026 Path Consultancy IT</span>
         <span>Ontwikkeld en beheerd door Team Path.</span>
-        <span class="app-footer-version">Versie 2.0.147</span>
+        <span class="app-footer-version">Versie 2.0.148</span>
       </footer>
     </main>
   </div>
@@ -1375,7 +1375,7 @@
   </div>
   <script vite-ignore defer src="assets/jspdf.umd.min.js"></script>
   <script vite-ignore defer src="assets/invoice-fonts.js"></script>
-  <script vite-ignore defer src="assets/app.js?v=2.0.147"></script>
-  <script vite-ignore defer src="assets/pwa-install.js?v=2.0.147"></script>
+  <script vite-ignore defer src="assets/app.js?v=2.0.148"></script>
+  <script vite-ignore defer src="assets/pwa-install.js?v=2.0.148"></script>
 </body>
 </html>
