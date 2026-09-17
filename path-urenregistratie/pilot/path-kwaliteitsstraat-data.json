@@ -1,8 +1,24 @@
 {
   "appVersion": "2.0.151",
-  "generatedAt": "2026-09-17T16:20:18.139Z",
+  "generatedAt": "2026-09-17T17:00:40.426Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "17 sep",
+      "version": "2.0.151",
+      "wish": "Rechtermuisknop op een kaart (naar het bordmenu uit Gio's Jira): openen, doorspringen naar Kennisbank of Testbeheer, verplaatsen naar een andere kolom (wordt opgeslagen), bovenaan/onderaan zetten binnen Te doen, en de link of sleutel kopiëren. De kolom waar de kaart al in staat is uitgeschakeld. Bewust niet overgenomen: Archiveren en Verwijderen -- projecthistorie gooien we niet weg, en een knop die dat suggereert hoort er dan ook niet te staan; hetzelfde geldt voor Bulkwijziging zolang we geen meervoudige selectie hebben. Escape sluit het menu zonder iets te doen. PIPE-H-014, tegenproef: de uitgeschakelde knop weer aangezet -> rood; teruggezet -> groen. 18/18 PIPE groen.",
+      "cases": [
+        {
+          "id": "PIPE-H-014",
+          "title": "de rechtermuisknop op een kaart geeft alleen acties die echt iets doen",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Beslistabel op het kaartmenu (welke actie hoort erin, welke bewust niet, en welke is uitgeschakeld in de huidige kolom) + controle op de server dat de actie echt uitgevoerd is",
+          "assertions": 14,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de rechtermuisknop op een kaart geeft alleen acties die echt iets doen\n  Given het menu is dicht tot je rechtsklikt\n  When de flow voor PIPE-H-014 wordt uitgevoerd\n  Then staan er alleen acties in die hier betekenis hebben\n  And sluit Escape het menu zonder iets te doen\n  And de kaart gaat terug, zodat deze case geen sporen achterlaat"
+        }
+      ]
+    },
     {
       "date": "17 sep",
       "version": "2.0.151",
@@ -506,7 +522,7 @@
           "technique": "Regressiecontrole na hernoeming: oude URL blijft bereikbaar en verwijst door (meta-refresh) naar de nieuwe naam",
           "assertions": 6,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de flow voor PIPE-N-003 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt"
+          "gherkin": ""
         }
       ]
     },

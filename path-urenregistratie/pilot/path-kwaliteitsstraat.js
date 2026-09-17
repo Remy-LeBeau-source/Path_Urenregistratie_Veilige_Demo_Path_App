@@ -1495,6 +1495,68 @@
     $$('.is-doelkolom').forEach(function (el) { el.classList.remove('is-doelkolom'); });
   });
 
+  // ---- Rechtermuisknop op een kaart -----------------------------------------
+  function sluitKaartMenu() {
+    var menu = $('[data-kaart-menu]');
+    if (menu) { menu.hidden = true; menu.innerHTML = ''; }
+  }
+
+  function openKaartMenu(sleutel, x, y) {
+    var menu = $('[data-kaart-menu]');
+    var ticket = findTicket(sleutel);
+    if (!menu || !ticket) return;
+    var huidige = metStand(ticket).status;
+    var inTeDoen = huidige === 'todo' || huidige === 'ingediend';
+    var groepen = [
+      [
+        ['Openen', 'open'],
+        ['Open in Kennisbank', 'doc'],
+        ['Open in Testbeheer', 'test']
+      ],
+      [
+        ['Naar Te doen', 'naar:todo'],
+        ['Naar In uitvoering', 'naar:doing'],
+        ['Naar Opgeleverd', 'naar:done']
+      ],
+      [
+        ['Kopieer link', 'link'],
+        ['Kopieer sleutel', 'sleutel']
+      ]
+    ];
+    if (inTeDoen) {
+      // Volgorde telt alleen in Te doen: daar bepaalt hij wat als eerste opgepakt wordt.
+      groepen.splice(2, 0, [['Bovenaan in Te doen', 'top'], ['Onderaan in Te doen', 'bodem']]);
+    }
+    menu.innerHTML = '<p class="kaart-menu-kop">' + escapeHtml(sleutel) + '</p>'
+      + groepen.map(function (groep) {
+        return '<div class="kaart-menu-groep">' + groep.map(function (paar) {
+          var uit = paar[1] === 'naar:' + huidige;
+          return '<button type="button" role="menuitem" data-kaart-actie="' + paar[1] + '"'
+            + (uit ? ' disabled' : '') + '>' + escapeHtml(paar[0]) + '</button>';
+        }).join('') + '</div>';
+      }).join('');
+    menu.setAttribute('data-kaart-menu-sleutel', sleutel);
+    menu.hidden = false;
+    // Binnen beeld houden: bij een klik rechtsonder valt een menu anders half weg.
+    var maten = menu.getBoundingClientRect();
+    var links = Math.min(x, window.innerWidth - maten.width - 8);
+    var boven = Math.min(y, window.innerHeight - maten.height - 8);
+    menu.style.left = Math.max(8, links) + 'px';
+    menu.style.top = Math.max(8, boven) + 'px';
+    var eerste = menu.querySelector('button:not([disabled])');
+    if (eerste) eerste.focus();
+  }
+
+  document.addEventListener('contextmenu', function (event) {
+    var kaart = event.target instanceof Element ? event.target.closest('.ticket-card') : null;
+    if (!kaart) { sluitKaartMenu(); return; }
+    event.preventDefault();
+    openKaartMenu(kaart.getAttribute('data-ticket'), event.clientX, event.clientY);
+  });
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') sluitKaartMenu();
+  });
+
   function koppelSlepen() {
     // Elke kolom kan nu ontvangen. Te doen houdt daarnaast zijn eigen
     // volgordelogica, want daar bepaalt de volgorde wat er als eerste wordt
@@ -1573,6 +1635,69 @@
   document.addEventListener('click', function (event) {
     var target = event.target instanceof Element ? event.target : null;
     if (!target) return;
+
+    var kaartActie = target.closest('[data-kaart-actie]');
+    if (kaartActie) {
+      var menuEl = $('[data-kaart-menu]');
+      var menuSleutel = menuEl ? menuEl.getAttribute('data-kaart-menu-sleutel') : '';
+      var actie = kaartActie.getAttribute('data-kaart-actie');
+      sluitKaartMenu();
+      if (!menuSleutel) return;
+      if (actie === 'open') { openDetail(menuSleutel); return; }
+      if (actie === 'doc') { ui.docKey = menuSleutel; ui.fixedDoc = ''; switchTab('knowledge', false); render(); return; }
+      if (actie === 'test') {
+        var t = findTicket(menuSleutel);
+        ui.query = t && t.cases && t.cases.length ? t.cases[0].id.toLowerCase() : menuSleutel.toLowerCase();
+        var zoekveld2 = $('[data-search]');
+        if (zoekveld2) zoekveld2.value = ui.query;
+        ui.status = 'all'; ui.folder = ''; resetToon();
+        switchTab('tests', false); render();
+        return;
+      }
+      if (actie === 'sleutel') {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(menuSleutel).then(function () { toast('Sleutel gekopieerd'); }, function () { toast(menuSleutel); });
+        } else { toast(menuSleutel); }
+        return;
+      }
+      if (actie === 'link') {
+        var adres2 = window.location.href.split('#')[0] + '#ticket/' + encodeURIComponent(menuSleutel);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(adres2).then(function () { toast('Link gekopieerd'); }, function () { toast(adres2); });
+        } else { toast(adres2); }
+        return;
+      }
+      if (actie === 'top' || actie === 'bodem') {
+        var rij = huidigeTeDoenVolgorde();
+        var plek = rij.indexOf(menuSleutel);
+        if (plek >= 0) {
+          rij.splice(plek, 1);
+          if (actie === 'top') rij.unshift(menuSleutel); else rij.push(menuSleutel);
+          volgordeBewaren(rij);
+          renderBoard();
+          toast(menuSleutel + (actie === 'top' ? ' staat bovenaan' : ' staat onderaan'));
+        }
+        return;
+      }
+      if (actie.indexOf('naar:') === 0) {
+        var doelKolom = actie.slice(5);
+        var ticketNu = findTicket(menuSleutel);
+        var vanNu = ticketNu ? metStand(ticketNu).status : '';
+        var naam = { todo: 'Te doen', doing: 'In uitvoering', done: 'Opgeleverd' }[doelKolom] || doelKolom;
+        bewaarStand(menuSleutel, doelKolom, vanNu).then(function () {
+          renderBoard();
+          toast(menuSleutel + ' staat nu op ' + naam);
+        }).catch(function (fout) {
+          standUitOpslag[menuSleutel] = vanNu;
+          renderBoard();
+          toast('Verplaatsen mislukt — ' + (fout && fout.message ? fout.message : 'opslag onbereikbaar'));
+        });
+        return;
+      }
+      return;
+    }
+    // Buiten het menu klikken sluit het, net als in Jira.
+    if (!target.closest('[data-kaart-menu]')) sluitKaartMenu();
 
     var keuze = target.closest('[data-keuze]');
     if (keuze) { kiesVerbetering(Number(keuze.getAttribute('data-keuze'))); return; }

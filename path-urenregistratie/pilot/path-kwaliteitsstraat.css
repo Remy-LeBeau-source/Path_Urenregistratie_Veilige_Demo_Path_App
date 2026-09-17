@@ -647,3 +647,12 @@ tr.toon-meer-rij td { padding: 6px 10px; }
 .ticket-list.is-doelkolom, [data-ticket-list].is-doelkolom { outline: 2px dashed var(--jira); outline-offset: 3px; border-radius: 4px; }
 .ticket-card { cursor: grab; }
 .ticket-card.is-sleept { opacity: .55; cursor: grabbing; }
+
+/* Rechtermuisknop-menu op een kaart, zoals op een Jira-bord. */
+.kaart-menu { position: fixed; z-index: 60; min-width: 210px; padding: 6px 0; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); box-shadow: var(--shadow-panel); font-size: 13px; }
+.kaart-menu-kop { margin: 0; padding: 4px 14px 8px; color: var(--subtle); font-family: var(--mono); font-size: 11px; }
+.kaart-menu-groep { padding: 4px 0; border-top: 1px solid var(--line); }
+.kaart-menu-groep:first-of-type { border-top: 0; }
+.kaart-menu button { display: block; width: 100%; padding: 6px 14px; border: 0; background: transparent; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.kaart-menu button:hover:not([disabled]) { background: var(--jira-soft); color: var(--jira); }
+.kaart-menu button[disabled] { color: var(--subtle); cursor: default; }

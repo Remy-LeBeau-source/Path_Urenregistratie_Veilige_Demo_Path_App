@@ -63,6 +63,16 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
     And de kaart gaat terug, zodat deze case geen sporen achterlaat
 
   @happy
+  Scenario: [PIPE-H-014] de rechtermuisknop op een kaart geeft alleen acties die echt iets doen
+    # Testtechniek: Beslistabel op het kaartmenu (welke actie hoort erin, welke bewust niet, en welke is uitgeschakeld in de huidige kolom) + controle op de server dat de actie echt uitgevoerd is
+    # Aantoonbare Playwright-assertions in deze case: 14
+    Given het menu is dicht tot je rechtsklikt
+    When de flow voor PIPE-H-014 wordt uitgevoerd
+    Then staan er alleen acties in die hier betekenis hebben
+    And sluit Escape het menu zonder iets te doen
+    And de kaart gaat terug, zodat deze case geen sporen achterlaat
+
+  @happy
   Scenario: [PIPE-H-012] elk ticket heeft een deelbare link en zichtbare verwijzingen naar Confluence en Zephyr
     # Testtechniek: Navigatietest over de drie werkruimtes via het gedeelde nummer + herstelbaarheid (dezelfde link opent hetzelfde ticket opnieuw) + negatieve inhoudscontrole dat de eigen implementatie (GitHub) nergens meer doorschemert
     # Aantoonbare Playwright-assertions in deze case: 23

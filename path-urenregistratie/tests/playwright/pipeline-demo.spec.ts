@@ -515,6 +515,62 @@ test.describe('Path Pipeline TEST-demo', () => {
     });
   });
 
+  test('[PIPE-H-014] de rechtermuisknop op een kaart geeft alleen acties die echt iets doen', async ({ page, request }) => {
+    // Opdracht Gio (17 sep, met een schermafdruk van het Jira-bordmenu): zulke
+    // functies moet je ook kennen. Overgenomen is wat hier betekenis heeft;
+    // bewust niet overgenomen zijn Archiveren en Verwijderen, want we gooien
+    // projecthistorie niet weg en een knop die dat suggereert hoort er dan ook
+    // niet te staan.
+    await new AuthApi(page.request).login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+    await page.goto('/pilot/path-kwaliteitsstraat.html');
+    await expect(page.locator('body')).toHaveAttribute('data-stand', 'loaded');
+    await page.getByRole('tab', { name: /Backlog/ }).click();
+
+    const kaart = page.locator('[data-ticket-list="done"] .ticket-card').first();
+    const sleutel = await kaart.getAttribute('data-ticket');
+    const menu = page.locator('[data-kaart-menu]');
+
+    await test.step('Given het menu is dicht tot je rechtsklikt', async () => {
+      await expect(menu).toBeHidden();
+      await kaart.click({ button: 'right' });
+      await expect(menu).toBeVisible();
+      await expect(menu).toContainText(sleutel!);
+    });
+
+    await test.step('Then staan er alleen acties in die hier betekenis hebben', async () => {
+      for (const actie of ['Openen', 'Open in Kennisbank', 'Open in Testbeheer', 'Naar Te doen', 'Naar In uitvoering', 'Kopieer link']) {
+        await expect(menu.getByRole('menuitem', { name: actie }), `actie ${actie}`).toBeVisible();
+      }
+      // Wat we niet doen, staat er ook niet.
+      for (const nooit of ['Archiveren', 'Verwijderen', 'Bulkwijziging']) {
+        await expect(menu, `${nooit} hoort er niet te staan`).not.toContainText(nooit);
+      }
+      // De kolom waar de kaart al in staat is geen zinnige actie.
+      await expect(menu.getByRole('menuitem', { name: 'Naar Opgeleverd' })).toBeDisabled();
+    });
+
+    await test.step('And verplaatst "Naar In uitvoering" de kaart echt, ook op de server', async () => {
+      await menu.getByRole('menuitem', { name: 'Naar In uitvoering' }).click();
+      await expect(menu).toBeHidden();
+      await expect(page.locator(`[data-ticket-list="doing"] [data-ticket="${sleutel}"]`)).toBeVisible();
+      const stand = await (await request.get('/pilot/path-kwaliteitsstraat-store.php')).json();
+      expect(stand.items[sleutel!].status, 'de server kent de verplaatsing uit het menu').toBe('doing');
+    });
+
+    await test.step('And sluit Escape het menu zonder iets te doen', async () => {
+      await page.locator(`[data-ticket-list="doing"] [data-ticket="${sleutel}"]`).click({ button: 'right' });
+      await expect(menu).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(menu).toBeHidden();
+      await expect(page.locator(`[data-ticket-list="doing"] [data-ticket="${sleutel}"]`)).toBeVisible();
+    });
+
+    await test.step('And de kaart gaat terug, zodat deze case geen sporen achterlaat', async () => {
+      const terug = await page.request.post('/pilot/path-kwaliteitsstraat-store.php', { data: { key: sleutel, status: 'done', from: 'doing' } });
+      expect(terug.status()).toBe(200);
+    });
+  });
+
   test('[PIPE-H-012] elk ticket heeft een deelbare link en zichtbare verwijzingen naar Confluence en Zephyr', async ({ page }) => {
     // Opdracht Gio (17 sep): "we moeten linkjes maken met ID's en van Jira naar
     // Confluence kunnen gaan". Plus: de verwijzing naar ons GitHub-issue moest

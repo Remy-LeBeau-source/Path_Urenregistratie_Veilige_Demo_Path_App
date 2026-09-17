@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 620 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 621 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 620 unieke case-ID's
+- Playwright executable cases: 621 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 621 unieke case-ID's
+- Totaal executable cases: 622 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 679
+- Uitvoeringen: 681
 - Niet-mobile projectuitvoeringen: 561
-- Mobile functionele cases: 59
-- Pixel 7 / Chromium-uitvoeringen: 59
-- iPhone 13 / WebKit-uitvoeringen: 59
+- Mobile functionele cases: 60
+- Pixel 7 / Chromium-uitvoeringen: 60
+- iPhone 13 / WebKit-uitvoeringen: 60
 
-De 59 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 620 Playwright-functionele cases in totaal 679 resultaten op: 561 + (59 x 2) = 679.
+De 60 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 621 Playwright-functionele cases in totaal 681 resultaten op: 561 + (60 x 2) = 681.
 
 ## Documentatieketen
 
@@ -699,13 +699,14 @@ De 59 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 620 Playwri
 
 - Feature: `tests/playwright/features/pipeline-demo.feature`
 - Source: `tests/playwright/pipeline-demo.spec.ts`
-- Cases: 17
+- Cases: 18
 
 - [PIPE-N-003] de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt — Techniek: Regressiecontrole na hernoeming: oude URL blijft bereikbaar en verwijst door (meta-refresh) naar de nieuwe naam · Assertions: 6
 - [PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin — Techniek: Datagedreven vergelijking (pagina versus pilot/path-kwaliteitsstraat-data.json) + traceerbaarheid over drie projecties · Assertions: 38
 - [PIPE-H-002] opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub — Techniek: Toestandsovergangtest (aangenomen → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van het wachtrij-antwoord + negatieve controle dat GitHub niet meer wordt benaderd · Assertions: 42
 - [PIPE-H-010] een ticket opent als een echte Jira-story: details, beschrijving, traceability, ontwerp en historie — Techniek: Contractcontrole op de issuepagina (vaste blokken, veld-naar-veldafbeelding naar Jira) + controle dat traceability-cijfers uit de echte case komen en de ERD-link echt bereikbaar is · Assertions: 28
 - [PIPE-H-013] een kaart verplaatsen verandert de stand echt en blijft staan na herladen — Techniek: Toestandsovergangtest op het bord (kolom naar kolom) met controle op de server in plaats van op het scherm + herstelbaarheid na herladen zonder browseropslag + tweede lezer ziet dezelfde stand · Assertions: 19
+- [PIPE-H-014] de rechtermuisknop op een kaart geeft alleen acties die echt iets doen — Techniek: Beslistabel op het kaartmenu (welke actie hoort erin, welke bewust niet, en welke is uitgeschakeld in de huidige kolom) + controle op de server dat de actie echt uitgevoerd is · Assertions: 14
 - [PIPE-H-012] elk ticket heeft een deelbare link en zichtbare verwijzingen naar Confluence en Zephyr — Techniek: Navigatietest over de drie werkruimtes via het gedeelde nummer + herstelbaarheid (dezelfde link opent hetzelfde ticket opnieuw) + negatieve inhoudscontrole dat de eigen implementatie (GitHub) nergens meer doorschemert · Assertions: 23
 - [PIPE-H-011] Releases bundelt de echte versies met hun wensen, cases en assertions — Techniek: Datagedreven vergelijking (versiegroepering op de pagina versus dezelfde groepering uit de feed) + equivalentieklassen op het releasefilter + navigatiecontrole van release naar bord · Assertions: 16
 - [PIPE-H-009] de koppelingen tonen welke bron geldt en lekken nooit een instelling — Techniek: Contractcontrole op het koppelingen-endpoint (vorm, statusregels per bron) + negatieve inhoudscontrole dat geen enkele instelling naar buiten lekt · Assertions: 19
