@@ -472,7 +472,8 @@ function freshState() {
       hourReminders: true,
       statusNotifications: true,
       approvalNotifications: true,
-      invoiceNotifications: true, customerTimesheetNotifications: true
+      invoiceNotifications: true, customerTimesheetNotifications: true,
+      avatars: {}
     },
     admins: [
       { id: "gio", name: "Gio Maatsen", email: "gio@example.invalid", active: true, emailNotificationsEnabled: true, photo: "" },
@@ -5001,13 +5002,64 @@ function applyAvatar(element, name, photo) {
   element.style.backgroundImage = photo ? 'url("' + String(photo).replaceAll('"', "%22") + '")' : "none";
 }
 
+// Zeven collega's staan vast op een pop die bij hen past (besluit 17 sep,
+// handoff avatarkiezer); iedereen daarbuiten krijgt een aan zijn naam
+// gekoppelde, stabiele willekeurige pop -- geen geslacht geraden uit de naam,
+// puur een hash zodat dezelfde naam altijd dezelfde pop teruggeeft, ook na
+// een nieuwe sessie. Namen op de sleutel genormaliseerd (kleine letters,
+// spaties samengevoegd) zodat kleine schrijfverschillen niet meteen missen.
+const AVATAR_VAST_PER_NAAM = {
+  "marc de roon": 3,
+  "stasjo van bakel": 1,
+  "brian hek": 36,
+  "shawn-douglas nahar": 9,
+  "gio maatsen": 96,
+  "kenrich lieveld": 24,
+  "joyce van der steenhoven": 84,
+};
+function normalizeerNaamSleutel(name) {
+  return String(name || "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+function avatarIndexVoorNaam(name) {
+  const totaal = window.PATH_AVATARS ? window.PATH_AVATARS.length : 0;
+  if (totaal <= 0) return -1;
+  const sleutel = normalizeerNaamSleutel(name);
+  if (Object.prototype.hasOwnProperty.call(AVATAR_VAST_PER_NAAM, sleutel)) {
+    return (AVATAR_VAST_PER_NAAM[sleutel] - 1 + totaal) % totaal;
+  }
+  // Simpele, stabiele stringhash (djb2) -- geen crypto nodig, alleen een
+  // reproduceerbare spreiding over de beschikbare avatars.
+  let hash = 5381;
+  for (let i = 0; i < sleutel.length; i++) {
+    hash = ((hash << 5) + hash + sleutel.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash) % totaal;
+}
+function standaardAvatarVoorNaam(name) {
+  const index = avatarIndexVoorNaam(name);
+  return index >= 0 && window.PATH_AVATARS ? window.PATH_AVATARS[index] : "";
+}
+// Een zelf gekozen avatar staat in state.preferences.avatars (per naam), niet op
+// het employee/admin-record zelf: dat record is in auth-mode server-autoritatief
+// en persistState() slaat er dan alleen de UI-voorkeuren van op, niet de
+// bedrijfsdata. Op het record schrijven zou de keuze dus na een herlading
+// stilzwijgend weer verliezen.
+function gekozenAvatarVoorNaam(name) {
+  const avatars = state.preferences && state.preferences.avatars;
+  if (!avatars) return "";
+  const index = avatars[normalizeerNaamSleutel(name)];
+  return typeof index === "number" && window.PATH_AVATARS && window.PATH_AVATARS[index] ? window.PATH_AVATARS[index] : "";
+}
+
 function currentProfileData() {
   if (state.currentRole === "employee") {
     const employee = currentEmployee();
-    return { source: employee, name: employee.name, email: employee.email, label: "Medewerker", photo: employee.photo || "" };
+    const photo = gekozenAvatarVoorNaam(employee.name) || employee.photo || standaardAvatarVoorNaam(employee.name);
+    return { source: employee, name: employee.name, email: employee.email, label: "Medewerker", photo };
   }
   const admin = currentAdmin();
-  return { source: admin, name: admin.name, email: admin.email, label: "Beheerder", photo: admin.photo || "" };
+  const photo = gekozenAvatarVoorNaam(admin.name) || admin.photo || standaardAvatarVoorNaam(admin.name);
+  return { source: admin, name: admin.name, email: admin.email, label: "Beheerder", photo };
 }
 
 function updateLoginAdminPreview() {
@@ -5114,7 +5166,7 @@ function profileForRole(role) {
       initials: initials(sessionName),
       name: sessionName,
       email: String(authRuntime.identityEmail || ""),
-      photo: "",
+      photo: gekozenAvatarVoorNaam(sessionName),
       label,
       home
     };
@@ -5123,7 +5175,7 @@ function profileForRole(role) {
   if (role === "admin") {
     const admin = currentAdmin();
     if (!admin) return sessionName ? sessionProfile(null) : null;
-    return sessionProfile({ initials: initials(admin.name), name: admin.name, email: admin.email, photo: admin.photo || "", label: roleProfiles.admin.label, home: roleProfiles.admin.home });
+    return sessionProfile({ initials: initials(admin.name), name: admin.name, email: admin.email, photo: gekozenAvatarVoorNaam(admin.name) || admin.photo || "", label: roleProfiles.admin.label, home: roleProfiles.admin.home });
   }
   const employee = currentEmployee();
   if (!employee) return sessionName ? sessionProfile(null) : null;
@@ -5131,7 +5183,7 @@ function profileForRole(role) {
     initials: initials(employee.name),
     name: employee.name,
     email: employee.email,
-    photo: employee.photo || "",
+    photo: gekozenAvatarVoorNaam(employee.name) || employee.photo || "",
     label: roleProfiles.employee.label,
     home: roleProfiles.employee.home
   });
@@ -5513,19 +5565,101 @@ function renderProfileChrome() {
   if (!state.currentRole) return;
   const profile = profileForRole(state.currentRole);
   if (!profile) return;
-  applyAvatar(document.querySelector("#workspace-avatar"), profile.name, profile.photo);
-  applyAvatar(document.querySelector("#topbar-avatar"), profile.name, profile.photo);
-  applyAvatar(document.querySelector("#profile-menu-avatar"), profile.name, profile.photo);
+  const photo = profile.photo || standaardAvatarVoorNaam(profile.name);
+  applyAvatar(document.querySelector("#workspace-avatar"), profile.name, photo);
+  applyAvatar(document.querySelector("#topbar-avatar"), profile.name, photo);
+  applyAvatar(document.querySelector("#profile-menu-avatar"), profile.name, photo);
   document.querySelector("#workspace-name").textContent = profile.name;
   document.querySelector("#workspace-role").textContent = profile.label;
   document.querySelector("#profile-menu-name").textContent = profile.name;
   document.querySelector("#profile-menu-role").textContent = profile.label;
+  renderAvatarPickerGrid();
   // "Ander account of rol" is alleen zinvol in de demomodus met vrije
   // rolwissel. Bij een echte login doet die knop hetzelfde als Uitloggen en
   // wekt hij ten onrechte de indruk dat een medewerker een andere rol kan
   // kiezen -- daarom verborgen buiten de demomodus.
   const switchButton = document.querySelector('[data-profile-action="switch"]');
   if (switchButton) switchButton.hidden = authRuntime.mode === "auth";
+}
+
+// Avatarkiezer in het profielmenu (17 sep, handoff). Kiezen is direct: geen
+// aparte opslaan-stap, het menu (en dit paneel) blijven gewoon open, zodat je
+// meteen door kunt bladeren naar een volgende keuze. Geldt voor elke rol --
+// dezelfde ene knop en hetzelfde ene paneel in #profile-menu bedienen
+// medewerker, backoffice en beheer identiek.
+const AVATAR_PICKER_PER_PAGINA = 12;
+let avatarPickerPagina = 0;
+
+function toggleAvatarPickerPanel() {
+  const panel = document.querySelector("#avatar-picker-panel");
+  const trigger = document.querySelector("#avatar-picker-trigger");
+  if (!panel || !trigger) return;
+  const openen = panel.hidden;
+  panel.hidden = !openen;
+  trigger.setAttribute("aria-expanded", String(openen));
+  if (openen) renderAvatarPickerGrid();
+}
+
+function stapAvatarPickerPagina(richting) {
+  const totaal = window.PATH_AVATARS ? window.PATH_AVATARS.length : 0;
+  const paginas = Math.max(1, Math.ceil(totaal / AVATAR_PICKER_PER_PAGINA));
+  avatarPickerPagina = Math.min(paginas - 1, Math.max(0, avatarPickerPagina + richting));
+  renderAvatarPickerGrid();
+}
+
+function kiesAvatar(index) {
+  if (!window.PATH_AVATARS || index < 0 || index >= window.PATH_AVATARS.length) return;
+  const profile = currentProfileData();
+  if (!state.preferences.avatars) state.preferences.avatars = {};
+  state.preferences.avatars[normalizeerNaamSleutel(profile.name)] = index;
+  persistState();
+  renderProfileChrome();
+}
+
+function renderAvatarPickerGrid() {
+  const paneel = document.querySelector("#avatar-picker-panel");
+  // renderProfileChrome() -- en dus deze functie -- draait mee in elke
+  // renderAll(), dus na vrijwel elke gebruikersactie in de hele app. Het
+  // raster opnieuw optekenen (113 afbeeldingen in dataURL-vorm) terwijl het
+  // paneel dicht is, kost daardoor merkbaar op: een volledige smoke-test-run
+  // liep hierdoor van ruim onder de 2 minuten naar bijna 8 minuten en strandde
+  // op een 4-seconden-timeout elders in de app. Alleen tekenen als het paneel
+  // ook echt open is; open() en elke paginastap roepen dit zelf al aan.
+  if (!paneel || paneel.hidden) return;
+  const grid = document.querySelector("#avatar-picker-grid");
+  const teller = document.querySelector("#avatar-picker-teller");
+  const vorige = document.querySelector("#avatar-picker-prev");
+  const volgende = document.querySelector("#avatar-picker-next");
+  if (!grid || !window.PATH_AVATARS || !window.PATH_AVATARS.length) return;
+  const totaal = window.PATH_AVATARS.length;
+  const paginas = Math.max(1, Math.ceil(totaal / AVATAR_PICKER_PER_PAGINA));
+  avatarPickerPagina = Math.min(paginas - 1, Math.max(0, avatarPickerPagina));
+  const start = avatarPickerPagina * AVATAR_PICKER_PER_PAGINA;
+  const eind = Math.min(totaal, start + AVATAR_PICKER_PER_PAGINA);
+  const huidigeFoto = currentProfileData().photo;
+  grid.innerHTML = "";
+  for (let i = start; i < eind; i++) {
+    const optie = document.createElement("button");
+    optie.type = "button";
+    optie.className = "avatar-picker-optie" + (window.PATH_AVATARS[i] === huidigeFoto ? " is-gekozen" : "");
+    optie.dataset.avatarIndex = String(i);
+    optie.setAttribute("aria-label", "Kies deze avatar");
+    const img = document.createElement("img");
+    img.src = window.PATH_AVATARS[i];
+    img.alt = "";
+    optie.appendChild(img);
+    if (window.PATH_AVATARS[i] === huidigeFoto) {
+      const vink = document.createElement("span");
+      vink.className = "avatar-picker-vink";
+      vink.setAttribute("aria-hidden", "true");
+      vink.textContent = "✓";
+      optie.appendChild(vink);
+    }
+    grid.appendChild(optie);
+  }
+  if (teller) teller.textContent = (avatarPickerPagina + 1) + "/" + paginas;
+  if (vorige) vorige.disabled = avatarPickerPagina === 0;
+  if (volgende) volgende.disabled = avatarPickerPagina >= paginas - 1;
 }
 
 function customerTimesheetNeedsEmployeeAction(status) {
@@ -14445,6 +14579,15 @@ document.addEventListener("click", event => {
   if (profileButton) toggleTopbarPopover("profile-menu", "profile-menu-button");
 
   if (!event.target.closest(".topbar-popover") && !notificationButton && !profileButton) closeTopbarPopovers();
+
+  const avatarPickerTrigger = event.target.closest("#avatar-picker-trigger");
+  if (avatarPickerTrigger) toggleAvatarPickerPanel();
+  const avatarPickerPrev = event.target.closest("#avatar-picker-prev");
+  if (avatarPickerPrev) stapAvatarPickerPagina(-1);
+  const avatarPickerNext = event.target.closest("#avatar-picker-next");
+  if (avatarPickerNext) stapAvatarPickerPagina(1);
+  const avatarPickerOptie = event.target.closest(".avatar-picker-optie");
+  if (avatarPickerOptie) kiesAvatar(Number(avatarPickerOptie.dataset.avatarIndex));
 
 /* Op startscherm zetten, vanuit het profielmenu.
 

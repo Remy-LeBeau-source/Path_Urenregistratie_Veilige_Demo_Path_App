@@ -1,6 +1,6 @@
 {
-  "appVersion": "2.0.157",
-  "generatedAt": "2026-09-17T23:06:33.523Z",
+  "appVersion": "2.0.158",
+  "generatedAt": "2026-09-17T23:45:08.785Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
@@ -174,6 +174,31 @@
           "assertions": 28,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: een ticket opent als een echte Jira-story: details, beschrijving, traceability, ontwerp en historie\n  Given een opgeleverd ticket wordt geopend vanaf het bord\n  When de flow voor PIPE-H-010 wordt uitgevoerd\n  Then staan de vaste blokken van een Jira-issuepagina er\n  And toont Traceability de echte testcases met techniek en assertions\n  And staan FO, TO en het databasemodel bij de story\n  And vertelt de historie wat er echt is gebeurd\n  And zijn de blokken in te klappen zoals in Jira"
+        }
+      ]
+    },
+    {
+      "date": "17 sep",
+      "version": "2.0.155",
+      "wish": "Avatarkiezer in het profielmenu, op verzoek: een knopkop met eigen avatar/naam/rol die uitklapt naar een raster van twaalf afbeeldingen (113 in totaal, ‹ › paginering, teller 1/10 t/m 10/10), voor elke rol (medewerker, backoffice, beheer) en in beide vormgevingen. Kiezen is direct, geen aparte opslaan-stap, blijft lokaal per browser bewaard (zelfde aanpak als de bestaande profielfoto-upload). Zeven collega's hebben een vaste toewijzing gekregen; iedereen daarbuiten krijgt een van zijn naam afgeleide, stabiele avatar (geen geslacht geraden) en kan die zelf wijzigen. Onderweg één bestaande regressietest gecorrigeerd: die verwachtte nog initialen-tekst waar nu standaard al een avatarfoto staat. AVATAR-H-001 t/m -007 en AVATAR-N-001 nieuw, beide vormgevingen en rollen gedekt.",
+      "cases": [
+        {
+          "id": "AVATAR-H-001",
+          "title": "een medewerker met een vaste naam krijgt automatisch zijn toegewezen avatar, zonder zelf te kiezen",
+          "feature": "tests/playwright/features/avatar-picker.feature",
+          "technique": "Beslissingstabel rollen en autorisatie",
+          "assertions": 1,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een medewerker met een vaste naam krijgt automatisch zijn toegewezen avatar, zonder zelf te kiezen\n  Given de medewerker inlogt zonder ooit een avatar gekozen te hebben\n  When de flow voor AVATAR-H-001 wordt uitgevoerd\n  Then toont het profielmenu meteen zijn vaste, toegewezen avatar (nummer 1)"
+        },
+        {
+          "id": "AVATAR-N-001",
+          "title": "het vinkje op de gekozen avatar is navy op mint, nooit wit",
+          "feature": "tests/playwright/features/avatar-picker.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 4,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: het vinkje op de gekozen avatar is navy op mint, nooit wit\n  Given avatarkiezer in het profielmenu is voorbereid\n  When de flow voor AVATAR-N-001 wordt uitgevoerd\n  Then is de achtergrond van het vinkje mint en de tekstkleur navy, geen wit"
         }
       ]
     },
@@ -468,7 +493,7 @@
           "technique": "Beslissingstabel rollen en autorisatie",
           "assertions": 5,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: vergrendelen zonder gecontroleerde conceptfactuur wordt geweigerd zodra mail echt verstuurt\n  Given facturen definitief maken en vergrendelen is voorbereid\n  When de flow voor INV-N-027 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat vergrendelen zonder gecontroleerde conceptfactuur wordt geweigerd zodra mail echt verstuurt"
+          "gherkin": ""
         },
         {
           "id": "TS-REV-API-H-005",
@@ -477,7 +502,7 @@
           "technique": "Concurrency + toestandsovergang",
           "assertions": 80,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking\n  Given de medewerker is ingelogd en heeft een schrijfbare testperiode\n  When de medewerker een concept opslaat en daarna indient\n  And de reviewcontext wisselt naar administrator\n  Then een verouderde correctie-aanvraag wordt geblokkeerd met stale-version\n  Then een correctie-aanvraag zonder toelichting wordt door de server geweigerd (sectie 20: UI-verbergen is geen autorisatie)\n  When de administrator een geldige correctie-aanvraag uitvoert\n  Then een tweede correctie op dezelfde versie wordt geweigerd\n  And de context wisselt terug naar medewerker voor herindiening\n  Then een medewerker mag geen admin-reviewactie uitvoeren\n  When de medewerker na correctie opnieuw indient\n  And de context wisselt opnieuw naar administrator voor goedkeuring\n  Then een verouderde approve-aanvraag wordt geblokkeerd met stale-version\n  And heeft de geweigerde poging geen goedkeuringsmail in de wachtrij gezet\n  When de administrator met juiste versie goedkeurt\n  And staat er nu precies één goedkeuringsmail in de wachtrij voor déze goedkeuringsversie\n  Then read-back toont approved status met volledige audit- en correctiehistorie\n  And een goedkeuring zonder factuur server-side kan worden heropend voor correctie\n  Then krijgt de medewerker ook bij een heropening ná goedkeuring een nieuwe, ongelezen melding\n  And cleanup: sessie sluiten voor testisolatie"
+          "gherkin": ""
         },
         {
           "id": "NOT-H-016",
@@ -486,7 +511,7 @@
           "technique": "Grenswaardenanalyse",
           "assertions": 17,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 5, de bel hooguit 10\n  Given meldingen beheren is voorbereid\n  Then toont de bel 10 van de 15 ongelezen meldingen, met een regel voor de rest\n  And toont Berichten hooguit 30 berichten, 5 per pagina (zelfde paginagrootte als Nieuw in de app), de ongelezen vooraan\n  When de medewerker naar de laatste pagina bladert, then staan daar 26–30 en is Volgende uit\n  And zet een filterwissel de lijst terug op pagina 1"
+          "gherkin": ""
         }
       ]
     },
@@ -1579,14 +1604,8 @@
   "open": [
     {
       "date": "17 sep",
-      "wish": "PATH-201 (en de dubbele indiening PATH-202), terug naar open na productbesluit Gio: het oorspronkelijke idee (filter op afzendernaam in Berichten) bleek gebouwd op een bestaand lek -- medewerkers zagen via server/api/announcements.php de echte naam van de beheerder die een mededeling stuurde, terwijl het besluit in database/seed-demo-data.sql was dat dit altijd \"Beheerder\" moet tonen. Het lek is gerepareerd (ANN-N-011, tegenproef rood/groen, 2.0.150) los van deze wens. Met het lek dicht heeft \"filter op afzendernaam\" geen waarde meer (er is nog maar één afzenderlabel: Beheerder). Nog te beslissen: wat de wens moet worden nu de oorspronkelijke insteek vervalt -- bijvoorbeeld filteren op onderwerp/type in plaats van op wie het stuurde.",
+      "wish": "PATH-201/202, terug naar open na productbesluit Gio: het oorspronkelijke idee (filter op afzendernaam in Berichten) bleek gebouwd op een bestaand lek -- medewerkers zagen via server/api/announcements.php de echte naam van de beheerder die een mededeling stuurde, terwijl het besluit in database/seed-demo-data.sql was dat dit altijd \"Beheerder\" moet tonen. Het lek is gerepareerd (ANN-N-011, tegenproef rood/groen, 2.0.150) los van deze wens. Met het lek dicht heeft \"filter op afzendernaam\" geen waarde meer (er is nog maar één afzenderlabel: Beheerder). Nog te beslissen: wat de wens moet worden nu de oorspronkelijke insteek vervalt -- bijvoorbeeld filteren op onderwerp/type in plaats van op wie het stuurde.",
       "who": "open, wacht op nieuwe richting Gio"
-    },
-    {
-      "date": "16 sep",
-      "wish": "Eigen vondst, niet bevestigd (dekkingsronde): de idempotency-check op mail_enqueue_timesheet_final_approval (en vergelijkbare functies in server/mail/queue.php) is een SELECT-dan-INSERT zonder database-constraint of rijvergrendeling, dus in theorie een race tussen twee gelijktijdige verzoeken. In de praktijk is de enige bekende aanroeper (de approve-actie in timesheets.php) al beschermd door optimistische versievergrendeling op de urenstaat zelf: een tweede gelijktijdige poging krijgt daar al 409 (stale-version) vóórdat de mailfunctie wordt bereikt. Geen discriminerend bewijs dat dit gat echt bereikbaar is; niet gepatcht op een vermoeden (eigen regel). Nog te doen: uitzoeken of er een aanroeppad bestaat dat niet via die versievergrendeling loopt, en zo ja, een UNIQUE-constraint overwegen zoals bij reminder_log.",
-      "who": "main",
-      "status": "open"
     },
     {
       "date": "16 sep",

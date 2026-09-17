@@ -104,7 +104,7 @@ Feature: Inloggen, uitloggen en sessiebeheer
   @happy
   Scenario: [AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 19
+    # Aantoonbare Playwright-assertions in deze case: 20
     Given de lokale Path loginpagina beschikbaar is
     Then heet het omgevingsveld Veilige testomgeving
     And heet de lokale titel Welkom bij Path Uren & Facturatie
@@ -131,10 +131,10 @@ Feature: Inloggen, uitloggen en sessiebeheer
   @happy
   Scenario: [AUTH-H-024] avatar-initialen slaan Nederlandse tussenvoegsels over
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 4
+    # Aantoonbare Playwright-assertions in deze case: 5
     Given Stasjo van Bakel bestaat als testmedewerker met een tussenvoegsel in de naam
     When Stasjo van Bakel inlogt en de app de avatar tekent
-    Then tonen beide avatars SB, niet SV
+    Then tonen beide avatars een afbeelding, geen tekst -- Stasjo heeft sinds de avatarkiezer (17 sep) een vaste, toegewezen pop, niet meer de initialen-fallback
     And de initialen-functie klopt over de klassen namen heen
 
   @happy

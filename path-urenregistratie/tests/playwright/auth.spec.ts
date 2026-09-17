@@ -350,7 +350,7 @@ test('[AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam',
     await expect(page.locator('#auth-login-email')).toHaveAttribute('placeholder', 'naam@pathconsultancy.nl');
     await expect(page.locator('#auth-login-submit')).toBeVisible();
     await expect(page.locator('.login-footer')).toContainText('© 2026 Path Consultancy');
-    await expect(page.locator('.login-footer')).toContainText('Versie 2.0.157');
+    await expect(page.locator('.login-footer')).toContainText('Versie 2.0.158');
   });
 
   await test.step('And kan het wachtwoord toegankelijk worden getoond en weer verborgen', async () => {
@@ -466,9 +466,11 @@ test('[AUTH-H-024] avatar-initialen slaan Nederlandse tussenvoegsels over', asyn
     await loginPage.login('stasjo@example.invalid', employeePassword);
   });
 
-  await test.step('Then tonen beide avatars SB, niet SV', async () => {
-    await expect(page.locator('#workspace-avatar')).toHaveText('SB', { timeout: 15000 });
-    await expect(page.locator('#topbar-avatar')).toHaveText('SB');
+  await test.step('Then tonen beide avatars een afbeelding, geen tekst -- Stasjo heeft sinds de avatarkiezer (17 sep) een vaste, toegewezen pop, niet meer de initialen-fallback', async () => {
+    await expect(page.locator('#workspace-avatar')).toHaveText('', { timeout: 15000 });
+    await expect(page.locator('#topbar-avatar')).toHaveText('');
+    const heeftAfbeelding = await page.locator('#workspace-avatar').evaluate(el => getComputedStyle(el).backgroundImage !== 'none');
+    expect(heeftAfbeelding, 'zonder eigen foto valt de avatar terug op een vaste, van de naam afgeleide pop, nooit op initialen SV').toBe(true);
   });
 
   await test.step('And de initialen-functie klopt over de klassen namen heen', async () => {

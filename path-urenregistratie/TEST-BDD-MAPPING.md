@@ -90,12 +90,20 @@
 | AUTH-N-007 | ui | auth.feature | vijf mislukte logins tonen een servergestuurde aftelling | Negatieve equivalentieklasse + error guessing | 4 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Negative | 4 | Actueel |
 | AUTH-N-008 | ui | auth.feature | de inlogblokkade en aftelling blijven zichtbaar na herladen | Negatieve equivalentieklasse + error guessing | 6 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Negative | 4 | Actueel |
 | AUTH-N-009 | ui | auth.feature | geen loginflits: login-scherm en app-shell blijven verborgen tijdens auth-bootstrap na F5 | Negatieve equivalentieklasse + error guessing | 9 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Negative | 4 | Actueel |
-| AUTH-H-009 | ui | auth.feature | lokale login benoemt de veilige testomgeving en productnaam | End-to-end use-case + visuele contractasserties | 19 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
+| AUTH-H-009 | ui | auth.feature | lokale login benoemt de veilige testomgeving en productnaam | End-to-end use-case + visuele contractasserties | 20 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
 | AUTH-H-020 | ui | auth.feature | elke medewerker ziet na inloggen de eigen naam, nooit die van een collega | Beslissingstabel rollen en autorisatie | 1 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
 | AUTH-H-021 | ui | auth.feature | elke beheerder ziet na inloggen de eigen naam, nooit die van een collega | Beslissingstabel rollen en autorisatie | 1 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
-| AUTH-H-024 | ui | auth.feature | avatar-initialen slaan Nederlandse tussenvoegsels over | End-to-end use-case + visuele contractasserties | 4 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
+| AUTH-H-024 | ui | auth.feature | avatar-initialen slaan Nederlandse tussenvoegsels over | End-to-end use-case + visuele contractasserties | 5 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
 | AUTH-H-022 | ui | auth.feature | in productiemodus toont de app de naam van de ingelogde gebruiker | End-to-end use-case + visuele contractasserties | 2 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
 | AUTH-H-025 | ui | auth.feature | de medewerker-snelkeuze vult het juiste, per-persoon echte adres in, niet dat van een andere genoemde tester | Beslissingstabel rollen en autorisatie | 4 | auth.steps.ts | auth.spec.ts | UI Desktop | Authenticatie | Veilige toegang en sessies | Happy | 4 | Actueel |
+| AVATAR-H-001 | ui | avatar-picker.feature | een medewerker met een vaste naam krijgt automatisch zijn toegewezen avatar, zonder zelf te kiezen | Beslissingstabel rollen en autorisatie | 1 | avatar-picker.steps.ts | avatar-picker.spec.ts | UI Desktop | Profiel & Voorkeuren | een medewerker met een vaste naam krijgt automatisch zijn toegewezen avatar, zonder zelf te kiezen | Happy | 19 | Actueel |
+| AVATAR-H-002 | ui | avatar-picker.feature | een beheerder met een vaste naam krijgt automatisch zijn toegewezen avatar | End-to-end use-case + visuele contractasserties | 1 | avatar-picker.steps.ts | avatar-picker.spec.ts | UI Desktop | Profiel & Voorkeuren | een beheerder met een vaste naam krijgt automatisch zijn toegewezen avatar | Happy | 19 | Actueel |
+| AVATAR-H-003 | ui | avatar-picker.feature | de avatarkiezer opent naast de ongewijzigde menu-items en testfunctiebalk | End-to-end use-case + visuele contractasserties | 12 | avatar-picker.steps.ts | avatar-picker.spec.ts | UI Desktop | Profiel & Voorkeuren | de avatarkiezer opent naast de ongewijzigde menu-items en testfunctiebalk | Happy | 19 | Actueel |
+| AVATAR-H-004 | ui | avatar-picker.feature | bladeren eindigt op precies vijf avatars met een uitgeschakelde volgende-knop | End-to-end use-case + visuele contractasserties | 7 | avatar-picker.steps.ts | avatar-picker.spec.ts | UI Desktop | Profiel & Voorkeuren | bladeren eindigt op precies vijf avatars met een uitgeschakelde volgende-knop | Happy | 19 | Actueel |
+| AVATAR-H-005 | ui | avatar-picker.feature | een avatar kiezen is direct zichtbaar, sluit het menu niet, en blijft staan na een echte paginaherlading | Toestandsovergang | 6 | avatar-picker.steps.ts | avatar-picker.spec.ts | UI Desktop | Profiel & Voorkeuren | een avatar kiezen is direct zichtbaar, sluit het menu niet, en blijft staan na een echte paginaherlading | Happy | 19 | Actueel |
+| AVATAR-N-001 | ui | avatar-picker.feature | het vinkje op de gekozen avatar is navy op mint, nooit wit | Negatieve equivalentieklasse + error guessing | 4 | avatar-picker.steps.ts | avatar-picker.spec.ts | UI Desktop | Profiel & Voorkeuren | het vinkje op de gekozen avatar is navy op mint, nooit wit | Negative | 19 | Actueel |
+| AVATAR-H-006 | ui | avatar-picker.feature | namen buiten de vaste lijst krijgen elk een eigen, stabiele avatar, zonder geslacht te raden | Beslissingstabel rollen en autorisatie | 5 | avatar-picker.steps.ts | avatar-picker.spec.ts | UI Desktop | Profiel & Voorkeuren | namen buiten de vaste lijst krijgen elk een eigen, stabiele avatar, zonder geslacht te raden | Happy | 19 | Actueel |
+| AVATAR-H-007 | ui | avatar-picker.feature | de avatarkiezer werkt identiek in de Nieuw-vormgeving (Modern) | End-to-end use-case + visuele contractasserties | 6 | avatar-picker.steps.ts | avatar-picker.spec.ts | UI Desktop | Profiel & Voorkeuren | de avatarkiezer werkt identiek in de Nieuw-vormgeving (Modern) | Happy | 19 | Actueel |
 | E2E-H-018 | integration | end-to-end-workflows.feature | iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF | Equivalentieklassen | 27 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF | Happy | 16 | Actueel |
 | E2E-N-020 | integration | end-to-end-workflows.feature | een medewerker kan de Backoffice-keten niet uitvoeren en een weigering verandert niets | Beslissingstabel rollen en autorisatie | 26 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | een medewerker kan de Backoffice-keten niet uitvoeren en een weigering verandert niets | Negative | 16 | Actueel |
 | E2E-N-018 | integration | end-to-end-workflows.feature | documentlinks accepteren geen ongeautoriseerde gebruiker, clientpad of vrije bestandsnaam | Negatieve equivalentieklasse + error guessing | 21 | end-to-end-workflows.steps.ts | business-workflows-*.spec.ts | DB / Integratie | Bedrijfsketens | documentlinks accepteren geen ongeautoriseerde gebruiker, clientpad of vrije bestandsnaam | Negative | 16 | Actueel |
@@ -646,10 +654,10 @@
 
 ## Totalen
 
-- Playwright executable cases: 624
+- Playwright executable cases: 632
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 625
-- Playwright features: 32
+- Totaal unieke executable cases: 633
+- Playwright features: 33
 - Database features: 1
-- Playwright steps mappings: 32
+- Playwright steps mappings: 33
 - Database steps mappings: 1
