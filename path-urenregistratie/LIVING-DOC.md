@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 616 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 617 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 616 unieke case-ID's
+- Playwright executable cases: 617 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 617 unieke case-ID's
+- Totaal executable cases: 618 unieke case-ID's
 - Playwright features: 32
 - Database features: 1
 - Playwright steps mappings: 32
 - Database steps mappings: 1
-- Uitvoeringen: 671
+- Uitvoeringen: 673
 - Niet-mobile projectuitvoeringen: 561
-- Mobile functionele cases: 55
-- Pixel 7 / Chromium-uitvoeringen: 55
-- iPhone 13 / WebKit-uitvoeringen: 55
+- Mobile functionele cases: 56
+- Pixel 7 / Chromium-uitvoeringen: 56
+- iPhone 13 / WebKit-uitvoeringen: 56
 
-De 55 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 616 Playwright-functionele cases in totaal 671 resultaten op: 561 + (55 x 2) = 671.
+De 56 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 617 Playwright-functionele cases in totaal 673 resultaten op: 561 + (56 x 2) = 673.
 
 ## Documentatieketen
 
@@ -135,7 +135,7 @@ De 55 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 616 Playwri
 - [AUTH-N-007] vijf mislukte logins tonen een servergestuurde aftelling — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 - [AUTH-N-008] de inlogblokkade en aftelling blijven zichtbaar na herladen — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 6
 - [AUTH-N-009] geen loginflits: login-scherm en app-shell blijven verborgen tijdens auth-bootstrap na F5 — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 9
-- [AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 20
+- [AUTH-H-009] lokale login benoemt de veilige testomgeving en productnaam — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 19
 - [AUTH-H-020] elke medewerker ziet na inloggen de eigen naam, nooit die van een collega — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [AUTH-H-021] elke beheerder ziet na inloggen de eigen naam, nooit die van een collega — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [AUTH-H-024] avatar-initialen slaan Nederlandse tussenvoegsels over — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 4
@@ -699,11 +699,12 @@ De 55 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 616 Playwri
 
 - Feature: `tests/playwright/features/pipeline-demo.feature`
 - Source: `tests/playwright/pipeline-demo.spec.ts`
-- Cases: 13
+- Cases: 14
 
 - [PIPE-N-003] de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt — Techniek: Regressiecontrole na hernoeming: oude URL blijft bereikbaar en verwijst door (meta-refresh) naar de nieuwe naam · Assertions: 6
 - [PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin — Techniek: Datagedreven vergelijking (pagina versus pilot/path-kwaliteitsstraat-data.json) + traceerbaarheid over drie projecties · Assertions: 38
 - [PIPE-H-002] opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub — Techniek: Toestandsovergangtest (aangenomen → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van het wachtrij-antwoord + negatieve controle dat GitHub niet meer wordt benaderd · Assertions: 42
+- [PIPE-H-010] een ticket opent als een echte Jira-story: details, beschrijving, traceability, ontwerp en historie — Techniek: Contractcontrole op de issuepagina (vaste blokken, veld-naar-veldafbeelding naar Jira) + controle dat traceability-cijfers uit de echte case komen en de ERD-link echt bereikbaar is · Assertions: 28
 - [PIPE-H-009] de koppelingen tonen welke bron geldt en lekken nooit een instelling — Techniek: Contractcontrole op het koppelingen-endpoint (vorm, statusregels per bron) + negatieve inhoudscontrole dat geen enkele instelling naar buiten lekt · Assertions: 19
 - [PIPE-N-002] de intakewachtrij weigert onvolledige, te grote en verkeerd geadresseerde invoer, en bestaat niet op productie — Techniek: Foutinjectie op de intake (leeg veld, onleesbare invoer, grensoverschrijding, verkeerde methode) + omgevingsafscherming met tegenproef · Assertions: 17
 - [PIPE-H-007] de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet — Techniek: Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst · Assertions: 26

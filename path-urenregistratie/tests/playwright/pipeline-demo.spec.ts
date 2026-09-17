@@ -335,6 +335,94 @@ test.describe('Path Pipeline TEST-demo', () => {
     });
   });
 
+  test('[PIPE-H-010] een ticket opent als een echte Jira-story: details, beschrijving, traceability, ontwerp en historie', async ({ page }) => {
+    // Opdracht Gio (17 sep, met schermafdrukken uit zijn eigen Jira): een ticket
+    // moet er echt uitzien als een Jira-story, met FO/TO en de ERD erbij, en de
+    // testcases als traceability. Dat is niet alleen vormgeving: dezelfde velden
+    // gaan straks naar de Jira van een klant, dus de afbeelding veld-naar-veld
+    // hoort vast te liggen vóór de eerste koppeling bestaat.
+    await page.goto('/pilot/path-kwaliteitsstraat.html');
+    await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
+    const feed = await feedVanServer(page);
+    const metCase = feed.delivered.find((row) => row.cases.length && row.cases[0].gherkin)!;
+    expect(metCase, 'er is een oplevering met een case en een scenario').toBeTruthy();
+    const sleutel = metCase.cases[0].id;
+
+    await test.step('Given een opgeleverd ticket wordt geopend vanaf het bord', async () => {
+      await page.getByRole('tab', { name: /Backlog/ }).click();
+      // Scoped op de kolom Opgeleverd: dezelfde sleutel staat ook in de
+      // paginaboom en in Testbeheer, en dat zijn andere ingangen naar hetzelfde
+      // ticket -- precies de kruisverwijzingen die we juist willen hebben.
+      await page.locator(`[data-ticket-list="done"] [data-open-ticket="${sleutel}"]`).first().click();
+      await expect(page.locator('[data-detail-drawer]')).toBeVisible();
+      await expect(page.locator('[data-detail-key]')).toHaveText(sleutel);
+    });
+
+    await test.step('Then staan de vaste blokken van een Jira-issuepagina er', async () => {
+      for (const blok of ['details', 'beschrijving', 'traceability', 'ontwerp', 'subtaken', 'activiteit']) {
+        await expect(page.locator(`[data-detail-blok="${blok}"]`), `blok ${blok}`).toBeVisible();
+      }
+      // Beschrijving in de vaste PO-opbouw, niet één brok tekst.
+      const beschrijving = page.locator('[data-detail-beschrijving]');
+      await expect(beschrijving).toContainText('Omschrijving context');
+      await expect(beschrijving).toContainText('Acceptatiecriterium');
+      await expect(beschrijving).toContainText(`versie ${metCase.version}`);
+    });
+
+    await test.step('And toont Traceability de echte testcases met techniek en assertions', async () => {
+      const rijen = page.locator('[data-detail-traceability] tbody tr');
+      await expect(rijen).toHaveCount(metCase.cases.length);
+      const eerste = rijen.first();
+      await expect(eerste).toContainText(metCase.cases[0].id);
+      // Het aantal assertions is geen sier maar het bewijs; het moet echt zijn.
+      const assertions = Number(await eerste.locator('.assert-count').textContent());
+      expect(assertions, 'assertions komen uit de echte case').toBe(metCase.cases[0].assertions);
+      await expect(page.locator('[data-detail-subtaken]')).toContainText(metCase.cases[0].id);
+    });
+
+    await test.step('And staan FO, TO en het databasemodel bij de story', async () => {
+      const ontwerp = page.locator('[data-detail-ontwerp]');
+      await expect(ontwerp).toContainText('Functioneel ontwerp');
+      await expect(ontwerp).toContainText('Technisch ontwerp');
+      const erd = ontwerp.locator('a[href*="ERD"]');
+      await expect(erd).toBeVisible();
+      // Een dode link naar het databasemodel is erger dan geen link.
+      const href = await erd.getAttribute('href');
+      const antwoord = await page.request.get(new URL(href!, new URL(page.url()).href).toString());
+      expect(antwoord.status(), 'het databasemodel moet echt bereikbaar zijn').toBe(200);
+    });
+
+    await test.step('And vertelt de historie wat er echt is gebeurd', async () => {
+      const historie = page.locator('[data-detail-historie] li');
+      await expect(historie.first()).toContainText('GIO-WENSEN.md');
+      await expect(page.locator('[data-detail-historie]')).toContainText(`versie ${metCase.version}`);
+    });
+
+    await test.step('And laat "Toon als Jira-ticket" zien welk veld waar landt', async () => {
+      await expect(page.locator('[data-detail-blok="jira"]')).toBeHidden();
+      await page.locator('[data-detail-jira]').click();
+      const vorm = page.locator('[data-detail-jira-vorm]');
+      await expect(vorm).toBeVisible();
+      for (const veld of ['summary', 'issuetype', 'description', 'fixVersion', 'status', 'testcases (Zephyr)']) {
+        await expect(vorm, `veld ${veld}`).toContainText(veld);
+      }
+      await expect(vorm).toContainText(metCase.version);
+      await expect(vorm).toContainText(metCase.cases[0].id);
+      // Een opgeleverd ticket hoort als Done over te gaan, niet als To Do.
+      await expect(vorm).toContainText('Done');
+    });
+
+    await test.step('And zijn de blokken in te klappen zoals in Jira', async () => {
+      const kop = page.locator('[data-blok-toggle="traceability"]');
+      await expect(kop).toHaveAttribute('aria-expanded', 'true');
+      await kop.click();
+      await expect(kop).toHaveAttribute('aria-expanded', 'false');
+      await expect(page.locator('[data-detail-traceability]')).toBeHidden();
+      await kop.click();
+      await expect(page.locator('[data-detail-traceability]')).toBeVisible();
+    });
+  });
+
   test('[PIPE-H-009] de koppelingen tonen welke bron geldt en lekken nooit een instelling', async ({ page, request }) => {
     // Opdracht Gio (17 sep): naast onze eigen omgeving moet een klant zijn eigen
     // Jira, Confluence of Zephyr kunnen koppelen. Dit pint de vorm daarvan vast

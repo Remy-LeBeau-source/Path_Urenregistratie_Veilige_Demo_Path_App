@@ -382,11 +382,60 @@
     </header>
     <h3 data-detail-title></h3>
     <div class="detail-pills" data-detail-pills></div>
-    <dl class="detail-fields" data-detail-fields></dl>
-    <div class="detail-gherkin"><p class="product-label zephyr">SCENARIO</p><pre data-detail-gherkin></pre></div>
+
+    <!-- Opbouw volgt een echte Jira-issuepagina (Details, Beschrijving,
+         Traceability, Subtaken, Activiteit), zodat dezelfde velden meegaan zodra
+         een ticket naar de Jira van een klant wordt omgezet. Alleen velden die we
+         echt bijhouden: geen story points of werklog, want een verzonnen getal in
+         een tool die juist moet bewijzen dat alles echt is, is het enige dat deze
+         demo kan ondermijnen. -->
+    <section class="detail-blok" data-detail-blok="details">
+      <h4><button type="button" class="blok-kop" data-blok-toggle="details" aria-expanded="true"><span aria-hidden="true">▾</span> Details</button></h4>
+      <dl class="detail-fields" data-detail-fields></dl>
+    </section>
+
+    <section class="detail-blok" data-detail-blok="beschrijving">
+      <h4><button type="button" class="blok-kop" data-blok-toggle="beschrijving" aria-expanded="true"><span aria-hidden="true">▾</span> Beschrijving</button></h4>
+      <div class="detail-beschrijving" data-detail-beschrijving></div>
+    </section>
+
+    <section class="detail-blok" data-detail-blok="traceability">
+      <h4><button type="button" class="blok-kop" data-blok-toggle="traceability" aria-expanded="true"><span aria-hidden="true">▾</span> Traceability</button></h4>
+      <div class="detail-traceability" data-detail-traceability></div>
+    </section>
+
+    <section class="detail-blok" data-detail-blok="ontwerp">
+      <h4><button type="button" class="blok-kop" data-blok-toggle="ontwerp" aria-expanded="true"><span aria-hidden="true">▾</span> Functioneel en technisch ontwerp</button></h4>
+      <div class="detail-ontwerp" data-detail-ontwerp></div>
+    </section>
+
+    <section class="detail-blok" data-detail-blok="subtaken">
+      <h4><button type="button" class="blok-kop" data-blok-toggle="subtaken" aria-expanded="true"><span aria-hidden="true">▾</span> Subtaken</button></h4>
+      <div class="detail-subtaken" data-detail-subtaken></div>
+    </section>
+
+    <section class="detail-blok" data-detail-blok="scenario">
+      <h4><button type="button" class="blok-kop" data-blok-toggle="scenario" aria-expanded="true"><span aria-hidden="true">▾</span> Scenario</button></h4>
+      <div class="detail-gherkin"><pre data-detail-gherkin></pre></div>
+    </section>
+
+    <section class="detail-blok" data-detail-blok="activiteit">
+      <h4><button type="button" class="blok-kop" data-blok-toggle="activiteit" aria-expanded="true"><span aria-hidden="true">▾</span> Activiteit</button></h4>
+      <ol class="detail-historie" data-detail-historie></ol>
+    </section>
+
+    <!-- Wat er precies naar een echte Jira-issue gaat zodra een klantkoppeling
+         aanstaat. Zichtbaar maken is het punt: zo is vooraf te zien welk veld
+         waar landt, in plaats van het pas bij de eerste koppeling te ontdekken. -->
+    <section class="detail-blok" data-detail-blok="jira" hidden>
+      <h4><button type="button" class="blok-kop" data-blok-toggle="jira" aria-expanded="true"><span aria-hidden="true">▾</span> Als Jira-issue</button></h4>
+      <div class="detail-jira" data-detail-jira-vorm></div>
+    </section>
+
     <div class="detail-actions">
       <button type="button" class="ghost-button small" data-detail-doc>Open in Kennisbank</button>
       <button type="button" class="ghost-button small" data-detail-test>Open in Testbeheer</button>
+      <button type="button" class="ghost-button small" data-detail-jira>Toon als Jira-ticket</button>
       <button type="button" class="primary-button small" data-detail-run hidden>Simuleer de flow</button>
     </div>
   </aside>

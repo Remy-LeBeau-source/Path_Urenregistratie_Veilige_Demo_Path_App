@@ -29,6 +29,13 @@ When("de flow wordt gestart, gaat de wens naar de eigen wachtrij en niet naar Gi
 Then("meldt de pagina dat hij is aangenomen en staat hij op het bord, ook na herladen");
 And("een tweede bezoeker met een schone browser ziet dezelfde wens, want de wachtrij staat op de server");
 And("een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc");
+Given("een opgeleverd ticket wordt geopend vanaf het bord");
+When("de flow voor PIPE-H-010 wordt uitgevoerd");
+Then("staan de vaste blokken van een Jira-issuepagina er");
+And("toont Traceability de echte testcases met techniek en assertions");
+And("staan FO, TO en het databasemodel bij de story");
+And("vertelt de historie wat er echt is gebeurd");
+And("zijn de blokken in te klappen zoals in Jira");
 Given("het koppelingen-endpoint van de open demo-omgeving");
 When("de flow voor PIPE-H-009 wordt uitgevoerd");
 Then("geldt onze eigen bron en staan de drie klantbronnen klaar");

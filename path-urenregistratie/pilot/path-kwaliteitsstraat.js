@@ -4,6 +4,10 @@
   var STORAGE_KEY = 'path-pipeline-demo-v1';
   var DATA_URL = 'path-kwaliteitsstraat-data.json';
   var INTAKE_URL = 'path-kwaliteitsstraat-intake.php';
+  // Het databasemodel hoort bij elke story (wens Gio, 17 sep). Het bestand wordt
+  // gegenereerd uit het echte schema (npm run erd) en gaat met de gewone uitrol
+  // mee, dus dit blijft vanzelf gelijklopen met de database.
+  var ERD_PAD = '../database/ERD-nieuw.svg';
   var REPO_URL = 'https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App';
   var INTAKE_LABEL = 'pipeline-intake';
   // Opdracht Gio (17 sep): dit is onze eigen administratie, geen etalage. De
@@ -732,6 +736,149 @@
     return state.customTickets.concat(deliveredTickets(), openTickets()).find(function (t) { return t.key === key; });
   }
 
+  // ---- Issuedetail in Jira-opbouw -------------------------------------------
+  // De blokken hieronder vullen elk een vast deel van de issuepagina. Alles komt
+  // uit de projectstand; waar een gegeven niet bestaat staat dat er eerlijk bij
+  // in plaats van een leeg vakje of een verzonnen waarde.
+
+  function veiligeTekst(waarde, terugval) {
+    var tekst = String(waarde == null ? '' : waarde).trim();
+    return tekst === '' ? (terugval || '—') : tekst;
+  }
+
+  function vulBeschrijving(ticket, isLocal) {
+    var doel = $('[data-detail-beschrijving]');
+    if (!doel) return;
+    // Vaste opbouw zoals een PO hem schrijft, met dezelfde koppen als in Jira.
+    var delen = [
+      ['Omschrijving context', veiligeTekst(ticket.wish || ticket.goal || ticket.title)],
+      ['Gewenste waarde', veiligeTekst(ticket.goal, isLocal ? 'Niet ingevuld bij het indienen.' : 'Volgt uit de omschrijving hierboven.')],
+      ['Acceptatiecriterium', veiligeTekst(ticket.criterion, 'Nog geen apart criterium vastgelegd; het scenario hieronder geldt als criterium.')]
+    ];
+    if (ticket.version) {
+      delen.push(['Opgeleverd in', 'versie ' + ticket.version + (ticket.date ? ' (' + ticket.date + ')' : '')]);
+    }
+    doel.innerHTML = delen.map(function (paar) {
+      return '<div class="beschrijving-deel"><strong>' + escapeHtml(paar[0]) + '</strong><p>' + escapeHtml(paar[1]) + '</p></div>';
+    }).join('');
+  }
+
+  function vulTraceability(ticket) {
+    var doel = $('[data-detail-traceability]');
+    if (!doel) return;
+    var cases = ticket.cases || [];
+    if (!cases.length) {
+      // Zelfde eerlijke melding als Jira bij een issue zonder testcase.
+      doel.innerHTML = '<p class="leeg-blok">Nog geen testcase gekoppeld. Een wens krijgt zijn case zodra hij gebouwd wordt;'
+        + ' zonder case met een rode tegenproef telt een oplevering niet mee.</p>';
+      return;
+    }
+    doel.innerHTML = '<table class="trace-tabel"><thead><tr><th>Testcase</th><th>Techniek</th><th>Assertions</th><th>Platform</th></tr></thead><tbody>'
+      + cases.map(function (c) {
+        return '<tr>'
+          + '<td><button type="button" class="row-open" data-open-case="' + escapeHtml(c.id) + '">' + escapeHtml(c.id) + '</button>'
+            + '<small>' + escapeHtml(c.title || '') + '</small></td>'
+          + '<td>' + escapeHtml(c.technique || '—') + '</td>'
+          + '<td class="assert-count">' + (c.assertions || '—') + '</td>'
+          + '<td>' + escapeHtml(c.platform || '—') + '</td>'
+          + '</tr>';
+      }).join('') + '</tbody></table>';
+  }
+
+  function vulOntwerp(ticket, isLocal) {
+    var doel = $('[data-detail-ontwerp]');
+    if (!doel) return;
+    var analyse = isLocal ? analysisForLocal(ticket) : analysisForDelivered(ticket);
+    doel.innerHTML = '<div class="beschrijving-deel"><strong>Functioneel ontwerp</strong><p>' + escapeHtml(veiligeTekst(analyse.fo)) + '</p></div>'
+      + '<div class="beschrijving-deel"><strong>Technisch ontwerp</strong><p>' + escapeHtml(veiligeTekst(analyse.to)) + '</p></div>'
+      + '<p class="ontwerp-links">'
+        // Eigen attribuut: data-detail-doc staat al op de knop in de actiebalk, en
+        // twee elementen met dezelfde haak maken elke verwijzing dubbelzinnig.
+        + '<button type="button" class="ghost-button small" data-detail-doc-ontwerp>Open de Confluence-pagina</button> '
+        + '<a class="ghost-button small" href="' + ERD_PAD + '" target="_blank" rel="noopener">Databasemodel (ERD) ↗</a>'
+      + '</p>';
+  }
+
+  function vulSubtaken(ticket) {
+    var doel = $('[data-detail-subtaken]');
+    if (!doel) return;
+    var cases = ticket.cases || [];
+    if (!cases.length) {
+      doel.innerHTML = '<p class="leeg-blok">Geen subtaken.</p>';
+      return;
+    }
+    // De cases zijn onze subtaken: elk is een af te ronden stuk werk met een
+    // eigen uitkomst, precies zoals een subtaak in Jira.
+    doel.innerHTML = '<ol class="subtaken-lijst">' + cases.map(function (c) {
+      return '<li><button type="button" class="row-open" data-open-case="' + escapeHtml(c.id) + '">' + escapeHtml(c.id) + '</button>'
+        + '<span>' + escapeHtml(c.title || '') + '</span>'
+        + '<span class="status-pill pass">Geslaagd</span></li>';
+    }).join('') + '</ol>';
+  }
+
+  function vulHistorie(ticket, isLocal) {
+    var doel = $('[data-detail-historie]');
+    if (!doel) return;
+    // Alleen gebeurtenissen die we echt kunnen aantonen uit de projectstand.
+    var regels = [];
+    if (isLocal) {
+      regels.push(['Ingediend via het wensenloket', ticket.date || 'zojuist']);
+      if (ticket.status !== 'todo' && ticket.status !== 'ingediend') regels.push(['Opgepakt in VS Code', '—']);
+    } else {
+      regels.push(['Ingediend en vastgelegd in GIO-WENSEN.md', ticket.date || '—']);
+      if (ticket.status === 'doing') regels.push(['In uitvoering', veiligeTekst(ticket.who, 'agent')]);
+      if (ticket.status === 'done') {
+        if (ticket.cases && ticket.cases.length) {
+          regels.push([ticket.cases.length + ' testcase(s) toegevoegd met tegenproef', '—']);
+        }
+        regels.push(['Groene regressie in CI', '—']);
+        regels.push(['Uitgerold naar TEST in versie ' + veiligeTekst(ticket.version), ticket.date || '—']);
+      }
+    }
+    doel.innerHTML = regels.map(function (paar) {
+      return '<li><span>' + escapeHtml(paar[0]) + '</span><time>' + escapeHtml(paar[1]) + '</time></li>';
+    }).join('');
+  }
+
+  // Vertaalt een ticket naar de velden van een Jira-issue. Deze ene functie is
+  // straks ook wat de klantkoppeling gebruikt: wat hier staat, gaat daar de deur
+  // uit. Daarom geen vrije tekst maar een vaste afbeelding van veld naar veld.
+  function jiraVelden(ticket) {
+    var isLocal = ticket.source !== 'feed' && ticket.source !== 'fallback';
+    var analyse = isLocal ? analysisForLocal(ticket) : analysisForDelivered(ticket);
+    var soort = { feature: 'Story', bug: 'Bug', chore: 'Task', ci: 'Task' }[ticket.type] || 'Story';
+    var beschrijving = [
+      'Omschrijving context:', veiligeTekst(ticket.wish || ticket.title), '',
+      'Acceptatiecriterium:', veiligeTekst(ticket.criterion, 'Zie het scenario hieronder.'), '',
+      'Functioneel ontwerp:', veiligeTekst(analyse.fo), '',
+      'Technisch ontwerp:', veiligeTekst(analyse.to), '',
+      'Scenario:', veiligeTekst(ticket.gherkin, 'Geen scenario vastgelegd.')
+    ].join('\n');
+    return [
+      ['summary', ticket.key + ' ' + ticket.title],
+      ['issuetype', soort],
+      ['description', beschrijving],
+      ['labels', ['path-kwaliteitsstraat', ticket.type].join(', ')],
+      ['fixVersion', veiligeTekst(ticket.version, 'nog niet opgeleverd')],
+      ['status', ticket.status === 'done' ? 'Done' : (ticket.status === 'doing' ? 'In Progress' : 'To Do')],
+      ['testcases (Zephyr)', (ticket.cases || []).map(function (c) { return c.id; }).join(', ') || 'nog geen'],
+      ['remote link (Confluence)', 'de pagina van ' + ticket.key + ' in de Kennisbank']
+    ];
+  }
+
+  function toonAlsJiraTicket(key) {
+    var ticket = findTicket(key);
+    var blok = $('[data-detail-blok="jira"]');
+    var doel = $('[data-detail-jira-vorm]');
+    if (!ticket || !blok || !doel) return;
+    doel.innerHTML = '<p class="leeg-blok">Deze velden gaan mee zodra de Jira van een klant gekoppeld is.</p>'
+      + '<dl class="detail-fields">' + jiraVelden(ticket).map(function (paar) {
+        return '<dt>' + escapeHtml(paar[0]) + '</dt><dd><pre class="jira-waarde">' + escapeHtml(paar[1]) + '</pre></dd>';
+      }).join('') + '</dl>';
+    blok.hidden = false;
+    blok.scrollIntoView({ block: 'nearest' });
+  }
+
   function openDetail(key) {
     var ticket = findTicket(key);
     if (!ticket) return;
@@ -750,12 +897,17 @@
       ['Testcase', ticket.testId || '—'],
       ['Wie', ticket.who || (isLocal ? 'Jij, via dit formulier' : 'main')]
     ];
-    if (ticket.wish && ticket.wish !== ticket.title) fields.push(['Volledige wens', ticket.wish]);
-    if (ticket.criterion) fields.push(['Acceptatiecriterium', ticket.criterion]);
-    if (ticket.cases && ticket.cases.length) fields.push(['Cases', ticket.cases.map(function (c) { return c.id + ' (' + (c.assertions || 0) + ' assertions)'; }).join(', ')]);
     $('[data-detail-fields]').innerHTML = fields.map(function (pair) {
       return '<dt>' + escapeHtml(pair[0]) + '</dt><dd>' + escapeHtml(pair[1]) + '</dd>';
     }).join('');
+    // Het Jira-blok hoort bij het vorige ticket; bij een nieuw ticket weer dicht.
+    var jiraBlok = $('[data-detail-blok="jira"]');
+    if (jiraBlok) jiraBlok.hidden = true;
+    vulBeschrijving(ticket, isLocal);
+    vulTraceability(ticket);
+    vulOntwerp(ticket, isLocal);
+    vulSubtaken(ticket);
+    vulHistorie(ticket, isLocal);
     setText('[data-detail-gherkin]', ticket.gherkin || 'Geen Gherkin bij dit ticket.');
     var run = $('[data-detail-run]');
     if (run) run.hidden = !(isLocal && (ticket.status === 'todo' || ticket.status === 'ingediend'));
@@ -1259,7 +1411,7 @@
     if (openTicket) { openDetail(openTicket.getAttribute('data-open-ticket')); return; }
 
     if (target.closest('[data-detail-close], [data-detail-backdrop]')) { closeDetail(); return; }
-    if (target.closest('[data-detail-doc]')) { ui.docKey = ui.detail; ui.fixedDoc = ''; closeDetail(); switchTab('knowledge', false); render(); return; }
+    if (target.closest('[data-detail-doc], [data-detail-doc-ontwerp]')) { ui.docKey = ui.detail; ui.fixedDoc = ''; closeDetail(); switchTab('knowledge', false); render(); return; }
     if (target.closest('[data-detail-test]')) {
       var ticket = findTicket(ui.detail);
       ui.query = ticket && ticket.testId ? ticket.testId.toLowerCase() : '';
@@ -1267,6 +1419,34 @@
       if (zoek) zoek.value = ui.query;
       ui.status = 'all'; ui.folder = '';
       closeDetail(); switchTab('tests', false); render();
+      return;
+    }
+
+    // Klikken op een testcase in Traceability of Subtaken springt naar die case
+    // in Testbeheer -- de andere kant van dezelfde koppeling.
+    var openCase = target.closest('[data-open-case]');
+    if (openCase) {
+      ui.query = String(openCase.getAttribute('data-open-case') || '').toLowerCase();
+      var zoekveld = $('[data-search]');
+      if (zoekveld) zoekveld.value = ui.query;
+      ui.status = 'all'; ui.folder = ''; resetToon();
+      closeDetail(); switchTab('tests', false); render();
+      return;
+    }
+
+    if (target.closest('[data-detail-jira]')) { toonAlsJiraTicket(ui.detail); return; }
+
+    // Blokken in- en uitklappen, zoals de secties op een Jira-issuepagina.
+    var blokKop = target.closest('[data-blok-toggle]');
+    if (blokKop) {
+      var blokNaam = blokKop.getAttribute('data-blok-toggle');
+      var blok = $('[data-detail-blok="' + blokNaam + '"]');
+      if (blok) {
+        var open = blok.classList.toggle('is-dicht');
+        blokKop.setAttribute('aria-expanded', open ? 'false' : 'true');
+        var pijl = blokKop.querySelector('span');
+        if (pijl) pijl.textContent = open ? '▸' : '▾';
+      }
       return;
     }
 

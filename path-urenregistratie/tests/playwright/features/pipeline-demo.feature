@@ -39,6 +39,18 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
     And een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc
 
   @happy
+  Scenario: [PIPE-H-010] een ticket opent als een echte Jira-story: details, beschrijving, traceability, ontwerp en historie
+    # Testtechniek: Contractcontrole op de issuepagina (vaste blokken, veld-naar-veldafbeelding naar Jira) + controle dat traceability-cijfers uit de echte case komen en de ERD-link echt bereikbaar is
+    # Aantoonbare Playwright-assertions in deze case: 28
+    Given een opgeleverd ticket wordt geopend vanaf het bord
+    When de flow voor PIPE-H-010 wordt uitgevoerd
+    Then staan de vaste blokken van een Jira-issuepagina er
+    And toont Traceability de echte testcases met techniek en assertions
+    And staan FO, TO en het databasemodel bij de story
+    And vertelt de historie wat er echt is gebeurd
+    And zijn de blokken in te klappen zoals in Jira
+
+  @happy
   Scenario: [PIPE-H-009] de koppelingen tonen welke bron geldt en lekken nooit een instelling
     # Testtechniek: Contractcontrole op het koppelingen-endpoint (vorm, statusregels per bron) + negatieve inhoudscontrole dat geen enkele instelling naar buiten lekt
     # Aantoonbare Playwright-assertions in deze case: 19

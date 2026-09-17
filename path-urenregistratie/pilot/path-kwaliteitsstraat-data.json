@@ -1,8 +1,24 @@
 {
   "appVersion": "2.0.151",
-  "generatedAt": "2026-09-17T13:18:53.790Z",
+  "generatedAt": "2026-09-17T13:29:09.516Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "17 sep",
+      "version": "2.0.151",
+      "wish": "Opdracht Gio (met schermafdrukken uit zijn eigen Jira): een ticket moet er echt uitzien als een Jira-story. Het detailpaneel is herbouwd naar de opbouw van een Jira-issuepagina: inklapbare blokken Details, Beschrijving (vaste PO-opbouw: omschrijving context, gewenste waarde, acceptatiecriterium, opgeleverd in), Traceability (tabel met de echte testcases, techniek, assertions en platform), Functioneel en technisch ontwerp met een link naar het databasemodel (ERD, gegenereerd uit het echte schema), Subtaken, Scenario en Activiteit met een historie die alleen aantoonbare gebeurtenissen toont. Nieuw: 'Toon als Jira-ticket' laat veld voor veld zien wat er naar een echte Jira-issue gaat (summary, issuetype, description, labels, fixVersion, status, Zephyr-cases, Confluence-link) -- diezelfde afbeelding gebruikt de klantkoppeling straks, dus die ligt nu vast vóór de eerste koppeling bestaat. Klikken op een testcase springt naar Testbeheer, en andersom. Bewust NIET nagebouwd: story points, velocity en werklog, want die houden we niet echt bij en een verzonnen getal ondermijnt precies waar deze tool voor is. Besluit over de werkwijze: we werken feitelijk Kanban (doorlopende stroom, geen timeboxen); Scrum met sprints wordt voorbereid maar niet aangezet. PIPE-H-010, tegenproef: traceability-blok uitgezet -> rood op het aantal rijen; teruggezet -> groen. 14/14 PIPE groen.",
+      "cases": [
+        {
+          "id": "PIPE-H-010",
+          "title": "een ticket opent als een echte Jira-story: details, beschrijving, traceability, ontwerp en historie",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Contractcontrole op de issuepagina (vaste blokken, veld-naar-veldafbeelding naar Jira) + controle dat traceability-cijfers uit de echte case komen en de ERD-link echt bereikbaar is",
+          "assertions": 28,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een ticket opent als een echte Jira-story: details, beschrijving, traceability, ontwerp en historie\n  Given een opgeleverd ticket wordt geopend vanaf het bord\n  When de flow voor PIPE-H-010 wordt uitgevoerd\n  Then staan de vaste blokken van een Jira-issuepagina er\n  And toont Traceability de echte testcases met techniek en assertions\n  And staan FO, TO en het databasemodel bij de story\n  And vertelt de historie wat er echt is gebeurd\n  And zijn de blokken in te klappen zoals in Jira"
+        }
+      ]
+    },
     {
       "date": "17 sep",
       "version": "2.0.151",
