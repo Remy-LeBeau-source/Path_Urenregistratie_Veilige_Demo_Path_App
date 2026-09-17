@@ -1,8 +1,24 @@
 {
-  "appVersion": "2.0.153",
-  "generatedAt": "2026-09-17T13:49:25.567Z",
+  "appVersion": "2.0.154",
+  "generatedAt": "2026-09-17T14:50:21.329Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "17 sep",
+      "version": "2.0.154",
+      "wish": "Marc de Roon vroeg (Path Testteam-chat) wat het verschil is tussen \"Bestand kiezen\" en \"Foto maken\" bij het opslaan van een klanturenstaat -- getest in Chrome op zijn pc gaf \"Foto maken\" hem exact hetzelfde bestandenvenster als \"Bestand kiezen\", alleen zonder PDF-optie. Bevestigd als echte bevinding: `capture=\"environment\"` (bedoeld om direct de camera te openen) wordt door desktop-browsers genegeerd en valt terug op het gewone bestandenvenster, dus de knop is op een computer overbodig in plaats van kapot. \"Foto maken\" verbergt zich nu vanzelf op elk toestel zonder aanraakscherm (`matchMedia(\"(pointer: coarse)\")`), blijft gewoon staan op telefoon en tablet. DASH-H-034 uitgebreid met een controle die op beide toestandtypes het juiste gedrag bewijst.",
+      "cases": [
+        {
+          "id": "DASH-H-034",
+          "title": "de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee",
+          "feature": "tests/playwright/features/dashboard.feature",
+          "technique": "End-to-end use-case + visuele contractasserties",
+          "assertions": 32,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee\n  Given een lege kaart met kiezen, foto en zelf gemaild\n  When een verkeerd bestandstype wordt gekozen, dan blijft de kaart leeg met uitleg\n  When een PDF wordt gekozen, dan toont de kaart naam, grootte, kruisje en de verstuurknop\n  And het kruisje brengt de kaart terug naar leeg\n  When het bestand als bijlage wordt verstuurd, dan gaat precies dat bestand mee naar de indienroute\n  And na een weigering blijft het gekozen bestand staan\n  Then wordt met Playwright-assertions bevestigd dat de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee"
+        }
+      ]
+    },
     {
       "date": "17 sep",
       "version": "2.0.153",
@@ -487,7 +503,7 @@
           "technique": "Toestandsovergangtest (aangenomen → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van het wachtrij-antwoord + negatieve controle dat GitHub niet meer wordt benaderd",
           "assertions": 42,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub\n  Given de pagina opent in Confluence, want daar begint de keten\n  And vanaf het Jira-bord wijst een knop terug naar het loket\n  And een nieuwe wens met acceptatiecriterium\n  When de flow wordt gestart, gaat de wens naar de eigen wachtrij en niet naar GitHub\n  Then meldt de pagina dat hij is aangenomen en staat hij op het bord, ook na herladen\n  And een tweede bezoeker met een schone browser ziet dezelfde wens, want de wachtrij staat op de server\n  And een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc"
+          "gherkin": ""
         },
         {
           "id": "PIPE-N-002",
@@ -496,7 +512,7 @@
           "technique": "Foutinjectie op de intake (leeg veld, onleesbare invoer, grensoverschrijding, verkeerde methode) + omgevingsafscherming met tegenproef",
           "assertions": 17,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de intakewachtrij weigert onvolledige, te grote en verkeerd geadresseerde invoer, en bestaat niet op productie\n  Given de intakewachtrij van de open demo-omgeving\n  When er onvolledige, onleesbare, te grote en verkeerd geadresseerde verzoeken binnenkomen\n  Then staat er van al die pogingen niets in de wachtrij en lekt er geen IP-kenmerk\n  And op een productieomgeving bestaat de wachtrij helemaal niet"
+          "gherkin": ""
         }
       ]
     },

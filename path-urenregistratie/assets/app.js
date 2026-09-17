@@ -16006,6 +16006,16 @@ document.querySelector("#customer-timesheet-save-draft").addEventListener("click
 document.querySelectorAll("[data-klantkaart-kies]").forEach(knop => {
   knop.addEventListener("click", () => document.getElementById(knop.dataset.klantkaartKies)?.click());
 });
+// "Foto maken" gebruikt capture="environment", wat alleen op een toestel met
+// een echt cameraprimaat iets doet. Op een desktop-browser negeert Chrome dat
+// stilzwijgend en toont het gewoon hetzelfde bestandenvenster als "Bestand
+// kiezen", alleen zonder PDF -- overbodig en verwarrend in plaats van kapot
+// (gemeld door TEST-tester Marc de Roon, 17 sep, getest op zijn pc).
+// (pointer: coarse) is de gangbare manier om "primaire invoer is een vinger,
+// geen muis" te herkennen, ongeacht schermbreedte.
+if (typeof window.matchMedia === "function" && !window.matchMedia("(pointer: coarse)").matches) {
+  document.querySelector(".klantkaart-knop-foto")?.setAttribute("hidden", "");
+}
 ["#employee-customer-timesheet-file", "#employee-customer-timesheet-photo"].forEach(selector => {
   document.querySelector(selector)?.addEventListener("change", event => kiesKlantKaartBestand(event.currentTarget));
 });
