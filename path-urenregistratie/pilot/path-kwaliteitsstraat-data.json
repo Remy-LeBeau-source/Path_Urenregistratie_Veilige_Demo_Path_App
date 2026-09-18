@@ -1,6 +1,6 @@
 {
-  "appVersion": "2.0.156",
-  "generatedAt": "2026-09-17T23:25:44.985Z",
+  "appVersion": "2.0.157",
+  "generatedAt": "2026-09-17T23:39:07.226Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
@@ -1498,11 +1498,6 @@
       "date": "16 sep",
       "improvement": "Op het demobord per kaart tonen hoe lang een wens al open staat",
       "why": "Een PO ziet dan meteen wat blijft liggen zonder de datum te hoeven lezen."
-    },
-    {
-      "date": "16 sep",
-      "improvement": "In Berichten een filter op afzender (Backoffice, systeem)",
-      "why": "Bij meer dan tien berichten wordt zoeken op wie het stuurde sneller dan scrollen."
     },
     {
       "date": "16 sep",

@@ -27,7 +27,6 @@ Verbeteringen die wij zelf zien maar die Gio niet gevraagd heeft. Het wensformul
 |---|---|---|
 | 17 sep | De kwaliteitsstraat-pagina echt live laten meebewegen: de kaart zelf naar In uitvoering laten schuiven en de 1-2-3-4-balk (Ticket, Zephyr-testcase, Automatische test, TEST & Living Doc) echte voortgang tonen in plaats van alleen de dobbelsteen-simulatie. Vraagt een nieuw schrijfbaar statuspunt op de pagina; Gio koos ervoor dat gewoon openbaar schrijfbaar te maken, net als het indienen van een wens zelf (zelfde vertrouwensniveau, geen aparte sleutel). | Maakt in een keer zichtbaar dat de agent echt aan het werk is, zonder te hoeven wachten op een herlaadbeurt na een push. |
 | 16 sep | Op het demobord per kaart tonen hoe lang een wens al open staat | Een PO ziet dan meteen wat blijft liggen zonder de datum te hoeven lezen. |
-| 16 sep | In Berichten een filter op afzender (Backoffice, systeem) | Bij meer dan tien berichten wordt zoeken op wie het stuurde sneller dan scrollen. |
 | 16 sep | Bij een geweigerde invoer in Mijn uren de foutmelding naast het veld tonen, niet alleen in de statusregel | De regel staat onderaan; op een telefoon staat het veld buiten beeld als de melding komt. |
 | 16 sep | Testset: elke schrijvende case zijn eigen maand geven (TW-1) | Dan is een lokale volledige regressie weer een geldige meting in plaats van ruis. |
 | 16 sep | De vijf E2E-cases die op de gezaaide urenstaat leunen loskoppelen van de seed | Zelfde reden; nu valt de groep om zodra een andere spec eerder liep. |
