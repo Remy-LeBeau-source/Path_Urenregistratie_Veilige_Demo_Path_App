@@ -147,7 +147,7 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
   @happy
   Scenario: [KLV-H-015] het label onder het weeknummer telt de open dagen van die week af tot Compleet
     # Testtechniek: Toestandsovergangtest (N open → Compleet) + grenswaarde (laatste open dag)
-    # Aantoonbare Playwright-assertions in deze case: 6
+    # Aantoonbare Playwright-assertions in deze case: 7
     Given een week met nog open werkdagen
     When de medewerker één dag invult, dan telt het label één af
     Then staat er Compleet zodra elke werkdag van de week is ingevuld
@@ -172,7 +172,7 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
   @happy
   Scenario: [KLV-H-018] Berichten toont "Nieuw in de app" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD
     # Testtechniek: Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie) + inhoudscontrole (geen namen of gevoelige gegevens) + responsive viewport
-    # Aantoonbare Playwright-assertions in deze case: 28
+    # Aantoonbare Playwright-assertions in deze case: 29
     Given vondsten uit de monkey-verkenning op Klassiek is voorbereid
     When de flow voor KLV-H-018 wordt uitgevoerd
     Then staan er lokaal/op TEST 20 updates met datum en tijdstip, nieuwste eerst

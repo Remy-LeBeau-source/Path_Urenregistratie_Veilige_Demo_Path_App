@@ -1,8 +1,33 @@
 {
-  "appVersion": "2.0.177",
-  "generatedAt": "2026-09-18T19:34:43.915Z",
+  "appVersion": "2.0.178",
+  "generatedAt": "2026-09-18T20:21:24.670Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "18 sep",
+      "version": "2.0.178",
+      "wish": "Twee wisselvallige cases in de eigen verkenningsset betrouwbaar gemaakt, in plaats van ze te laten herhalen tot ze groen zijn. De CI van 2.0.177 viel om op KLV-H-015 en KLV-H-018 en was bij het herhalen van alleen die job groen; lokaal waren ze los ook groen. Eerst uitgezocht in plaats van aangenomen. KLV-H-015 (het weeklabel telt de open dagen af): de verwachte telling werd vastgelegd op het moment dat de testmaand werd klaargezet, maar het werkpatroon van de medewerker (sinds vandaag met een vrije vrijdag) komt van de server en kan daarna binnenkomen -- dan verwachtte de case 5 terwijl het label terecht 4 toonde. Nu wacht de case tot het label en de telregel van de app hetzelfde zeggen en rekent daarna met dát getal verder; dat is ook precies wat de case wil bewijzen. Onderweg eerst een verkeerde verklaring uitgesloten (dezelfde maand als een andere case -- bleek niet te botsen) en een meetfout van mezelf rechtgezet (Een regex die bij het inline aanpassen een onzichtbaar teken kreeg). KLV-H-018 (\"Nieuw in de app\" binnen de rand op 390px): paneel en regels werden na elkaar gemeten, direct na het verkleinen van het venster; loopt de opmaak dan nog, dan komen ze uit verschillende momenten en ontstaat een schijnbare -9. Nu wordt alles in één beeldmoment gemeten, pas als de opmaak twee opeenvolgende metingen gelijk is. Tegenproef: een regel echt 40px naar links verschoven -> rood (-23) op precies die controle; teruggezet -> groen. Beide lokaal meerdere keren achter elkaar groen.",
+      "cases": [
+        {
+          "id": "KLV-H-015",
+          "title": "het label onder het weeknummer telt de open dagen van die week af tot Compleet",
+          "feature": "tests/playwright/features/klassiek-verkenning.feature",
+          "technique": "Toestandsovergangtest (N open → Compleet) + grenswaarde (laatste open dag)",
+          "assertions": 7,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: het label onder het weeknummer telt de open dagen van die week af tot Compleet\n  Given een week met nog open werkdagen\n  When de medewerker één dag invult, dan telt het label één af\n  Then staat er Compleet zodra elke werkdag van de week is ingevuld"
+        },
+        {
+          "id": "KLV-H-018",
+          "title": "Berichten toont \"Nieuw in de app\" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD",
+          "feature": "tests/playwright/features/klassiek-verkenning.feature",
+          "technique": "Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie) + inhoudscontrole (geen namen of gevoelige gegevens) + responsive viewport",
+          "assertions": 29,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: Berichten toont \"Nieuw in de app\" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD\n  Given vondsten uit de monkey-verkenning op Klassiek is voorbereid\n  When de flow voor KLV-H-018 wordt uitgevoerd\n  Then staan er lokaal/op TEST 20 updates met datum en tijdstip, nieuwste eerst\n  And staan er 5 per pagina met Vorige en Volgende, tot en met de laatste pagina\n  And staat geen naam of gevoelig gegeven in de teksten\n  And op de PROD-host is het blok weg"
+        }
+      ]
+    },
     {
       "date": "18 sep",
       "version": "2.0.177",
@@ -349,7 +374,7 @@
           "technique": "Navigatietest over de drie werkruimtes via het gedeelde nummer + herstelbaarheid (dezelfde link opent hetzelfde ticket opnieuw) + negatieve inhoudscontrole dat de eigen implementatie (GitHub) nergens meer doorschemert",
           "assertions": 23,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: elk ticket heeft een deelbare link en zichtbare verwijzingen naar Confluence en Zephyr\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de flow voor PIPE-H-012 wordt uitgevoerd\n  Then claimt de pagina geen gereedschap dat we niet gebruiken\n  And stuurt geen enkele knop of link de lezer nog naar GitHub\n  And staan in het ticket de verwijzingen met hun echte nummer\n  And is de link naar dit ticket deelbaar\n  And wijst de keten door naar de uitkomst in de Living Doc\n  And brengt de Confluence-verwijzing je naar de pagina van hetzelfde nummer"
+          "gherkin": ""
         }
       ]
     },
@@ -767,7 +792,7 @@
           "title": "Berichten toont \"Nieuw in de app\" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD",
           "feature": "tests/playwright/features/klassiek-verkenning.feature",
           "technique": "Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie) + inhoudscontrole (geen namen of gevoelige gegevens) + responsive viewport",
-          "assertions": 28,
+          "assertions": 29,
           "platform": "desktop-chromium",
           "gherkin": ""
         }
@@ -1033,7 +1058,7 @@
           "title": "Berichten toont \"Nieuw in de app\" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD",
           "feature": "tests/playwright/features/klassiek-verkenning.feature",
           "technique": "Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie) + inhoudscontrole (geen namen of gevoelige gegevens) + responsive viewport",
-          "assertions": 28,
+          "assertions": 29,
           "platform": "desktop-chromium",
           "gherkin": ""
         }
@@ -1456,7 +1481,7 @@
           "title": "Berichten toont \"Nieuw in de app\" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD",
           "feature": "tests/playwright/features/klassiek-verkenning.feature",
           "technique": "Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie) + inhoudscontrole (geen namen of gevoelige gegevens) + responsive viewport",
-          "assertions": 28,
+          "assertions": 29,
           "platform": "desktop-chromium",
           "gherkin": ""
         }
@@ -1630,7 +1655,7 @@
           "title": "Berichten toont \"Nieuw in de app\" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD",
           "feature": "tests/playwright/features/klassiek-verkenning.feature",
           "technique": "Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie) + inhoudscontrole (geen namen of gevoelige gegevens) + responsive viewport",
-          "assertions": 28,
+          "assertions": 29,
           "platform": "desktop-chromium",
           "gherkin": ""
         }
@@ -1646,7 +1671,7 @@
           "title": "Berichten toont \"Nieuw in de app\" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD",
           "feature": "tests/playwright/features/klassiek-verkenning.feature",
           "technique": "Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie) + inhoudscontrole (geen namen of gevoelige gegevens) + responsive viewport",
-          "assertions": 28,
+          "assertions": 29,
           "platform": "desktop-chromium",
           "gherkin": ""
         }
@@ -1696,7 +1721,7 @@
           "title": "het label onder het weeknummer telt de open dagen van die week af tot Compleet",
           "feature": "tests/playwright/features/klassiek-verkenning.feature",
           "technique": "Toestandsovergangtest (N open → Compleet) + grenswaarde (laatste open dag)",
-          "assertions": 6,
+          "assertions": 7,
           "platform": "desktop-chromium",
           "gherkin": ""
         }

@@ -666,6 +666,20 @@ async function eigenMaandMetOpenWeek(page: Page, caseNummer: 0 | 1 | 2 | 3): Pro
   return { maand, openWeek, werkdagenOpen };
 }
 
+// Het aantal open werkdagen in de bekeken maand, zoals de app het op dit moment
+// telt. Bewust elke keer opnieuw: het werkpatroon van de medewerker (bijvoorbeeld
+// een vrije vrijdag) komt van de server en kan binnenkomen NADAT eigenMaandMetOpenWeek
+// al telde. Dan zei die hulpfunctie 5 terwijl het label even later 4 toonde --
+// wisselvallig rood in CI op 18 sep (KLV-H-015, groen bij herhalen).
+async function actueelOpen(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    const rt = window as unknown as IndienRt;
+    const period = rt.currentPeriod();
+    const record = rt.recordFor(rt.currentEmployee().id, period.key);
+    return ((0, eval)('ontbrekendeWerkdagen') as (r: unknown, p: unknown) => unknown[])(record, period).length;
+  });
+}
+
 async function naarMijnUren(page: Page): Promise<void> {
   await page.locator('.nav-item[data-view="timesheet"]:visible').first().click();
   await expect(page.locator('#view-timesheet')).toHaveClass(/is-active/);
@@ -765,10 +779,19 @@ test('[KLV-H-015] het label onder het weeknummer telt de open dagen van die week
   await loginPage.open();
   await loginPage.loginAsEmployee();
   await naarMijnUren(page);
-  const { openWeek, werkdagenOpen } = await eigenMaandMetOpenWeek(page, 3);
+  const { openWeek } = await eigenMaandMetOpenWeek(page, 3);
   const rij = page.locator(`#hours-grid tr[data-week-index="${openWeek}"]`);
   const label = rij.locator('.hours-weekcel small');
+  let werkdagenOpen = 0;
   await test.step('Given een week met nog open werkdagen', async () => {
+    // Wachten tot het label en de telregel van de app hetzelfde zeggen. Dat is
+    // precies wat deze case wil weten; het tijdstip waarop het werkpatroon
+    // binnenkomt hoort de uitkomst niet te bepalen.
+    await expect.poll(async () => {
+      werkdagenOpen = await actueelOpen(page);
+      return `label=${(await label.textContent())?.trim()} regel=${werkdagenOpen} open`;
+    }, { timeout: 15_000, message: 'label en telregel van de app blijven het oneens' }).toMatch(/^label=(\d+) open regel=\1 open$/);
+    expect(werkdagenOpen, 'er horen open werkdagen te zijn, anders toetst deze case niets').toBeGreaterThan(1);
     await expect(label).toHaveText(`${werkdagenOpen} open`);
     await expect(label).toHaveClass('is-open');
     // Weeknummer en label los van elkaar, ook waar ze naast elkaar staan.
@@ -912,17 +935,36 @@ test('[KLV-H-018] Berichten toont "Nieuw in de app" met de laatste 20 updates en
     await test.step(`And liggen de zichtbare regels en de paginabalk bij ${breedte}px binnen de rand van het paneel`, async () => {
       await page.setViewportSize({ width: breedte, height: 900 });
       await expect(blok).toBeVisible();
-      const paneel = (await blok.boundingBox())!;
-      for (const regel of [...await regels.locator('visible=true').all(), nav]) {
-        const vak = (await regel.boundingBox())!;
-        expect(vak.x - paneel.x, `linkermarge @ ${breedte}px`).toBeGreaterThanOrEqual(0);
-        expect(paneel.x + paneel.width - (vak.x + vak.width), `rechtermarge @ ${breedte}px`).toBeGreaterThanOrEqual(0);
-      }
-      for (const regel of await regels.locator('visible=true').all()) {
-        const vak = (await regel.boundingBox())!;
+      // Alles in ÉÉN beeldmoment meten, en pas als de opmaak stilstaat. Eerder
+      // werden paneel en regels na elkaar gemeten, direct na het verkleinen van het
+      // venster; loopt de opmaak dan nog (de navigatie klapt bij deze breedte om),
+      // dan komen paneel en regel uit verschillende momenten. Dat gaf wisselvallig
+      // -9 in CI (18 sep, groen bij herhalen) zonder dat er iets buiten het paneel stak.
+      const meet = () => page.evaluate(() => new Promise<{ paneel: DOMRect; vakken: DOMRect[]; regels: number }>((klaar) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          const paneel = document.querySelector('#nieuw-in-de-app')!.getBoundingClientRect();
+          const zichtbaar = [...document.querySelectorAll<HTMLElement>('#nieuw-in-de-app-lijst > li')].filter((li) => li.offsetParent !== null);
+          const nav = document.querySelector<HTMLElement>('#nieuw-in-de-app-paginering')!;
+          klaar({ paneel: paneel.toJSON(), vakken: [...zichtbaar, nav].map((e) => e.getBoundingClientRect().toJSON()), regels: zichtbaar.length });
+        }));
+      }));
+      let meting = await meet();
+      await expect.poll(async () => {
+        const vorige = JSON.stringify(meting);
+        meting = await meet();
+        return JSON.stringify(meting) === vorige;
+      }, { timeout: 5_000, message: 'de opmaak komt niet tot rust' }).toBe(true);
+      const { paneel, vakken, regels: aantalRegels } = meting;
+      expect(aantalRegels, `zichtbare regels @ ${breedte}px`).toBeGreaterThan(0);
+      vakken.forEach((vak, i) => {
+        expect(vak.x - paneel.x, `linkermarge @ ${breedte}px, element ${i}`).toBeGreaterThanOrEqual(0);
+        expect(paneel.x + paneel.width - (vak.x + vak.width), `rechtermarge @ ${breedte}px, element ${i}`).toBeGreaterThanOrEqual(0);
+      });
+      // De regels (zonder de paginabalk) houden daarnaast echte ruimte tot de rand.
+      vakken.slice(0, aantalRegels).forEach((vak) => {
         expect(vak.x - paneel.x, `ruimte links @ ${breedte}px`).toBeGreaterThanOrEqual(12);
         expect(paneel.x + paneel.width - (vak.x + vak.width), `ruimte rechts @ ${breedte}px`).toBeGreaterThanOrEqual(12);
-      }
+      });
     });
   }
   await test.step('And op de PROD-host is het blok weg', async () => {
