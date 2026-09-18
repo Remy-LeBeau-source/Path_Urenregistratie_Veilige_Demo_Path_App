@@ -1,8 +1,33 @@
 {
-  "appVersion": "2.0.178",
-  "generatedAt": "2026-09-18T20:21:24.670Z",
+  "appVersion": "2.0.179",
+  "generatedAt": "2026-09-18T21:32:16.557Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "18 sep",
+      "version": "2.0.179",
+      "wish": "Twee testcases leunen niet meer op de gezaaide demo-urenstaat (eerste deel van TW-1). Ze vielen om als een eerdere case in dezelfde run die urenstaat al had ingediend of goedgekeurd, wat een lokale volledige regressie onbetrouwbaar maakte. SKIN-H-035 (de goedkeurkaart op 360px) maakt nu zelf een wegwerpmedewerker aan die maart 2021 indient, zoekt precies die kaart op en ruimt na afloop op (correctie vragen, dan deactiveren; verwijderen weigert de server terecht omdat er historie is). Onderweg gevonden: zonder startdatum in het opruimverzoek weigert de server het deactiveren met 409, dus die gaat nu mee. E2E-H-018 (factuurbijlagen zijn echte PDF's) werkt nu in een willekeurige, nog ongebruikte verre maand, in plaats van in de huidige maand met voorwaardelijke takken. Techniek: testware-analyse op testonafhankelijkheid (ISTQB). Tegenproeven: afstand tussen de knoppen 4px in plaats van 10px geeft rood op SKIN-H-035 (verwacht 10, gemeten 4); de no-store-header uit de factuurdownload halen geeft rood op E2E-H-018. Allebei teruggezet en groen. De drie TS-REV-UI-cases uit dezelfde meting staan nog open.",
+      "cases": [
+        {
+          "id": "SKIN-H-035",
+          "title": "op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle breedte",
+          "feature": "tests/playwright/features/skin.feature",
+          "technique": "Toestandsovergang",
+          "assertions": 21,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle breedte\n  Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid\n  When de flow voor SKIN-H-035 wordt uitgevoerd\n  Then staan de knoppen onder elkaar in de afgesproken volgorde, met 10px ertussen\n  And staat Goedkeuren ook in de DOM eerst, zodat de tabvolgorde klopt\n  And heeft Correctie vragen alleen een rand, geen vlak\n  And blijft dat zo in het donkere thema\n  And houdt de desktopkaart zijn beeld, met een DOM-volgorde die gelijk loopt met dat beeld\n  And springt de volgorde terug als het scherm weer smal wordt"
+        },
+        {
+          "id": "E2E-H-018",
+          "title": "iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF",
+          "feature": "tests/playwright/features/end-to-end-workflows.feature",
+          "technique": "Equivalentieklassen",
+          "assertions": 29,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF\n  Given een goedgekeurde urenstaat klaarstaat voor facturatie\n  When Backoffice de factuur definitief maakt\n  Then levert de factuurbijlage een echte, geldige PDF met veilige headers\n  And blijft dezelfde bijlage na een verversing byte voor byte gelijk\n  And belooft geen enkele delivery een bijlage zonder werkelijk bestand"
+        }
+      ]
+    },
     {
       "date": "18 sep",
       "version": "2.0.178",
@@ -358,7 +383,7 @@
           "technique": "Toestandsovergangtest op het bord (kolom naar kolom) met controle op de server in plaats van op het scherm + herstelbaarheid na herladen zonder browseropslag + tweede lezer ziet dezelfde stand + equivalentieklassen op de lezer (anoniem ziet geen naam, ingelogd wel)",
           "assertions": 21,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: een kaart verplaatsen verandert de stand echt en blijft staan na herladen\n  Given anoniem verplaatsen wordt geweigerd\n  Given de opslag kent deze kaart nog niet\n  When de kaart naar In uitvoering wordt gesleept\n  Then weet de server het, met een geschiedenisregel erbij\n  And blijft hij daar na herladen, ook zonder de browseropslag\n  And een tweede lezer ziet dezelfde stand\n  And de kaart gaat terug, zodat deze case geen sporen achterlaat"
+          "gherkin": ""
         }
       ]
     },
@@ -1927,7 +1952,7 @@
     },
     {
       "date": "16 sep",
-      "improvement": "De vijf E2E-cases die op de gezaaide urenstaat leunen loskoppelen van de seed",
+      "improvement": "De drie TS-REV-UI-cases (H-008, H-011, H-012) die in een volledige lokale run omvallen onafhankelijk maken (E2E-H-018 en SKIN-H-035 zijn al los, 2.0.179)",
       "why": "Zelfde reden; nu valt de groep om zodra een andere spec eerder liep."
     }
   ]

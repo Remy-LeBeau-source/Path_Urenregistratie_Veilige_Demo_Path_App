@@ -315,7 +315,7 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
   @happy
   Scenario: [SKIN-H-034] een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgloed
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 3
+    # Aantoonbare Playwright-assertions in deze case: 12
     Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
     When de hoofdactie ingedrukt wordt gehouden
     Then krimpt hij zichtbaar en licht de mintschaduw op

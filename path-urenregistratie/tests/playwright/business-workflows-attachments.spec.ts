@@ -37,11 +37,30 @@ async function leesUrenstaat(page: Page, periode: string, medewerkerId: number):
   return (await response.json() as Json).timesheet as Json;
 }
 
-function periodeKey(label: string): string {
-  const maanden = ['januari', 'februari', 'maart', 'april', 'mei', 'juni',
-    'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
-  const delen = label.toLowerCase().split(/\s+/);
-  return `${delen[1]}-${String(maanden.indexOf(delen[0]) + 1).padStart(2, '0')}`;
+async function schrijf(page: Page, pad: string, data: Json): Promise<{ status: number; body: Json }> {
+  const response = await page.request.post(pad, { headers: { 'X-CSRF-Token': await csrf(page) }, data });
+  return { status: response.status(), body: await response.json() as Json };
+}
+
+// Een eigen, nog ongebruikte maand. Eerder werkte deze case in de huidige maand
+// van de gezaaide medewerker, met takken voor "er is nog een vrij vak" en "hij is
+// al ingediend". Stond die maand al goedgekeurd of gefactureerd (door de seed of
+// een eerdere case), dan liep hij vast zonder dat er aan de bijlagen iets mis was.
+// Nu een willekeurige maand ver weg, zoals de e-mailwachtrij-specs: de harness
+// stuurt de run-sleutel mee (X-Path-E2E-Run-Id), waardoor de server die toestaat.
+// Dag 1 moet ma-do zijn; de server weigert een werkdag in het weekend.
+async function ongebruiktePeriode(page: Page, medewerkerId: number): Promise<string> {
+  for (let poging = 0; poging < 40; poging++) {
+    const jaar = 3000 + Math.floor(Math.random() * 7000);
+    const maand = 1 + Math.floor(Math.random() * 12);
+    const weekdag = new Date(Date.UTC(jaar, maand - 1, 1)).getUTCDay();
+    if (weekdag < 1 || weekdag > 4) continue;
+    const periode = `${jaar}-${String(maand).padStart(2, '0')}`;
+    const gelezen = await (await page.request.get(
+      `/server/api/timesheets.php?period=${periode}&employee_id=${medewerkerId}`)).json() as Json;
+    if (gelezen.ok && !gelezen.found) return periode;
+  }
+  throw new Error('geen ongebruikte periode gevonden voor E2E-H-018');
 }
 
 test('[E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF', async ({ page }) => {
@@ -57,29 +76,28 @@ test('[E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige e
   await test.step('Given een goedgekeurde urenstaat klaarstaat voor facturatie', async () => {
     await loginPage.open();
     await loginPage.loginAsEmployee();
-    await page.locator('button[data-view="timesheet"]').click();
-    await expect(page.locator('#timesheet-status')).toBeVisible();
-    periodeSleutel = periodeKey(String(await page.locator('#period-label').textContent() || '').trim());
 
     const ik = await (await page.request.get('/server/auth/me.php')).json() as Json;
     const bootstrap = await (await page.request.get('/server/api/bootstrap.php')).json() as Json;
     medewerkerId = Number((bootstrap.employees as Json[]).find(
       item => Number(item.user_id) === Number((ik.user as Json).id))?.id || 0);
     expect(medewerkerId).toBeGreaterThan(0);
+    periodeSleutel = await ongebruiktePeriode(page, medewerkerId);
 
-    const invoer = page.locator('#hours-grid .hours-input:not([disabled])').first();
-    if (await invoer.count()) {
-      await invoer.fill('8');
-      await invoer.press('Tab');
-      await page.locator('[data-hours-week-scope="all"]').click();
-      const schrijf = page.waitForResponse(response =>
-        response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
-      await page.locator('#submit-timesheet').click();
-      await page.locator('#modal-confirm').click();
-      await schrijf;
-    }
-    urenstaatId = Number((await leesUrenstaat(page, periodeSleutel, medewerkerId)).id || 0);
+    const uren = {
+      period: periodeSleutel, contractual_hours: 160, billable_hours: 8, leave_hours: 0, sickness_hours: 0,
+      day_entries: [{ work_date: `${periodeSleutel}-01`, hours: 8, description: 'E2E-H-018' }],
+    };
+    const concept = await schrijf(page, '/server/api/timesheets.php', { action: 'save_draft', ...uren });
+    expect(concept.status, JSON.stringify(concept.body)).toBe(200);
+    const ingediend = await schrijf(page, '/server/api/timesheets.php', {
+      action: 'submit', ...uren, expected_version: Number((concept.body.timesheet as Json | undefined)?.version || 0),
+    });
+    expect(ingediend.status, JSON.stringify(ingediend.body)).toBe(200);
+    const ingediendeUrenstaat = await leesUrenstaat(page, periodeSleutel, medewerkerId);
+    urenstaatId = Number(ingediendeUrenstaat.id || 0);
     expect(urenstaatId, 'de urenstaat hoort te bestaan').toBeGreaterThan(0);
+    expect(String(ingediendeUrenstaat.status), 'de urenstaat hoort ingediend te zijn').toBe('submitted');
 
     const customerTimesheet = await page.request.post('/server/api/customer-timesheets.php', {
       headers: { 'X-CSRF-Token': await csrf(page) },
@@ -101,16 +119,13 @@ test('[E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige e
     });
     expect(confirmation.ok(), `extern bevestigen hoort te slagen: ${await confirmation.text()}`).toBe(true);
 
-    const status = String((await leesUrenstaat(page, periodeSleutel, medewerkerId)).status);
-    if (status === 'submitted') {
-      await page.locator('button[data-view="approvals"]').click();
-      const goedkeuren = page.locator(`[data-approve="${medewerkerId}"]`).first();
-      await expect(goedkeuren).toBeVisible();
-      const schrijf = page.waitForResponse(response =>
-        response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
-      await goedkeuren.click();
-      await schrijf;
-    }
+    // Goedkeuren via de API: de verre testmaand staat bewust niet in de
+    // goedkeurlijst (die kijkt niet vooruit), en deze case gaat over de bijlagen.
+    const goedgekeurd = await schrijf(page, '/server/api/timesheets.php', {
+      action: 'approve', period: periodeSleutel, employee_id: medewerkerId,
+      expected_version: Number((await leesUrenstaat(page, periodeSleutel, medewerkerId)).version || 0),
+    });
+    expect(goedgekeurd.status, JSON.stringify(goedgekeurd.body)).toBe(200);
     expect(String((await leesUrenstaat(page, periodeSleutel, medewerkerId)).status),
       'de urenstaat hoort goedgekeurd te zijn voordat er gefactureerd wordt').toBe('approved');
   });

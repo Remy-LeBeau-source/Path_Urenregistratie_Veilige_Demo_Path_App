@@ -164,7 +164,7 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 637 Playwri
 - Source: `tests/playwright/business-workflows-*.spec.ts`
 - Cases: 26
 
-- [E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF — Techniek: Equivalentieklassen · Assertions: 27
+- [E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF — Techniek: Equivalentieklassen · Assertions: 29
 - [E2E-N-020] een medewerker kan de Backoffice-keten niet uitvoeren en een weigering verandert niets — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
 - [E2E-N-018] documentlinks accepteren geen ongeautoriseerde gebruiker, clientpad of vrije bestandsnaam — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 21
 - [E2E-H-004] goedkeuring vervangt urencontrole door factuurverzending voor hetzelfde dossier — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
@@ -783,7 +783,7 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 637 Playwri
 - [SKIN-H-032] Klassiek en Modern tonen dezelfde statusketen, uit dezelfde bron — Techniek: Toestandsovergang · Assertions: 14
 - [SKIN-H-033] de medewerkerschermen rekken op een breed scherm niet verder uit dan 1060px en staan gecentreerd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 8
 - [SKIN-H-037] Klassiek houdt Berichten compact in licht en donker, Nieuw behoudt zijn eigen kopnavigatie — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
-- [SKIN-H-034] een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgloed — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
+- [SKIN-H-034] een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgloed — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 12
 - [SKIN-H-035] op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle breedte — Techniek: Toestandsovergang · Assertions: 21
 - [SKIN-H-036] een dialoog met open toetsenbord houdt de knoppen, de sluitactie en het typveld in beeld — Techniek: Toestandsovergang · Assertions: 7
 - [SKIN-N-008] met "minder beweging" houdt een dialoog met open toetsenbord de knoppen, de sluitactie en het typveld in beeld — Techniek: Toestandsovergang · Assertions: 7

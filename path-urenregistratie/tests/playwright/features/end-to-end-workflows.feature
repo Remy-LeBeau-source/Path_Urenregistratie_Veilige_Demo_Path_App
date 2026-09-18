@@ -11,7 +11,7 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
   @happy
   Scenario: [E2E-H-018] iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF
     # Testtechniek: Equivalentieklassen
-    # Aantoonbare Playwright-assertions in deze case: 27
+    # Aantoonbare Playwright-assertions in deze case: 29
     Given een goedgekeurde urenstaat klaarstaat voor facturatie
     When Backoffice de factuur definitief maakt
     Then levert de factuurbijlage een echte, geldige PDF met veilige headers

@@ -2387,8 +2387,98 @@ test('[SKIN-H-034] een ingedrukte knop krimpt, en de hoofdactie krijgt de mintgl
 // En de volgorde in de DOM, want die bepaalt de tabvolgorde: een versie die
 // de knoppen alleen via CSS `order` verplaatste, zou er goed uitzien en toch
 // een toetsenbordgebruiker eerst naar de onderste knop sturen.
+// Een eigen, ingediende urenstaat om goed te keuren, los van de gezaaide
+// demo-data. Eerder nam SKIN-H-035 de eerste goedkeurkaart die er toevallig
+// stond; zonder ingediende urenstaat in de seed (of als een eerdere case die
+// al had goedgekeurd) viel de case om zonder dat er iets aan de kaart mis was.
+// Een wegwerpmedewerker met een startdatum in 2020 dient maart 2021 in: een
+// maand die geen enkele andere case gebruikt, en die Beheer toch meeneemt
+// omdat hij in het verleden ligt. Opruimen: eerst correctie vragen (dan staat
+// hij niet meer bij Goedkeuren en telt hij nergens mee), dan de medewerker
+// deactiveren. Verwijderen kan niet en hoort ook niet: de server bewaart een
+// account met urenstaten en inloghistorie (users.php, delete-history-preserved).
+async function eigenIngediendeUrenstaat(): Promise<{ medewerkerId: number; periode: string; opruimen: () => Promise<void> }> {
+  const uniek = `${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 900 + 100)}`;
+  const adres = `goedkeurproef-${uniek}@example.invalid`;
+  const naam = `Goedkeurproef ${uniek}`;
+  const wachtwoord = `GoedkeurE2e!${uniek}`;
+  const periode = '2021-03';
+  const beheer = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+  const medewerker = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+  const post = async (ctx: typeof beheer, pad: string, data: JsonBody) => {
+    const csrf = await (await ctx.get('/server/auth/csrf.php')).json() as { csrf_token?: string };
+    const res = await ctx.post(pad, { headers: { 'X-CSRF-Token': String(csrf.csrf_token || '') }, data });
+    return { status: res.status(), body: await res.json() as JsonBody };
+  };
+  let gebruikerId = 0;
+  let medewerkerId = 0;
+  let versie = 0;
+  const opruimen = async () => {
+    if (medewerkerId > 0 && versie > 0) {
+      await post(beheer, '/server/api/timesheets.php', {
+        action: 'request_correction', period: periode, employee_id: medewerkerId, expected_version: versie,
+        correction_message: 'Opruimen na SKIN-H-035.',
+      }).catch(() => null);
+    }
+    if (gebruikerId > 0) {
+      await post(beheer, '/server/api/staff.php', {
+        action: 'upsert_employee',
+        sendInvitation: false,
+        // startDate opnieuw meesturen: zonder valt de server terug op vandaag,
+        // en dan weigert hij (409) omdat maart 2021 buiten beeld zou raken.
+        employee: { name: naam, email: adres, dbEmployeeId: medewerkerId, dbUserId: gebruikerId, role: 'Consultant', active: false, startDate: '2020-01-01' },
+      }).catch(() => null);
+    }
+    await medewerker.dispose();
+    await beheer.dispose();
+  };
+  try {
+    const login = await post(beheer, '/server/auth/login.php', {
+      email: appConfig.adminEmail,
+      password: requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'),
+    });
+    expect(login.status, 'Backoffice moet kunnen inloggen om de medewerker aan te maken').toBe(200);
+    const aangemaakt = await post(beheer, '/server/api/staff.php', {
+      action: 'upsert_employee',
+      sendInvitation: false,
+      employee: { name: naam, email: adres, role: 'Consultant', active: true, startDate: '2020-01-01', weeklyHours: 40 },
+    });
+    expect(aangemaakt.status, JSON.stringify(aangemaakt.body)).toBe(200);
+    gebruikerId = Number(aangemaakt.body.user_id || 0);
+    medewerkerId = Number(aangemaakt.body.employee_id || 0);
+    expect(medewerkerId, 'de wegwerpmedewerker hoort een medewerker-id te krijgen').toBeGreaterThan(0);
+
+    const reset = await post(beheer, '/server/auth/request-reset.php', { email: adres });
+    expect(reset.status).toBe(200);
+    const gezet = await post(medewerker, '/server/auth/reset-password.php', { token: String(reset.body.token || ''), new_password: wachtwoord });
+    expect(gezet.status, JSON.stringify(gezet.body)).toBe(200);
+    const binnen = await post(medewerker, '/server/auth/login.php', { email: adres, password: wachtwoord });
+    expect(binnen.status, JSON.stringify(binnen.body)).toBe(200);
+
+    // 1 maart 2021 is een maandag.
+    const uren = {
+      period: periode, contractual_hours: 184, billable_hours: 8, leave_hours: 0, sickness_hours: 0,
+      day_entries: [{ work_date: `${periode}-01`, hours: 8, description: 'SKIN-H-035' }],
+    };
+    const concept = await post(medewerker, '/server/api/timesheets.php', { action: 'save_draft', ...uren });
+    expect(concept.status, JSON.stringify(concept.body)).toBe(200);
+    const ingediend = await post(medewerker, '/server/api/timesheets.php', {
+      action: 'submit', ...uren, expected_version: Number((concept.body.timesheet as JsonBody | undefined)?.version || 0),
+    });
+    expect(ingediend.status, JSON.stringify(ingediend.body)).toBe(200);
+    versie = Number((ingediend.body.timesheet as JsonBody | undefined)?.version || 0);
+    expect((ingediend.body.timesheet as JsonBody | undefined)?.status, 'de urenstaat hoort ingediend te zijn').toBe('submitted');
+  } catch (fout) {
+    await opruimen();
+    throw fout;
+  }
+  return { medewerkerId, periode, opruimen };
+}
+
 test('[SKIN-H-035] op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle breedte', async ({ page }) => {
   test.setTimeout(120_000);
+  const { medewerkerId, periode, opruimen } = await eigenIngediendeUrenstaat();
+  try {
   const loginPage = new LoginPage(page);
   await loginPage.open();
   await page.setViewportSize({ width: 360, height: 740 });
@@ -2397,8 +2487,10 @@ test('[SKIN-H-035] op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vr
   await page.evaluate(() => { window.location.hash = 'approvals'; });
   await expect(page.locator('#view-approvals')).toHaveClass(/is-active/);
 
-  const acties = page.locator('#view-approvals .approval-actions').first();
-  await expect(acties).toBeVisible();
+  // Alle openstaande tonen: de eigen maand (maart 2021) is niet de bekeken maand.
+  await page.locator('#approval-period-filters [data-approval-scope="all"]').click();
+  const acties = page.locator(`#view-approvals .approval-actions:has([data-approve="${medewerkerId}"][data-period-key="${periode}"])`);
+  await expect(acties, 'de eigen ingediende urenstaat hoort als goedkeurkaart te verschijnen').toBeVisible({ timeout: 20_000 });
 
   await test.step('Then staan de knoppen onder elkaar in de afgesproken volgorde, met 10px ertussen', async () => {
     const maten = await acties.evaluate(el => {
@@ -2492,6 +2584,9 @@ test('[SKIN-H-035] op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vr
       knop.hasAttribute('data-approve') ? 'goedkeuren' : knop.hasAttribute('data-request-correction') ? 'correctie' : 'bekijken')))
       .toEqual(['goedkeuren', 'correctie', 'bekijken']);
   });
+  } finally {
+    await opruimen();
+  }
 });
 
 // Besluit van Gio (14 sep): elke dialoog blijft met open softwaretoetsenbord
