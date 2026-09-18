@@ -1,11 +1,11 @@
 {
-  "appVersion": "2.0.161",
-  "generatedAt": "2026-09-18T07:00:16.308Z",
+  "appVersion": "2.0.162",
+  "generatedAt": "2026-09-18T07:21:39.617Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
       "date": "18 sep",
-      "version": "2.0.161",
+      "version": "2.0.162",
       "wish": "Opdracht Gio: het bord moet live meebewegen, en de kaarten moeten vanzelf naar In uitvoering. De 1-2-3-4-balk was een simulatie met een dobbelsteen: leuk om de flow te laten zien, maar hij vertelde niets over echt werk. Nu meldt de pijplijn zijn stappen aan de opslag (nieuw onderdeel \"voortgang\", dezelfde vorm op beide achterkanten) en toont de pagina die, met de toelichting die de pijplijn zelf meestuurt. De pagina haalt zijn stand elke tien seconden op en tekent alleen opnieuw als er echt iets veranderd is -- anders springt het scherm onder je handen weg terwijl je leest; op een verborgen tabblad gebeurt er niets (geen verzoeken voor niemand, geen batterij op een telefoon), en zodra je terugkomt wordt meteen bijgewerkt. De simulatieknop blijft bestaan, maar overschrijft nooit meer wat er werkelijk gebeurt; de balk laat zelf zien welke van de twee je ziet. Schrijfrecht, afwijkend van je eerdere keuze -- lees dit even: jij koos destijds \"gewoon openbaar schrijfbaar, zelfde vertrouwensniveau als het indienen van een wens\". Dat heb ik niet zo gedaan. Een wens indienen voegt iets toe dat daarna door een mens wordt beoordeeld, maar voortgang melden verandert wat de pagina beweert over werk dat al loopt: dan kan iedere voorbijganger laten zien dat iets \"op TEST staat\" terwijl dat niet zo is, en is het geen administratie meer. De pijplijn meldt zich daarom met een sleutel die alleen op de server staat (kwaliteitsstraat.agent_sleutel in server/config.local.php); staat die er niet, dan bestaat die weg niet. Zeg het als je het toch openbaar wilt, dan draai ik het terug. Nieuw hulpmiddel: npm run intake:voortgang -- PATH-201 2 \"Zephyr-case geschreven\", dat bewust zacht faalt -- lukt het melden niet, dan is dat jammer voor het scherm en mag het nooit lopend werk afbreken. PIPE-H-017 (toestandsovergangtest over de vier fasen, grenswaarden op de fase, negatieve klasse op het schrijfrecht), tegenproef: het meebewegen uitgezet -> rood; teruggezet -> groen. De opslagcheck ging van 30 naar 39 controles.",
       "cases": [
         {
