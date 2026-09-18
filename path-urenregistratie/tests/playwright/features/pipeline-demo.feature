@@ -71,6 +71,16 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
     Then toont de pagina toch de echte stand, niet de voorbeelddata
     And blijft de pagina het eerlijk melden als het echt niet lukt
 
+  @happy
+  Scenario: [PIPE-H-018] elke openstaande kaart toont hoe lang hij al open is, en valt op vanaf een week
+    # Testtechniek: Datagedreven over alle openstaande kaarten (elk getal nagerekend tegen zijn eigen begindatum) + grenswaarden op de weekdrempel (6 gewoon, 7 valt op) en op enkelvoud/meervoud (vandaag, 1 dag, meer dagen), met een vastgezette klok
+    # Aantoonbare Playwright-assertions in deze case: 12
+    Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid
+    When de flow voor PIPE-H-018 wordt uitgevoerd
+    Then heeft elke openstaande kaart een label, en opgeleverd werk niet
+    And klopt het getal voor elke kaart met zijn eigen begindatum
+    And valt hij pas op vanaf zeven dagen
+
   @negative
   Scenario: [PIPE-N-006] geen enkele openbare bron van de kwaliteitsstraat bevat namen of mailadressen van medewerkers
     # Testtechniek: Datagedreven over de volledige personenlijst uit het zaaibestand (naam, voornaam, delen van een dubbele voornaam, mailadres) + equivalentieklassen over elke openbare bron van de pagina (projectstand, html, script, anonieme opslag, koppelingen)

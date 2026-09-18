@@ -154,6 +154,7 @@ function techniqueFor(definition, testCase) {
       'PIPE-H-006': 'Meting van berekende stijl in licht en donker + responsive viewport (intake #45)',
       'PIPE-H-007': 'Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst',
       'PIPE-H-008': 'Beslistabel op het criterium-voorstel (leeg/getal/status/generiek geeft elk een ander Then) + negatieve controle op een extern netwerkverzoek',
+      'PIPE-H-018': 'Datagedreven over alle openstaande kaarten (elk getal nagerekend tegen zijn eigen begindatum) + grenswaarden op de weekdrempel (6 gewoon, 7 valt op) en op enkelvoud/meervoud (vandaag, 1 dag, meer dagen), met een vastgezette klok',
       'PIPE-N-006': 'Datagedreven over de volledige personenlijst uit het zaaibestand (naam, voornaam, delen van een dubbele voornaam, mailadres) + equivalentieklassen over elke openbare bron van de pagina (projectstand, html, script, anonieme opslag, koppelingen)',
       'PIPE-H-017': 'Toestandsovergangtest over de vier fasen van de straat (elke stap moet op het scherm terechtkomen, en vrijgeven moet hem weer loslaten) + grenswaarden op de fase (0 en 4 horen erbij, -1 en 5 niet) + negatieve klasse op het schrijfrecht',
       'PIPE-N-005': 'Foutinjectie op de netwerklaag met grenswaardeanalyse op het aantal pogingen (twee mislukkingen nog goed, drie mislukkingen geeft de eerlijke terugvalmelding)',

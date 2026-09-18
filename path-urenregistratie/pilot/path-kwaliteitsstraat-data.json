@@ -1,8 +1,24 @@
 {
-  "appVersion": "2.0.173",
-  "generatedAt": "2026-09-18T18:23:34.765Z",
+  "appVersion": "2.0.174",
+  "generatedAt": "2026-09-18T18:40:20.658Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "18 sep",
+      "version": "2.0.174",
+      "wish": "Nice-to-have uit onze eigen lijst opgeleverd: elke openstaande kaart toont hoe lang hij al open is. \"Een PO ziet dan meteen wat blijft liggen zonder de datum te hoeven lezen.\" Kaarten in Te doen en In uitvoering krijgen \"vandaag open\", \"1 dag open\" of \"N dagen open\"; vanaf zeven dagen valt het label op in amber, met de tekst erbij zodat het niet alleen van de kleur afhangt. Opgeleverd werk krijgt geen teller, want dat staat niet meer open. Een wens uit het loket rekent vanaf het exacte indientijdstip; een wens uit deze lijst heeft alleen \"16 sep\" zonder jaar, en dan geldt dit jaar, tenzij die datum in de toekomst zou liggen (Een wens van december, gelezen in januari). De begindatum staat als attribuut op het label, zodat het getal na te rekenen is. Ook de afgeronde wens \"het bord live laten meebewegen\" stond nog in deze nice-to-have-lijst, met de verouderde zin dat het openbaar schrijfbaar zou worden -- verwijderd; en de keuzeknoppen met lange tekst waren volledig rond, wat op een telefoon ovale vlekken gaf -- nu een vaste ronding. PIPE-H-018 met vastgezette klok: datagedreven over alle openstaande kaarten (elk getal nagerekend tegen zijn eigen begindatum) plus grenswaarden op de week (6 gewoon, 7 valt op) en op enkelvoud/meervoud; tegenproeven: drempel op 8 -> rood (\"7 dagen open valt niet op\"), altijd meervoud -> rood (\"0 dagen open\" in plaats van \"vandaag open\").",
+      "cases": [
+        {
+          "id": "PIPE-H-018",
+          "title": "elke openstaande kaart toont hoe lang hij al open is, en valt op vanaf een week",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Datagedreven over alle openstaande kaarten (elk getal nagerekend tegen zijn eigen begindatum) + grenswaarden op de weekdrempel (6 gewoon, 7 valt op) en op enkelvoud/meervoud (vandaag, 1 dag, meer dagen), met een vastgezette klok",
+          "assertions": 12,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: elke openstaande kaart toont hoe lang hij al open is, en valt op vanaf een week\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de flow voor PIPE-H-018 wordt uitgevoerd\n  Then heeft elke openstaande kaart een label, en opgeleverd werk niet\n  And klopt het getal voor elke kaart met zijn eigen begindatum\n  And valt hij pas op vanaf zeven dagen"
+        }
+      ]
+    },
     {
       "date": "18 sep",
       "version": "2.0.173",
@@ -386,7 +402,7 @@
           "technique": "End-to-end use-case + visuele contractasserties",
           "assertions": 33,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee\n  Given een lege kaart met kiezen, foto en zelf gemaild\n  When een verkeerd bestandstype wordt gekozen, dan blijft de kaart leeg met uitleg\n  When een PDF wordt gekozen, dan toont de kaart naam, grootte, kruisje en de verstuurknop\n  And het kruisje brengt de kaart terug naar leeg\n  When het bestand als bijlage wordt verstuurd, dan gaat precies dat bestand mee naar de indienroute\n  And na een weigering blijft het gekozen bestand staan\n  Then wordt met Playwright-assertions bevestigd dat de klanturenstaatkaart loopt van leeg via bestand gekozen naar verstuurd, en stuurt het gekozen bestand echt mee"
+          "gherkin": ""
         }
       ]
     },
@@ -1841,16 +1857,6 @@
     }
   ],
   "niceToHave": [
-    {
-      "date": "17 sep",
-      "improvement": "De kwaliteitsstraat-pagina echt live laten meebewegen: de kaart zelf naar In uitvoering laten schuiven en de 1-2-3-4-balk (Ticket, Zephyr-testcase, Automatische test, TEST & Living Doc) echte voortgang tonen in plaats van alleen de dobbelsteen-simulatie. Vraagt een nieuw schrijfbaar statuspunt op de pagina; PO koos ervoor dat gewoon openbaar schrijfbaar te maken, net als het indienen van een wens zelf (zelfde vertrouwensniveau, geen aparte sleutel).",
-      "why": "Maakt in een keer zichtbaar dat de agent echt aan het werk is, zonder te hoeven wachten op een herlaadbeurt na een push."
-    },
-    {
-      "date": "16 sep",
-      "improvement": "Op het demobord per kaart tonen hoe lang een wens al open staat",
-      "why": "Een PO ziet dan meteen wat blijft liggen zonder de datum te hoeven lezen."
-    },
     {
       "date": "16 sep",
       "improvement": "Bij een geweigerde invoer in Mijn uren de foutmelding naast het veld tonen, niet alleen in de statusregel",

@@ -569,6 +569,71 @@ test.describe('Path Pipeline TEST-demo', () => {
     });
   });
 
+  test('[PIPE-H-018] elke openstaande kaart toont hoe lang hij al open is, en valt op vanaf een week', async ({ page }) => {
+    // Nice-to-have uit onze eigen lijst: "Op het demobord per kaart tonen hoe lang
+    // een wens al open staat -- een PO ziet dan meteen wat blijft liggen zonder de
+    // datum te hoeven lezen."
+    //
+    // Techniek (TMap/ISTQB): datagedreven over ALLE openstaande kaarten (elk
+    // getal wordt nagerekend tegen zijn eigen begindatum), plus grenswaarden op
+    // de drempel van een week (6 dagen: gewoon, 7 dagen: valt op) en op de
+    // enkelvoud/meervoud-grens (0 = vandaag, 1 dag, meer dagen). De klok staat
+    // vast, anders hangt de uitkomst af van de dag waarop de test draait.
+    const dag = 86_400_000;
+    const opDag = (iso: string, extraDagen: number) => new Date(new Date(iso + 'T10:00:00').getTime() + extraDagen * dag);
+
+    async function laad(klok: Date) {
+      await page.clock.setFixedTime(klok);
+      await page.goto('/pilot/path-kwaliteitsstraat.html');
+      await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
+      await page.getByRole('tab', { name: /Backlog/ }).click();
+    }
+    const labels = () => page.evaluate(() => [...document.querySelectorAll<HTMLElement>('.open-duur')].map((s) => ({
+      kolom: s.closest('[data-ticket-list]')?.getAttribute('data-ticket-list') || '',
+      dagen: Number(s.dataset.openDagen), sinds: s.dataset.openSinds || '', tekst: s.textContent!.trim(), lang: s.classList.contains('is-lang'),
+    })));
+
+    await laad(new Date('2026-09-25T10:00:00'));
+    const eerst = await labels();
+
+    await test.step('Then heeft elke openstaande kaart een label, en opgeleverd werk niet', async () => {
+      expect(eerst.length, 'er horen openstaande kaarten te zijn, anders toetst deze case niets').toBeGreaterThan(0);
+      const openKaarten = await page.locator('[data-ticket-list="todo"] .ticket-card, [data-ticket-list="doing"] .ticket-card').count();
+      expect(eerst.filter((l) => l.kolom !== 'done').length, 'elke kaart in Te doen en In uitvoering').toBe(openKaarten);
+      expect(eerst.filter((l) => l.kolom === 'done'), 'opgeleverd werk staat niet meer open').toEqual([]);
+    });
+
+    await test.step('And klopt het getal voor elke kaart met zijn eigen begindatum', async () => {
+      for (const l of eerst) {
+        const verwacht = Math.round((Date.UTC(2026, 8, 25) - Date.parse(l.sinds + 'T00:00:00Z')) / dag);
+        expect(l.dagen, `${l.sinds} -> ${l.tekst}`).toBe(verwacht);
+        expect(l.lang, `${l.tekst} valt ${l.lang ? '' : 'niet '}op`).toBe(verwacht >= 7);
+      }
+    });
+
+    // Grenswaarden rond de jongste kaart, zodat hij precies op de grens valt.
+    const jongste = [...eerst].sort((a, b) => b.sinds.localeCompare(a.sinds))[0].sinds;
+    const vanJongste = async () => (await labels()).filter((l) => l.sinds === jongste)[0];
+
+    await test.step('And zegt hij "vandaag open" op de dag zelf en "1 dag open" de dag erna', async () => {
+      await laad(opDag(jongste, 0));
+      expect((await vanJongste()).tekst).toBe('vandaag open');
+      await laad(opDag(jongste, 1));
+      expect((await vanJongste()).tekst).toBe('1 dag open');
+    });
+
+    await test.step('And valt hij pas op vanaf zeven dagen', async () => {
+      await laad(opDag(jongste, 6));
+      const zes = await vanJongste();
+      expect(zes.tekst).toBe('6 dagen open');
+      expect(zes.lang, 'zes dagen is nog gewoon').toBe(false);
+      await laad(opDag(jongste, 7));
+      const zeven = await vanJongste();
+      expect(zeven.tekst).toBe('7 dagen open');
+      expect(zeven.lang, 'zeven dagen valt op').toBe(true);
+    });
+  });
+
   test('[PIPE-N-006] geen enkele openbare bron van de kwaliteitsstraat bevat namen of mailadressen van medewerkers', async ({ request }) => {
     // Aanleiding (18 sep): de openbare projectstand bevatte de volledige namen
     // van collega's, met hun werkpatroon erbij (dagen en uren). Dat kwam uit

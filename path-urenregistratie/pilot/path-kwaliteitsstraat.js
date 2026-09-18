@@ -510,10 +510,56 @@
     return '<span class="status-pill open">Te doen</span>';
   }
 
+  // Hoe lang staat een wens al open? Nice-to-have uit onze eigen lijst: "een PO
+  // ziet dan meteen wat blijft liggen zonder de datum te hoeven lezen".
+  //
+  // Een wens uit het loket heeft een exact indientijdstip. Een wens uit de
+  // projectstand heeft alleen "16 sep" -- zonder jaar, zoals GIO-WENSEN.md hem
+  // schrijft. Dan geldt dit jaar, tenzij die datum in de toekomst zou liggen
+  // (een wens van december, gelezen in januari): dan was het vorig jaar.
+  var MAANDEN = { jan: 0, feb: 1, mrt: 2, maa: 2, apr: 3, mei: 4, jun: 5, jul: 6, aug: 7, sep: 8, okt: 9, nov: 10, dec: 11 };
+  var LANG_OPEN_DAGEN = 7;
+
+  function openSinds(ticket) {
+    if (typeof ticket.submittedTs === 'number' && ticket.submittedTs > 0) return new Date(ticket.submittedTs * 1000);
+    var m = /^\s*(\d{1,2})\s+([a-z]{3})/i.exec(String(ticket.date || ''));
+    if (!m || !(m[2].toLowerCase() in MAANDEN)) return null;
+    var nu = new Date();
+    var datum = new Date(nu.getFullYear(), MAANDEN[m[2].toLowerCase()], Number(m[1]));
+    if (datum > nu) datum.setFullYear(datum.getFullYear() - 1);
+    return datum;
+  }
+
+  // Hele kalenderdagen, niet 24-uursblokken: iets van gisteravond is "1 dag",
+  // niet "vandaag".
+  function dagenOpen(ticket) {
+    var sinds = openSinds(ticket);
+    if (!sinds) return null;
+    var nu = new Date();
+    var vandaag = Date.UTC(nu.getFullYear(), nu.getMonth(), nu.getDate());
+    var dag = Date.UTC(sinds.getFullYear(), sinds.getMonth(), sinds.getDate());
+    return Math.max(0, Math.round((vandaag - dag) / 86400000));
+  }
+
+  function openDuurHtml(ticket) {
+    // Opgeleverd werk staat niet meer open; dan zegt deze teller niets.
+    if (ticket.status === 'done') return '';
+    var dagen = dagenOpen(ticket);
+    if (dagen === null) return '';
+    var tekst = dagen === 0 ? 'vandaag open' : dagen === 1 ? '1 dag open' : dagen + ' dagen open';
+    var lang = dagen >= LANG_OPEN_DAGEN;
+    // De begindatum staat erbij, zodat zichtbaar en na te rekenen is waar het
+    // getal vandaan komt (en een test het voor elke kaart kan controleren).
+    var sinds = openSinds(ticket);
+    var sindsIso = sinds.getFullYear() + '-' + String(sinds.getMonth() + 1).padStart(2, '0') + '-' + String(sinds.getDate()).padStart(2, '0');
+    return '<span class="open-duur' + (lang ? ' is-lang' : '') + '" data-open-dagen="' + dagen + '" data-open-sinds="' + sindsIso + '"' +
+      (lang ? ' title="Staat al ' + dagen + ' dagen open"' : '') + '>' + tekst + '</span>';
+  }
+
   function ticketHtml(ticket) {
     var isLocal = ticket.source !== 'feed' && ticket.source !== 'fallback';
     var canRun = isLocal && (ticket.status === 'todo' || ticket.status === 'ingediend');
-    var meta = '';
+    var meta = openDuurHtml(ticket);
     if (ticket.version && ticket.source === 'feed') meta += '<span class="version-chip">' + escapeHtml(ticket.version) + '</span>';
     if (ticket.platform) meta += '<span>' + escapeHtml(ticket.platform) + '</span>';
     if (ticket.who && ticket.status !== 'done') meta += '<span>' + escapeHtml(ticket.who) + '</span>';
@@ -1370,7 +1416,8 @@
       testId: 'TC-DEMO-H-' + String(state.demoCase).padStart(3, '0'),
       platform: 'desktop-chromium', result: '', source: bron,
       stakeholder: wens.stakeholder || 'Product Owner', goal: wens.goal || '', criterion: wens.criterion || '',
-      date: wens.date || nowLabel(), gherkin: wens.gherkin || gherkinVoor(wens.title, wens.criterion)
+      date: wens.date || nowLabel(), gherkin: wens.gherkin || gherkinVoor(wens.title, wens.criterion),
+      submittedTs: typeof wens.submitted_ts === 'number' ? wens.submitted_ts : null
     };
   }
 
