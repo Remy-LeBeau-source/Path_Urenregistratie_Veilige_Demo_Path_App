@@ -177,9 +177,30 @@ if (path_health_requires_demo_seed($healthEnv)) {
 }
 
 // In production: suppress all technical details; return only ok/not-ok.
+// Ongewijzigd -- deploy-production-remote.sh leest alleen $payload['ok'].
 if ($healthEnv === 'production') {
     echo json_encode(['ok' => path_health_checks_are_ok($result['checks'])], JSON_UNESCAPED_SLASHES);
     exit;
+}
+
+// Wie de gevoelige velden mag zien: PHP-versie, DB-hostnaam en DB-naam waren
+// op TEST zonder inloggen op te vragen (gemeld door de herontwerp-sessie, 18
+// sep) -- niet de structuur zelf (welke controles er zijn en of ze slagen),
+// want scripts/deploy-test-remote.sh leest via het PUBLIEKE testdomein (dus
+// NIET loopback) `is_array($payload['checks'])` en loopt elke 'ok' erin na;
+// die structuur mag dus nooit verdwijnen, ook niet voor een niet-loopback
+// verzoek. Alleen de twee concrete gevoelige velden verdwijnen. Wie de volle
+// diagnose nodig heeft, vraagt hem altijd rechtstreeks op de server zelf op
+// (CI, live-docs, run-playwright-e2e.mjs doen allemaal curl naar 127.0.0.1).
+// X-Forwarded-For wordt bewust NIET vertrouwd: dat zou dit met één header
+// laten omzeilen zodra TEST ooit achter een proxy komt te staan.
+$remoteAddress = strtolower((string)($_SERVER['REMOTE_ADDR'] ?? ''));
+$isLoopbackClient = in_array($remoteAddress, ['127.0.0.1', '::1'], true);
+if (!$isLoopbackClient) {
+    unset($result['php_version']);
+    if (isset($result['checks']['database_connection']) && is_array($result['checks']['database_connection'])) {
+        unset($result['checks']['database_connection']['host'], $result['checks']['database_connection']['database']);
+    }
 }
 
 echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);

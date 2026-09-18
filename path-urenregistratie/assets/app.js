@@ -528,166 +528,20 @@ function freshState() {
       customerTimesheetBrokerBody: DEFAULT_CUSTOMER_TIMESHEET_BROKER_BODY,
       leaveSickEntryEnabled: false
     },
-    employees: [
-      {
-        id: 1,
-        // Vaste seed-user-id (database/seed-demo-data.sql: employees.id 1-4
-        // koppelt aan users.id 3-6) -- resolveLoginEmail() gebruikt dit veld
-        // om de server-override (employeeEmailOverrides, gesleuteld op
-        // users.id) op te zoeken. Zonder dit botste employees.id toevallig
-        // met een ANDERE genoemde testers users.id (Brian's employees.id 3
-        // = Marc's users.id 3), waardoor de snelkeuze bij Brian per ongeluk
-        // Marc's echte adres invulde.
-        dbUserId: 3,
-        name: "Marc de Roon",
-        email: "marc@example.invalid",
-        active: true,
-        // Gelijk aan employment_start_date op de server (database/
-        // seed-demo-data.sql). Stond op 2026-01-01; vóór de bootstrap-
-        // hydratatie liet setPeriod() daardoor maanden vóór de echte
-        // indiensttreding door. Zie [DASH-N-030].
-        startDate: "2026-05-01",
-        notificationsEnabled: true,
-        emailNotificationsEnabled: true,
-        photo: "",
-        role: "Testconsultant",
-        client: "IND",
-        broker: "ItaQ Consultancy",
-        brokerEmail: "facturen-itaq@example.invalid",
-        invoiceRecipientName: "Itaq",
-        brokerInvoiceAddress: "Laan van ZuidHoorn 165\n2289 DD Rijswijk",
-        invoiceProject: "IND",
-        brokerMailEnabled: true,
-        rate: 85,
-        contract: "Midlance 70/30",
-        weeklyHours: 40,
-        projectCode: "IND",
-        invoiceTemplate: "IND-{jaar}-{maand}",
-        mailSubject: "IND - factuur en uren {medewerker} - {maand} {jaar}",
-        mailBody: DEFAULT_INVOICE_MAIL_BODY,
-        brokerInvoiceAttachment: true,
-        bookkeeperInvoiceAttachment: true,
-        payrollInvoiceAttachment: false,
-        mailRecipientRoutes: defaultMailRecipientRoutes(),
-        customerTimesheetExpected: true,
-        customerTimesheetDueWorkday: 5,
-        customerTimesheetBrokerEnabled: true,
-        customerTimesheetUseBrokerEmail: true,
-        customerTimesheetBrokerEmail: "facturen-itaq@example.invalid",
-        invoiceWithoutCustomerTimesheetAllowed: true
-      },
-      {
-        id: 2,
-        dbUserId: 4,
-        name: "Stasjo van Bakel",
-        email: "stasjo@example.invalid",
-        active: true,
-        startDate: "2026-05-01", // gelijk aan de server, zie Marc hierboven en [DASH-N-030]
-        notificationsEnabled: true,
-        emailNotificationsEnabled: true,
-        photo: "",
-        role: "Test Engineer",
-        client: "IND",
-        broker: "ItaQ Consultancy",
-        brokerEmail: "facturen-itaq@example.invalid",
-        invoiceRecipientName: "Itaq",
-        brokerInvoiceAddress: "Laan van ZuidHoorn 165\n2289 DD Rijswijk",
-        invoiceProject: "IND",
-        brokerMailEnabled: true,
-        rate: 80,
-        contract: "Vast · 36 uur",
-        weeklyHours: 36,
-        projectCode: "IND-TST-2026",
-        invoiceTemplate: "IND-StvB-{jaar}-{maand}",
-        mailSubject: "Factuur en uren {medewerker} ({klant}) maand {maand} {jaar}",
-        mailBody: DEFAULT_INVOICE_MAIL_BODY,
-        brokerInvoiceAttachment: true,
-        bookkeeperInvoiceAttachment: true,
-        payrollInvoiceAttachment: false,
-        mailRecipientRoutes: defaultMailRecipientRoutes(),
-        customerTimesheetExpected: true,
-        customerTimesheetDueWorkday: 7,
-        customerTimesheetBrokerEnabled: true,
-        customerTimesheetUseBrokerEmail: false,
-        customerTimesheetBrokerEmail: "urenstaten-itaq@example.invalid",
-        invoiceWithoutCustomerTimesheetAllowed: true
-      },
-      {
-        id: 3,
-        dbUserId: 5,
-        name: "Brian Hek",
-        email: "brian@example.invalid",
-        active: true,
-        startDate: "2026-05-01", // gelijk aan de server, zie Marc hierboven en [DASH-N-030]
-        notificationsEnabled: true,
-        emailNotificationsEnabled: true,
-        photo: "",
-        role: "Test Engineer",
-        client: "COA",
-        broker: "ItaQ Consultancy",
-        brokerEmail: "facturen-itaq@example.invalid",
-        invoiceRecipientName: "Itaq",
-        brokerInvoiceAddress: "Laan van ZuidHoorn 165\n2289 DD Rijswijk",
-        invoiceProject: "COA",
-        brokerMailEnabled: true,
-        rate: 72.5,
-        contract: "Vast · 36 uur",
-        weeklyHours: 36,
-        projectCode: "COA",
-        invoiceTemplate: "COA-{jaar}-{maand}",
-        mailSubject: "Factuur en uren {medewerker} ({klant}) maand {maand} {jaar}",
-        mailBody: DEFAULT_INVOICE_MAIL_BODY,
-        brokerInvoiceAttachment: true,
-        bookkeeperInvoiceAttachment: true,
-        payrollInvoiceAttachment: false,
-        mailRecipientRoutes: defaultMailRecipientRoutes(),
-        customerTimesheetExpected: true,
-        customerTimesheetDueWorkday: 5,
-        customerTimesheetBrokerEnabled: true,
-        customerTimesheetUseBrokerEmail: true,
-        customerTimesheetBrokerEmail: "facturen-itaq@example.invalid",
-        invoiceWithoutCustomerTimesheetAllowed: true
-      },
-      {
-        id: 4,
-        dbUserId: 6,
-        name: "Shawn-Douglas Nahar",
-        email: "shawn@example.invalid",
-        active: true,
-        startDate: "2026-07-01",
-        notificationsEnabled: true,
-        emailNotificationsEnabled: true,
-        photo: "",
-        role: "Test Automation Engineer",
-        client: "Belastingdienst",
-        broker: "Circle8",
-        brokerEmail: "facturen-circle8@example.invalid",
-        invoiceRecipientName: "circle8",
-        brokerInvoiceAddress: "Plettenburg-West,\nFultonbaan 6,\n3439 NE Nieuwegein",
-        invoiceProject: "belastingdienst",
-        brokerMailEnabled: true,
-        rate: 85.5,
-        contract: "Midlance 75/25",
-        weeklyHours: 40,
-        projectCode: "202636991",
-        agreementNumber: "202636991",
-        creditorNumber: "622085",
-        contractorNumber: "217744",
-        invoiceTemplate: "Bel-Shawn-{jaar}-{maand}",
-        mailSubject: "{factuurnummer} - {medewerker} - overeenkomst {overeenkomstnummer}",
-        mailBody: DEFAULT_INVOICE_MAIL_BODY,
-        brokerInvoiceAttachment: true,
-        bookkeeperInvoiceAttachment: true,
-        payrollInvoiceAttachment: false,
-        mailRecipientRoutes: defaultMailRecipientRoutes(),
-        customerTimesheetExpected: true,
-        customerTimesheetDueWorkday: 10,
-        customerTimesheetBrokerEnabled: true,
-        customerTimesheetUseBrokerEmail: false,
-        customerTimesheetBrokerEmail: "urenstaten-circle8@example.invalid",
-        invoiceWithoutCustomerTimesheetAllowed: true
-      }
-    ],
+    // De echte inhoud (namen, tarieven, contracten, bemiddelaargegevens) staat
+    // in assets/employees-seed.js, geladen vóór dit bestand (net als
+    // avatars.js). Dat bestand bevat financiële persoonsgegevens en gaat
+    // daarom NIET mee naar PROD (git-archive-exclude in
+    // scripts/deploy-production-transip.sh, zelfde patroon als pilot/).
+    // Ontbreekt het (zoals op PROD), dan begint de app met een lege
+    // medewerkerslijst tot de server (auth-mode) de echte data levert.
+    // mailBody/mailRecipientRoutes zijn generieke standaardwaarden, geen
+    // persoonsgegevens -- die horen hier, niet in het seed-bestand.
+    employees: (window.PATH_EMPLOYEES_SEED || []).map(werknemer => ({
+      ...werknemer,
+      mailBody: DEFAULT_INVOICE_MAIL_BODY,
+      mailRecipientRoutes: defaultMailRecipientRoutes()
+    })),
     notifications: demoNotifications(),
     announcements: demoAnnouncements(),
     records: {
@@ -920,9 +774,20 @@ function loadState() {
         normalized.brokerInvoiceAddress = "Plettenburg-West,\nFultonbaan 6,\n3439 NE Nieuwegein";
         normalized.brokerMailEnabled = true;
         normalized.invoiceProject = "belastingdienst";
-        normalized.agreementNumber = "202636991";
-        normalized.creditorNumber = "622085";
-        normalized.contractorNumber = "217744";
+        // Uit het seed-bestand, niet hardcoded: dit zijn financiële
+        // persoonsgegevens (zie window.PATH_EMPLOYEES_SEED in freshState()
+        // hierboven, en waarom dat bestand een eigen leven leidt). Zonder deze
+        // omweg stond hier gewoon opnieuw een derde kopie van dezelfde
+        // gegevens rechtstreeks in het publiek opgehaalde app.js (gevonden 18
+        // sep, SEC-H-014). Ontbreekt het seed-bestand (PROD), dan blijven deze
+        // velden leeg -- exact zoals de rest van deze migratie zich al gedraagt
+        // wanneer een waarde niet bekend is.
+        {
+          const shawn = (window.PATH_EMPLOYEES_SEED || []).find(e => e.name === "Shawn-Douglas Nahar");
+          normalized.agreementNumber = shawn?.agreementNumber || "";
+          normalized.creditorNumber = shawn?.creditorNumber || "";
+          normalized.contractorNumber = shawn?.contractorNumber || "";
+        }
       } else if (!String(normalized.invoiceRecipientName || "").trim()) {
         normalized.invoiceRecipientName = normalized.broker || "Broker";
       }

@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 637 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 642 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 637 unieke case-ID's
+- Playwright executable cases: 642 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 638 unieke case-ID's
+- Totaal executable cases: 643 unieke case-ID's
 - Playwright features: 33
 - Database features: 1
 - Playwright steps mappings: 33
 - Database steps mappings: 1
-- Uitvoeringen: 703
-- Niet-mobile projectuitvoeringen: 571
+- Uitvoeringen: 708
+- Niet-mobile projectuitvoeringen: 576
 - Mobile functionele cases: 66
 - Pixel 7 / Chromium-uitvoeringen: 66
 - iPhone 13 / WebKit-uitvoeringen: 66
 
-De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 637 Playwright-functionele cases in totaal 703 resultaten op: 571 + (66 x 2) = 703.
+De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 642 Playwright-functionele cases in totaal 708 resultaten op: 576 + (66 x 2) = 708.
 
 ## Documentatieketen
 
@@ -658,7 +658,7 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 637 Playwri
 
 - Feature: `tests/playwright/features/security.feature`
 - Source: `tests/playwright/security.spec.ts`
-- Cases: 21
+- Cases: 26
 
 - [SEC-H-001] csrf token endpoint werkt — Techniek: API-contract + equivalentieklasse · Assertions: 4
 - [SEC-H-002] login met csrf werkt — Techniek: API-contract + equivalentieklasse · Assertions: 2
@@ -681,6 +681,11 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 637 Playwri
 - [SEC-H-010] medewerker die de pagina herlaadt met een beheer-URL in de adresbalk komt terug op het eigen dashboard — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [SEC-H-011] medewerker die naar Klanturenstaten (beheer) navigeert komt terug op het eigen dashboard — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 4
 - [SEC-H-012] een in localStorage naar beheerder gezette rol geeft geen beheerscherm — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
+- [SEC-H-014] assets/app.js bevat nooit meer de echte financiële gegevens van de genoemde testers — Techniek: API-contract + equivalentieklasse · Assertions: 3
+- [SEC-N-009] SQL-injectiepogingen op het loginformulier falen netjes, nooit met een serverfout — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 5
+- [SEC-N-010] een padtraversalpoging op een periode-parameter wordt afgewezen, niet stilzwijgend genegeerd tot een ander antwoord — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
+- [SEC-H-015] de sessiecookie draagt HttpOnly en SameSite=Lax — Techniek: API-contract + equivalentieklasse · Assertions: 4
+- [SEC-N-011] een kapotte JSON-payload lekt geen bestandspad of stacktrace naar de client — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
 
 ### Vondsten uit de monkey-verkenning op Klassiek
 

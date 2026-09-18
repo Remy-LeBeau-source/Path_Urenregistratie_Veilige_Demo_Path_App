@@ -178,3 +178,44 @@ Feature: Authenticatie- en API-beveiliging
     Given een ingelogde medewerker
     When de bewaarde staat handmatig op de beheerdersrol wordt gezet
     Then start de app na herladen gewoon als medewerker
+
+  @happy
+  Scenario: [SEC-H-014] assets/app.js bevat nooit meer de echte financiële gegevens van de genoemde testers
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given het publiek opgehaalde assets/app.js
+    When de flow voor SEC-H-014 wordt uitgevoerd
+    Then bevat het geen van de echte tarieven, contractvormen of bemiddelaargegevens
+    And staat de scheiding zelf overeind: app.js verwijst naar het aparte seed-bestand, kent het niet uit het hoofd
+
+  @negative
+  Scenario: [SEC-N-009] SQL-injectiepogingen op het loginformulier falen netjes, nooit met een serverfout
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given authenticatie- en API-beveiliging is voorbereid
+    When de flow voor SEC-N-009 wordt uitgevoerd
+    Then werkt een normale login daarna nog gewoon (de tabel bestaat nog, niets is gecorrumpeerd)
+
+  @negative
+  Scenario: [SEC-N-010] een padtraversalpoging op een periode-parameter wordt afgewezen, niet stilzwijgend genegeerd tot een ander antwoord
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given authenticatie- en API-beveiliging is voorbereid
+    When de flow voor SEC-N-010 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat een padtraversalpoging op een periode-parameter wordt afgewezen, niet stilzwijgend genegeerd tot een ander antwoord
+
+  @happy
+  Scenario: [SEC-H-015] de sessiecookie draagt HttpOnly en SameSite=Lax
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given authenticatie- en API-beveiliging is voorbereid
+    When de flow voor SEC-H-015 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat de sessiecookie draagt HttpOnly en SameSite=Lax
+
+  @negative
+  Scenario: [SEC-N-011] een kapotte JSON-payload lekt geen bestandspad of stacktrace naar de client
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given authenticatie- en API-beveiliging is voorbereid
+    When de flow voor SEC-N-011 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat een kapotte JSON-payload lekt geen bestandspad of stacktrace naar de client

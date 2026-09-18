@@ -63,11 +63,20 @@ trap cleanup EXIT
 
 archive="$temp_root/path-uren-${short_sha}.tar.gz"
 remote_script_local="$repo_root/path-urenregistratie/scripts/deploy-production-remote.sh"
+# assets/employees-seed.js uitgesloten sinds 18 sep: bevat financiële
+# persoonsgegevens (tarief, contractvorm, bemiddelaargegevens) van de genoemde
+# testers, tot dan zonder inloggen op te halen via het publieke assets/app.js.
+# Zelfde patroon als pilot/ hieronder. Op PROD loggen medewerkers altijd echt
+# in; hun werkelijke gegevens komen dan van de server, nooit van dit bestand.
 git -C "$repo_root" archive --format=tar.gz --prefix=path-urenregistratie/ \
-  -o "$archive" "${DEPLOY_SOURCE_SHA}:path-urenregistratie" -- . ':(exclude)pilot'
+  -o "$archive" "${DEPLOY_SOURCE_SHA}:path-urenregistratie" -- . ':(exclude)pilot' ':(exclude)assets/employees-seed.js'
 
 if tar -tzf "$archive" | grep -q '^path-urenregistratie/pilot/'; then
   echo 'Production archive unexpectedly contains TEST-only pilot pages.' >&2
+  exit 1
+fi
+if tar -tzf "$archive" | grep -q '^path-urenregistratie/assets/employees-seed\.js$'; then
+  echo 'Production archive unexpectedly contains employees-seed.js (financial PII).' >&2
   exit 1
 fi
 

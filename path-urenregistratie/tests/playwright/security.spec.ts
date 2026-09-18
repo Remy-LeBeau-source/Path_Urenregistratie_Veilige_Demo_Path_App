@@ -495,3 +495,160 @@ test('[SEC-H-012] een in localStorage naar beheerder gezette rol geeft geen behe
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// Ronde van 18 sep, naar aanleiding van het gevonden en gerepareerde publieke
+// datalek (echte financiële persoonsgegevens in het openbaar opgehaalde
+// assets/app.js, en de repository-boom die op TEST/PROD zonder inloggen
+// uitgedeeld werd). Techniek per case genoemd zoals de rest van deze suite.
+// ---------------------------------------------------------------------------
+
+test('[SEC-H-014] assets/app.js bevat nooit meer de echte financiële gegevens van de genoemde testers', async ({ request }) => {
+  // Techniek: statische/dynamische inhoudscontrole op gevoelige data (OWASP
+  // "Sensitive Data Exposure"), tegen het ECHTE, publiek opgehaalde bestand --
+  // niet tegen de broncode op schijf, want dat bewijst niets over wat een
+  // bezoeker daadwerkelijk kan opvragen.
+  //
+  // Regressiebewaking op de fix van 18 sep: tot dan stonden de uurtarieven,
+  // contractvormen, bemiddelaargegevens en (voor Shawn) een overeenkomst-,
+  // crediteur- en contractantnummer van vier genoemde medewerkers gewoon in
+  // assets/app.js, zonder inloggen op te halen door iedereen op internet,
+  // ook op productie. Die gegevens horen sindsdien in assets/employees-seed.js
+  // te staan, dat op PROD niet wordt uitgerold (zie
+  // scripts/deploy-production-transip.sh) maar op TEST/lokaal, waar deze test
+  // draait, gewoon aanwezig blijft -- de eis is dus dat app.js zelf schoon is,
+  // niet dat er nergens op de server meer een tarief te vinden zou zijn.
+  let appJs = '';
+  await test.step('Given het publiek opgehaalde assets/app.js', async () => {
+    const response = await request.get('/assets/app.js');
+    expect(response.ok()).toBeTruthy();
+    appJs = await response.text();
+  });
+
+  await test.step('Then bevat het geen van de echte tarieven, contractvormen of bemiddelaargegevens', async () => {
+    for (const verboden of [
+      'rate: 85', 'rate: 80', 'rate: 72.5', 'rate: 85.5',
+      'Midlance 70/30', 'Midlance 75/25',
+      'ItaQ Consultancy', 'Circle8',
+      'facturen-itaq@example.invalid', 'facturen-circle8@example.invalid',
+      '202636991', '622085', '217744',
+    ]) {
+      expect(appJs.includes(verboden), `assets/app.js mag "${verboden}" niet meer bevatten`).toBe(false);
+    }
+  });
+
+  await test.step('And staat de scheiding zelf overeind: app.js verwijst naar het aparte seed-bestand, kent het niet uit het hoofd', async () => {
+    expect(appJs.includes('PATH_EMPLOYEES_SEED'), 'app.js hoort de medewerkerdata uit window.PATH_EMPLOYEES_SEED te lezen, niet uit een eigen array').toBe(true);
+  });
+});
+
+test('[SEC-N-009] SQL-injectiepogingen op het loginformulier falen netjes, nooit met een serverfout', async ({ request }) => {
+  // Techniek: injectie (OWASP A03) met klassieke SQLi-payloads tegen het
+  // veld waar de gevolgen het ernstigst zouden zijn (authenticatie-bypass).
+  // De code gebruikt overal PDO-prepares met parameters, dus dit hoort altijd
+  // gewoon als "verkeerd wachtwoord" terug te komen -- nooit als 500 (dat zou
+  // duiden op een query die de payload wél interpreteerde) en nooit met een
+  // foutmelding die iets over de databasestructuur verraadt.
+  const payloads = [
+    "' OR '1'='1",
+    "' OR '1'='1' -- ",
+    "admin@example.invalid'--",
+    "'; DROP TABLE users; --",
+    "' UNION SELECT 1,2,3,4,5,6,7,8 -- ",
+  ];
+
+  for (const payload of payloads) {
+    await test.step(`When ingelogd wordt met payload ${JSON.stringify(payload)} als e-mail én wachtwoord`, async () => {
+      const csrfResponse = await request.get('/server/auth/csrf.php');
+      const csrfToken = (await csrfResponse.json()).csrf_token;
+      const response = await request.post('/server/auth/login.php', {
+        headers: { 'X-CSRF-Token': csrfToken },
+        data: { email: payload, password: payload },
+      });
+      const body = await response.json().catch(() => null);
+
+      expect(response.status(), `payload ${JSON.stringify(payload)} mag nooit een serverfout geven`).not.toBe(500);
+      expect([400, 401]).toContain(response.status());
+      expect(body, 'het antwoord hoort geldige JSON te zijn, geen ruwe databasefout').not.toBeNull();
+      const tekst = JSON.stringify(body).toLowerCase();
+      for (const lek of ['sql syntax', 'mysql', 'pdoexception', 'sqlstate']) {
+        expect(tekst.includes(lek), `het antwoord op payload ${JSON.stringify(payload)} mag geen databasefout lekken ("${lek}")`).toBe(false);
+      }
+    });
+  }
+
+  await test.step('Then werkt een normale login daarna nog gewoon (de tabel bestaat nog, niets is gecorrumpeerd)', async () => {
+    const authApi = new AuthApi(request);
+    await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+    const { status } = await authApi.me();
+    expect(status).toBe(200);
+    await authApi.logout();
+  });
+});
+
+test('[SEC-N-010] een padtraversalpoging op een periode-parameter wordt afgewezen, niet stilzwijgend genegeerd tot een ander antwoord', async ({ request }) => {
+  // Techniek: padtraversal (OWASP "Path Traversal"), met de klassieke
+  // ../-reeksen en een absoluut pad tegen een parameter die normaal een
+  // "YYYY-MM"-periodesleutel is. De bestandsnaam zelf komt bij dit endpoint
+  // altijd uit de database (storage_key, zie server/api/customer-timesheets.php),
+  // nooit rechtstreeks van de client -- dit bewijst dat een vervormde
+  // periodesleutel netjes wordt afgewezen in plaats van een onverwachte
+  // interne toestand te bereiken (grenswaardenanalyse op een vormvereiste).
+  const authApi = new AuthApi(request);
+  await authApi.login(appConfig.employeeEmail, requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD'));
+
+  for (const payload of ['../../../../etc/passwd', '..%2f..%2f..%2fetc%2fpasswd', '/etc/passwd', '....//....//etc/passwd']) {
+    await test.step(`When de periodeparameter ${JSON.stringify(payload)} bevat`, async () => {
+      const response = await request.get(`/server/api/customer-timesheets.php?action=download&period=${encodeURIComponent(payload)}&employee_id=2&assignment_id=1`);
+      expect(response.status(), `payload ${JSON.stringify(payload)} mag nooit 200 geven`).not.toBe(200);
+      expect([400, 404, 422]).toContain(response.status());
+      const tekst = await response.text();
+      expect(tekst.toLowerCase().includes('root:'), 'het antwoord mag nooit de inhoud van een systeembestand bevatten').toBe(false);
+    });
+  }
+
+  await authApi.logout();
+});
+
+test('[SEC-H-015] de sessiecookie draagt HttpOnly en SameSite=Lax', async ({ request }) => {
+  // Techniek: configuratiecontrole op sessiebeheer (OWASP "Session
+  // Management"), rechtstreeks op de Set-Cookie-header van een echte login --
+  // niet alleen beredeneerd uit de broncode, want een verkeerd samengestelde
+  // header zou deze test wel en de broncode-lezer niet opvallen.
+  const csrfResponse = await request.get('/server/auth/csrf.php');
+  const csrfToken = (await csrfResponse.json()).csrf_token;
+  const response = await request.post('/server/auth/login.php', {
+    headers: { 'X-CSRF-Token': csrfToken },
+    data: { email: appConfig.employeeEmail, password: requirePassword(appConfig.employeePassword, 'PLAYWRIGHT_EMPLOYEE_PASSWORD') },
+  });
+  expect(response.ok()).toBeTruthy();
+
+  const setCookie = response.headersArray().filter(h => h.name.toLowerCase() === 'set-cookie').map(h => h.value);
+  expect(setCookie.length, 'de login hoort minstens één cookie te zetten').toBeGreaterThan(0);
+  const sessieCookie = setCookie.find(c => /^PHPSESSID=/i.test(c) || /session/i.test(c)) || setCookie[0];
+  expect(sessieCookie.toLowerCase(), 'de sessiecookie hoort HttpOnly te dragen').toContain('httponly');
+  expect(sessieCookie.toLowerCase(), 'de sessiecookie hoort SameSite=Lax te dragen').toContain('samesite=lax');
+
+  const authApi = new AuthApi(request);
+  await authApi.logout();
+});
+
+test('[SEC-N-011] een kapotte JSON-payload lekt geen bestandspad of stacktrace naar de client', async ({ request }) => {
+  // Techniek: foutinjectie + informatielek-controle (OWASP "Improper Error
+  // Handling"). Een server die op een misvormd verzoek zijn eigen interne pad
+  // of een PHP-waarschuwing teruggeeft, verraadt bouwdetails aan een
+  // aanvaller. Dit stuurt bewust kapotte JSON naar een endpoint dat een body
+  // verwacht en controleert dat het antwoord daar niets van laat zien.
+  const csrfResponse = await request.get('/server/auth/csrf.php');
+  const csrfToken = (await csrfResponse.json()).csrf_token;
+  const response = await request.post('/server/auth/login.php', {
+    headers: { 'X-CSRF-Token': csrfToken, 'Content-Type': 'application/json' },
+    data: '{"email": "kapot"' as unknown as Record<string, unknown>,
+  });
+  const tekst = await response.text();
+
+  expect(response.status(), 'kapotte JSON mag nooit een onbehandelde serverfout geven').not.toBe(500);
+  for (const lek of ['fatal error', 'stack trace', '.php on line', 'c:\\\\', '/var/www', '/data/sites']) {
+    expect(tekst.toLowerCase().includes(lek), `het antwoord mag "${lek}" niet bevatten`).toBe(false);
+  }
+});

@@ -496,6 +496,11 @@
 | SEC-H-010 | security | security.feature | medewerker die de pagina herlaadt met een beheer-URL in de adresbalk komt terug op het eigen dashboard | Beslissingstabel rollen en autorisatie | 4 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
 | SEC-H-011 | security | security.feature | medewerker die naar Klanturenstaten (beheer) navigeert komt terug op het eigen dashboard | Beslissingstabel rollen en autorisatie | 4 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
 | SEC-H-012 | security | security.feature | een in localStorage naar beheerder gezette rol geeft geen beheerscherm | Beslissingstabel rollen en autorisatie | 6 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
+| SEC-H-014 | security | security.feature | assets/app.js bevat nooit meer de echte financiële gegevens van de genoemde testers | API-contract + equivalentieklasse | 3 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
+| SEC-N-009 | security | security.feature | SQL-injectiepogingen op het loginformulier falen netjes, nooit met een serverfout | Negatieve equivalentieklasse + error guessing | 5 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 5 | Actueel |
+| SEC-N-010 | security | security.feature | een padtraversalpoging op een periode-parameter wordt afgewezen, niet stilzwijgend genegeerd tot een ander antwoord | Negatieve equivalentieklasse + error guessing | 3 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 5 | Actueel |
+| SEC-H-015 | security | security.feature | de sessiecookie draagt HttpOnly en SameSite=Lax | API-contract + equivalentieklasse | 4 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Happy | 5 | Actueel |
+| SEC-N-011 | security | security.feature | een kapotte JSON-payload lekt geen bestandspad of stacktrace naar de client | Negatieve equivalentieklasse + error guessing | 2 | security.steps.ts | security.spec.ts | Security | Audit & Security | Veilige toegang en sessies | Negative | 5 | Actueel |
 | KLV-N-002 | ui | klassiek-verkenning.feature | het maandkeuzepaneel valt op geen enkele breedte buiten het scherm | Monkey testing (seeded) + grenswaardenanalyse + responsive viewport | 8 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | het maandkeuzepaneel valt op geen enkele breedte buiten het scherm | Negative | 19 | Actueel |
 | KLV-N-003 | ui | klassiek-verkenning.feature | in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte | Monkey testing (seeded) + grenswaardenanalyse + responsive viewport | 3 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte | Negative | 19 | Actueel |
 | KLV-N-004 | ui | klassiek-verkenning.feature | een trage opslag die pas na herladen aankomt, blokkeert de volgende invoer niet | Monkey testing (seeded) + concurrency + herstelbaarheid | 7 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | een trage opslag die pas na herladen aankomt, blokkeert de volgende invoer niet | Negative | 19 | Actueel |
@@ -659,9 +664,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 637
+- Playwright executable cases: 642
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 638
+- Totaal unieke executable cases: 643
 - Playwright features: 33
 - Database features: 1
 - Playwright steps mappings: 33

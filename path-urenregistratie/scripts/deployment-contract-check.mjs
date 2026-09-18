@@ -67,6 +67,12 @@ assert.doesNotMatch(remote, /mv "\$live_root" "\$rollback_root"/, 'PROD document
 assert.match(runner, /':\(exclude\)pilot'/, 'PROD archive must exclude the TEST-only pilot directory');
 assert.match(runner, /tar -tzf "\$archive"[\s\S]*\^path-urenregistratie\/pilot\//, 'PROD archive must verify that no pilot path slipped through');
 assert.doesNotMatch(testRunner, /:\(exclude\)pilot/, 'TEST archive must continue to publish the pilot pages');
+// 18 sep: assets/employees-seed.js bevat financiële persoonsgegevens (tarief,
+// contractvorm, bemiddelaargegevens) van de genoemde testers en mag daarom net
+// als pilot/ nooit in de PROD-archive terechtkomen, wel op TEST.
+assert.match(runner, /':\(exclude\)assets\/employees-seed\.js'/, 'PROD archive must exclude employees-seed.js (financial PII)');
+assert.match(runner, /tar -tzf "\$archive"[\s\S]*\^path-urenregistratie\/assets\/employees-seed\\\.js\$/, 'PROD archive must verify that employees-seed.js did not slip through');
+assert.doesNotMatch(testRunner, /:\(exclude\)assets\/employees-seed\.js/, 'TEST archive must continue to publish employees-seed.js');
 
 assert.match(workflow, /deploy-test:\s*[\s\S]*needs:\s*test/, 'TEST deployment must wait for TEST regression');
 assert.match(workflow, /deploy-test:\s*[\s\S]*environment:\s*test/, 'TEST deployment must use the test environment');

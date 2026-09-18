@@ -1,6 +1,6 @@
 {
-  "appVersion": "2.0.179",
-  "generatedAt": "2026-09-18T21:32:16.557Z",
+  "appVersion": "2.0.180",
+  "generatedAt": "2026-09-18T22:52:21.531Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
@@ -50,6 +50,58 @@
           "assertions": 29,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: Berichten toont \"Nieuw in de app\" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD\n  Given vondsten uit de monkey-verkenning op Klassiek is voorbereid\n  When de flow voor KLV-H-018 wordt uitgevoerd\n  Then staan er lokaal/op TEST 20 updates met datum en tijdstip, nieuwste eerst\n  And staan er 5 per pagina met Vorige en Volgende, tot en met de laatste pagina\n  And staat geen naam of gevoelig gegeven in de teksten\n  And op de PROD-host is het blok weg"
+        }
+      ]
+    },
+    {
+      "date": "18 sep",
+      "version": "2.0.180",
+      "wish": "PO's besluit uitgevoerd: financiële persoonsgegevens uit het openbare assets/app.js gehaald, plus een brede beveiligingstestronde over de hele app. PO: \"Alles wat erin staat is gebaseerd op realiteit\" (dus géén verzonnen waarden) en \"Kies wat het best is. En maak een Security testen aan. Veel testen volgens de Security test technieken toevoegen over de gehele applicatie.\" Gekozen voor richting (c): de medewerkersset (uurtarief, contractvorm, factuuradres bemiddelaar, en bij één tester ook overeenkomst-/crediteur-/opdrachtnemernummer) staat nu in een apart bestand assets/employees-seed.js, dat de uitrol naar PROD uitsluit via dezelfde git-archive-exclude als pilot/ (met een verificatie erna die de uitrol laat mislukken als het bestand toch meekomt). TEST en lokaal laden het bestand gewoon (nodig voor het inloggen van de genoemde testers), PROD niet. Een verborgen tweede kopie van dezelfde gegevens in een oude migratiefunctie (schema-versie < 15, Shawns overeenkomstnummer) werd pas gevonden doordat de nieuwe test SEC-H-014 het écht uitgeleverde app.js naleest in plaats van alleen de extractie te vertrouwen -- ook die kopie leest nu uit het aparte bestand. Zes nieuwe testen: SEC-H-014 (app.js bevat geen van de gevoelige waarden meer), SEC-N-009 (SQL-injectiepogingen op inloggen geven nooit een 500 of een databasefoutmelding), SEC-N-010 (pad-traversal-pogingen op het downloaden van klanturenstaten geven nooit de bestandsinhoud), SEC-H-015 (inlogcookie heeft HttpOnly en SameSite=Lax), SEC-N-011 (kapotte JSON geeft nooit een 500 of een stacktrace). Bijvangst van dezelfde ronde: server/health.php gaf op TEST aan iedereen zonder inloggen de PHP-versie en de databasehostnaam/-naam mee (gemeld door herontwerp). Nu alleen nog zichtbaar voor een verzoek vanaf de server zelf (127.0.0.1/::1); de rest van de antwoordvorm (elke controle en zijn ok-vlag) blijft intact, want scripts/deploy-test-remote.sh leest die structuur juist via het publieke testadres om een uitrol te keuren. X-Forwarded-For wordt bewust nooit vertrouwd voor die beslissing (met één header te vervalsen). health-exposure-policy-check.php simuleert beide verzoeken (kan niet via een echte Playwright-aanroep, die komt altijd van 127.0.0.1) en toetst beide kanten; tegenproef: de restrictie teruggedraaid -> rood op precies de twee gevoelige velden. Tegenproef PII: SEC-H-014 faalde eerst echt op de verborgen tweede kopie (Shawns overeenkomstnummer nog aanwezig), groen na de fix.",
+      "cases": [
+        {
+          "id": "SEC-H-014",
+          "title": "assets/app.js bevat nooit meer de echte financiële gegevens van de genoemde testers",
+          "feature": "tests/playwright/features/security.feature",
+          "technique": "API-contract + equivalentieklasse",
+          "assertions": 3,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: assets/app.js bevat nooit meer de echte financiële gegevens van de genoemde testers\n  Given het publiek opgehaalde assets/app.js\n  When de flow voor SEC-H-014 wordt uitgevoerd\n  Then bevat het geen van de echte tarieven, contractvormen of bemiddelaargegevens\n  And staat de scheiding zelf overeind: app.js verwijst naar het aparte seed-bestand, kent het niet uit het hoofd"
+        },
+        {
+          "id": "SEC-N-009",
+          "title": "SQL-injectiepogingen op het loginformulier falen netjes, nooit met een serverfout",
+          "feature": "tests/playwright/features/security.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 5,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: SQL-injectiepogingen op het loginformulier falen netjes, nooit met een serverfout\n  Given authenticatie- en API-beveiliging is voorbereid\n  When de flow voor SEC-N-009 wordt uitgevoerd\n  Then werkt een normale login daarna nog gewoon (de tabel bestaat nog, niets is gecorrumpeerd)"
+        },
+        {
+          "id": "SEC-N-010",
+          "title": "Een padtraversalpoging op een periode-parameter wordt afgewezen, niet stilzwijgend genegeerd tot een ander antwoord",
+          "feature": "tests/playwright/features/security.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 3,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een padtraversalpoging op een periode-parameter wordt afgewezen, niet stilzwijgend genegeerd tot een ander antwoord\n  Given authenticatie- en API-beveiliging is voorbereid\n  When de flow voor SEC-N-010 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat een padtraversalpoging op een periode-parameter wordt afgewezen, niet stilzwijgend genegeerd tot een ander antwoord"
+        },
+        {
+          "id": "SEC-H-015",
+          "title": "de sessiecookie draagt HttpOnly en SameSite=Lax",
+          "feature": "tests/playwright/features/security.feature",
+          "technique": "API-contract + equivalentieklasse",
+          "assertions": 4,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de sessiecookie draagt HttpOnly en SameSite=Lax\n  Given authenticatie- en API-beveiliging is voorbereid\n  When de flow voor SEC-H-015 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de sessiecookie draagt HttpOnly en SameSite=Lax"
+        },
+        {
+          "id": "SEC-N-011",
+          "title": "Een kapotte JSON-payload lekt geen bestandspad of stacktrace naar de client",
+          "feature": "tests/playwright/features/security.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 2,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een kapotte JSON-payload lekt geen bestandspad of stacktrace naar de client\n  Given authenticatie- en API-beveiliging is voorbereid\n  When de flow voor SEC-N-011 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat een kapotte JSON-payload lekt geen bestandspad of stacktrace naar de client"
         }
       ]
     },
@@ -367,7 +419,7 @@
           "technique": "Toestandsovergangtest op het bord (kolom naar kolom) met controle op de server in plaats van op het scherm + herstelbaarheid na herladen zonder browseropslag + tweede lezer ziet dezelfde stand + equivalentieklassen op de lezer (anoniem ziet geen naam, ingelogd wel)",
           "assertions": 21,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: een kaart verplaatsen verandert de stand echt en blijft staan na herladen\n  Given anoniem verplaatsen wordt geweigerd\n  Given de opslag kent deze kaart nog niet\n  When de kaart naar In uitvoering wordt gesleept\n  Then weet de server het, met een geschiedenisregel erbij\n  And blijft hij daar na herladen, ook zonder de browseropslag\n  And een tweede lezer ziet dezelfde stand\n  And de kaart gaat terug, zodat deze case geen sporen achterlaat"
+          "gherkin": ""
         }
       ]
     },
@@ -1880,9 +1932,9 @@
   "open": [
     {
       "date": "18 sep",
-      "wish": "Open besluit voor PO, gevonden door herontwerp: het openbare assets/app.js bevat echte tarieven en contractvormen per medewerker met naam -- ook op PROD. https://uren.pathconsultancy.nl/assets/app.js is zonder inloggen op te halen en bevat de voorbeeldset van de demomodus. Volgens STAMGEGEVENS-EN-PLACEHOLDERS.md zijn dat de aangeleverde, echte gegevens (alleen e-mailadressen vervangen). Gemeten in het PROD-bestand, zonder de waarden te tonen: 4 medewerkernamen, 6 uurtarieven, 3 contractvormen, 7 factuuradressen van bemiddelaars, 1 IBAN en 1 KvK-nummer. IBAN en KvK zijn waarschijnlijk van het bedrijf en staan ook op facturen; tarief en contract per persoon met naam zijn wel financiële persoonsgegevens. Niet zelf aangepast: het is de kern van de demomodus, de smoke-test verwacht de gegevens, en of het echte of verzonnen waarden moeten zijn is een keuze van PO. Richtingen: (a) verzonnen tarieven, contracten en bemiddelaars in de voorbeeldset -- snelst, demo werkt hetzelfde; (b) echte gegevens alleen na inloggen van de server, nooit in de gebundelde JS; (c) de voorbeeldset in een bestand dat niet naar PROD gaat. Main doet de bouw zodra PO kiest. Bijgesteld 18 sep: herontwerp las PO's \"Ok ga verder en stop niet\" als akkoord op richting (a). Dat was te snel: main vroeg het hem rechtstreeks en zijn antwoord was \"Alles wat erin staat is gebaseerd op realiteit\" -- dus géén verzonnen waarden. Richting (a) vervalt; het gaat om het oplossen van de blootstelling zonder de gegevens zelf te veranderen, dus (b) of (c). Main vraagt door welke van de twee. Er is niets aan app.js veranderd.",
-      "who": "PO, daarna main",
-      "status": "open, wacht op keuze tussen (b) en (c)"
+      "wish": "Opgelost: het openbare assets/app.js bevatte echte tarieven en contractvormen per medewerker met naam -- ook op PROD. Zie de volledige toelichting bij Klaar (2.0.180). PO's antwoord op de vraag welke richting: \"Kies wat het best is. En maak een Security testen aan. Veel testen volgens de Security test technieken toevoegen over de gehele applicatie.\"",
+      "who": "main",
+      "status": "klaar (2.0.180)"
     },
     {
       "date": "17 sep",

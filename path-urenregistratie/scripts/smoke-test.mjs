@@ -25,6 +25,7 @@ import { JSDOM } from "jsdom";
 
 const root = new URL("../", import.meta.url);
 const html = await readFile(new URL("index.html", root), "utf8");
+const employeesSeedScript = await readFile(new URL("assets/employees-seed.js", root), "utf8");
 const script = await readFile(new URL("assets/app.js", root), "utf8");
 const styles = await readFile(new URL("assets/styles.css", root), "utf8");
 const dom = new JSDOM(html, {
@@ -52,6 +53,11 @@ const smokeScript = script.replace(
   "function currentCalendarPeriodKey() {\n  const now = new Date('2026-08-31T12:00:00.000Z');",
 );
 if (smokeScript === script) throw new Error("De vaste smokeklok kon niet veilig worden geïnjecteerd");
+// Zelfde volgorde als index.html: employees-seed.js zet window.PATH_EMPLOYEES_SEED
+// vóór app.js het bij freshState() gebruikt. Dit bestand bestaat alleen op
+// DEV/TEST/ACC (PROD sluit het uit, zie deploy-production-transip.sh) -- de
+// smoke draait altijd lokaal, dus dat is hier geen punt.
+dom.window.eval(employeesSeedScript);
 dom.window.eval(smokeScript);
 if (typeof dom.window.applyAuthUiMode === "function") {
   dom.window.applyAuthUiMode("demo");
@@ -323,7 +329,7 @@ assert(document.querySelector("#dashboard-team-title").textContent === "Teamstat
 assert(document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action").length === 4 && document.querySelectorAll("#dashboard-employee-rows .dashboard-team-action.send").length === 2, "Iedere medewerker moet een duidelijke vervolgactie hebben en ingediende uren moeten als controleactie opvallen");
 assert(document.querySelector("#customer-timesheet-admin-summary").textContent === "4 verwacht · 1 document te controleren · 0 extern te bevestigen · 0 wacht op medewerkers" && document.querySelectorAll("#customer-timesheet-admin-list .customer-timesheet-admin-meta").length === 4, "Klanturenstaten moeten documentstatus, externe bevestiging, deadline en brokerroute als compacte kaarten tonen");
 assert(document.querySelector(".workflow-overview") && document.querySelectorAll(".workflow-overview .workflow-step").length === 4, "Procesmeter en vier fasen moeten samen één compact overzicht vormen");
-assert(document.querySelector(".demo-badge").textContent.includes("2.0.179"), "Het zichtbare versienummer moet 2.0.179 zijn");
+assert(document.querySelector(".demo-badge").textContent.includes("2.0.180"), "Het zichtbare versienummer moet 2.0.180 zijn");
 assert(!/veilige demo|testmeldingen|verzendtest/i.test(document.body.textContent), "De gebruikersinterface mag geen tijdelijke demo- of testterminologie meer tonen");
 assert(!document.querySelector('.nav-list [data-view="payroll"]'), "EasySalary hoort niet meer als dubbel onderdeel in het hoofdmenu te staan");
 assert(document.querySelector("#dashboard-employee-rows").textContent.includes("Marc de Roon"), "De aangeleverde medewerkergegevens moeten zichtbaar zijn");
@@ -1694,6 +1700,7 @@ function createQueueTestDom() {
   queueDom.window.URL.createObjectURL = () => "blob:queue-test";
   queueDom.window.URL.revokeObjectURL = () => {};
   queueDom.window.fetch = () => new Promise(() => {});
+  queueDom.window.eval(employeesSeedScript);
   queueDom.window.eval(script);
   if (typeof queueDom.window.applyAuthUiMode === "function") {
     queueDom.window.applyAuthUiMode("demo");
@@ -1829,6 +1836,10 @@ migrationDom.window.URL.createObjectURL = () => "blob:test";
 migrationDom.window.URL.revokeObjectURL = () => {};
 migrationDom.window.fetch = () => new Promise(() => {});
 migrationDom.window.localStorage.setItem("path-uren-demo-v07-final", JSON.stringify(legacyState));
+// De schemamigratie zelf (o.a. Shawns overeenkomst-/crediteur-/contractant-
+// nummer terugzetten voor oude circle8-records) leest window.PATH_EMPLOYEES_SEED
+// tijdens het evalueren van app.js hieronder, dus moet ook hier eerst geladen zijn.
+migrationDom.window.eval(employeesSeedScript);
 migrationDom.window.eval(script);
 if (typeof migrationDom.window.applyAuthUiMode === "function") {
   migrationDom.window.applyAuthUiMode("demo");
@@ -2181,7 +2192,7 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
-console.log("Path v2.0.179 volledige smoke test: geslaagd");
+console.log("Path v2.0.180 volledige smoke test: geslaagd");
 // app.js schedules browser refresh timers. In JSDOM those timers can keep Node
 // alive after every assertion has completed, which made the release check look
 // stuck. End explicitly only after the complete smoke contract is green.
