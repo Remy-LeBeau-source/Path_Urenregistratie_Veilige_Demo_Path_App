@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 634 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 635 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 634 unieke case-ID's
+- Playwright executable cases: 635 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 635 unieke case-ID's
+- Totaal executable cases: 636 unieke case-ID's
 - Playwright features: 33
 - Database features: 1
 - Playwright steps mappings: 33
 - Database steps mappings: 1
-- Uitvoeringen: 698
-- Niet-mobile projectuitvoeringen: 570
+- Uitvoeringen: 699
+- Niet-mobile projectuitvoeringen: 571
 - Mobile functionele cases: 64
 - Pixel 7 / Chromium-uitvoeringen: 64
 - iPhone 13 / WebKit-uitvoeringen: 64
 
-De 64 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 634 Playwright-functionele cases in totaal 698 resultaten op: 570 + (64 x 2) = 698.
+De 64 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 635 Playwright-functionele cases in totaal 699 resultaten op: 571 + (64 x 2) = 699.
 
 ## Documentatieketen
 
@@ -488,7 +488,7 @@ De 64 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 634 Playwri
 
 - Feature: `tests/playwright/features/notifications.feature`
 - Source: `tests/playwright/notifications.spec.ts`
-- Cases: 18
+- Cases: 19
 
 - [NOT-H-001] ingelogde gebruiker kan notificaties ophalen — Techniek: API-contract + equivalentieklasse · Assertions: 5
 - [NOT-H-002] mark_all_read werkt zonder fouten — Techniek: Toestandsovergang · Assertions: 8
@@ -508,6 +508,7 @@ De 64 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 634 Playwri
 - [NOT-H-014] Alles gelezen in Berichten leest alleen de mededelingen en laat de bel met rust — Techniek: API-contract + equivalentieklasse · Assertions: 8
 - [NOT-H-016] bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 5, de bel hooguit 10 — Techniek: Grenswaardenanalyse · Assertions: 17
 - [NOT-H-017] Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 20
+- [NOT-H-019] een net geopend bericht blijft op zijn pagina staan, ook al telt het meteen als gelezen — Techniek: API-contract + equivalentieklasse · Assertions: 9
 
 ### Mededelingen versturen, intrekken en verbergen
 

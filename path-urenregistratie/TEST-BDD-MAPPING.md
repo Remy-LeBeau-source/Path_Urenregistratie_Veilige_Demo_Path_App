@@ -379,6 +379,7 @@
 | NOT-H-014 | api | notifications.feature | Alles gelezen in Berichten leest alleen de mededelingen en laat de bel met rust | API-contract + equivalentieklasse | 8 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | Alles gelezen in Berichten leest alleen de mededelingen en laat de bel met rust | Happy | 15 | Actueel |
 | NOT-H-016 | api | notifications.feature | bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 5, de bel hooguit 10 | Grenswaardenanalyse | 17 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | bij veel berichten blijft het overzichtelijk: Berichten toont de laatste 30, per pagina 5, de bel hooguit 10 | Happy | 15 | Actueel |
 | NOT-H-017 | api | notifications.feature | Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar | Negatieve equivalentieklasse + error guessing | 20 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | Berichten start op Actueel zonder ingetrokken berichten, telt per filter, en toont ingetrokken rustig en leesbaar | Happy | 15 | Actueel |
+| NOT-H-019 | api | notifications.feature | een net geopend bericht blijft op zijn pagina staan, ook al telt het meteen als gelezen | API-contract + equivalentieklasse | 9 | notifications.steps.ts | notifications.spec.ts | API | Notificaties | een net geopend bericht blijft op zijn pagina staan, ook al telt het meteen als gelezen | Happy | 15 | Actueel |
 | ANN-H-001 | api | announcements.feature | beheerder verstuurt een mededeling aan een gekozen medewerker | Beslissingstabel rollen en autorisatie | 8 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | beheerder verstuurt een mededeling aan een gekozen medewerker | Happy | 15 | Actueel |
 | ANN-H-002 | api | announcements.feature | een concept blijft intern en kan daarna definitief worden verwijderd | API-contract + equivalentieklasse | 7 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | een concept blijft intern en kan daarna definitief worden verwijderd | Happy | 15 | Actueel |
 | ANN-H-003 | api | announcements.feature | intrekken met reden en daarna verbergen bij medewerkers | Beslissingstabel rollen en autorisatie | 7 | announcements.steps.ts | announcements.spec.ts | API | Mededelingen | intrekken met reden en daarna verbergen bij medewerkers | Happy | 15 | Actueel |
@@ -656,9 +657,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 634
+- Playwright executable cases: 635
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 635
+- Totaal unieke executable cases: 636
 - Playwright features: 33
 - Database features: 1
 - Playwright steps mappings: 33

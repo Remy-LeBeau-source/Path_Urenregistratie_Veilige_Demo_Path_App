@@ -162,3 +162,11 @@ Feature: Meldingen beheren
     Then staat Actueel aan, met alleen berichten die nog gelden
     And tellen de filters op: Ongelezen + Gelezen = Actueel, Actueel + Ingetrokken = Alles
     And vat een ingetrokken bericht de reden samen, niet de tekst die niet meer geldt
+
+  @happy
+  Scenario: [NOT-H-019] een net geopend bericht blijft op zijn pagina staan, ook al telt het meteen als gelezen
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given het te openen bericht staat als tweede, ongelezen, op pagina 1 (de twee ongelezen vooraan)
+    When het bericht wordt opengeklapt (en dus meteen als gelezen telt)
+    Then blijft het bericht zichtbaar en opengeklapt op pagina 1, niet verplaatst naar pagina 2

@@ -9371,7 +9371,16 @@ function toonBerichtenLijst(list, berichten, unreadCount, tellingen = {}) {
   }
   // Ongelezen bovenaan, verder de volgorde van de bron (nieuwste eerst). Overzichtelijk bij
   // veel berichten (Gio 15 sep: "alleen de laatste 30"): hooguit 30, 10 per pagina.
-  const geordend = berichten.filter(bericht => bericht.unread).concat(berichten.filter(bericht => !bericht.unread));
+  //
+  // Een bericht dat je net hebt opengeklapt telt ook als gelezen (zie hierboven),
+  // maar mag daardoor niet meteen naar de gelezen-groep -- en dus mogelijk een
+  // andere pagina -- springen. Zonder deze uitzondering verdween een net geopend
+  // bericht letterlijk onder je handen: gemeld door Marc de Roon (18 sep), die
+  // een bericht op pagina 1 opende en het meteen op pagina 2 terugvond.
+  // openBerichten.clear() bij het verlaten van dit tabblad zorgt dat dit geen
+  // blijvende uitzondering wordt.
+  const houdBovenaan = bericht => bericht.unread || openBerichten.has(bericht.id);
+  const geordend = berichten.filter(houdBovenaan).concat(berichten.filter(bericht => !houdBovenaan(bericht)));
   const zichtbaar = geordend.slice(0, BERICHTEN_MAXIMUM);
   list.innerHTML = zichtbaar.map(berichtKaartHtml).join("")
     + (geordend.length > BERICHTEN_MAXIMUM ? '<p class="berichten-afgekapt">Alleen de laatste ' + BERICHTEN_MAXIMUM + ' berichten staan hier.</p>' : "");

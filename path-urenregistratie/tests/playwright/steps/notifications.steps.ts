@@ -69,3 +69,6 @@ When("de flow voor NOT-H-017 wordt uitgevoerd");
 Then("staat Actueel aan, met alleen berichten die nog gelden");
 And("tellen de filters op: Ongelezen + Gelezen = Actueel, Actueel + Ingetrokken = Alles");
 And("vat een ingetrokken bericht de reden samen, niet de tekst die niet meer geldt");
+Given("het te openen bericht staat als tweede, ongelezen, op pagina 1 (de twee ongelezen vooraan)");
+When("het bericht wordt opengeklapt (en dus meteen als gelezen telt)");
+Then("blijft het bericht zichtbaar en opengeklapt op pagina 1, niet verplaatst naar pagina 2");
