@@ -1,6 +1,6 @@
 {
   "appVersion": "2.0.160",
-  "generatedAt": "2026-09-18T02:27:43.078Z",
+  "generatedAt": "2026-09-18T03:11:29.470Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
@@ -1673,7 +1673,7 @@
     },
     {
       "date": "15 sep",
-      "wish": "Dialoog met toetsenbord onder \"minder beweging\": dialoog krimpt niet mee (SKIN-N-008 fixme). Controleren op echte iPhone.",
+      "wish": "Dialoog met toetsenbord onder \"minder beweging\": dialoog krimpt niet mee (SKIN-N-008 fixme). Controleren op echte iPhone. Verder uitgezocht 18 sep, diagnose scherper, nog niet opgelost. Gemeten met de case tijdelijk aangezet: de achtergrondlaag krimpt correct mee (300px), het attribuut staat, de variabele staat op 300px -- alleen de dialoog zelf houdt zijn oude grens (824px), waardoor het kruisje ruim 500px boven het scherm valt. Zonder \"minder beweging\" is diezelfde meting gewoon 280px. Het is bovendien niet elke keer mis: twee runs op exact dezelfde code gaven 280px en 824px, en dat verklaart waarom de eerdere vier fixpogingen \"soms\" leken te werken. Twee nieuwe pogingen (een afgedwongen herberekening, en de grens rechtstreeks op de dialoog zetten in plaats van via CSS) haalden de wisselvalligheid er niet uit: de grens stond aantoonbaar op 280px terwijl de indeling op 824px bleef staan. Beide pogingen zijn daarom teruggedraaid -- onbewezen code hoort niet in gedeelde bestanden. Wat dit sterk maakt als vervolgstap: het lijkt een eigenaardigheid van de browser onder die instelling, dus eerst op een echt iOS-toestel kijken of het daar überhaupt bestaat, vóór er nog code voor wordt geschreven.",
       "who": "herontwerp",
       "status": "open"
     }
