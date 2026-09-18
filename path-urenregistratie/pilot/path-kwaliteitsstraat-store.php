@@ -181,7 +181,40 @@ if (($invoer['action'] ?? '') === 'voortgang') {
     if ($uitkomst === null) {
         store_antwoord(503, ['error' => 'De opslag is nu niet beschikbaar.']);
     }
-    store_antwoord(200, ['environment' => $omgeving, 'opslag' => $uitkomst['bron'], 'voortgang' => $uitkomst]);
+
+    // De kaart schuift mee met de fase, zonder dat iemand dat apart hoeft te doen.
+    // Wens Gio: "de kaarten moet hij zelf op in uitvoering zetten". Dat hier laten
+    // gebeuren in plaats van bij de aanroeper is met opzet: één handeling, dus de
+    // kolom kan nooit uit de pas lopen met de fase die ernaast staat.
+    //
+    // Fase 1 t/m 3 is werk onderhanden; fase 4 betekent dat het op TEST staat met
+    // de Living Doc bij, en dat is precies wat Opgeleverd betekent. Fase 0 raakt
+    // de kolom bewust niet aan: dat is "niet meer onderhanden", en of een wens
+    // dan terug moet naar Te doen of blijft staan is een besluit van een mens.
+    $nieuweKolom = '';
+    if ($fase >= 1 && $fase <= 3) {
+        $nieuweKolom = 'doing';
+    } elseif ($fase === 4) {
+        $nieuweKolom = 'done';
+    }
+    $kaart = null;
+    if ($nieuweKolom !== '') {
+        $huidig = opslag_lees($pad);
+        $vorigeKolom = (string)($huidig['items'][$sleutel]['status'] ?? '');
+        if ($vorigeKolom !== $nieuweKolom) {
+            $verplaatst = opslag_zet_status($pad, $sleutel, $nieuweKolom, $vorigeKolom, 'Pijplijn');
+            $kaart = $verplaatst !== null ? $verplaatst['item'] : null;
+        }
+    }
+
+    store_antwoord(200, [
+        'environment' => $omgeving,
+        'opslag' => $uitkomst['bron'],
+        'voortgang' => $uitkomst,
+        // null als de kaart al goed stond; dan is er niets verplaatst en hoort
+        // er ook geen regel in de geschiedenis bij te komen.
+        'kaart' => $kaart,
+    ]);
 }
 
 // ---- Kaart verplaatsen ------------------------------------------------------

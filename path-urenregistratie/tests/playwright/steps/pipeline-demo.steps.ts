@@ -51,6 +51,7 @@ Given("anoniem voortgang melden wordt geweigerd");
 And("een fase buiten 0 tot en met 4 wordt geweigerd");
 Then("staat de balk op de simulatie zolang er niets loopt");
 When("de pijplijn stap voor stap voortgang meldt");
+And("schuift de kaart vanzelf mee met de fase");
 And("laat fase 0 de balk weer los");
 Given("het leesantwoord noemt de gebruikte achterkant");
 And("het leesantwoord bevat geen verbindingsgegevens");

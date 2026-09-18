@@ -627,6 +627,23 @@ test.describe('Path Pipeline TEST-demo', () => {
       }
     });
 
+    await test.step('And schuift de kaart vanzelf mee met de fase', async () => {
+      // Tweede helft van dezelfde wens: "de kaarten moet hij zelf op in
+      // uitvoering zetten". Dat gebeurt op de server, in dezelfde handeling als
+      // het melden van de fase, zodat kolom en fase niet uit elkaar kunnen lopen.
+      const stand = await (await request.get(store)).json();
+      expect(stand.items[wens]?.status, 'fase 4 hoort de kaart op Opgeleverd te zetten').toBe('done');
+      const regel = stand.historie.find((h: { key: string }) => h.key === wens);
+      expect(regel, 'de verplaatsing hoort in de geschiedenis te staan').toBeTruthy();
+      expect(regel.by, 'zichtbaar dat de pijplijn het deed, niet een mens').toBe('Pijplijn');
+
+      // En tijdens het werk stond hij op In uitvoering; dat is de stand die Gio
+      // op het scherm wil zien terwijl er gewerkt wordt.
+      const terug = await page.request.post(store, { data: { action: 'voortgang', key: wens, fase: 2, toelichting: 'Weer bezig' } });
+      expect(terug.status()).toBe(200);
+      expect((await terug.json()).kaart.status).toBe('doing');
+    });
+
     await test.step('And laat fase 0 de balk weer los', async () => {
       const vrij = await page.request.post(store, { data: { action: 'voortgang', key: wens, fase: 0 } });
       expect(vrij.status()).toBe(200);

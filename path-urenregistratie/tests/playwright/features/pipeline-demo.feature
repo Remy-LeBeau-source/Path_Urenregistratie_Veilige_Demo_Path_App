@@ -74,11 +74,12 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
   @happy
   Scenario: [PIPE-H-017] de stappenbalk toont echte voortgang van de pijplijn en beweegt mee zonder herladen
     # Testtechniek: Toestandsovergangtest over de vier fasen van de straat (elke stap moet op het scherm terechtkomen, en vrijgeven moet hem weer loslaten) + grenswaarden op de fase (0 en 4 horen erbij, -1 en 5 niet) + negatieve klasse op het schrijfrecht
-    # Aantoonbare Playwright-assertions in deze case: 18
+    # Aantoonbare Playwright-assertions in deze case: 23
     Given anoniem voortgang melden wordt geweigerd
     And een fase buiten 0 tot en met 4 wordt geweigerd
     Then staat de balk op de simulatie zolang er niets loopt
     When de pijplijn stap voor stap voortgang meldt
+    And schuift de kaart vanzelf mee met de fase
     And laat fase 0 de balk weer los
 
   @happy
