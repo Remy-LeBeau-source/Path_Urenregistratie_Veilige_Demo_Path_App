@@ -549,12 +549,19 @@ tr.toon-meer-rij td { padding: 6px 10px; }
   .create-button { padding: 0 10px; font-size: 0; }
   .create-button::before { content: "＋ Wens"; font-size: 13px; font-weight: 600; }
   .product-bar { gap: 6px; padding: 0 6px; }
-  /* Drie tabbladen moeten op 390px naast elkaar passen, anders valt Zephyr weg. */
+  /* Vier tabbladen moeten op 390px naast elkaar passen, anders valt Testbeheer
+     weg. flex:1 alleen is daarvoor niet genoeg: een flex-item krimpt standaard
+     niet onder zijn eigen inhoud (min-width: auto), dus bij een iets bredere
+     letter -- zoals op de pipelinemachine -- schoof het vierde tabblad er net
+     buiten terwijl het lokaal paste. Met min-width: 0 krimpen ze wel mee. */
   .workspace-tabs { position: sticky; top: 56px; z-index: 20; background: var(--canvas); }
-  .workspace-tabs button { flex: 1; justify-content: center; gap: 5px; padding: 8px 4px 10px; }
+  .workspace-tabs button { flex: 1; min-width: 0; justify-content: center; gap: 5px; padding: 8px 4px 10px; }
   .workspace-tabs button > span:first-child, .workspace-tabs small { display: none; }
   .workspace-tabs button > span:nth-child(2) { font-size: 13px; }
   .workspace-tabs b { min-width: 18px; padding: 1px 4px; font-size: 11px; }
+  /* Krimpen mag, uitpuilen niet: zonder overflow zou de naam gewoon buiten zijn
+     eigen (gekrompen) vak doorlopen en alsnog over de rand van het scherm gaan. */
+  .workspace-tabs button > span:nth-child(2) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .drop-panel, .drop-panel.wide { left: 8px; right: 8px; width: auto; }
   .living-doc li { grid-template-columns: minmax(0, 1fr); }
   .living-doc time { grid-row: 1; justify-self: start; }

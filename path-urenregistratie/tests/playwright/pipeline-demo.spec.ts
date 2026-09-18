@@ -1449,6 +1449,27 @@ test('[PIPE-N-004] tussen de mobiele en de bureaubladdrempel blijft de Confluenc
       expect(tabs).toHaveLength(4);
       const buitenBeeld = tabs.filter((tab) => tab.rechts > 391);
       expect(buitenBeeld, `Tabbladen buiten beeld: ${buitenBeeld.map((t) => t.naam).join(', ')}`).toEqual([]);
+
+      // Waarom hier niet alleen op die grens van 391px wordt getoetst: precies
+      // deze case was lokaal groen en in de pipeline rood, omdat het lettertype
+      // daar iets breder is en het vierde tabblad er dan net buiten schoof. Een
+      // grens die van de toevallige lettermaat van de machine afhangt, bewijst
+      // niets. Getoetst wordt daarom de eigenschap die dat onmogelijk maakt: de
+      // vier tabbladen verdelen de balk, in plaats van dat hun tekst hun breedte
+      // bepaalt. Meting 18 sep: met die eigenschap eindigt het laatste tabblad
+      // altijd op de rand van de balk; zonder liep het mee met de tekst (387px
+      // in plaats van 376px) en dan is een bredere letter genoeg om eruit te
+      // lopen.
+      const balkRechts = await page.evaluate(() => Math.round(document.querySelector('.workspace-tabs')!.getBoundingClientRect().right));
+      await page.addStyleTag({ content: '.workspace-tabs button > span:nth-child(2) { font-size: 17px !important; }' });
+      const tabsGroot = await page.evaluate(() => Array.from(document.querySelectorAll('[role="tab"]'))
+        .map((tab) => ({ naam: (tab.textContent || '').replace(/\s+/g, ' ').trim(), rechts: Math.round(tab.getBoundingClientRect().right) })));
+      const groteBuitenBeeld = tabsGroot.filter((tab) => tab.rechts > 391);
+      expect(groteBuitenBeeld, `Tabbladen buiten beeld bij een bredere letter: ${groteBuitenBeeld.map((t) => t.naam + '@' + t.rechts).join(', ')}`).toEqual([]);
+      expect(
+        Math.abs(tabsGroot[tabsGroot.length - 1].rechts - balkRechts),
+        `het laatste tabblad hoort op de rand van de balk te eindigen (balk @${balkRechts}, tabblad @${tabsGroot[tabsGroot.length - 1].rechts}): groeit het mee met de tekst, dan valt het bij een breder lettertype buiten beeld`
+      ).toBeLessThanOrEqual(1);
       await expect(page.locator('script[src*="assets/app.js"], link[href*="assets/styles.css"]')).toHaveCount(0);
       await expect(page.locator('footer')).toContainText('geen koppeling met een bestaand Jira-, Confluence- of Zephyr-account');
       await expect(page.locator('footer')).toContainText('aangenomen in de intakewachtrij');

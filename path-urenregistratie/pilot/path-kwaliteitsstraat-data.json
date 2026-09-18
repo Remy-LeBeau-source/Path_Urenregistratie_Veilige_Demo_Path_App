@@ -1,8 +1,24 @@
 {
   "appVersion": "2.0.158",
-  "generatedAt": "2026-09-17T23:45:08.785Z",
+  "generatedAt": "2026-09-18T00:46:12.926Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "18 sep",
+      "version": "2.0.158",
+      "wish": "Twee pipelinefouten opgelost die lokaal niet te zien waren. (1) Op een telefoon viel het vierde tabblad (Testbeheer) buiten beeld, maar alleen in de pipeline: daar is het lettertype net iets breder. Oorzaak: de tabbladen verdeelden de balk wel, maar konden niet krimpen onder hun eigen tekst, dus duwde een bredere letter ze eruit. Gemeten: met de fix eindigt het laatste tabblad altijd op de rand van de balk (376px), zonder liep het mee met de tekst (387px van de 391 beschikbaar) -- vier pixels speling, en in de pipeline dus net te weinig. PIPE-N-001 toetst nu die eigenschap zelf (het laatste tabblad eindigt op de rand van de balk) in plaats van een pixelgrens die van de lettermaat van de machine afhangt; dat was nodig omdat mijn eerste twee tegenproeven groen bleven -- een grens die toevallig haalbaar is bewijst niets. Met de nieuwe assertie: tegenproef rood, fix groen. (2) \"Nieuw in de app\" telde 22 regels in plaats van 20 doordat main en ik allebei bijschreven, en de volgorde klopte niet meer na het samenvoegen. Teruggebracht tot de laatste 20 en chronologisch gezet.",
+      "cases": [
+        {
+          "id": "PIPE-N-001",
+          "title": "de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole",
+          "assertions": 16,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de Kennisbank op de telefoon wordt geopend\n  Then tekent de Living Doc tien regels per keer, lokaal vóór echt, en bewaart hij er hooguit 25\n  And de pagina heeft geen horizontale overflow of gedeelde appcode"
+        }
+      ]
+    },
     {
       "date": "18 sep",
       "version": "head` erachter laat de testserver als wees achter op poort 8000, en een tegenproef-injectie via `node -e` met \\n landt stil niet in een bestand met CRLF-regeleinden (dat gaf hier eerst een volkomen verkeerde diagnose, tot ik de injectie natrok).",
@@ -155,7 +171,7 @@
           "title": "de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon",
           "feature": "tests/playwright/features/pipeline-demo.feature",
           "technique": "Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole",
-          "assertions": 14,
+          "assertions": 16,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de Kennisbank op de telefoon wordt geopend\n  Then tekent de Living Doc tien regels per keer, lokaal vóór echt, en bewaart hij er hooguit 25\n  And de pagina heeft geen horizontale overflow of gedeelde appcode"
         }
@@ -286,7 +302,7 @@
           "title": "de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon",
           "feature": "tests/playwright/features/pipeline-demo.feature",
           "technique": "Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole",
-          "assertions": 14,
+          "assertions": 16,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de Kennisbank op de telefoon wordt geopend\n  Then tekent de Living Doc tien regels per keer, lokaal vóór echt, en bewaart hij er hooguit 25\n  And de pagina heeft geen horizontale overflow of gedeelde appcode"
         }
@@ -477,7 +493,7 @@
           "technique": "Toestandsovergangtest (onbekend -> bekend -> onbekend -> onbekend) op de hulpbot-teller, met inhoudscontrole van het samengevoegde contactbericht",
           "assertions": 12,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: pas de tweede onbekende vraag op rij geeft contact, en een bekende vraag ertussen zet de teller terug\n  Given een eerste onbekende vraag, then vraagt de bot om een andere formulering zonder contactoptie\n  When daarna een bekende vraag wordt gesteld, then komt het echte antwoord en geen contactfallback\n  And telt een volgende onbekende vraag weer als de EERSTE, niet als de tweede\n  And pas de daaropvolgende tweede onbekende vraag op rij geeft de contactfallback met beide letterlijke formuleringen\n  Then wordt met Playwright-assertions bevestigd dat pas de tweede onbekende vraag op rij geeft contact, en een bekende vraag ertussen zet de teller terug"
+          "gherkin": ""
         }
       ]
     },
@@ -1133,7 +1149,7 @@
           "title": "de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon",
           "feature": "tests/playwright/features/pipeline-demo.feature",
           "technique": "Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole",
-          "assertions": 14,
+          "assertions": 16,
           "platform": "desktop-chromium",
           "gherkin": ""
         }
