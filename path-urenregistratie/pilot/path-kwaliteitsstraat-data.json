@@ -1,6 +1,6 @@
 {
-  "appVersion": "2.0.163",
-  "generatedAt": "2026-09-18T07:59:40.722Z",
+  "appVersion": "2.0.164",
+  "generatedAt": "2026-09-18T09:17:29.880Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
@@ -16,6 +16,22 @@
           "assertions": 23,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: de stappenbalk toont echte voortgang van de pijplijn en beweegt mee zonder herladen\n  Given anoniem voortgang melden wordt geweigerd\n  And een fase buiten 0 tot en met 4 wordt geweigerd\n  Then staat de balk op de simulatie zolang er niets loopt\n  When de pijplijn stap voor stap voortgang meldt\n  And schuift de kaart vanzelf mee met de fase\n  And laat fase 0 de balk weer los"
+        }
+      ]
+    },
+    {
+      "date": "18 sep",
+      "version": "2.0.164",
+      "wish": "Marc de Roon meldde: een net geopend bericht in Berichten \"verdwijnt\" naar een andere pagina. Oorzaak: de lijst zet ongelezen berichten altijd vooraan, en openklappen telt meteen als gelezen (bestaand gedrag). Zonder uitzondering verhuisde een net geopend bericht bij de eerstvolgende hertekening dus naar zijn gewone, gelezen plek -- met vijf per pagina soms een andere pagina, terwijl je het net had opengeklapt. Dezelfde bescherming die al bestond voor het filter Ongelezen (een net geopend bericht blijft daar zichtbaar tot je wegnavigeert) is nu ook toegepast op de volgorde zelf. NOT-H-019 nieuw; eerste, te simpele testopzet bleek zelf niet te discrimineren (het geopende bericht stond toevallig al op zijn natuurlijke plek) -- pas een opzet met genoeg tussenliggende berichten om de paginagrens te overschrijden bewees rood vóór de fix, groen erna.",
+      "cases": [
+        {
+          "id": "NOT-H-019",
+          "title": "een net geopend bericht blijft op zijn pagina staan, ook al telt het meteen als gelezen",
+          "feature": "tests/playwright/features/notifications.feature",
+          "technique": "API-contract + equivalentieklasse",
+          "assertions": 9,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een net geopend bericht blijft op zijn pagina staan, ook al telt het meteen als gelezen\n  Given het te openen bericht staat als tweede, ongelezen, op pagina 1 (de twee ongelezen vooraan)\n  When het bericht wordt opengeklapt (en dus meteen als gelezen telt)\n  Then blijft het bericht zichtbaar en opengeklapt op pagina 1, niet verplaatst naar pagina 2"
         }
       ]
     },
@@ -449,7 +465,7 @@
           "technique": "API-contract + equivalentieklasse",
           "assertions": 4,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: herhaalde mislukte loginpogingen maken security-audit event\n  Given authenticatie- en API-beveiliging is voorbereid\n  When de flow voor SEC-H-006 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat herhaalde mislukte loginpogingen maken security-audit event"
+          "gherkin": ""
         },
         {
           "id": "SEC-H-013",
@@ -458,7 +474,7 @@
           "technique": "Grenswaardenanalyse op de drempel (twee mag nog niet, drie wel) + idempotentiecontrole (geen tweede event binnen hetzelfde venster) + inhoudscontrole van het event_data-veld",
           "assertions": 14,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: het drempel-audit-event verschijnt precies bij drie mislukkingen, één keer, met de juiste inhoud\n  Given een geseed medewerkersaccount dat nergens anders mislukte pogingen krijgt\n  When er twee keer mislukt wordt ingelogd (net onder de drempel)\n  Then bestaat er nog geen drempel-event (de grens ligt bij drie, niet twee)\n  When een derde mislukte poging de drempel haalt\n  Then verschijnt precies één event, met het juiste account en de juiste inhoud\n  When nog een mislukte poging volgt binnen hetzelfde venster (blijft ruim onder de eigen inlogdrempel van vijf, zie AUTH-N-008/PWD-N-018 -- dit account wordt hierna door andere cases nog echt gebruikt om in te loggen)\n  Then blijft het nog steeds precies één event: de dedup-guard voorkomt een tweede"
+          "gherkin": ""
         }
       ]
     },

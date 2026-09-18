@@ -870,4 +870,55 @@ test.describe('notifications api', () => {
       });
     }
   });
+
+  // Gemeld door Marc de Roon (18 sep): een bericht op pagina 1 openen liet het meteen op
+  // pagina 2 terechtkomen. Oorzaak: toonBerichtenLijst() groepeert ongelezen altijd vooraan;
+  // openklappen telt meteen als gelezen (zie NOT-H-018), dus schoof het bericht bij de
+  // eerstvolgende hertekening naar de gelezen-groep aan het eind -- met paginering van 5 kon
+  // dat een andere pagina worden, terwijl je het net had opengeklapt.
+  test('[NOT-H-019] een net geopend bericht blijft op zijn pagina staan, ook al telt het meteen als gelezen', async ({ page }) => {
+    // Negen berichten, chronologisch (nieuwste eerst): één ongelezen bovenaan, dan vier
+    // al-gelezen berichten, dan het te openen ongelezen bericht, dan nog drie gelezen. Zijn
+    // "natuurlijke" plek tussen de gelezen berichten (zodra hij zelf ook gelezen telt) ligt
+    // na vijf andere berichten -- precies over de paginagrens (5 per pagina) heen. Met minder
+    // tussenliggende berichten verschuift hij wel van plek, maar blijft toevallig op dezelfde
+    // pagina staan; dat discrimineert de fix niet.
+    await nagebootsteBerichten(page, [
+      { id: 9609, notification_type: 'announcement', announcement_id: 9609, title: 'Nieuwste, blijft ongelezen', read: false },
+      { id: 9608, notification_type: 'announcement', announcement_id: 9608, title: 'Al gelezen A', read: true },
+      { id: 9607, notification_type: 'announcement', announcement_id: 9607, title: 'Al gelezen B', read: true },
+      { id: 9606, notification_type: 'announcement', announcement_id: 9606, title: 'Al gelezen C', read: true },
+      { id: 9605, notification_type: 'announcement', announcement_id: 9605, title: 'Al gelezen D', read: true },
+      { id: 9604, notification_type: 'announcement', announcement_id: 9604, title: 'Op te openen bericht', read: false },
+      { id: 9603, notification_type: 'announcement', announcement_id: 9603, title: 'Al gelezen E', read: true },
+      { id: 9602, notification_type: 'announcement', announcement_id: 9602, title: 'Al gelezen F', read: true },
+      { id: 9601, notification_type: 'announcement', announcement_id: 9601, title: 'Oudste, al gelezen', read: true },
+    ]);
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('button[data-view="employee-announcements"]').click();
+    const lijst = page.locator('#employee-announcement-list');
+    const nav = page.locator('#berichten-paginering');
+    const teOpenen = lijst.locator('.employee-announcement-card').filter({ hasText: 'Op te openen bericht' });
+
+    await test.step('Given het te openen bericht staat als tweede, ongelezen, op pagina 1 (de twee ongelezen vooraan)', async () => {
+      await expect(nav.locator('[data-pagina-stand]')).toHaveText('1–5 van 9');
+      await expect(teOpenen).toBeVisible();
+      await expect(teOpenen).toHaveClass(/is-unread/);
+    });
+
+    await test.step('When het bericht wordt opengeklapt (en dus meteen als gelezen telt)', async () => {
+      await teOpenen.locator('[data-bericht-toggle]').click();
+      await expect(teOpenen.locator('[data-bericht-toggle]')).toHaveAttribute('aria-expanded', 'true');
+      await expect(page.locator('#announcement-unread-filter')).toHaveText('Ongelezen · 1');
+    });
+
+    await test.step('Then blijft het bericht zichtbaar en opengeklapt op pagina 1, niet verplaatst naar pagina 2', async () => {
+      await expect(nav.locator('[data-pagina-stand]')).toHaveText('1–5 van 9');
+      await expect(teOpenen).toBeVisible();
+      await expect(teOpenen.locator('[data-bericht-toggle]')).toHaveAttribute('aria-expanded', 'true');
+      await expect(teOpenen).not.toHaveClass(/is-unread/);
+    });
+  });
 });
