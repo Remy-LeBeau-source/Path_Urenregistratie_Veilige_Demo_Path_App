@@ -106,8 +106,49 @@ function controleerBestand(pad, lichtSelector, donkerSelector) {
       }
     }
   }
+  // Regels die ALLEEN een tekstkleur zetten. Die tekst staat op de achtergrond
+  // van zijn ouder, en de controle hierboven sloeg ze daarom over. Zo bleef
+  // onopgemerkt dat var(--danger) als tekst op donker maar 3,0:1 haalde (18 sep).
+  // Getoetst tegen de standaardachtergrond van het thema (--surface).
+  //
+  // Een regel die op een eigen, anders gekleurde ondergrond staat, hoort in
+  // OP_EIGEN_VLAK, met de reden. Zo wordt een nieuwe regel nooit stil
+  // overgeslagen: hij valt op tot iemand bewust vastlegt waarom hij klopt.
+  for (const regel of regels) {
+    const kleurM = /(?:^|;)\s*color\s*:\s*(var\([^;]+\))/i.exec(regel.body);
+    const achterM = /(?:^|;)\s*background(?:-color)?\s*:/i.exec(regel.body);
+    if (!kleurM || achterM) continue;
+    if (OP_EIGEN_VLAK.some((s) => regel.selector.includes(s))) continue;
+    const alleenDonker = regel.selector.includes('[data-theme="dark"]');
+    const modi = alleenDonker ? [['donker', donker]] : [['licht', licht], ['donker', donker]];
+    for (const [modus, tokens] of modi) {
+      const voor = rgb(los(kleurM[1], tokens));
+      const achter = rgb(los('var(--surface)', tokens));
+      if (!voor || !achter) continue;
+      const c = contrast(voor, achter);
+      if (c < 4.5) {
+        problemen.push({ bestand: pad, modus, selector: regel.selector, contrast: c.toFixed(2), voor: kleurM[1].trim(), achter: 'var(--surface) (ondergrond van de ouder)' });
+      }
+    }
+  }
   return problemen;
 }
+
+// Tekst die alleen een kleur zet maar aantoonbaar op een eigen, donkere ondergrond
+// staat -- niet op --surface. Elk item met waar die ondergrond vandaan komt.
+const OP_EIGEN_VLAK = [
+  // Staat in .employee-hero, dat een donkerblauw verloop als achtergrond heeft
+  // (#0d1b38 ...); mint daarop is ruim leesbaar. In Klassiek bovendien verborgen.
+  '.employee-next-action-label',
+  // Crèmekleurige tekst op de donkere bentokaart van het medewerkerdashboard in New.
+  '.new-employee-bento',
+  // Het woord CONCEPTVOORBEELD in de voet van de factuurvoorbeeldweergave; die voet
+  // heeft zelf background: var(--navy), en mint op navy is ruim leesbaar.
+  // (Geprobeerd: de ondergrond automatisch uit de ouderregel afleiden. Dat gaf
+  // negen valse meldingen -- verlopen, en achtergronden die per thema weer
+  // worden overschreven -- dus liever een expliciete, beredeneerde lijst.)
+  '.invoice-brand-footer strong',
+];
 
 const problemen = [
   ...controleerBestand('assets/styles.css', ':root {', 'html[data-theme="dark"] {'),

@@ -54,6 +54,11 @@
      het donkere blok hem omdraaien zonder dat de lichte modus verandert. */
   --warning-rand: #edc58f;
   --danger: #a34b4b;
+  /* Rood voor TEKST. --danger is gemaakt voor vlakken en randen en heeft één
+     waarde voor licht en donker; als tekst haalde hij op de donkere achtergrond
+     maar 3,0:1 (gezien 18 sep). Hier een eigen waarde per thema, zodat
+     scripts/contrast-licht-donker.mjs hem ook kan narekenen. */
+  --danger-tekst: #a34b4b;
   --shadow: 0 14px 35px rgba(13, 27, 56, 0.08);
   --radius: 18px;
   /* Hoogteschaal. Rand en schaduw zeggen allebei "los object", en ze stonden
@@ -649,7 +654,7 @@ html:not([data-skin="new"]) .button-primary:active:not(:disabled) { transform: s
 .dashboard-next-action-side .small-button { min-height: 42px; border-color: var(--warning); background: var(--surface); color: var(--navy-tekst); font-size: 11px; padding: 10px 17px; }
 .text-button { border: 0; background: transparent; color: var(--teal); cursor: pointer; font-size: 12px; font-weight: 800; padding: 7px; }
 .text-button:hover { color: var(--mint-dark-tekst); }
-.text-button.danger-text { color: var(--danger); }
+.text-button.danger-text { color: var(--danger-tekst); }
 .text-button.danger-text:hover { color: #7f3030; }
 
 .progress-ring { --size: 70px; display: grid; flex: 0 0 auto; width: var(--size); height: var(--size); place-items: center; border-radius: 50%; background: conic-gradient(var(--mint) calc(var(--progress) * 1%), rgba(255,255,255,.11) 0); }
@@ -1004,7 +1009,7 @@ html:not([data-skin="new"]) .button-primary:active:not(:disabled) { transform: s
 .small-button.document-restore-action:focus-visible { outline: 3px solid color-mix(in srgb,var(--warning) 30%,transparent); outline-offset: 2px; }
 .invoice-document-restore small { color: var(--muted); font-size: 9px; line-height: 1.45; }
 .external-timesheet-warning { display: grid; gap: 7px; border: 1px solid color-mix(in srgb,var(--danger) 48%,var(--line)); border-left: 4px solid var(--danger); border-radius: 11px; background: color-mix(in srgb,var(--danger) 8%,var(--vlak)); color: var(--navy-tekst); padding: 12px 13px; }
-.external-timesheet-warning strong { color: var(--danger); }
+.external-timesheet-warning strong { color: var(--danger-tekst); }
 .external-timesheet-warning p { margin: 0; color: var(--muted); line-height: 1.55; }
 .external-timesheet-warning ul { margin: 0; padding-left: 18px; display: grid; gap: 3px; color: var(--navy-tekst); line-height: 1.5; }
 .invoice-document-upload { display: grid; gap: 7px; margin: 0; }
@@ -1641,7 +1646,7 @@ html:not([data-skin="new"]) .button-primary:active:not(:disabled) { transform: s
 .profile-menu-person small { margin-top: 3px; color: var(--muted); font-size: 9px; }
 .profile-menu > button { width: 100%; border: 0; border-radius: 9px; background: transparent; color: var(--ink); cursor: pointer; font-size: 11px; padding: 10px 11px; text-align: left; }
 .profile-menu > button:hover { background: var(--vlak-zacht); }
-.profile-menu .danger-menu-item { margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; color: var(--danger); }
+.profile-menu .danger-menu-item { margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0 0 9px 9px; color: var(--danger-tekst); }
 
 /* Avatarkiezer in het profielmenu (17 sep, handoff). Klappen doet
    #avatar-picker-panel open/dicht; kiezen is direct (geen los opslaan) en
@@ -2418,7 +2423,7 @@ html[data-theme="dark"] .employee-announcement-list .employee-announcement-card.
 .help-inline-topics button { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--navy-tekst); cursor: pointer; font-size: 10px; font-weight: 900; padding: 8px 11px; text-align: left; }
 .help-inline-topics button:hover { border-color: var(--mint); background: var(--green-light); }
 
-html[data-theme="dark"] { color-scheme: dark; --ingetrokken-tekst: #c4bdf2; --ingetrokken-rand: #4d4679; --ingetrokken-vlak: #1c1a33; --ink: #e7eef4; --muted: #b1bfcb; --line: #2a3a4a; --line-zacht: #223243; --surface: #111d2b; --background: #09131f; --green-light: #15352f; --teal: #64d7bd; --mint-dark: #51caae; --warning-bg: #332618; --warning: #efb76f; --shadow: 0 14px 35px rgba(0,0,0,.35);
+html[data-theme="dark"] { color-scheme: dark; --danger-tekst: #e58d8d; --ingetrokken-tekst: #c4bdf2; --ingetrokken-rand: #4d4679; --ingetrokken-vlak: #1c1a33; --ink: #e7eef4; --muted: #b1bfcb; --line: #2a3a4a; --line-zacht: #223243; --surface: #111d2b; --background: #09131f; --green-light: #15352f; --teal: #64d7bd; --mint-dark: #51caae; --warning-bg: #332618; --warning: #efb76f; --shadow: 0 14px 35px rgba(0,0,0,.35);
   /* Schaduwen moeten in het donker dieper en zwarter zijn; dezelfde blauwe
      alfa's als in de lichte modus zijn daar onzichtbaar. */
   --hoogte-kaart: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.28);
@@ -5196,12 +5201,9 @@ html:not([data-skin="new"]) body[data-role="employee"] .klantkaart-meer { displa
 dd:has(> .summary-hours-input[aria-invalid="true"])::after {
   display: block;
   margin-top: 3px;
-  /* Niet kaal var(--danger): die heeft één waarde voor licht en donker en haalt
-     op de donkere achtergrond maar 3,0:1 -- te weinig voor tekst van 11px.
-     Gemengd met de tekstkleur van het thema wordt hij in licht donkerder en in
-     donker lichter, en blijft hij herkenbaar rood: gemeten 9,0:1 op wit en
-     6,3:1 op #101c26. */
-  color: color-mix(in srgb, var(--danger) 60%, var(--ink));
+  /* Niet kaal var(--danger): die haalt als tekst op donker maar 3,0:1. Het
+     teksttoken heeft een eigen waarde per thema (5,7:1 licht, 6,9:1 donker). */
+  color: var(--danger-tekst);
   font-size: 11px;
   font-weight: 700;
   line-height: 1.25;

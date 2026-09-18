@@ -1,8 +1,14 @@
 {
-  "appVersion": "2.0.176",
-  "generatedAt": "2026-09-18T19:11:05.016Z",
+  "appVersion": "2.0.177",
+  "generatedAt": "2026-09-18T19:34:43.915Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "18 sep",
+      "version": "2.0.177",
+      "wish": "Eigen vondst opgelost: de rode tekstkleur haalde op de donkere achtergrond maar 3,0:1, en de contrastcontrole zag het niet. var(--danger) is gemaakt voor vlakken en randen en heeft één waarde voor licht en donker. Als tekstkleur haalde hij op donker 2,97:1 (nodig: 4,5:1), op drie plekken: de rode knoptekst (danger-text), de rode optie in het profielmenu, en het vetgedrukte deel van de waarschuwing bij een ontbrekende klanturenstaat. Nu een eigen teksttoken --danger-tekst met een waarde per thema: #a34b4b in licht (5,7:1, ongewijzigd) en #e58d8d in donker (6,9:1, nog herkenbaar rood). Ook de nieuwe melding bij het urenvak gebruikt dat token in plaats van een kleurmenging, zodat de controle hem kan narekenen. Waarom de controle het miste: scripts/contrast-licht-donker.mjs keek alleen naar regels die zowel een achtergrond als een tekstkleur zetten; een regel met alleen een tekstkleur (die op de achtergrond van zijn ouder staat) viel erbuiten. Nu toetst hij die ook, tegen de standaardachtergrond van het thema. Drie regels staan aantoonbaar op een eigen, donkere ondergrond en staan met die reden op een expliciete lijst, zodat een nieuwe regel nooit stil wordt overgeslagen. Geprobeerd en teruggedraaid: de ondergrond automatisch afleiden uit de ouderregel -- dat gaf negen valse meldingen (verlopen, achtergronden die per thema weer overschreven worden), dus liever een beredeneerde lijst dan een slimme gok. Tegenproef: de knoptekst terug op var(--danger) -> rood op precies die regel (2,97:1); teruggezet -> groen.",
+      "cases": []
+    },
     {
       "date": "18 sep",
       "version": "2.0.176",
@@ -359,7 +365,7 @@
           "technique": "Datagedreven vergelijking (versiegroepering op de pagina versus dezelfde groepering uit de feed) + equivalentieklassen op het releasefilter + navigatiecontrole van release naar bord",
           "assertions": 16,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: Releases bundelt de echte versies met hun wensen, cases en assertions\n  Given het tabblad Releases\n  When de flow voor PIPE-H-011 wordt uitgevoerd\n  Then staat de nieuwste versie bovenaan met haar echte aantallen\n  And scheidt het filter gereleaste versies van wat nog op een versie wacht\n  And brengt klikken op een versie je naar precies die opleveringen"
+          "gherkin": ""
         },
         {
           "id": "PIPE-H-002",
@@ -368,7 +374,7 @@
           "technique": "Toestandsovergangtest (aangenomen → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van het wachtrij-antwoord + negatieve controle dat GitHub niet meer wordt benaderd",
           "assertions": 42,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub\n  Given de pagina opent in Confluence, want daar begint de keten\n  And vanaf het Jira-bord wijst een knop terug naar het loket\n  And een nieuwe wens met acceptatiecriterium\n  When de flow wordt gestart, gaat de wens naar de eigen wachtrij en niet naar GitHub\n  Then meldt de pagina dat hij is aangenomen en staat hij op het bord, ook na herladen\n  And een tweede bezoeker met een schone browser ziet dezelfde wens, want de wachtrij staat op de server\n  And een simulatie op dezelfde kaart loopt door vier fasen naar Zephyr en de Living Doc"
+          "gherkin": ""
         },
         {
           "id": "PIPE-N-001",
@@ -377,7 +383,7 @@
           "technique": "Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole",
           "assertions": 20,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de Kennisbank op de telefoon wordt geopend\n  Then tekent de Living Doc tien regels per keer, lokaal vóór echt, en bewaart hij er hooguit 25\n  And de pagina heeft geen horizontale overflow of gedeelde appcode"
+          "gherkin": ""
         }
       ]
     },
@@ -1824,15 +1830,9 @@
   "open": [
     {
       "date": "18 sep",
-      "wish": "Open besluit voor PO, gevonden door herontwerp: het openbare assets/app.js bevat echte tarieven en contractvormen per medewerker met naam -- ook op PROD. https://uren.pathconsultancy.nl/assets/app.js is zonder inloggen op te halen en bevat de voorbeeldset van de demomodus. Volgens STAMGEGEVENS-EN-PLACEHOLDERS.md zijn dat de aangeleverde, echte gegevens (alleen e-mailadressen vervangen). Gemeten in het PROD-bestand, zonder de waarden te tonen: 4 medewerkernamen, 6 uurtarieven, 3 contractvormen, 7 factuuradressen van bemiddelaars, 1 IBAN en 1 KvK-nummer. IBAN en KvK zijn waarschijnlijk van het bedrijf en staan ook op facturen; tarief en contract per persoon met naam zijn wel financiële persoonsgegevens. Niet zelf aangepast: het is de kern van de demomodus, de smoke-test verwacht de gegevens, en of het echte of verzonnen waarden moeten zijn is een keuze van PO. Richtingen: (a) verzonnen tarieven, contracten en bemiddelaars in de voorbeeldset -- snelst, demo werkt hetzelfde; (b) echte gegevens alleen na inloggen van de server, nooit in de gebundelde JS; (c) de voorbeeldset in een bestand dat niet naar PROD gaat. Main doet de bouw zodra PO kiest.",
+      "wish": "Open besluit voor PO, gevonden door herontwerp: het openbare assets/app.js bevat echte tarieven en contractvormen per medewerker met naam -- ook op PROD. https://uren.pathconsultancy.nl/assets/app.js is zonder inloggen op te halen en bevat de voorbeeldset van de demomodus. Volgens STAMGEGEVENS-EN-PLACEHOLDERS.md zijn dat de aangeleverde, echte gegevens (alleen e-mailadressen vervangen). Gemeten in het PROD-bestand, zonder de waarden te tonen: 4 medewerkernamen, 6 uurtarieven, 3 contractvormen, 7 factuuradressen van bemiddelaars, 1 IBAN en 1 KvK-nummer. IBAN en KvK zijn waarschijnlijk van het bedrijf en staan ook op facturen; tarief en contract per persoon met naam zijn wel financiële persoonsgegevens. Niet zelf aangepast: het is de kern van de demomodus, de smoke-test verwacht de gegevens, en of het echte of verzonnen waarden moeten zijn is een keuze van PO. Richtingen: (a) verzonnen tarieven, contracten en bemiddelaars in de voorbeeldset -- snelst, demo werkt hetzelfde; (b) echte gegevens alleen na inloggen van de server, nooit in de gebundelde JS; (c) de voorbeeldset in een bestand dat niet naar PROD gaat. Main doet de bouw zodra PO kiest. Bijgesteld 18 sep: herontwerp las PO's \"Ok ga verder en stop niet\" als akkoord op richting (a). Dat was te snel: main vroeg het hem rechtstreeks en zijn antwoord was \"Alles wat erin staat is gebaseerd op realiteit\" -- dus géén verzonnen waarden. Richting (a) vervalt; het gaat om het oplossen van de blootstelling zonder de gegevens zelf te veranderen, dus (b) of (c). Main vraagt door welke van de twee. Er is niets aan app.js veranderd.",
       "who": "PO, daarna main",
-      "status": "open, wacht op besluit PO"
-    },
-    {
-      "date": "18 sep",
-      "wish": "Eigen vondst, nog te doen (herontwerp): var(--danger) heeft één waarde voor licht en donker en haalt als tekstkleur op de donkere achtergrond maar 3,0:1 (nodig: 4,5:1). Dat raakt op dit moment 7 plekken in styles.css waar hij als tekstkleur wordt gebruikt, onder meer de rode menu-optie in het profielmenu, danger-text-knoppen en de waarschuwing bij een ontbrekende klanturenstaat. scripts/contrast-licht-donker.mjs meldt het niet, dus die controle kijkt kennelijk niet naar deze combinatie. Aanpak: dezelfde menging met de tekstkleur als bij de nieuwe melding naast het urenvak (9,0:1 licht, 6,3:1 donker), en de contrastcontrole uitbreiden zodat hij dit soort paren wel vindt.",
-      "who": "herontwerp",
-      "status": "open"
+      "status": "open, wacht op keuze tussen (b) en (c)"
     },
     {
       "date": "17 sep",
