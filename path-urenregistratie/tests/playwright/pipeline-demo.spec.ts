@@ -644,6 +644,40 @@ test.describe('Path Pipeline TEST-demo', () => {
       expect((await terug.json()).kaart.status).toBe('doing');
     });
 
+    await test.step('And mag een pijplijnsleutel niets anders dan voortgang melden', async () => {
+      // Deze sleutel leeft in een pijplijn en in omgevingsvariabelen, en zulke
+      // sleutels lekken vaker dan wachtwoorden van mensen. Hij hoort daarom
+      // precies één ding te mogen. De testserver draait met een eigen sleutel
+      // (gezet door scripts/run-playwright-e2e.mjs), zodat hier een ECHT geldige
+      // sleutel getoetst kan worden -- met alleen een verkeerde sleutel zou deze
+      // stap niets bewijzen, want die strandt sowieso al bij de deur.
+      const sleutelVanDeRun = process.env.PATH_AGENT_SLEUTEL || '';
+      expect(sleutelVanDeRun, 'de testopstelling hoort een pijplijnsleutel te zetten').not.toBe('');
+      const metSleutel = { 'X-Path-Agent': sleutelVanDeRun };
+
+      // Wat hij wél mag.
+      const melden = await request.post(store, { headers: metSleutel, data: { action: 'voortgang', key: wens, fase: 1 } });
+      expect(melden.status(), 'voortgang melden hoort te mogen').toBe(200);
+
+      // En wat hij niet mag: de werkwijze van het hele bord omzetten, of een
+      // willekeurige kaart verslepen.
+      const bordOmzetten = await request.post(store, { headers: metSleutel, data: { action: 'bord', modus: 'scrum', wip: 0 } });
+      expect(bordOmzetten.status(), 'de werkwijze omzetten hoort niet te mogen').toBe(403);
+      expect((await bordOmzetten.json()).error).toBe('alleen-voortgang');
+
+      const kaartSlepen = await request.post(store, { headers: metSleutel, data: { key: wens, status: 'todo', from: 'doing' } });
+      expect(kaartSlepen.status(), 'een kaart verslepen hoort niet te mogen').toBe(403);
+
+      // Een verzonnen sleutel strandt al eerder, bij de deur.
+      const verzonnen = await request.post(store, { headers: { 'X-Path-Agent': 'deze-sleutel-klopt-niet' }, data: { action: 'voortgang', key: wens, fase: 4 } });
+      expect(verzonnen.status(), 'een verkeerde sleutel hoort niet binnen te komen').toBe(401);
+
+      // En het bord staat er daarna nog net zo bij als ervoor.
+      const stand = await (await request.get(store)).json();
+      expect(stand.bord.modus, 'de werkwijze hoort niet gewijzigd te zijn').toBe('kanban');
+      expect(stand.voortgang[wens].fase, 'alleen de toegestane melding is aangekomen').toBe(1);
+    });
+
     await test.step('And laat fase 0 de balk weer los', async () => {
       const vrij = await page.request.post(store, { data: { action: 'voortgang', key: wens, fase: 0 } });
       expect(vrij.status()).toBe(200);
@@ -673,7 +707,10 @@ test.describe('Path Pipeline TEST-demo', () => {
     const toegestaneBronnen = ['bestand', 'mysql', 'bestand (database niet bereikbaar)'];
     // Alles waarmee je zelf verbinding zou kunnen maken. Staat er ooit een van
     // deze sleutels in het antwoord, dan lekt de opslag zijn eigen sleutelbos.
-    const verbodenSleutels = ['dsn', 'user', 'username', 'password', 'wachtwoord', 'host', 'database', 'pad', 'path', 'bestand_pad'];
+    // agent_sleutel staat er sinds 18 sep bij: dat is de sleutel waarmee de
+    // pijplijn voortgang meldt, en die hoort net zo hard buiten elk antwoord te
+    // blijven als de databasegegevens.
+    const verbodenSleutels = ['dsn', 'user', 'username', 'password', 'wachtwoord', 'host', 'database', 'pad', 'path', 'bestand_pad', 'agent_sleutel', 'agent'];
 
     await test.step('Given het leesantwoord noemt de gebruikte achterkant', async () => {
       const lees = await request.get(store);

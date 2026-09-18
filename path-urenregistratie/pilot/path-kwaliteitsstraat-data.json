@@ -1,8 +1,24 @@
 {
-  "appVersion": "2.0.164",
-  "generatedAt": "2026-09-18T08:33:07.467Z",
+  "appVersion": "2.0.165",
+  "generatedAt": "2026-09-18T09:20:42.709Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "18 sep",
+      "version": "2.0.165",
+      "wish": "Kritische ronde op mijn eigen nieuwe code, met een echte vondst. De sleutel waarmee de pijplijn voortgang meldt, gaf volledige schrijfrechten: daarmee kon je ook de werkwijze van het hele bord omzetten (Kanban/Scrum) en willekeurige kaarten verslepen. Dat is meer dan de pijplijn nodig heeft, en het weegt zwaarder dan bij een gewone gebruiker: zo'n sleutel leeft in een pijplijn en in omgevingsvariabelen, en die lekken vaker dan wachtwoorden van mensen. De sleutel mag nu precies één ding -- melden hoe ver een wens is; de kaart die daarbij meeschuift doet de server zelf op grond van de fase. Alles daarbuiten geeft 403 met een bruikbare uitleg (\"Log in om het bord zelf te wijzigen\"). Handmatig nagelopen tegen een draaiende server: geldige sleutel + voortgang geeft 200; geldige sleutel + werkwijze omzetten geeft 403; geldige sleutel + kaart verslepen geeft 403; zonder sleutel geeft 401; de bordstand stond daarna nog exact zoals ervoor, en de sleutel komt in geen enkel antwoord voor (opslag noch koppelingen). Ook de geheimhoudingscontrole in PIPE-H-016 kende de nieuwe sleutel nog niet -- die stond niet in de lijst met verboden veldnamen, dus een lek zou er ongemerkt doorheen zijn gekomen; toegevoegd. En de test toetst het nu ook echt. Mijn eerste poging deed dat niet: die gebruikte een verzonnen sleutel, en die strandt sowieso al bij de deur -- de tegenproef bleef dan ook groen met de beveiliging uitgezet, wat precies bewijst dat er niets getoetst werd. De testserver krijgt nu een eigen sleutel mee via de configuratiehaak die de opslaglaag daar al voor had, zodat een ECHT geldige sleutel getoetst kan worden: melden mag (200), de werkwijze omzetten niet (403), een kaart verslepen niet (403), een verzonnen sleutel komt niet binnen (401), en achteraf staat het bord er onveranderd bij. Met die opzet is de tegenproef wel rood.",
+      "cases": [
+        {
+          "id": "PIPE-H-016",
+          "title": "de opslag vertelt eerlijk waar de stand vandaan komt, zonder verbindingsgegevens",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Beslistabel op de gemelde opslagbron (bestand, database, database ingesteld maar onbereikbaar) + structurele geheimhoudingscontrole op verboden sleutels in het antwoord + gelijkheidscontrole tussen lezen en schrijven",
+          "assertions": 8,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de opslag vertelt eerlijk waar de stand vandaan komt, zonder verbindingsgegevens\n  Given het leesantwoord noemt de gebruikte achterkant\n  And het leesantwoord bevat geen verbindingsgegevens\n  When er iets wordt opgeslagen\n  Then noemt het schrijfantwoord dezelfde achterkant als het leesantwoord\n  And deze case laat geen kaart achter"
+        }
+      ]
+    },
     {
       "date": "18 sep",
       "version": "2.0.164",
@@ -13,9 +29,9 @@
           "title": "de stappenbalk toont echte voortgang van de pijplijn en beweegt mee zonder herladen",
           "feature": "tests/playwright/features/pipeline-demo.feature",
           "technique": "Toestandsovergangtest over de vier fasen van de straat (elke stap moet op het scherm terechtkomen, en vrijgeven moet hem weer loslaten) + grenswaarden op de fase (0 en 4 horen erbij, -1 en 5 niet) + negatieve klasse op het schrijfrecht",
-          "assertions": 23,
+          "assertions": 31,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de stappenbalk toont echte voortgang van de pijplijn en beweegt mee zonder herladen\n  Given anoniem voortgang melden wordt geweigerd\n  And een fase buiten 0 tot en met 4 wordt geweigerd\n  Then staat de balk op de simulatie zolang er niets loopt\n  When de pijplijn stap voor stap voortgang meldt\n  And schuift de kaart vanzelf mee met de fase\n  And laat fase 0 de balk weer los"
+          "gherkin": "Scenario: de stappenbalk toont echte voortgang van de pijplijn en beweegt mee zonder herladen\n  Given anoniem voortgang melden wordt geweigerd\n  And een fase buiten 0 tot en met 4 wordt geweigerd\n  Then staat de balk op de simulatie zolang er niets loopt\n  When de pijplijn stap voor stap voortgang meldt\n  And schuift de kaart vanzelf mee met de fase\n  And mag een pijplijnsleutel niets anders dan voortgang melden\n  And laat fase 0 de balk weer los"
         }
       ]
     },
@@ -449,7 +465,7 @@
           "technique": "API-contract + equivalentieklasse",
           "assertions": 4,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: herhaalde mislukte loginpogingen maken security-audit event\n  Given authenticatie- en API-beveiliging is voorbereid\n  When de flow voor SEC-H-006 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat herhaalde mislukte loginpogingen maken security-audit event"
+          "gherkin": ""
         },
         {
           "id": "SEC-H-013",
@@ -458,7 +474,7 @@
           "technique": "Grenswaardenanalyse op de drempel (twee mag nog niet, drie wel) + idempotentiecontrole (geen tweede event binnen hetzelfde venster) + inhoudscontrole van het event_data-veld",
           "assertions": 14,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: het drempel-audit-event verschijnt precies bij drie mislukkingen, één keer, met de juiste inhoud\n  Given een geseed medewerkersaccount dat nergens anders mislukte pogingen krijgt\n  When er twee keer mislukt wordt ingelogd (net onder de drempel)\n  Then bestaat er nog geen drempel-event (de grens ligt bij drie, niet twee)\n  When een derde mislukte poging de drempel haalt\n  Then verschijnt precies één event, met het juiste account en de juiste inhoud\n  When nog een mislukte poging volgt binnen hetzelfde venster (blijft ruim onder de eigen inlogdrempel van vijf, zie AUTH-N-008/PWD-N-018 -- dit account wordt hierna door andere cases nog echt gebruikt om in te loggen)\n  Then blijft het nog steeds precies één event: de dedup-guard voorkomt een tweede"
+          "gherkin": ""
         }
       ]
     },

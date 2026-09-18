@@ -120,6 +120,21 @@ if ($gebruiker === null && !$pijplijn) {
     ]);
 }
 
+// De pijplijnsleutel mag precies één ding: melden hoe ver een wens is. De kaart
+// die daarbij meeschuift doet de server zelf, verderop, op grond van de fase.
+//
+// Waarom die grens er staat: de sleutel leeft in een pijplijn en in
+// omgevingsvariabelen, en zulke sleutels lekken vaker dan wachtwoorden van
+// mensen. Zonder deze grens zou hij ook de werkwijze van het hele bord kunnen
+// omzetten of willekeurige kaarten kunnen verslepen -- rechten die de pijplijn
+// nergens voor nodig heeft. Wie meer wil, logt in als mens.
+if ($gebruiker === null && $pijplijn && ($invoer['action'] ?? '') !== 'voortgang') {
+    store_antwoord(403, [
+        'error' => 'alleen-voortgang',
+        'message' => 'Deze sleutel mag alleen voortgang melden. Log in om het bord zelf te wijzigen.',
+    ]);
+}
+
 $map = dirname($pad);
 if (!is_dir($map) || !is_writable($map)) {
     store_antwoord(503, ['error' => 'De opslag is nu niet beschikbaar.']);

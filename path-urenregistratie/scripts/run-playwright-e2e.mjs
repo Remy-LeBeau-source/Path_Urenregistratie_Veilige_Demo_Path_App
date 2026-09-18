@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -153,6 +153,22 @@ async function main() {
   const privateRoot = mkdtempSync(path.join(tmpdir(), 'path-urenregistratie-playwright-'));
   const runId = path.basename(privateRoot);
 
+  // De kwaliteitsstraat kent een sleutel waarmee de pijplijn voortgang meldt.
+  // Die staat normaal alleen op de server, dus een browsertest kan er niet bij --
+  // en dan is niet te toetsen dat die sleutel ook echt begrensd is tot alleen
+  // voortgang melden. Daarom krijgt de testserver hier een eigen sleutel mee, via
+  // de configuratiehaak die de opslaglaag daar al voor heeft.
+  //
+  // Deze waarde staat bewust in de testopstelling en niet in de app: het is geen
+  // geheim, hij bestaat alleen zolang deze run duurt, en de server buiten de test
+  // gebruikt hem nergens.
+  const agentSleutelVoorTest = `playwright-${runId}`;
+  const kwaliteitsstraatConfig = path.join(privateRoot, 'kwaliteitsstraat-config.php');
+  writeFileSync(
+    kwaliteitsstraatConfig,
+    `<?php\n\nreturn ['kwaliteitsstraat' => ['agent_sleutel' => ${JSON.stringify(agentSleutelVoorTest)}]];\n`
+  );
+
   const serverEnv = {
     ...process.env,
     PATH_APP_DB_NAME: resolvedDatabaseName,
@@ -164,6 +180,8 @@ async function main() {
     PATH_APP_BASE_URL: baseUrl,
     PATH_APP_PRIVATE_ROOT: privateRoot,
     PATH_APP_E2E_RUN_ID: runId,
+    PATH_KWALITEITSSTRAAT_CONFIG: kwaliteitsstraatConfig,
+    PATH_AGENT_SLEUTEL: agentSleutelVoorTest,
   };
 
   const testRuntimeEnv = {
@@ -177,6 +195,8 @@ async function main() {
     PATH_APP_BASE_URL: baseUrl,
     PATH_APP_PRIVATE_ROOT: privateRoot,
     PATH_APP_E2E_RUN_ID: runId,
+    PATH_KWALITEITSSTRAAT_CONFIG: kwaliteitsstraatConfig,
+    PATH_AGENT_SLEUTEL: agentSleutelVoorTest,
   };
 
   if (effectiveStage !== 'prod') {
