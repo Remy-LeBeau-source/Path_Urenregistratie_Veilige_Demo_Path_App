@@ -16,6 +16,8 @@ declare(strict_types=1);
 // plus een negatieve klasse (database ingesteld maar onbereikbaar) die moet
 // terugvallen op het bestand en dat eerlijk moet melden.
 
+require_once __DIR__ . '/cli-bootstrap.php';
+
 $wortel = dirname(__DIR__, 2);
 require_once $wortel . '/pilot/path-kwaliteitsstraat-opslag-lib.php';
 

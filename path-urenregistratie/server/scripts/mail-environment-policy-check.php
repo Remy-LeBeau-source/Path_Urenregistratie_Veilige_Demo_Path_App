@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/cli-bootstrap.php';
 require_once __DIR__ . '/../auth/session.php';
 require_once __DIR__ . '/../auth/password-reset-service.php';
 
