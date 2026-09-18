@@ -326,6 +326,10 @@ test('[KLV-N-008] meer dan 24 uur op een dag wordt direct in het vak gemeld en n
     await test.step('Then is het vak ongeldig, staat er een duidelijke melding en gaat er niets naar de server', async () => {
       await expect(vak).toHaveAttribute('aria-invalid', 'true');
       await expect(page.locator('#hours-target-help')).toContainText('maximaal 24 uur');
+      // En de reden staat direct bij het vak (nice-to-have 18 sep): op een
+      // telefoon is de regel onderin vaak buiten beeld terwijl je nog typt.
+      const bijHetVak = await vak.evaluate((el) => getComputedStyle(el.parentElement!, '::after').content);
+      expect(bijHetVak, 'de melding naast het vak').toBe('"Max. 24 uur"');
       await expect(page.locator('#hours-total')).toHaveText(totaalVooraf || '');
       expect(verstuurdeUren.filter(uren => uren > 24)).toEqual([]);
       expect(geweigerd).toEqual([]);
@@ -336,6 +340,8 @@ test('[KLV-N-008] meer dan 24 uur op een dag wordt direct in het vak gemeld en n
       await vak.fill('24');
       await expect(vak).toHaveAttribute('aria-invalid', 'false');
       await expect(page.locator('#hours-target-help')).not.toContainText('maximaal 24 uur');
+      const naGeldig = await vak.evaluate((el) => getComputedStyle(el.parentElement!, '::after').content);
+      expect(naGeldig, 'bij een geldige waarde verdwijnt de melding naast het vak').not.toBe('"Max. 24 uur"');
     });
   } finally {
     await vak.fill(oorspronkelijk).catch(() => undefined);

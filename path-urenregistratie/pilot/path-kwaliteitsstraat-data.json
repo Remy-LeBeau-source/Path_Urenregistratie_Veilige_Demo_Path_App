@@ -1,8 +1,24 @@
 {
-  "appVersion": "2.0.175",
-  "generatedAt": "2026-09-18T18:54:04.351Z",
+  "appVersion": "2.0.176",
+  "generatedAt": "2026-09-18T19:11:05.016Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "18 sep",
+      "version": "2.0.176",
+      "wish": "Nice-to-have uit onze eigen lijst opgeleverd: bij een geweigerde invoer in Mijn uren staat de reden nu direct bij het vak. Tot nu toe kreeg het vak alleen een rode rand, en stond de uitleg in de regel onderin; op een telefoon is die regel vaak buiten beeld terwijl je nog typt. Nu staat onder het vak \"Max. 24 uur\" (bij verlof en ziekte: \"Meer dan deze maand telt\"). Puur CSS op het aria-invalid dat de validatie al zet, dus de melding kan nooit iets anders zeggen dan wat de validatie besliste, en app.js is niet aangeraakt; voor een schermlezer blijft de bestaande statusregel de aankondiging. Twee dingen gezien en opgelost met screenshots en metingen in plaats van aannames: (1) op een telefoon is de cel een rij, en daar duwde de melding de rij opzij -- de cel werd 295px breed tegen 220px bij de andere dagen; nu telt de melding niet mee voor die breedte en schuift de rij hooguit enkele pixels, binnen de variatie die de rijen onderling al hebben; (2) de gewone foutkleur haalde op de donkere achtergrond maar 3,0:1, te weinig voor tekst van 11px; gemengd met de tekstkleur van het thema nu 9,0:1 licht en 6,3:1 donker, en herkenbaar rood. KLV-N-008 uitgebreid: de melding staat bij het vak bij 25 uur en verdwijnt bij precies 24 (grenswaarden); tegenproef: de regel weg -> rood (\"none\" in plaats van \"Max. 24 uur\").",
+      "cases": [
+        {
+          "id": "KLV-N-008",
+          "title": "meer dan 24 uur op een dag wordt direct in het vak gemeld en niet naar de server gestuurd",
+          "feature": "tests/playwright/features/klassiek-verkenning.feature",
+          "technique": "Monkey testing (seeded) + grenswaardenanalyse + negatieve equivalentieklasse",
+          "assertions": 11,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: meer dan 24 uur op een dag wordt direct in het vak gemeld en niet naar de server gestuurd\n  Given een medewerker op Mijn uren van een open maand\n  When de medewerker 25 uur op een dag intypt\n  Then is het vak ongeldig, staat er een duidelijke melding en gaat er niets naar de server\n  And geldt 24,5 ook als te veel, maar 24 precies niet"
+        }
+      ]
+    },
     {
       "date": "18 sep",
       "version": "2.0.175",
@@ -377,7 +393,7 @@
           "technique": "Contractcontrole op de issuepagina (vaste blokken, veld-naar-veldafbeelding naar Jira) + controle dat traceability-cijfers uit de echte case komen en de ERD-link echt bereikbaar is",
           "assertions": 28,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: een ticket opent als een echte Jira-story: details, beschrijving, traceability, ontwerp en historie\n  Given een opgeleverd ticket wordt geopend vanaf het bord\n  When de flow voor PIPE-H-010 wordt uitgevoerd\n  Then staan de vaste blokken van een Jira-issuepagina er\n  And toont Traceability de echte testcases met techniek en assertions\n  And staan FO, TO en het databasemodel bij de story\n  And vertelt de historie wat er echt is gebeurd\n  And zijn de blokken in te klappen zoals in Jira"
+          "gherkin": ""
         }
       ]
     },
@@ -1813,6 +1829,12 @@
       "status": "open, wacht op besluit PO"
     },
     {
+      "date": "18 sep",
+      "wish": "Eigen vondst, nog te doen (herontwerp): var(--danger) heeft één waarde voor licht en donker en haalt als tekstkleur op de donkere achtergrond maar 3,0:1 (nodig: 4,5:1). Dat raakt op dit moment 7 plekken in styles.css waar hij als tekstkleur wordt gebruikt, onder meer de rode menu-optie in het profielmenu, danger-text-knoppen en de waarschuwing bij een ontbrekende klanturenstaat. scripts/contrast-licht-donker.mjs meldt het niet, dus die controle kijkt kennelijk niet naar deze combinatie. Aanpak: dezelfde menging met de tekstkleur als bij de nieuwe melding naast het urenvak (9,0:1 licht, 6,3:1 donker), en de contrastcontrole uitbreiden zodat hij dit soort paren wel vindt.",
+      "who": "herontwerp",
+      "status": "open"
+    },
+    {
       "date": "17 sep",
       "wish": "PATH-201/202, terug naar open na productbesluit PO: het oorspronkelijke idee (filter op afzendernaam in Berichten) bleek gebouwd op een bestaand lek -- medewerkers zagen via server/api/announcements.php de echte naam van de beheerder die een mededeling stuurde, terwijl het besluit in database/seed-demo-data.sql was dat dit altijd \"Beheerder\" moet tonen. Het lek is gerepareerd (ANN-N-011, tegenproef rood/groen, 2.0.150) los van deze wens. Met het lek dicht heeft \"filter op afzendernaam\" geen waarde meer (er is nog maar één afzenderlabel: Beheerder). Nog te beslissen: wat de wens moet worden nu de oorspronkelijke insteek vervalt -- bijvoorbeeld filteren op onderwerp/type in plaats van op wie het stuurde.",
       "who": "open, wacht op nieuwe richting PO"
@@ -1873,11 +1895,6 @@
     }
   ],
   "niceToHave": [
-    {
-      "date": "16 sep",
-      "improvement": "Bij een geweigerde invoer in Mijn uren de foutmelding naast het veld tonen, niet alleen in de statusregel",
-      "why": "De regel staat onderaan; op een telefoon staat het veld buiten beeld als de melding komt."
-    },
     {
       "date": "16 sep",
       "improvement": "Testset: elke schrijvende case zijn eigen maand geven (TW-1)",

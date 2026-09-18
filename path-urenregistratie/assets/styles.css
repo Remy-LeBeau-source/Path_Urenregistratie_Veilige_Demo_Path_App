@@ -5186,6 +5186,42 @@ html:not([data-skin="new"]) body[data-role="employee"] .klantkaart-meer { displa
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--danger) 35%, transparent);
 }
 
+/* En de reden direct bij dat vak, niet alleen in de regel onderin (nice-to-have
+   uit GIO-WENSEN.md, 18 sep). Op een telefoon staat die regel vaak buiten beeld
+   terwijl je nog in het vak typt, en dan zie je alleen een rode rand zonder uitleg.
+   Puur CSS op het aria-invalid dat de validatie al zet: de melding kan daardoor
+   nooit iets anders zeggen dan wat de validatie besliste, en voor een
+   schermlezer blijft de bestaande statusregel de aankondiging. */
+#hours-grid .hours-day-entry:has(> .hours-input[aria-invalid="true"])::after,
+dd:has(> .summary-hours-input[aria-invalid="true"])::after {
+  display: block;
+  margin-top: 3px;
+  /* Niet kaal var(--danger): die heeft één waarde voor licht en donker en haalt
+     op de donkere achtergrond maar 3,0:1 -- te weinig voor tekst van 11px.
+     Gemengd met de tekstkleur van het thema wordt hij in licht donkerder en in
+     donker lichter, en blijft hij herkenbaar rood: gemeten 9,0:1 op wit en
+     6,3:1 op #101c26. */
+  color: color-mix(in srgb, var(--danger) 60%, var(--ink));
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+#hours-grid .hours-day-entry:has(> .hours-input[aria-invalid="true"])::after { content: "Max. 24 uur"; }
+/* Op een telefoon is de cel een rij (dag, snelkeuze, vak). Daar zou de melding
+   als vierde element achteraan in die rij belanden en het vak opzij duwen. Bij
+   een fout mag de rij daarom afbreken, zodat de melding over de volle breedte
+   onder het vak staat; order houdt hem achteraan, ook na de herschikking van de
+   rij met order op kleine schermen. Op het bureaublad is de cel een grid en staat
+   de melding vanzelf onder het vak. */
+#hours-grid .hours-day-entry:has(> .hours-input[aria-invalid="true"]) { flex-wrap: wrap; }
+/* width 0 + min-width 100%: de melding telt niet mee voor de breedte van de cel
+   (die neemt de breedte van zijn inhoud aan), maar vult bij het tekenen wel de
+   hele tweede regel. Met alleen flex-basis 100% werd de cel met de fout 295px
+   breed tegen 220px bij de andere dagen, en verschoof die ene rij zichtbaar
+   (gemeten 18 sep op 390px). */
+#hours-grid .hours-day-entry:has(> .hours-input[aria-invalid="true"])::after { flex: 0 0 auto; width: 0; min-width: 100%; order: 99; text-align: right; }
+dd:has(> .summary-hours-input[aria-invalid="true"])::after { content: "Meer dan deze maand telt"; }
+
 /* ===========================================================================
    Testfuncties (Gio 15 sep): op TEST zoveel mogelijk PROD. In de balk alleen
    Herstel, goed leesbaar (was een donker pictogram); thema, vormgeving, omgeving en
