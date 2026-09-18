@@ -139,6 +139,36 @@ test.describe('avatarkiezer in het profielmenu', () => {
     });
   });
 
+  test('[AVATAR-H-008] het openen van de avatarkiezer overleeft een scroll-event dat de eigen hoogtewijziging veroorzaakt', async ({ page }) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await openProfielmenu(page);
+    // Het openen van het profielmenu zelf markeert ook al een hertekening
+    // (toggleTopbarPopover -> markLayoutRender), met dezelfde 1500ms-genadeperiode.
+    // Wie meteen doorklikt zit dus toevallig nog in die eerdere genade, en dat
+    // maskeerde deze bug hier ook: pas na die periode ligt de bescherming echt bij
+    // toggleAvatarPickerPanel() zelf. Net als in het echt (je kijkt eerst even).
+    await page.waitForTimeout(1600);
+
+    await test.step('When de avatarkiezer wordt geopend en dat, net als op mobiel, meteen een scroll-event oplevert', async () => {
+      await page.locator('#avatar-picker-trigger').click();
+      await expect(page.locator('#avatar-picker-panel')).toBeVisible();
+      // Het raster maakt het profielmenu flink hoger. Op mobiel (vaste positionering
+      // + eigen scrollbalk, of de adresbalk die meebeweegt) geeft dat een scroll-event
+      // dat zonder markLayoutRender() het hele profielmenu weer dichtklapte, nog voor
+      // je iets kon aantikken -- gemeld op mobiel (17 sep). Dit dwingt dat scroll-event
+      // hier af, ongeacht of deze browser er zelf een afvuurt.
+      await page.evaluate(() => window.dispatchEvent(new Event('scroll')));
+    });
+
+    await test.step('Then blijven het profielmenu en de avatarkiezer open', async () => {
+      await expect(page.locator('#profile-menu')).toBeVisible();
+      await expect(page.locator('#avatar-picker-panel')).toBeVisible();
+      await expect(page.locator('.avatar-picker-optie')).toHaveCount(12);
+    });
+  });
+
   test('[AVATAR-N-001] het vinkje op de gekozen avatar is navy op mint, nooit wit', async ({ page }) => {
     const loginPage = new LoginPage(page);
     await loginPage.open();

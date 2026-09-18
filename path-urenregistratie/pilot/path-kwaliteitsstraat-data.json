@@ -1,8 +1,30 @@
 {
-  "appVersion": "2.0.160",
-  "generatedAt": "2026-09-18T03:11:29.470Z",
+  "appVersion": "2.0.161",
+  "generatedAt": "2026-09-18T07:38:02.527Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "18 sep",
+      "version": "2.0.161",
+      "wish": "Marc de Roon meldde: avatarkiezer sluit meteen op mobiel, geen avatar te kiezen. Het uitklappen van het twaalf-avatars-raster maakt het profielmenu op mobiel flink hoger (vaste positionering + eigen scrollbalk), wat een scroll-event geeft. Zonder markering dat dit een eigen hertekening was, sloot de bestaande scroll-sluitlogica (bedoeld voor een echte gebruikersscroll) het hele profielmenu meteen weer -- nog voor je iets kon aantikken. Zelfde patroon als eerder al bestond voor het openen van het menu zelf, alleen was de avatarkiezer daar destijds niet in meegenomen. AVATAR-H-008 nieuw (dwingt het scroll-event na de eigen genadeperiode af, bewijst dat het menu openblijft), avatar-picker.spec.ts draait nu ook op mobile-chrome/mobile-safari (stond alleen op desktop, dus dit gat was nooit gedekt). Tegenproef: fix teruggedraaid -> rood; teruggezet -> groen (ook echt met een scroll-event, niet alleen de klik zelf).",
+      "cases": [
+        {
+          "id": "AVATAR-H-008",
+          "title": "het openen van de avatarkiezer overleeft een scroll-event dat de eigen hoogtewijziging veroorzaakt",
+          "feature": "tests/playwright/features/avatar-picker.feature",
+          "technique": "Grenswaardenanalyse",
+          "assertions": 4,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: het openen van de avatarkiezer overleeft een scroll-event dat de eigen hoogtewijziging veroorzaakt\n  Given avatarkiezer in het profielmenu is voorbereid\n  When de avatarkiezer wordt geopend en dat, net als op mobiel, meteen een scroll-event oplevert\n  Then blijven het profielmenu en de avatarkiezer open"
+        }
+      ]
+    },
+    {
+      "date": "18 sep",
+      "version": "2.0.161",
+      "wish": "Marc de Roon meldde: \"Standaardweek vullen\" geeft hem op TEST steeds weer 40 uur i.p.v. 36, ondanks de fix in 2.0.153. Oorzaak gevonden met een echte database, niet alleen code lezen: elke TEST-uitrol (en elke Playwright-testrun) draait na de migraties een gedeelde-baseline-reset die de medewerkerstabel opnieuw zaait. Migratie 039 (het echte 36-uurpatroon van Marc/Brian/Shawn) stond niet in de lijst met bestanden die die reset na het zaaien herstelt -- exact hetzelfde gat dat al eerder voor migratie 038 was gevonden en opgelost, alleen was 039 er nooit aan toegevoegd toen hij bijkwam. Tegenproef met een echte database: reset zonder de regel -> Marc terug naar 40 uur/geen dagpatroon (en Shawn terug naar zijn oude, foute maandag-vrij-patroon); reset met de regel -> alle vier blijven op hun juiste patroon. test-reset-policy-check.php uitgebreid met een eigen controle die dit vastlegt.",
+      "cases": []
+    },
     {
       "date": "18 sep",
       "version": "2.0.160",
@@ -452,7 +474,7 @@
           "technique": "API-contract + equivalentieklasse",
           "assertions": 3,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: config voorbeeld bevat voorbereide CSP/CORS/HSTS flags\n  Given authenticatie- en API-beveiliging is voorbereid\n  When de flow voor SEC-H-007 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat config voorbeeld bevat voorbereide CSP/CORS/HSTS flags"
+          "gherkin": ""
         },
         {
           "id": "SEC-H-008",
@@ -461,7 +483,7 @@
           "technique": "API-contract + equivalentieklasse",
           "assertions": 5,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: draaiende server zet de vaste beveiligingsheaders echt op elk antwoord\n  Given een willekeurig, niet-geauthenticeerd endpoint\n  When de client dat endpoint bevraagt\n  Then staan de vaste beveiligingsheaders echt op het antwoord"
+          "gherkin": ""
         }
       ]
     },
@@ -477,7 +499,7 @@
           "technique": "Equivalentieklassen over alle Instellingen-velden (identiteit, merkkleuren, betaaltermijn, vier herinneringssoorten) met van de huidige waarde afwijkende testwaarden, elk teruggecontroleerd op de server",
           "assertions": 21,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: admin kan company/settings server-led opslaan\n  Given organisatie-instellingen beheren is voorbereid\n  When de flow voor ADM-WR-H-001 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat admin kan company/settings server-led opslaan"
+          "gherkin": ""
         }
       ]
     },

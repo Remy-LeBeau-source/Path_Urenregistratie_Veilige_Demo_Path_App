@@ -50,6 +50,14 @@ Feature: Avatarkiezer in het profielmenu
     Then verschijnt de keuze meteen, blijft het menu open, en is er geen aparte opslaan-knop nodig
     And staat dezelfde avatar er nog na een echte paginaherlading
 
+  @happy
+  Scenario: [AVATAR-H-008] het openen van de avatarkiezer overleeft een scroll-event dat de eigen hoogtewijziging veroorzaakt
+    # Testtechniek: Grenswaardenanalyse
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given avatarkiezer in het profielmenu is voorbereid
+    When de avatarkiezer wordt geopend en dat, net als op mobiel, meteen een scroll-event oplevert
+    Then blijven het profielmenu en de avatarkiezer open
+
   @negative
   Scenario: [AVATAR-N-001] het vinkje op de gekozen avatar is navy op mint, nooit wit
     # Testtechniek: Negatieve equivalentieklasse + error guessing

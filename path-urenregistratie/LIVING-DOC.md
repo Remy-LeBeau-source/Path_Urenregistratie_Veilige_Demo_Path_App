@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 632 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 633 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 632 unieke case-ID's
+- Playwright executable cases: 633 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 633 unieke case-ID's
+- Totaal executable cases: 634 unieke case-ID's
 - Playwright features: 33
 - Database features: 1
 - Playwright steps mappings: 33
 - Database steps mappings: 1
-- Uitvoeringen: 695
-- Niet-mobile projectuitvoeringen: 569
+- Uitvoeringen: 696
+- Niet-mobile projectuitvoeringen: 570
 - Mobile functionele cases: 63
 - Pixel 7 / Chromium-uitvoeringen: 63
 - iPhone 13 / WebKit-uitvoeringen: 63
 
-De 63 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 632 Playwright-functionele cases in totaal 695 resultaten op: 569 + (63 x 2) = 695.
+De 63 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 633 Playwright-functionele cases in totaal 696 resultaten op: 570 + (63 x 2) = 696.
 
 ## Documentatieketen
 
@@ -146,13 +146,14 @@ De 63 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 632 Playwri
 
 - Feature: `tests/playwright/features/avatar-picker.feature`
 - Source: `tests/playwright/avatar-picker.spec.ts`
-- Cases: 8
+- Cases: 9
 
 - [AVATAR-H-001] een medewerker met een vaste naam krijgt automatisch zijn toegewezen avatar, zonder zelf te kiezen — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 1
 - [AVATAR-H-002] een beheerder met een vaste naam krijgt automatisch zijn toegewezen avatar — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 1
 - [AVATAR-H-003] de avatarkiezer opent naast de ongewijzigde menu-items en testfunctiebalk — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 12
 - [AVATAR-H-004] bladeren eindigt op precies vijf avatars met een uitgeschakelde volgende-knop — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 7
 - [AVATAR-H-005] een avatar kiezen is direct zichtbaar, sluit het menu niet, en blijft staan na een echte paginaherlading — Techniek: Toestandsovergang · Assertions: 6
+- [AVATAR-H-008] het openen van de avatarkiezer overleeft een scroll-event dat de eigen hoogtewijziging veroorzaakt — Techniek: Grenswaardenanalyse · Assertions: 4
 - [AVATAR-N-001] het vinkje op de gekozen avatar is navy op mint, nooit wit — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 4
 - [AVATAR-H-006] namen buiten de vaste lijst krijgen elk een eigen, stabiele avatar, zonder geslacht te raden — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 5
 - [AVATAR-H-007] de avatarkiezer werkt identiek in de Nieuw-vormgeving (Modern) — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6

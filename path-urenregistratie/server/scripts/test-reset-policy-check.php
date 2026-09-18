@@ -94,6 +94,12 @@ $checks = [
     'both_acceptance_credentials_required_before_remote_reset' => str_contains($source, '$capturedCredentialEmails !== $requiredCredentialEmails')
         && str_contains($source, 'Both TEST acceptance account credentials must exist'),
     'baseline_contains_demo_seed' => str_contains($source, 'seed-demo-data.sql'),
+    // 18 sep: exact hetzelfde gat als hierboven bij 038, nu voor 039 (het echte
+    // 36-uurpatroon van Marc/Brian/Shawn). migrate.php past 039 maar één keer
+    // toe; zonder deze regel in de gedeelde-resetlijst zet elke TEST-uitrol (en
+    // elke Playwright-testrun) dat weer terug naar de kale seed (40 uur) --
+    // gemeld door Marc de Roon, wiens patroon steeds weer verdween.
+    'baseline_contains_day_hours_pattern_update' => str_contains($source, '039_employee_day_hours_pattern_update.sql'),
     'acceptance_accounts_restored' => str_contains($source, 'giovanno.maatsen@pathconsultancy.nl')
         && str_contains($source, 'kenrich.lieveld@pathconsultancy.nl'),
     'twelve_action_baseline_contract' => str_contains($source, "'open_actions' => 12"),

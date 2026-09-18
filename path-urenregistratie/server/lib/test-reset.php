@@ -651,6 +651,15 @@ function test_reset_shared_baseline(PDO $pdo, array $config, string $actorEmail)
         // maakte. Zelfde reden als 008/009/016/018 hierboven al in deze lijst
         // staan: baseline-uitlijning die na de kale seed moet blijven gelden.
         $root . '/server/migrations/038_demo_employee_day_hours_pattern.sql',
+        // Exact hetzelfde gat, nu voor 039 (18 sep): die migratie corrigeerde
+        // Marc/Stasjo/Brian/Shawn naar hun echte 36-uurpatroon, maar stond niet
+        // in deze lijst. migrate.php past 039 zelf maar één keer toe (getrackt
+        // in schema_migrations); elke TEST-uitrol draait daarna deze gedeelde
+        // reset, die zonder deze regel het patroon meteen weer terugzette naar
+        // de kale seed (40 uur, gelijk verdeeld) -- gemeld door Marc: "Standaard-
+        // week vullen" gaf hem op TEST steeds weer 40 uur i.p.v. 36, ondanks dat
+        // 039 al maanden eerder was uitgerold.
+        $root . '/server/migrations/039_employee_day_hours_pattern_update.sql',
     ];
 
     $verifiedDemoAccounts = 0;
