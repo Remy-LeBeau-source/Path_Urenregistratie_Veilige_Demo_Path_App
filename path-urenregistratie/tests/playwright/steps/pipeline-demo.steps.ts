@@ -92,6 +92,7 @@ When("de flow voor PIPE-H-009 wordt uitgevoerd");
 Then("geldt onze eigen bron en staan de drie klantbronnen klaar");
 And("staat er nergens een instelling in het antwoord");
 And("legt de Kennisbank uit wat er per koppeling nodig is");
+And("zegt de pagina over gegevens wat een voorbijganger wel en niet ziet");
 Given("de intakewachtrij van de open demo-omgeving");
 When("er onvolledige, onleesbare, te grote en verkeerd geadresseerde verzoeken binnenkomen");
 Then("staat er van al die pogingen niets in de wachtrij en lekt er geen IP-kenmerk");

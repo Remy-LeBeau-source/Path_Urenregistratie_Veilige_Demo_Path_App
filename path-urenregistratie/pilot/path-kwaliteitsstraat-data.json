@@ -1,8 +1,24 @@
 {
-  "appVersion": "2.0.174",
-  "generatedAt": "2026-09-18T18:40:20.658Z",
+  "appVersion": "2.0.175",
+  "generatedAt": "2026-09-18T18:54:04.351Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "18 sep",
+      "version": "2.0.175",
+      "wish": "Kennisbank bijgewerkt met wat er vandaag veranderde. Drie vaste pagina's liepen achter. Intake en werkwijze: een ingediende wens schuift nu vanzelf naar In uitvoering en de stappenbalk loopt mee tot TEST, zonder herladen. Gegevens en zichtbaarheid: op deze openbare pagina staan rollen in plaats van namen, en wie een kaart verplaatste zie je pas na inloggen. Koppelingen: elke omgeving heeft een eigen pijplijnsleutel die alleen voortgang mag melden, niet het bord omzetten -- dat hoort een klant die zijn eigen omgeving koppelt te weten. Opvallend bij het nalezen: de pagina Gegevens en zichtbaarheid stelt zelf dat tarieven en gegevens van tussenpersonen van collega's nergens horen te staan, \"ook niet verstopt in een antwoord van de server\" -- precies wat het openbare assets/app.js nu wel doet (zie het open besluit bovenaan). PIPE-H-009 controleert de nieuwe kernzinnen; tegenproef met de oude tekst -> rood.",
+      "cases": [
+        {
+          "id": "PIPE-H-009",
+          "title": "de koppelingen tonen welke bron geldt en lekken nooit een instelling",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Contractcontrole op het koppelingen-endpoint (vorm, statusregels per bron) + negatieve inhoudscontrole dat geen enkele instelling naar buiten lekt",
+          "assertions": 22,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de koppelingen tonen welke bron geldt en lekken nooit een instelling\n  Given het koppelingen-endpoint van de open demo-omgeving\n  When de flow voor PIPE-H-009 wordt uitgevoerd\n  Then geldt onze eigen bron en staan de drie klantbronnen klaar\n  And staat er nergens een instelling in het antwoord\n  And legt de Kennisbank uit wat er per koppeling nodig is\n  And zegt de pagina over gegevens wat een voorbijganger wel en niet ziet"
+        }
+      ]
+    },
     {
       "date": "18 sep",
       "version": "2.0.174",
@@ -377,7 +393,7 @@
           "technique": "Beslissingstabel rollen en autorisatie",
           "assertions": 1,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: een medewerker met een vaste naam krijgt automatisch zijn toegewezen avatar, zonder zelf te kiezen\n  Given de medewerker inlogt zonder ooit een avatar gekozen te hebben\n  When de flow voor AVATAR-H-001 wordt uitgevoerd\n  Then toont het profielmenu meteen zijn vaste, toegewezen avatar (nummer 1)"
+          "gherkin": ""
         },
         {
           "id": "AVATAR-N-001",
@@ -386,7 +402,7 @@
           "technique": "Negatieve equivalentieklasse + error guessing",
           "assertions": 4,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: het vinkje op de gekozen avatar is navy op mint, nooit wit\n  Given avatarkiezer in het profielmenu is voorbereid\n  When de flow voor AVATAR-N-001 wordt uitgevoerd\n  Then is de achtergrond van het vinkje mint en de tekstkleur navy, geen wit"
+          "gherkin": ""
         }
       ]
     },
@@ -422,7 +438,7 @@
           "title": "de koppelingen tonen welke bron geldt en lekken nooit een instelling",
           "feature": "tests/playwright/features/pipeline-demo.feature",
           "technique": "Contractcontrole op het koppelingen-endpoint (vorm, statusregels per bron) + negatieve inhoudscontrole dat geen enkele instelling naar buiten lekt",
-          "assertions": 19,
+          "assertions": 22,
           "platform": "desktop-chromium",
           "gherkin": ""
         },

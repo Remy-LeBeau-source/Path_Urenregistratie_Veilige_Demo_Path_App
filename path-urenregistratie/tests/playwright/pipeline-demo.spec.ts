@@ -1219,8 +1219,17 @@ test.describe('Path Pipeline TEST-demo', () => {
       await expect(page.locator('[data-doc-title]')).toContainText('Koppelingen');
       await expect(page.locator('[data-doc-page]')).toContainText('projectsleutel');
       await expect(page.locator('[data-doc-page]')).toContainText('serviceaccount');
+      // Sinds 18 sep meldt de pijplijn zelf voortgang, met een sleutel die alleen
+      // dat mag. Een klant die zijn eigen omgeving koppelt, hoort dat hier te lezen.
+      await expect(page.locator('[data-doc-page]')).toContainText('melden hoe ver een wens is');
       // Ook hier: de uitleg mag geen echte omgeving van een klant noemen.
       await expect(page.locator('[data-doc-page]')).not.toContainText('atlassian.net');
+    });
+
+    await test.step('And zegt de pagina over gegevens wat een voorbijganger wel en niet ziet', async () => {
+      await page.locator('[data-doc-fixed="gegevens"]').click();
+      await expect(page.locator('[data-doc-page]')).toContainText('rollen in plaats van namen');
+      await expect(page.locator('[data-doc-page]')).toContainText('pas na inloggen');
     });
   });
 

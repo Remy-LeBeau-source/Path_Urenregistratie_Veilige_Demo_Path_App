@@ -159,12 +159,13 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
   @happy
   Scenario: [PIPE-H-009] de koppelingen tonen welke bron geldt en lekken nooit een instelling
     # Testtechniek: Contractcontrole op het koppelingen-endpoint (vorm, statusregels per bron) + negatieve inhoudscontrole dat geen enkele instelling naar buiten lekt
-    # Aantoonbare Playwright-assertions in deze case: 19
+    # Aantoonbare Playwright-assertions in deze case: 22
     Given het koppelingen-endpoint van de open demo-omgeving
     When de flow voor PIPE-H-009 wordt uitgevoerd
     Then geldt onze eigen bron en staan de drie klantbronnen klaar
     And staat er nergens een instelling in het antwoord
     And legt de Kennisbank uit wat er per koppeling nodig is
+    And zegt de pagina over gegevens wat een voorbijganger wel en niet ziet
 
   @negative
   Scenario: [PIPE-N-002] de intakewachtrij weigert onvolledige, te grote en verkeerd geadresseerde invoer, en bestaat niet op productie

@@ -73,7 +73,7 @@
     },
     intake: {
       key: 'INTAKE', title: 'Intake en werkwijze', leftLabel: 'Loket', leftTitle: 'Deze pagina',
-      leftText: 'Een wens die hier wordt ingediend krijgt meteen een eigen nummer (PATH-nnn) en komt in de wachtrij. Dat nummer is overal hetzelfde: op het bord, op deze pagina en bij de testcase.',
+      leftText: 'Een wens die hier wordt ingediend krijgt meteen een eigen nummer (PATH-nnn) en komt in de wachtrij. Dat nummer is overal hetzelfde: op het bord, op deze pagina en bij de testcase. Zodra het ticket er is, schuift de kaart vanzelf naar In uitvoering en loopt de stappenbalk bovenaan mee tot en met TEST, zonder dat je de pagina hoeft te herladen.',
       rightLabel: 'Keten', rightTitle: 'Acht stappen tot TEST',
       rightText: 'GIO-WENSEN → feature + spec + steps → impactregressie → LIVING-DOC → versie → push → CI → TEST, en daarna de wens naar "Klaar".',
       fo: 'De pagina toont geen verzonnen data: de opleveringen, cases, technieken en assertions komen uit GIO-WENSEN.md en de feature-bestanden, via scripts/pipeline-demo-data.mjs.',
@@ -104,7 +104,7 @@
       leftText: 'Een medewerker ziet zijn eigen uren, zijn eigen opdracht en de mededelingen die aan hem gericht zijn. Tarieven, klant- en tussenpersoongegevens en mailroutering van collega\'s horen daar niet bij, ook niet verstopt in een antwoord van de server.',
       rightLabel: 'Afzender', rightTitle: 'Altijd "Beheerder", nooit een naam',
       rightText: 'Bij een mededeling ziet een medewerker de neutrale aanduiding Beheerder. Welke beheerder het bericht stuurde is iets wat beheerders onderling zien, niet iets wat de ontvanger nodig heeft.',
-      fo: 'Deze regel geldt ook voor wat de server meestuurt en niet toont: een veld dat geen scherm gebruikt maar wel in het antwoord zit, is alsnog zichtbaar voor wie kijkt.',
+      fo: 'Deze regel geldt ook voor wat de server meestuurt en niet toont: een veld dat geen scherm gebruikt maar wel in het antwoord zit, is alsnog zichtbaar voor wie kijkt. Op deze openbare pagina staan daarom rollen in plaats van namen, en in de geschiedenis van het bord zie je pas na inloggen wie iets verplaatste; daarvoor staat er alleen of het door een medewerker of vanzelf gebeurde.',
       to: 'Releasenotities in de app worden geschreven vanuit wat er nu goed gaat, niet vanuit wat er mis was — een notitie mag nooit verraden dat er iets is dichtgezet dat eerder openstond. Geen namen, geen bedragen.',
       criterion: 'Geen enkel veld bereikt een rol die het niet nodig heeft, ook niet ongebruikt in een antwoord.',
       gherkin: 'Scenario: De ontvanger ziet geen naam van de afzender\n  Given een beheerder stuurt een mededeling aan een medewerker\n  When de medewerker die mededeling opent\n  Then staat er "Beheerder" als afzender\n  And is de echte naam nergens in het antwoord van de server te vinden',
@@ -127,7 +127,7 @@
       rightLabel: 'Stand vandaag', rightTitle: 'Eigen bron operationeel, klantbronnen voorbereid',
       rightText: 'De eigen bron levert nu tickets, documenten en testcases. De drie klantkoppelingen staan klaar qua vorm en instelling, maar zijn nog niet aangesloten: dat vraagt per klant echte gegevens en een afspraak over rechten.',
       fo: 'Wat we van een klant nodig hebben staat vast per koppeling: voor Jira de basis-URL, de projectsleutel en een API-token van een serviceaccount; voor Confluence dezelfde omgeving plus de ruimtesleutel; voor Zephyr Scale een eigen API-token, want dat staat los van het Atlassian-token.',
-      to: 'Die gegevens staan in de serverconfiguratie buiten de webroot, nooit in de pagina zelf: deze pagina is openbaar en zonder inloggen bereikbaar. Het koppelingen-endpoint vertelt daarom alleen WELKE bron aan staat en of hij volledig is ingesteld, nooit waarmee.',
+      to: 'Die gegevens staan in de serverconfiguratie buiten de webroot, nooit in de pagina zelf: deze pagina is openbaar en zonder inloggen bereikbaar. Het koppelingen-endpoint vertelt daarom alleen WELKE bron aan staat en of hij volledig is ingesteld, nooit waarmee. Voor de voortgang op het bord heeft elke omgeving daarnaast een eigen sleutel waarmee de pijplijn zich meldt. Die sleutel mag precies één ding: melden hoe ver een wens is. Het bord omzetten of kaarten verslepen kan hij niet, want zo\'n sleutel leeft in een pijplijn en lekt makkelijker dan een wachtwoord.',
       criterion: 'Een klantkoppeling is pas "gekoppeld" als hij aan staat en zowel een basis-URL als een token heeft; anders meldt hij zichzelf eerlijk als voorbereid of onvolledig.',
       gherkin: 'Scenario: Een halve instelling meldt zich niet als gekoppeld\n  Given een klantkoppeling staat aan maar mist een token\n  When de pagina de koppelingen opvraagt\n  Then meldt die bron zich als onvolledig ingesteld\n  And staat er nergens een waarde uit de instelling in het antwoord',
       summary: 'Hoe dezelfde keten werkt op onze eigen omgeving of op die van een klant.', author: 'Bron: pilot/path-kwaliteitsstraat-koppelingen.php', updated: 'Vaste pagina', trace: 'Vast', testId: 'PIPE-H-009'
