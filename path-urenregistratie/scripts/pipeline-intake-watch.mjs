@@ -36,7 +36,13 @@ const intervalArg = argumenten.find((a) => a.startsWith('--interval='));
 // Ondergrens van 15 seconden: de wachtrij is een klein bestand op een gedeelde
 // server, en vaker vragen levert geen snellere reactie op, alleen meer belasting.
 const interval = Math.max(15, Number(intervalArg?.split('=')[1] || 60)) * 1000;
-const basis = lokaal ? 'http://127.0.0.1:8010' : 'https://uren-test.pathconsultancy.nl';
+// Met --lokaal wijst dit naar de eigen ontwikkelserver. Die poort verschilt per
+// werkplek (deze sessie draait op 8000, de main-sessie op 8010), dus hij is
+// instelbaar met PATH_KWALITEITSSTRAAT_URL -- dezelfde variabele als
+// scripts/pipeline-voortgang.mjs gebruikt, zodat er maar één plek is om te zetten.
+const basis = lokaal
+  ? (process.env.PATH_KWALITEITSSTRAAT_URL || 'http://127.0.0.1:8000').replace(/\/+$/, '')
+  : 'https://uren-test.pathconsultancy.nl';
 const url = `${basis}/pilot/path-kwaliteitsstraat-intake.php`;
 
 function nu() {
@@ -128,6 +134,29 @@ function maakIssue(wens) {
   return (resultaat.stdout || '').trim();
 }
 
+// Zodra het ticket bestaat, hoort de kaart op het bord dat te laten zien: stap 1
+// van vier, en de kaart schuift daarmee vanzelf naar In uitvoering. Dat is het
+// verschil tussen "er gebeurt vast wel iets" en zien dat het is aangenomen.
+//
+// Mislukt dit, dan is dat hooguit jammer voor het scherm: het issue bestaat en
+// het werk gaat door. Daarom vangt deze functie alles op en gooit hij nooit.
+async function meldVoortgang(sleutel, fase, toelichting) {
+  const agentSleutel = process.env.PATH_AGENT_SLEUTEL || '';
+  if (!agentSleutel) return;
+  try {
+    const antwoord = await fetch(`${basis}/pilot/path-kwaliteitsstraat-store.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Path-Agent': agentSleutel },
+      body: JSON.stringify({ action: 'voortgang', key: sleutel, fase, toelichting }),
+    });
+    console.log(antwoord.ok
+      ? `  voortgang gemeld: stap ${fase} van 4`
+      : `  voortgang niet gemeld (HTTP ${antwoord.status}); het werk gaat gewoon door`);
+  } catch (fout) {
+    console.log(`  voortgang niet gemeld (${fout.message}); het werk gaat gewoon door`);
+  }
+}
+
 async function ronde(stand) {
   let wensen;
   try {
@@ -156,6 +185,7 @@ async function ronde(stand) {
     if (!droog) {
       stand.afgehandeld.push(wens.key);
       schrijfStand(stand);
+      await meldVoortgang(wens.key, 1, 'Ticket aangemaakt, scenario volgt');
     }
     console.log('  klaar om op te pakken: PIPELINE-INTAKE.md stap 2 (regel in GIO-WENSEN.md, dan bouwen).');
   }
