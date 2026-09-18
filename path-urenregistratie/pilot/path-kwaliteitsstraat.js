@@ -6,13 +6,13 @@
   var INTAKE_URL = 'path-kwaliteitsstraat-intake.php';
   // Gedeelde opslag van de bordstand (kolom per kaart, met geschiedenis).
   var STORE_URL = 'path-kwaliteitsstraat-store.php';
-  // Het databasemodel hoort bij elke story (wens Gio, 17 sep). Het bestand wordt
+  // Het databasemodel hoort bij elke story (wens PO, 17 sep). Het bestand wordt
   // gegenereerd uit het echte schema (npm run erd) en gaat met de gewone uitrol
   // mee, dus dit blijft vanzelf gelijklopen met de database.
   var ERD_PAD = '../database/ERD-nieuw.svg';
   var REPO_URL = 'https://github.com/Remy-LeBeau-source/Path_Urenregistratie_Veilige_Demo_Path_App';
   var INTAKE_LABEL = 'pipeline-intake';
-  // Opdracht Gio (17 sep): dit is onze eigen administratie, geen etalage. De
+  // Opdracht PO (17 sep): dit is onze eigen administratie, geen etalage. De
   // volledige projecthistorie zit in de feed; deze getallen bepalen alleen hoeveel
   // er per keer wordt getekend. Eerder waren het harde caps die vóór het filteren
   // werden toegepast -- daardoor zocht de zoekbalk aantoonbaar alleen in de
@@ -33,7 +33,7 @@
   // Terugval als de feed niet laadt (bijvoorbeeld rechtstreeks vanaf schijf openen).
   var fallbackSeeds = [
     { key: 'PATH-196', title: 'Ingetrokken mededeling toont label en reden', type: 'bug', testId: 'TC-NOT-H-012', platform: 'desktop-chromium',
-      gherkin: 'Scenario: Ingetrokken mededeling toont label en reden\n  Given Stasjo opent Berichten met ingetrokken voorbeeldmededelingen in de TEST-basis\n  When hij het filter Ingetrokken kiest\n  Then staan alleen ingetrokken berichten er, ingeklapt met label\n  And zie je de reden zodra je het bericht openklapt' },
+      gherkin: 'Scenario: Ingetrokken mededeling toont label en reden\n  Given een medewerker opent Berichten met ingetrokken voorbeeldmededelingen in de TEST-basis\n  When hij het filter Ingetrokken kiest\n  Then staan alleen ingetrokken berichten er, ingeklapt met label\n  And zie je de reden zodra je het bericht openklapt' },
     { key: 'PATH-194', title: 'PROD-poort breekt release alleen af bij een nieuwere release', type: 'ci', testId: 'TC-PROD-WEKKER-01', platform: 'CI',
       gherkin: 'Scenario: PROD-poort breekt release alleen af bij een nieuwere release\n  Given een release na TEST-deploy wacht op de handmatige PROD-poort\n  When na tien minuten geen nieuwere commit op main staat\n  Then blijft de goedkeuring open\n  And wordt alleen een oudere wachtende run afgebroken zodra main verder is' },
     { key: 'PATH-197', title: 'Hele maand blijft staan na een hertekening op de achtergrond', type: 'bug', testId: 'TC-DASH-N-032', platform: 'desktop-chromium',
@@ -64,11 +64,11 @@
       key: 'RELEASEAFSPRAKEN', title: 'Releaseafspraken', leftLabel: 'Omgevingen', leftTitle: 'Lokaal → CI → TEST → PROD',
       leftText: 'Lokaal draait de gerichte regressie vóór het pushen. CI draait de volledige suite in tien shards. TEST is uren-test.pathconsultancy.nl en volgt automatisch na een groene run.',
       rightLabel: 'Productie', rightTitle: 'Handmatige keuze, altijd',
-      rightText: 'De stap naar productie is een handmatige goedkeuring die alleen Gio geeft. Geen enkele agent keurt die poort goed; een wachtende run wordt hooguit afgebroken als er een nieuwere release klaarstaat.',
+      rightText: 'De stap naar productie is een handmatige goedkeuring die alleen PO geeft. Geen enkele agent keurt die poort goed; een wachtende run wordt hooguit afgebroken als er een nieuwere release klaarstaat.',
       fo: 'Eén agent per branch tegelijk (het "stokje"). Overdragen betekent: alles gepusht, CI-uitkomst erbij en de regel bijgewerkt.',
       to: 'Versienummer: altijd het hoogste nummer op origin/main en origin/herontwerp plus 1, gezet met npm run version:set. Nooit een nummer hergebruiken.',
-      criterion: 'PROD wijzigt alleen na een bewuste klik van Gio, nooit automatisch.',
-      gherkin: 'Scenario: De poort naar productie blijft van Gio\n  Given een release staat groen op TEST\n  When de pipeline bij de productiepoort komt\n  Then wacht hij op een handmatige goedkeuring\n  And breekt hij alleen af als er een nieuwere release klaarstaat',
+      criterion: 'PROD wijzigt alleen na een bewuste klik van PO, nooit automatisch.',
+      gherkin: 'Scenario: De poort naar productie blijft van PO\n  Given een release staat groen op TEST\n  When de pipeline bij de productiepoort komt\n  Then wacht hij op een handmatige goedkeuring\n  And breekt hij alleen af als er een nieuwere release klaarstaat',
       summary: 'Welke stappen automatisch gaan en welke keuze bij een mens blijft.', author: 'Bron: BESLISTABEL.md (R45) en CODEX_HANDOFF.md', updated: 'Vaste pagina', trace: 'Vast', testId: 'TC-PROD-WEKKER-01'
     },
     intake: {
@@ -79,14 +79,14 @@
       fo: 'De pagina toont geen verzonnen data: de opleveringen, cases, technieken en assertions komen uit GIO-WENSEN.md en de feature-bestanden, via scripts/pipeline-demo-data.mjs.',
       to: 'npm run check faalt als pilot/path-kwaliteitsstraat-data.json achterloopt op de projectstand. Zo kan de demo niet stilletjes verouderen.',
       criterion: 'Wat hier staat, is terug te vinden in de repository.',
-      gherkin: 'Scenario: Een wens loopt van het loket tot TEST\n  Given Gio dient een wens in op deze pagina\n  When de agent het issue met label pipeline-intake oppakt\n  Then ontstaan er een feature, een spec en een groene regressie\n  And staat de oplevering daarna in de Living Doc en op TEST',
+      gherkin: 'Scenario: Een wens loopt van het loket tot TEST\n  Given PO dient een wens in op deze pagina\n  When de agent het issue met label pipeline-intake oppakt\n  Then ontstaan er een feature, een spec en een groene regressie\n  And staat de oplevering daarna in de Living Doc en op TEST',
       summary: 'Hoe een wens op deze pagina uiteindelijk op TEST terechtkomt.', author: 'Bron: PIPELINE-INTAKE.md', updated: 'Vaste pagina', trace: 'Vast', testId: 'PIPE-H-002'
     },
-    // Toegevoegd 17 sep op verzoek van Gio: de kennisbank moet onze échte
+    // Toegevoegd 17 sep op verzoek van PO: de kennisbank moet onze échte
     // werkwijze bevatten, niet drie losse pagina's. Bewust met de hand geschreven
     // en niet automatisch uit de MD-bestanden gegenereerd: die bevatten echte
     // e-mailadressen, serverdetails en zelfs een testwachtwoord, en deze pagina is
-    // openbaar zonder inloggen (besluit Gio 16 sep: geen persoons- of
+    // openbaar zonder inloggen (besluit PO 16 sep: geen persoons- of
     // klantgegevens zolang dat zo is).
     dekkingsronde: {
       key: 'DEKKINGSRONDE', title: 'Dekkingsronde', leftLabel: 'Aanleiding', leftTitle: 'Niet wachten tot iets stukgaat',
@@ -247,9 +247,12 @@
   }
 
   function toegewezen(ticket) {
-    var wie = String(ticket.who || (ticket.source === 'feed' ? 'main' : 'Gio')).toLowerCase();
+    var wie = String(ticket.who || (ticket.source === 'feed' ? 'main' : 'PO')).toLowerCase();
     if (wie.indexOf('herontwerp') >= 0) return { naam: 'Herontwerp', initialen: 'HW' };
-    if (wie.indexOf('gio') >= 0) return { naam: 'Gio', initialen: 'GM' };
+    // De projectstand noemt de product owner sinds 18 sep 'PO' in plaats van bij
+    // naam (geen persoonsgegevens op een openbare pagina); 'gio' blijft herkend
+    // voor kaarten die nog uit de browseropslag van voor die datum komen.
+    if (/\b(po|gio)\b/.test(wie)) return { naam: 'PO', initialen: 'PO' };
     if (wie.indexOf('besluit') >= 0) return { naam: 'Besluit', initialen: 'BO' };
     return { naam: 'Main', initialen: 'MA' };
   }
@@ -514,7 +517,7 @@
     if (ticket.version && ticket.source === 'feed') meta += '<span class="version-chip">' + escapeHtml(ticket.version) + '</span>';
     if (ticket.platform) meta += '<span>' + escapeHtml(ticket.platform) + '</span>';
     if (ticket.who && ticket.status !== 'done') meta += '<span>' + escapeHtml(ticket.who) + '</span>';
-    // Sinds 17 sep mag een kaart wél tussen kolommen (opdracht Gio: dit wordt
+    // Sinds 17 sep mag een kaart wél tussen kolommen (opdracht PO: dit wordt
     // het product, dus slepen moet de stand echt veranderen). Dat kon eerder
     // bewust niet, omdat er niets was om de verplaatsing in op te slaan --
     // je zou een stand tonen die niemand anders ziet. Nu bewaart de gedeelde
@@ -1328,7 +1331,7 @@
     return 'Scenario: ' + (title || 'Nieuwe wens') + '\n  Given een gebruiker de nieuwe werkwijze gebruikt\n  When ' + (criterion || 'de wens is doorgevoerd') + '\n  Then ' + thenClauseVoor(criterion, title);
   }
 
-  // Deterministisch sjabloon voor het acceptatiecriterium zelf (besluit Gio, 16 sep):
+  // Deterministisch sjabloon voor het acceptatiecriterium zelf (besluit PO, 16 sep):
   // geen live AI-aanroep vanaf een publieke pagina, dus geen sleutel nodig. Het
   // sjabloon verzint geen nieuwe werkwoorden bij vrije tekst (dat gaat al snel fout
   // in het Nederlands); het hergebruikt woordelijk wat de PO zelf al typte in
@@ -1372,7 +1375,7 @@
   }
 
   // De wens gaat naar de eigen wachtrij op de server (pilot/path-kwaliteitsstraat-intake.php),
-  // niet naar een voorgevuld GitHub-formulier dat Gio zelf moet afmaken. Het
+  // niet naar een voorgevuld GitHub-formulier dat PO zelf moet afmaken. Het
   // GitHub-issue maakt de agent later zelf aan; dat tussenstation hoort onzichtbaar
   // te zijn. Lukt opslaan niet (pagina via file:// geopend, of de server antwoordt
   // niet), dan zeggen we dat ook eerlijk in plaats van te doen alsof het gelukt is.
@@ -1525,7 +1528,7 @@
   }
 
   // ===================== Keuzelijst: verbeteringen die wij al zien =====================
-  // Basisregel van Gio (16 sep): het formulier toont de nice-to-haves uit GIO-WENSEN.md
+  // Basisregel van PO (16 sep): het formulier toont de nice-to-haves uit GIO-WENSEN.md
   // als keuzelijst. Kiezen vult de velden voor; vrij typen blijft altijd mogelijk. Haakt
   // aan op [data-ticket-form] waar dat ook staat, zodat een verhuizing van het formulier
   // deze code niet raakt.

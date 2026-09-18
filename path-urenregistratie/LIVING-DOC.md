@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 635 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 636 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 635 unieke case-ID's
+- Playwright executable cases: 636 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 636 unieke case-ID's
+- Totaal executable cases: 637 unieke case-ID's
 - Playwright features: 33
 - Database features: 1
 - Playwright steps mappings: 33
 - Database steps mappings: 1
-- Uitvoeringen: 699
+- Uitvoeringen: 701
 - Niet-mobile projectuitvoeringen: 571
-- Mobile functionele cases: 64
-- Pixel 7 / Chromium-uitvoeringen: 64
-- iPhone 13 / WebKit-uitvoeringen: 64
+- Mobile functionele cases: 65
+- Pixel 7 / Chromium-uitvoeringen: 65
+- iPhone 13 / WebKit-uitvoeringen: 65
 
-De 64 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 635 Playwright-functionele cases in totaal 699 resultaten op: 571 + (64 x 2) = 699.
+De 65 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 636 Playwright-functionele cases in totaal 701 resultaten op: 571 + (65 x 2) = 701.
 
 ## Documentatieketen
 
@@ -716,7 +716,7 @@ De 64 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 635 Playwri
 
 - Feature: `tests/playwright/features/pipeline-demo.feature`
 - Source: `tests/playwright/pipeline-demo.spec.ts`
-- Cases: 22
+- Cases: 23
 
 - [PIPE-N-003] de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt — Techniek: Regressiecontrole na hernoeming: oude URL blijft bereikbaar en verwijst door (meta-refresh) naar de nieuwe naam · Assertions: 6
 - [PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin — Techniek: Datagedreven vergelijking (pagina versus pilot/path-kwaliteitsstraat-data.json) + traceerbaarheid over drie projecties · Assertions: 38
@@ -724,6 +724,7 @@ De 64 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 635 Playwri
 - [PIPE-H-010] een ticket opent als een echte Jira-story: details, beschrijving, traceability, ontwerp en historie — Techniek: Contractcontrole op de issuepagina (vaste blokken, veld-naar-veldafbeelding naar Jira) + controle dat traceability-cijfers uit de echte case komen en de ERD-link echt bereikbaar is · Assertions: 28
 - [PIPE-H-013] een kaart verplaatsen verandert de stand echt en blijft staan na herladen — Techniek: Toestandsovergangtest op het bord (kolom naar kolom) met controle op de server in plaats van op het scherm + herstelbaarheid na herladen zonder browseropslag + tweede lezer ziet dezelfde stand + equivalentieklassen op de lezer (anoniem ziet geen naam, ingelogd wel) · Assertions: 21
 - [PIPE-N-005] een haperende verbinding kost de pagina geen echte stand, maar drie keer mislukken wordt wel gemeld — Techniek: Foutinjectie op de netwerklaag met grenswaardeanalyse op het aantal pogingen (twee mislukkingen nog goed, drie mislukkingen geeft de eerlijke terugvalmelding) · Assertions: 3
+- [PIPE-N-006] geen enkele openbare bron van de kwaliteitsstraat bevat namen of mailadressen van medewerkers — Techniek: Datagedreven over de volledige personenlijst uit het zaaibestand (naam, voornaam, delen van een dubbele voornaam, mailadres) + equivalentieklassen over elke openbare bron van de pagina (projectstand, html, script, anonieme opslag, koppelingen) · Assertions: 4
 - [PIPE-H-017] de stappenbalk toont echte voortgang van de pijplijn en beweegt mee zonder herladen — Techniek: Toestandsovergangtest over de vier fasen van de straat (elke stap moet op het scherm terechtkomen, en vrijgeven moet hem weer loslaten) + grenswaarden op de fase (0 en 4 horen erbij, -1 en 5 niet) + negatieve klasse op het schrijfrecht · Assertions: 31
 - [PIPE-H-016] de opslag vertelt eerlijk waar de stand vandaan komt, zonder verbindingsgegevens — Techniek: Beslistabel op de gemelde opslagbron (bestand, database, database ingesteld maar onbereikbaar) + structurele geheimhoudingscontrole op verboden sleutels in het antwoord + gelijkheidscontrole tussen lezen en schrijven · Assertions: 8
 - [PIPE-H-015] het bord staat op Kanban, met Scrum klaar om aan te zetten — Techniek: Equivalentieklassen op de werkwijze (Kanban, Scrum met einddatum, Scrum zonder einddatum) + negatieve invoercontrole op de server (onbekende werkwijze, kromme datum, anoniem) + herstelbaarheid na herladen · Assertions: 16

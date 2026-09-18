@@ -569,6 +569,50 @@ test.describe('Path Pipeline TEST-demo', () => {
     });
   });
 
+  test('[PIPE-N-006] geen enkele openbare bron van de kwaliteitsstraat bevat namen of mailadressen van medewerkers', async ({ request }) => {
+    // Aanleiding (18 sep): de openbare projectstand bevatte de volledige namen
+    // van collega's, met hun werkpatroon erbij (dagen en uren). Dat kwam uit
+    // GIO-WENSEN.md, dat bij ons wel namen mag bevatten, via de generator die er
+    // een openbaar bestand van maakt. Ook de pagina zelf noemde in tekst en
+    // broncode-opmerkingen een naam -- en ook die opmerkingen zijn openbaar.
+    //
+    // Techniek (TMap/ISTQB): datagedreven over de VOLLEDIGE personenlijst uit
+    // het zaaibestand (geen handmatige steekproef, zodat een nieuwe collega
+    // vanzelf mee getoetst wordt), gecombineerd met equivalentieklassen over
+    // elke openbare bron die de pagina laadt.
+    const zaai = await readFile(join(process.cwd(), 'database', 'seed-demo-data.sql'), 'utf8');
+    const personen = [...zaai.matchAll(/\(\s*\d+\s*,\s*\d+\s*,\s*'([^']+)'\s*,\s*'([^']+)'\s*,\s*'(?:administrator|employee)'/g)]
+      .map((m) => ({ mail: m[1], naam: m[2] }));
+    expect(personen.length, 'het zaaibestand hoort de medewerkers te bevatten, anders toetst deze case niets').toBeGreaterThanOrEqual(4);
+
+    // Volledige naam, voornaam en de delen van een dubbele voornaam.
+    const verboden = [...new Set(personen.flatMap(({ naam }) => {
+      const voornaam = naam.split(' ')[0];
+      return [naam, voornaam, ...voornaam.split('-')];
+    }))].filter((d) => d.length > 2);
+
+    const bronnen: Array<[string, string]> = [
+      ['projectstand', await (await request.get('/pilot/path-kwaliteitsstraat-data.json')).text()],
+      ['pagina', await (await request.get('/pilot/path-kwaliteitsstraat.html')).text()],
+      ['paginascript', await (await request.get('/pilot/path-kwaliteitsstraat.js')).text()],
+      // Anoniem opgehaald: zo ziet een voorbijganger hem.
+      ['opslag', await (await request.get('/pilot/path-kwaliteitsstraat-store.php')).text()],
+      ['koppelingen', await (await request.get('/pilot/path-kwaliteitsstraat-koppelingen.php')).text()],
+    ];
+
+    for (const [bron, inhoud] of bronnen) {
+      expect(inhoud.length, `${bron} hoort inhoud te hebben`).toBeGreaterThan(20);
+      for (const deel of verboden) {
+        // Hele woorden: "Marc" hoort te vallen, "Marcering" niet.
+        const woord = new RegExp(`(?<![\\p{L}])${deel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}])`, 'u');
+        expect(woord.test(inhoud), `${bron} noemt "${deel}"`).toBe(false);
+      }
+      for (const { mail } of personen) {
+        expect(inhoud.includes(mail), `${bron} bevat het mailadres ${mail}`).toBe(false);
+      }
+    }
+  });
+
   test('[PIPE-H-017] de stappenbalk toont echte voortgang van de pijplijn en beweegt mee zonder herladen', async ({ page, request }) => {
     // De pagina haalt zijn stand elke tien seconden op, en deze case wacht vier
     // keer op zo'n ronde. Dat past niet in de standaardtijd van een case, en de

@@ -12,6 +12,38 @@ Options -Indexes
   Require all denied
 </FilesMatch>
 
+# Alleen wat de app zelf nodig heeft, hoort via het web bereikbaar te zijn.
+#
+# De uitrol zet de hele repository in de webmap. Tot 18 sep 2026 stond daardoor
+# alles open wat niet met een punt begint: de wensenlijst met namen en
+# werkpatronen van medewerkers, de overdrachtsnotities, de testrollen, de
+# omgevingsbestanden (ook die van productie), de beheerscripts in server/scripts
+# en de volledige node_modules -- op TEST en op PROD. Er stonden geen werkende
+# wachtwoorden in, maar dit hoort niet op internet.
+#
+# Wat hieronder dicht gaat, laadt de app nergens zelf; nagekeken in index.html,
+# sw.js, assets/, pilot/ en server/. scripts/webtoegang-check.mjs toetst deze
+# regels tegen elk bestand in de repository: wat de app nodig heeft moet open
+# blijven, de rest dicht. Pas je hier iets aan, draai dan die controle.
+
+# Documentatie, broncode van tests en scripts, databaseschema's, omgevingen.
+<FilesMatch "\.(md|env|sql|feature|ts|mjs|ps1|cmd|sh|lock|log|example|pdf)$">
+  Require all denied
+</FilesMatch>
+
+# Projectbestanden die niets met de draaiende app te maken hebben.
+<FilesMatch "^(package(-lock)?\.json|vite\.config\.js)$">
+  Require all denied
+</FilesMatch>
+
+# Hele mappen die alleen voor ontwikkeling bestaan. server/scripts valt hier ook
+# onder: dat zijn beheertaken voor de opdrachtregel (reset, back-up, herstel,
+# inrichting), en de meeste controleren zelf niet of ze via het web worden
+# aangeroepen.
+<If "%{REQUEST_URI} =~ m#(^|/)(environments|tests|scripts|node_modules|design-mockups|agents|allure-results|allure-report)/#">
+  Require all denied
+</If>
+
 <IfModule mod_headers.c>
   Header always set X-Content-Type-Options "nosniff"
   Header always set X-Frame-Options "DENY"

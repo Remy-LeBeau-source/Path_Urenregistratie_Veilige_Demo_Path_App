@@ -71,6 +71,14 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
     Then toont de pagina toch de echte stand, niet de voorbeelddata
     And blijft de pagina het eerlijk melden als het echt niet lukt
 
+  @negative
+  Scenario: [PIPE-N-006] geen enkele openbare bron van de kwaliteitsstraat bevat namen of mailadressen van medewerkers
+    # Testtechniek: Datagedreven over de volledige personenlijst uit het zaaibestand (naam, voornaam, delen van een dubbele voornaam, mailadres) + equivalentieklassen over elke openbare bron van de pagina (projectstand, html, script, anonieme opslag, koppelingen)
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid
+    When de flow voor PIPE-N-006 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat geen enkele openbare bron van de kwaliteitsstraat bevat namen of mailadressen van medewerkers
+
   @happy
   Scenario: [PIPE-H-017] de stappenbalk toont echte voortgang van de pijplijn en beweegt mee zonder herladen
     # Testtechniek: Toestandsovergangtest over de vier fasen van de straat (elke stap moet op het scherm terechtkomen, en vrijgeven moet hem weer loslaten) + grenswaarden op de fase (0 en 4 horen erbij, -1 en 5 niet) + negatieve klasse op het schrijfrecht

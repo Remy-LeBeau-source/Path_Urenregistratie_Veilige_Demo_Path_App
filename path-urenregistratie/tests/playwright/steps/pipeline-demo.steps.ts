@@ -47,6 +47,8 @@ Given("de projectstand pas bij de derde poging binnenkomt");
 When("de flow voor PIPE-N-005 wordt uitgevoerd");
 Then("toont de pagina toch de echte stand, niet de voorbeelddata");
 And("blijft de pagina het eerlijk melden als het echt niet lukt");
+When("de flow voor PIPE-N-006 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat geen enkele openbare bron van de kwaliteitsstraat bevat namen of mailadressen van medewerkers");
 Given("anoniem voortgang melden wordt geweigerd");
 And("een fase buiten 0 tot en met 4 wordt geweigerd");
 Then("staat de balk op de simulatie zolang er niets loopt");

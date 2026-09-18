@@ -23,6 +23,67 @@ const GHERKIN_VOLLEDIG_TOT = 25;
 // Feature-bestanden en MD's wisselen tussen LF en CRLF: altijd normaliseren,
 // anders laat een trailing \r de Scenario-regex stilletjes mislukken.
 const read = (p) => fs.readFileSync(path.join(root, p), 'utf8').replace(/\r\n/g, '\n');
+
+// ---------------------------------------------------------------------------
+// Geen persoonsgegevens in de openbare projectstand
+// ---------------------------------------------------------------------------
+// De kwaliteitsstraat is openbaar leesbaar, op voorwaarde dat er geen persoons-
+// gegevens in staan. GIO-WENSEN.md is dat niet: daar staan namen van collega's
+// in, soms met hun werkpatroon ("werkt ma t/m do 8 uur, vrijdag 4"). Tot 18 sep
+// kwam dat letterlijk in dit openbare bestand terecht.
+//
+// Wie een persoon is, wordt niet hier bijgehouden maar uit het zaaibestand van
+// de database gelezen: een nieuwe collega die daar bijkomt, wordt dan vanzelf
+// ook afgeschermd, in plaats van pas nadat iemand eraan denkt deze lijst bij te
+// werken. De beheerder met id 1 is de product owner en heet op de pagina "PO",
+// net als in de rest van de kwaliteitsstraat.
+function personenUitZaaibestand() {
+  const regel = /\(\s*(\d+)\s*,\s*\d+\s*,\s*'([^']+)'\s*,\s*'([^']+)'\s*,\s*'(administrator|employee)'/g;
+  const personen = [];
+  for (const m of read('database/seed-demo-data.sql').matchAll(regel)) {
+    const [, id, , naam, rol] = m;
+    const label = id === '1' ? 'PO' : rol === 'administrator' ? 'een beheerder' : 'een medewerker';
+    // Volledige naam eerst, dan losse delen van de voornaam: "Shawn-Douglas
+    // Nahar" komt in de tekst ook voor als "Shawn".
+    const voornaam = naam.split(' ')[0];
+    const delen = [...new Set([naam, voornaam, ...voornaam.split('-')])].filter((d) => d.length > 2);
+    personen.push({ delen, label });
+  }
+  if (personen.length === 0) {
+    throw new Error('Geen personen gevonden in database/seed-demo-data.sql; zonder die lijst kan de projectstand niet veilig openbaar.');
+  }
+  return personen;
+}
+
+const PERSONEN = personenUitZaaibestand();
+const ontsnap = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+function zonderPersoonsgegevens(tekst) {
+  let uit = tekst;
+  // Langste namen eerst, zodat "Marc de Roon" in zijn geheel wordt vervangen en
+  // niet eerst "Marc" los, met "de Roon" als restje erachter.
+  const vervangingen = PERSONEN.flatMap((p) => p.delen.map((deel) => ({ deel, label: p.label })))
+    .sort((a, b) => b.deel.length - a.deel.length);
+  for (const { deel, label } of vervangingen) {
+    uit = uit.replace(new RegExp(`(?<![\\p{L}])${ontsnap(deel)}(?![\\p{L}])`, 'gu'), label);
+  }
+  // Mailadressen, ook de testaccounts: die zijn te herleiden tot een persoon.
+  uit = uit.replace(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g, 'een testaccount');
+  // Een opsomming van namen wordt anders "een medewerker/een medewerker/een
+  // medewerker"; dat leest als een fout en zegt niets extra's.
+  uit = uit.replace(/een (medewerker|beheerder)(?:\s*(?:\/|,|\ben\b)\s*een (?:medewerker|beheerder))+/g, 'enkele collega\'s');
+  // Aan het begin van een zin met een hoofdletter.
+  return uit.replace(/(^|[.!?]\s+|\*\*|["(]\s*)een /g, (_, voor) => `${voor}Een `);
+}
+
+function zonderPersoonsgegevensDiep(waarde) {
+  if (typeof waarde === 'string') return zonderPersoonsgegevens(waarde);
+  if (Array.isArray(waarde)) return waarde.map(zonderPersoonsgegevensDiep);
+  if (waarde && typeof waarde === 'object') {
+    return Object.fromEntries(Object.entries(waarde).map(([k, v]) => [k, zonderPersoonsgegevensDiep(v)]));
+  }
+  return waarde;
+}
 const cells = (line) => line.split('|').slice(1, -1).map((c) => c.trim().replace(/\*\*/g, ''));
 
 function tableRows(markdown, heading) {
@@ -92,7 +153,7 @@ function build() {
 // anders is de poort altijd rood en zou elke run het bestand opnieuw schrijven.
 const zonderTijd = (tekst) => tekst.replace(/\n  "generatedAt": "[^"]*",?/, '');
 
-const data = build();
+const data = zonderPersoonsgegevensDiep(build());
 const json = `${JSON.stringify(data, null, 2)}\n`;
 if (process.argv.includes('--check')) {
   const current = fs.existsSync(OUT) ? fs.readFileSync(OUT, 'utf8') : '';
