@@ -127,15 +127,19 @@ test.describe('avatarkiezer in het profielmenu', () => {
       await expect(page.locator('#profile-menu')).toBeVisible();
       await expect(page.locator('.avatar-picker-optie.is-gekozen')).toHaveCount(1);
       await expect(page.locator('.avatar-picker-optie').nth(5)).toHaveClass(/is-gekozen/);
-      const bg = await page.locator('#profile-menu-avatar').evaluate(el => getComputedStyle(el).backgroundImage);
-      expect(bg).toContain(gekozenAvatar.slice(20, 90));
+      // Eenmalige evaluate() + platte expect() herhaalt niet, dus een klik die de
+      // stijl syncroon zet maar waarvan getComputedStyle() op WebKit soms een tik
+      // later bijwerkt, kon hier vals rood geven (gezien op mobile-safari, 18 sep).
+      // expect.poll() geeft dezelfde controle de normale Playwright-hertries.
+      await expect.poll(() => page.locator('#profile-menu-avatar').evaluate(el => getComputedStyle(el).backgroundImage))
+        .toContain(gekozenAvatar.slice(20, 90));
     });
 
     await test.step('And staat dezelfde avatar er nog na een echte paginaherlading', async () => {
       await page.reload();
       await openProfielmenu(page);
-      const bg = await page.locator('#profile-menu-avatar').evaluate(el => getComputedStyle(el).backgroundImage);
-      expect(bg).toContain(gekozenAvatar.slice(20, 90));
+      await expect.poll(() => page.locator('#profile-menu-avatar').evaluate(el => getComputedStyle(el).backgroundImage))
+        .toContain(gekozenAvatar.slice(20, 90));
     });
   });
 

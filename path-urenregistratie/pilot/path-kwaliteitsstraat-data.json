@@ -1,8 +1,24 @@
 {
-  "appVersion": "2.0.166",
-  "generatedAt": "2026-09-18T09:38:33.908Z",
+  "appVersion": "2.0.167",
+  "generatedAt": "2026-09-18T11:26:04.467Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "18 sep",
+      "version": "2.0.167",
+      "wish": "Eigen vondst: AVATAR-H-005 viel wisselvallig om op mobile-safari (2.0.164 blokkeerde de pijplijn hierdoor, ook TEST voor Marc's fixes). De controle op de zichtbare avatar-achtergrond gebruikte een eenmalige evaluate() + platte expect() zonder Playwright-hertries; op WebKit werkte getComputedStyle() soms een fractie later bij dan de stijl zelf al gezet was. Vervangen door expect.poll(), dezelfde eis maar met de normale hertries. 27/27 groen op mobile-safari (3x herhaald). Geen appwijziging, puur een test-robuustheidsfix.",
+      "cases": [
+        {
+          "id": "AVATAR-H-005",
+          "title": "een avatar kiezen is direct zichtbaar, sluit het menu niet, en blijft staan na een echte paginaherlading",
+          "feature": "tests/playwright/features/avatar-picker.feature",
+          "technique": "Toestandsovergang",
+          "assertions": 5,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een avatar kiezen is direct zichtbaar, sluit het menu niet, en blijft staan na een echte paginaherlading\n  Given avatarkiezer in het profielmenu is voorbereid\n  When een andere avatar dan de huidige wordt aangetikt\n  Then verschijnt de keuze meteen, blijft het menu open, en is er geen aparte opslaan-knop nodig\n  And staat dezelfde avatar er nog na een echte paginaherlading"
+        }
+      ]
+    },
     {
       "date": "18 sep",
       "version": "2.0.166",
@@ -422,7 +438,7 @@
           "technique": "Concurrency + toestandsovergang",
           "assertions": 80,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: admin vraagt correctie, employee dient opnieuw in, admin keurt goed met optimistic locking\n  Given de medewerker is ingelogd en heeft een schrijfbare testperiode\n  When de medewerker een concept opslaat en daarna indient\n  And de reviewcontext wisselt naar administrator\n  Then een verouderde correctie-aanvraag wordt geblokkeerd met stale-version\n  Then een correctie-aanvraag zonder toelichting wordt door de server geweigerd (sectie 20: UI-verbergen is geen autorisatie)\n  When de administrator een geldige correctie-aanvraag uitvoert\n  Then een tweede correctie op dezelfde versie wordt geweigerd\n  And de context wisselt terug naar medewerker voor herindiening\n  Then een medewerker mag geen admin-reviewactie uitvoeren\n  When de medewerker na correctie opnieuw indient\n  And de context wisselt opnieuw naar administrator voor goedkeuring\n  Then een verouderde approve-aanvraag wordt geblokkeerd met stale-version\n  And heeft de geweigerde poging geen goedkeuringsmail in de wachtrij gezet\n  When de administrator met juiste versie goedkeurt\n  And staat er nu precies één goedkeuringsmail in de wachtrij voor déze goedkeuringsversie\n  Then read-back toont approved status met volledige audit- en correctiehistorie\n  And een goedkeuring zonder factuur server-side kan worden heropend voor correctie\n  Then krijgt de medewerker ook bij een heropening ná goedkeuring een nieuwe, ongelezen melding\n  And cleanup: sessie sluiten voor testisolatie"
+          "gherkin": ""
         },
         {
           "id": "TS-REV-API-H-006",
@@ -431,7 +447,7 @@
           "technique": "Concurrency + toestandsovergang",
           "assertions": 10,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: gelijktijdige approve-requests door twee beheerders leveren exact één winnaar\n  Given een medewerker een urenstaat heeft ingediend in een schrijfbare testperiode\n  When twee beheerders tegelijk dezelfde urenstaat proberen goed te keuren\n  Then wordt met Playwright-assertions bevestigd dat gelijktijdige approve-requests door twee beheerders leveren exact één winnaar"
+          "gherkin": ""
         }
       ]
     },
