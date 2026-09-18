@@ -1,8 +1,24 @@
 {
-  "appVersion": "2.0.167",
-  "generatedAt": "2026-09-18T11:26:04.467Z",
+  "appVersion": "2.0.168",
+  "generatedAt": "2026-09-18T13:08:42.520Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "18 sep",
+      "version": "2.0.168",
+      "wish": "Eigen vondst in eigen werk: het openbare leesantwoord van het werkbord gaf de echte naam van wie een kaart verplaatste. De kwaliteitsstraat is openbaar leesbaar op voorwaarde dat er geen persoonsgegevens in staan, maar de geschiedenis (en sinds vandaag ook de voortgang) gaf aan iedereen -- ook zonder inloggen -- de weergavenaam van de collega die iets deed. Dat zat er sinds 17 sep in, en erger: mijn eigen test PIPE-H-013 haalde de stand anoniem op en verwachtte daarin letterlijk \"Gio Maatsen\". De test legde het lek dus vast als gewenst gedrag. Nu dezelfde lijn als bij de mededelingen: wie niet ingelogd is, ziet \"Path-medewerker\"; ingelogd zie je wie het was. \"Pijplijn\" blijft staan, want dat is geen persoon, en juist het onderscheid tussen vanzelf en door iemand maakt de geschiedenis nuttig. Het scherm zelf toonde de namen nergens, dus daar verandert niets. PIPE-H-013 toetst nu beide kanten (equivalentieklassen op de lezer: anoniem geen naam, en nergens in het hele anonieme antwoord; ingelogd wel), tegenproef: het afschermen uitgezet -> rood (\"Gio Maatsen\" in plaats van \"Path-medewerker\"); teruggezet -> groen.",
+      "cases": [
+        {
+          "id": "PIPE-H-013",
+          "title": "een kaart verplaatsen verandert de stand echt en blijft staan na herladen",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Toestandsovergangtest op het bord (kolom naar kolom) met controle op de server in plaats van op het scherm + herstelbaarheid na herladen zonder browseropslag + tweede lezer ziet dezelfde stand + equivalentieklassen op de lezer (anoniem ziet geen naam, ingelogd wel)",
+          "assertions": 21,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een kaart verplaatsen verandert de stand echt en blijft staan na herladen\n  Given anoniem verplaatsen wordt geweigerd\n  Given de opslag kent deze kaart nog niet\n  When de kaart naar In uitvoering wordt gesleept\n  Then weet de server het, met een geschiedenisregel erbij\n  And blijft hij daar na herladen, ook zonder de browseropslag\n  And een tweede lezer ziet dezelfde stand\n  And de kaart gaat terug, zodat deze case geen sporen achterlaat"
+        }
+      ]
+    },
     {
       "date": "18 sep",
       "version": "2.0.167",
@@ -206,8 +222,8 @@
           "id": "PIPE-H-013",
           "title": "een kaart verplaatsen verandert de stand echt en blijft staan na herladen",
           "feature": "tests/playwright/features/pipeline-demo.feature",
-          "technique": "Toestandsovergangtest op het bord (kolom naar kolom) met controle op de server in plaats van op het scherm + herstelbaarheid na herladen zonder browseropslag + tweede lezer ziet dezelfde stand",
-          "assertions": 19,
+          "technique": "Toestandsovergangtest op het bord (kolom naar kolom) met controle op de server in plaats van op het scherm + herstelbaarheid na herladen zonder browseropslag + tweede lezer ziet dezelfde stand + equivalentieklassen op de lezer (anoniem ziet geen naam, ingelogd wel)",
+          "assertions": 21,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: een kaart verplaatsen verandert de stand echt en blijft staan na herladen\n  Given anoniem verplaatsen wordt geweigerd\n  Given de opslag kent deze kaart nog niet\n  When de kaart naar In uitvoering wordt gesleept\n  Then weet de server het, met een geschiedenisregel erbij\n  And blijft hij daar na herladen, ook zonder de browseropslag\n  And een tweede lezer ziet dezelfde stand\n  And de kaart gaat terug, zodat deze case geen sporen achterlaat"
         }
@@ -222,8 +238,8 @@
           "id": "PIPE-H-013",
           "title": "een kaart verplaatsen verandert de stand echt en blijft staan na herladen",
           "feature": "tests/playwright/features/pipeline-demo.feature",
-          "technique": "Toestandsovergangtest op het bord (kolom naar kolom) met controle op de server in plaats van op het scherm + herstelbaarheid na herladen zonder browseropslag + tweede lezer ziet dezelfde stand",
-          "assertions": 19,
+          "technique": "Toestandsovergangtest op het bord (kolom naar kolom) met controle op de server in plaats van op het scherm + herstelbaarheid na herladen zonder browseropslag + tweede lezer ziet dezelfde stand + equivalentieklassen op de lezer (anoniem ziet geen naam, ingelogd wel)",
+          "assertions": 21,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: een kaart verplaatsen verandert de stand echt en blijft staan na herladen\n  Given anoniem verplaatsen wordt geweigerd\n  Given de opslag kent deze kaart nog niet\n  When de kaart naar In uitvoering wordt gesleept\n  Then weet de server het, met een geschiedenisregel erbij\n  And blijft hij daar na herladen, ook zonder de browseropslag\n  And een tweede lezer ziet dezelfde stand\n  And de kaart gaat terug, zodat deze case geen sporen achterlaat"
         }
@@ -422,7 +438,7 @@
           "technique": "Twee-rollentest (beheerder versus medewerker op dezelfde mededeling) + negatieve inhoudscontrole op naamlekken",
           "assertions": 10,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: een medewerker ziet nooit welke beheerder een mededeling stuurde\n  Given de administrator (Gio Maatsen) een mededeling stuurt aan een andere testmedewerker (Brian)\n  When de flow voor ANN-N-011 wordt uitgevoerd\n  Then ziet de administrator zelf zijn eigen echte naam als afzender"
+          "gherkin": ""
         }
       ]
     },
