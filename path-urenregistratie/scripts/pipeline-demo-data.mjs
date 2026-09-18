@@ -84,7 +84,16 @@ function zonderPersoonsgegevensDiep(waarde) {
   }
   return waarde;
 }
-const cells = (line) => line.split('|').slice(1, -1).map((c) => c.trim().replace(/\*\*/g, ''));
+// Een pipe in de tekst staat in de bron als \| (Markdown-ontsnapping). Die hoort
+// geen nieuwe kolom te beginnen: op 18 sep brak "`| head`" twee regels, waarna de
+// rest van de zin als versienummer op het bord verscheen.
+const cells = (line) => line.replace(/\\\|/g, '\u0000').split('|').slice(1, -1)
+  .map((c) => c.replace(/\u0000/g, '|').trim().replace(/\*\*/g, ''));
+
+// De versiekolom bevat soms meer dan een nummer ("main 2.0.106", "2.0.77-2.0.90").
+// Voor het bord en het Releases-tabblad telt het eerste versienummer; staat er
+// geen in, dan blijft de tekst zelf staan (bijvoorbeeld "werkwijze").
+const versieUit = (cel) => (String(cel).match(/\d+\.\d+\.\d+/) || [cel])[0];
 
 function tableRows(markdown, heading) {
   const start = markdown.indexOf(`\n## ${heading}`);
@@ -135,7 +144,7 @@ function build() {
     const ids = [...new Set(wish.match(CASE_ID) || [])].filter((id) => features.has(id));
     const volledig = index < GHERKIN_VOLLEDIG_TOT;
     return {
-      date, version, wish,
+      date, version: versieUit(version), wish,
       cases: ids.map((id) => {
         const c = features.get(id);
         return volledig ? c : { ...c, gherkin: '' };

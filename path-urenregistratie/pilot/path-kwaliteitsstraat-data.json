@@ -1,11 +1,27 @@
 {
-  "appVersion": "2.0.172",
-  "generatedAt": "2026-09-18T15:42:37.542Z",
+  "appVersion": "2.0.173",
+  "generatedAt": "2026-09-18T18:23:34.765Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
       "date": "18 sep",
-      "version": "2.0.169, correctie 2.0.171, live controle 2.0.172",
+      "version": "2.0.173",
+      "wish": "Eigen controle met screenshots van de kwaliteitsstraat op TEST, drie vondsten. (1) Op een telefoon (390px) viel stap 4 van de stappenbalk in zijn eentje naar een tweede regel en liep het verbindingslijntje rechts uit beeld: elke stap had minstens 104px nodig, vier stappen passen niet in ruim 340px. Opgelost door die minimumbreedte op smalle schermen op te heffen, met vier gelijke kolommen zodat de labels netjes onder de bolletjes staan. (2) De namen van de tabbladen werden afgekapt (\"Kennisba…\", \"Testbehee…\") doordat de tellers ruimte innamen; onder 430px valt de teller weg, het aantal staat binnen elk scherm ook boven de kolommen. PIPE-N-001 meet nu beide: geen afgekapte tabbladnaam, en de vier stappen op één regel binnen beeld. Tegenproeven: tellers terug -> rood op de afgekapte namen; de stappenregels weg -> rood op twee regels, precies het beeld van de screenshot. Eerlijk erbij: toen ik alleen de grid-regel weghaalde bleef het groen -- het opheffen van de minimumbreedte is wat het oplost, de grid maakt de kolommen alleen gelijk. (3) Mijn eigen fout in deze wensenlijst: twee regels van vandaag bevatten de tekst \"`| head`\" met een losse pipe, en die breekt een Markdown-tabelrij -- de rest van de zin kwam daardoor als versienummer op het bord en op het Releases-tabblad terecht. Ook had ik bij de .htaccess-fix toelichting in de versiekolom gezet. Hersteld, en de generator leest een ontsnapte | voortaan goed en haalt het versienummer uit de cel (\"main 2.0.106\" hoort bij 2.0.106 op het Releases-tabblad); cellen zonder nummer, zoals \"werkwijze\", blijven wat ze zijn.",
+      "cases": [
+        {
+          "id": "PIPE-N-001",
+          "title": "de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole",
+          "assertions": 20,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de Kennisbank op de telefoon wordt geopend\n  Then tekent de Living Doc tien regels per keer, lokaal vóór echt, en bewaart hij er hooguit 25\n  And de pagina heeft geen horizontale overflow of gedeelde appcode"
+        }
+      ]
+    },
+    {
+      "date": "18 sep",
+      "version": "2.0.169",
       "wish": "Eigen vondst, dringend: interne bestanden waren op TEST én PROD gewoon via internet op te halen. De uitrol zet de hele repository in de webmap, en .htaccess schermde alleen bestanden af die met een punt beginnen. Daardoor gaven onder meer /GIO-WENSEN.md, /LIVING-DOC.md, /CODEX_HANDOFF.md, /TEST-ROLES.md, /environments/test.env en /environments/prod.env gewoon HTTP 200, ook op https://uren.pathconsultancy.nl (bevestigd door main). Ook de beheerscripts in server/scripts (waaronder reset, back-up en herstel) waren via een webadres te bereiken, en ik telde 22 van de 25 die zelf niet controleren of ze via het web worden aangeroepen -- die telling was te hoog (gecorrigeerd door main): 18 daarvan laden cli-bootstrap.php, dat die controle al doet; echt onbeschermd waren er 4, en die heeft main in 2.0.170 dichtgezet, bewezen met een echte niet-CLI-aanroep. Ik had alleen gezocht naar de controle in het script zelf en niet naar wat het inlaadt. Aangeroepen via het web heb ik ze bewust NIET, omdat dat TEST had kunnen resetten. Geen werkende wachtwoorden gelekt: alle wachtwoordvelden in de omgevingsbestanden zijn leeg of placeholder (nagekeken zonder de waarden te tonen). Wel openbaar: volledige namen van medewerkers met hun werkpatroon (dagen en uren), testaccounts, de opbouw van de omgevingen, en de volledige node_modules. Opgelost in .htaccess: interne bestandssoorten (md, env, sql, feature, ts, mjs, ps1, cmd, pdf, ...) en mappen (environments, tests, scripts, server/scripts, node_modules, design-mockups, agents) worden geweigerd; wat de app laadt blijft open (index.html, assets, server/api en server/auth, pilot, het ERD). Nieuwe controle scripts/webtoegang-check.mjs in npm run check leest de ECHTE regels uit .htaccess en past ze toe op alle ~6900 bestanden in de repository: 69 bestanden die de app nodig heeft moeten open staan, ~6800 interne moeten dicht. Twee tegenproeven, beide rood: de mapregel weg -> design-mockups lekt; per ongeluk js dicht -> assets/app.js breekt. Tweede deel, mijn eigen fout: de openbare projectstand van de kwaliteitsstraat (gebouwd uit GIO-WENSEN.md door mijn generator) bevatte dezelfde namen en werkpatronen. De generator leest nu wie een persoon is uit het zaaibestand van de database en vervangt namen door een rol (PO, enkele collega's) en mailadressen door \"Een testaccount\"; een nieuwe collega in het zaaibestand wordt vanzelf mee afgeschermd. Ook de handgeschreven teksten en opmerkingen in de pagina zelf noemden een naam (opmerkingen in een openbaar script zijn ook openbaar). PIPE-N-006 toetst alle openbare bronnen van de pagina (projectstand, html, script, anonieme opslag, koppelingen) tegen de volledige personenlijst; tegenproef: afscherming uit -> rood op \"projectstand noemt PO\". Wat alleen jij kunt doen: op PROD staat het nog open tot jij deze versie naar productie brengt. Het aandachtspunt dat de beheerscripts zelf ook moeten weigeren als ze via het web draaien, heeft main opgepakt (2.0.170). Live nagelopen op TEST na de uitrol van 2.0.171 met het nieuwe `npm run web:live`: vóór de uitrol gaven 10 interne adressen 200 (nulmeting, bewijst dat de controle een open bestand herkent); erna geven alle 11 interne adressen 403 en de 10 adressen die de app en de kwaliteitsstraat laden gewoon 200. De uitgerolde projectstand bevat geen enkele naam of testmailadres meer, en de API's werken nog (me, csrf en de opslag 200; mededelingen 401 zonder inloggen, zoals hoort). Op PROD staat het nog open tot Promote Prod; daarna: `npm run web:live -- https://uren.pathconsultancy.nl`. Het script roept de beheerscripts in server/scripts bewust niet aan: als de afscherming daar ooit toch zou falen, zou een controle het script uitvoeren.",
       "cases": [
         {
@@ -153,7 +169,7 @@
           "title": "de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon",
           "feature": "tests/playwright/features/pipeline-demo.feature",
           "technique": "Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole",
-          "assertions": 16,
+          "assertions": 20,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de Kennisbank op de telefoon wordt geopend\n  Then tekent de Living Doc tien regels per keer, lokaal vóór echt, en bewaart hij er hooguit 25\n  And de pagina heeft geen horizontale overflow of gedeelde appcode"
         }
@@ -161,8 +177,8 @@
     },
     {
       "date": "18 sep",
-      "version": "head` erachter laat de testserver als wees achter op poort 8000, en een tegenproef-injectie via `node -e` met \\n landt stil niet in een bestand met CRLF-regeleinden (dat gaf hier eerst een volkomen verkeerde diagnose, tot ik de injectie natrok).",
-      "wish": "Smoke-test viel om op deze werkplek, niet in de pipeline -- uitgezocht in plaats van overgedaan. De volledige smoke stopte drie keer op \"klanturenstaat opgeslagen als concept\" na 4 seconden. Eerst gemeten wat die stappen echt kosten (23,3 s voor het concept, 14,0 s voor indienen, 16,2 s voor het PNG-concept), en pas daarna iets veranderd. Het ligt niet aan de app: dit testblok zet de kalendermaand zelf op het jaar 9999 om vrije navigatie te toetsen, en jsdom betaalt dat met tienduizenden DOM-bevragingen -- in de pipeline (Linux) blijven diezelfde stappen ruim binnen de grens. De wachttijd staat nu op de gemeten werkelijkheid (30 s) met die meting erbij in de code. Dit is geen zachtere test: de asserties erna zijn ongewijzigd en blijft de toestand uit, dan faalt de smoke alsnog -- bewezen doordat exact dezelfde run ervoor rood was. Twee leermomenten voor mezelf vastgelegd: een testrun met `",
+      "version": "2.0.160",
+      "wish": "Smoke-test viel om op deze werkplek, niet in de pipeline -- uitgezocht in plaats van overgedaan. De volledige smoke stopte drie keer op \"klanturenstaat opgeslagen als concept\" na 4 seconden. Eerst gemeten wat die stappen echt kosten (23,3 s voor het concept, 14,0 s voor indienen, 16,2 s voor het PNG-concept), en pas daarna iets veranderd. Het ligt niet aan de app: dit testblok zet de kalendermaand zelf op het jaar 9999 om vrije navigatie te toetsen, en jsdom betaalt dat met tienduizenden DOM-bevragingen -- in de pipeline (Linux) blijven diezelfde stappen ruim binnen de grens. De wachttijd staat nu op de gemeten werkelijkheid (30 s) met die meting erbij in de code. Dit is geen zachtere test: de asserties erna zijn ongewijzigd en blijft de toestand uit, dan faalt de smoke alsnog -- bewezen doordat exact dezelfde run ervoor rood was. Twee leermomenten voor mezelf vastgelegd: een testrun met `| head` erachter laat de testserver als wees achter op poort 8000, en een tegenproef-injectie via `node -e` met \\n landt stil niet in een bestand met CRLF-regeleinden (dat gaf hier eerst een volkomen verkeerde diagnose, tot ik de injectie natrok).",
       "cases": []
     },
     {
@@ -173,8 +189,8 @@
     },
     {
       "date": "17 sep",
-      "version": "head` erachter breekt de pijp af en laat de testserver als wees achter op poort 8000, wat de volgende run blokkeert -- niet meer doen.",
-      "wish": "Eigen vondst in een volledige testronde: twee cases vielen om op een projectstand die niet binnenkwam, terwijl dezelfde cases los groen waren. Uitgezocht in plaats van overgedaan: het lag niet aan de pagina maar aan de eenvoudige testserver, die verzoeken een voor een afhandelt terwijl de pagina er bij het laden drie tegelijk doet (projectstand, bordstand, wachtrij). Dat kan een echte gebruiker op een trage verbinding net zo goed overkomen, en dan stond er voorbeelddata op de pagina die juist onze echte administratie hoort te zijn. De herkansing gaat daarom van een naar twee, met oplopende wachttijd (250 ms, dan 750 ms): een server die het even druk heeft is met een tweede poging vlak erachter niet geholpen. Lukt het daarna nog niet, dan blijft de pagina dat gewoon melden. PIPE-N-005, tegenproef: terug naar een herkansing -> rood ('fallback' in plaats van 'loaded'); teruggezet -> groen. Bijvangst in mijn eigen werkwijze: een testrun met `",
+      "version": "2.0.160",
+      "wish": "Eigen vondst in een volledige testronde: twee cases vielen om op een projectstand die niet binnenkwam, terwijl dezelfde cases los groen waren. Uitgezocht in plaats van overgedaan: het lag niet aan de pagina maar aan de eenvoudige testserver, die verzoeken een voor een afhandelt terwijl de pagina er bij het laden drie tegelijk doet (projectstand, bordstand, wachtrij). Dat kan een echte gebruiker op een trage verbinding net zo goed overkomen, en dan stond er voorbeelddata op de pagina die juist onze echte administratie hoort te zijn. De herkansing gaat daarom van een naar twee, met oplopende wachttijd (250 ms, dan 750 ms): een server die het even druk heeft is met een tweede poging vlak erachter niet geholpen. Lukt het daarna nog niet, dan blijft de pagina dat gewoon melden. PIPE-N-005, tegenproef: terug naar een herkansing -> rood ('fallback' in plaats van 'loaded'); teruggezet -> groen. Bijvangst in mijn eigen werkwijze: een testrun met `| head` erachter breekt de pijp af en laat de testserver als wees achter op poort 8000, wat de volgende run blokkeert -- niet meer doen.",
       "cases": [
         {
           "id": "PIPE-N-005",
@@ -311,7 +327,7 @@
           "title": "de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon",
           "feature": "tests/playwright/features/pipeline-demo.feature",
           "technique": "Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole",
-          "assertions": 16,
+          "assertions": 20,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de Kennisbank op de telefoon wordt geopend\n  Then tekent de Living Doc tien regels per keer, lokaal vóór echt, en bewaart hij er hooguit 25\n  And de pagina heeft geen horizontale overflow of gedeelde appcode"
         }
@@ -442,7 +458,7 @@
           "title": "de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon",
           "feature": "tests/playwright/features/pipeline-demo.feature",
           "technique": "Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole",
-          "assertions": 16,
+          "assertions": 20,
           "platform": "desktop-chromium",
           "gherkin": ""
         }
@@ -1250,13 +1266,13 @@
     },
     {
       "date": "15 sep",
-      "version": "main 2.0.113-seed",
+      "version": "2.0.113",
       "wish": "Meer voorbeeldberichten: elke medewerker 15 mededelingen, 6 ingetrokken, 9 actueel, 5 ongelezen, zodat er onder Alles een tweede pagina is.",
       "cases": []
     },
     {
       "date": "16 sep",
-      "version": "Codex 2.0.115",
+      "version": "2.0.115",
       "wish": "Berichten duidelijker en de belmelding klanturenstaat opent het klanturenstaatscherm met het uploadvak klaar (NOT-H-013 met vier meldingen).",
       "cases": [
         {
@@ -1289,7 +1305,7 @@
           "title": "de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon",
           "feature": "tests/playwright/features/pipeline-demo.feature",
           "technique": "Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole",
-          "assertions": 16,
+          "assertions": 20,
           "platform": "desktop-chromium",
           "gherkin": ""
         }
@@ -1334,13 +1350,13 @@
     },
     {
       "date": "15 sep",
-      "version": "main 2.0.108 + 2.0.111",
+      "version": "2.0.108",
       "wish": "Voorbeeldmeldingen in de bel voor alle medewerkers op TEST: elk 4 ongelezen (correctie, uren invullen, goedgekeurd, klanturenstaat), tik springt naar de juiste plek.",
       "cases": []
     },
     {
       "date": "15 sep",
-      "version": "main 2.0.106",
+      "version": "2.0.106",
       "wish": "Prod-wekker slimmer: na 10 minuten alleen afbreken als main een nieuwere commit heeft dan de wachtende release; zo niet, dan blijft de stap naar productie open. Elke 5 minuten opnieuw gekeken (tot 360 min). Contractcheck met tegenproef, R45. Nog te bevestigen in de eerstvolgende echte release.",
       "cases": []
     },
@@ -1482,7 +1498,7 @@
     },
     {
       "date": "15 sep",
-      "version": "main 2.0.100",
+      "version": "2.0.100",
       "wish": "TEST-seed: 10 mededelingen, 6 ingetrokken, 4 ongelezen (main).",
       "cases": []
     },
@@ -1697,13 +1713,13 @@
     },
     {
       "date": "15 sep",
-      "version": "main 2.0.92",
+      "version": "2.0.92",
       "wish": "Prod-poort: niet binnen 10 min goedgekeurd = automatisch afbreken, TEST loopt altijd door. Werkt via force-cancel.",
       "cases": []
     },
     {
       "date": "15 sep",
-      "version": "main 2.0.84",
+      "version": "2.0.84",
       "wish": "Zwevende \"Hulp & contact\" weg op telefoon, hulp via profielmenu.",
       "cases": []
     },
@@ -1733,7 +1749,7 @@
     },
     {
       "date": "15 sep",
-      "version": "2.0.77–2.0.90",
+      "version": "2.0.77",
       "wish": "Monkey-verkenning Klassiek met vaste regressiecases KLV-N-001 t/m KLV-N-011.",
       "cases": [
         {
@@ -1758,6 +1774,12 @@
     }
   ],
   "open": [
+    {
+      "date": "18 sep",
+      "wish": "Open besluit voor PO, gevonden door herontwerp: het openbare assets/app.js bevat echte tarieven en contractvormen per medewerker met naam -- ook op PROD. https://uren.pathconsultancy.nl/assets/app.js is zonder inloggen op te halen en bevat de voorbeeldset van de demomodus. Volgens STAMGEGEVENS-EN-PLACEHOLDERS.md zijn dat de aangeleverde, echte gegevens (alleen e-mailadressen vervangen). Gemeten in het PROD-bestand, zonder de waarden te tonen: 4 medewerkernamen, 6 uurtarieven, 3 contractvormen, 7 factuuradressen van bemiddelaars, 1 IBAN en 1 KvK-nummer. IBAN en KvK zijn waarschijnlijk van het bedrijf en staan ook op facturen; tarief en contract per persoon met naam zijn wel financiële persoonsgegevens. Niet zelf aangepast: het is de kern van de demomodus, de smoke-test verwacht de gegevens, en of het echte of verzonnen waarden moeten zijn is een keuze van PO. Richtingen: (a) verzonnen tarieven, contracten en bemiddelaars in de voorbeeldset -- snelst, demo werkt hetzelfde; (b) echte gegevens alleen na inloggen van de server, nooit in de gebundelde JS; (c) de voorbeeldset in een bestand dat niet naar PROD gaat. Main doet de bouw zodra PO kiest.",
+      "who": "PO, daarna main",
+      "status": "open, wacht op besluit PO"
+    },
     {
       "date": "17 sep",
       "wish": "PATH-201/202, terug naar open na productbesluit PO: het oorspronkelijke idee (filter op afzendernaam in Berichten) bleek gebouwd op een bestaand lek -- medewerkers zagen via server/api/announcements.php de echte naam van de beheerder die een mededeling stuurde, terwijl het besluit in database/seed-demo-data.sql was dat dit altijd \"Beheerder\" moet tonen. Het lek is gerepareerd (ANN-N-011, tegenproef rood/groen, 2.0.150) los van deze wens. Met het lek dicht heeft \"filter op afzendernaam\" geen waarde meer (er is nog maar één afzenderlabel: Beheerder). Nog te beslissen: wat de wens moet worden nu de oorspronkelijke insteek vervalt -- bijvoorbeeld filteren op onderwerp/type in plaats van op wie het stuurde.",

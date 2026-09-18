@@ -739,7 +739,7 @@ De 65 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 636 Playwri
 - [PIPE-H-004] zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes — Techniek: Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole · Assertions: 26
 - [PIPE-H-003] de Kennisbank leest in de Atlassian-letterstapel op 16px met regelhoogte 24px, licht en donker — Techniek: Meting van berekende stijl (computed style) in licht en donker kleurschema · Assertions: 5
 - [PIPE-H-005] de weergaveknop kiest licht, donker of systeem en onthoudt die keuze — Techniek: Toestandsovergang over drie weergavestanden + meting van berekende stijl + persistentie na herladen · Assertions: 13
-- [PIPE-N-001] de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon — Techniek: Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole · Assertions: 16
+- [PIPE-N-001] de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon — Techniek: Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole · Assertions: 20
 - [PIPE-H-006] de Living Doc leest op vijftien pixels, in licht en in donker — Techniek: Meting van berekende stijl in licht en donker + responsive viewport (intake #45) · Assertions: 5
 
 ### Vormgevingsschakelaar (klassiek / nieuw)

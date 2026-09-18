@@ -1644,6 +1644,24 @@ test('[PIPE-N-004] tussen de mobiele en de bureaubladdrempel blijft de Confluenc
       // altijd op de rand van de balk; zonder liep het mee met de tekst (387px
       // in plaats van 376px) en dan is een bredere letter genoeg om eruit te
       // lopen.
+      // Gezien 18 sep op TEST, met een screenshot op 390px: de namen van de
+      // tabbladen werden afgekapt ("Kennisba…") en stap 4 van de stappenbalk viel
+      // in zijn eentje naar een tweede regel. Een tabblad dat binnen beeld valt,
+      // is nog geen leesbaar tabblad; daarom hier ook de tekst zelf en de regel.
+      const leesbaar = await page.evaluate(() => {
+        const namen = [...document.querySelectorAll<HTMLElement>('.workspace-tabs button > span:nth-child(2)')]
+          .map((s) => ({ naam: s.textContent!.trim(), afgekapt: s.scrollWidth > s.clientWidth + 1 }));
+        const stappen = [...document.querySelectorAll<HTMLElement>('.flow-checkpoints li')]
+          .map((li) => { const r = li.getBoundingClientRect(); return { boven: Math.round(r.top), rechts: Math.round(r.right) }; });
+        return { namen, stappen, breedte: window.innerWidth };
+      });
+      const afgekapt = leesbaar.namen.filter((n) => n.afgekapt).map((n) => n.naam);
+      expect(afgekapt, `afgekapte tabbladnamen op ${leesbaar.breedte}px`).toEqual([]);
+      expect(leesbaar.stappen).toHaveLength(4);
+      const regels = new Set(leesbaar.stappen.map((s) => s.boven));
+      expect(regels.size, `de vier stappen horen op één regel te staan (bovenkanten: ${[...regels].join(', ')})`).toBe(1);
+      for (const stap of leesbaar.stappen) expect(stap.rechts, 'geen stap buiten beeld').toBeLessThanOrEqual(leesbaar.breedte);
+
       const balkRechts = await page.evaluate(() => Math.round(document.querySelector('.workspace-tabs')!.getBoundingClientRect().right));
       await page.addStyleTag({ content: '.workspace-tabs button > span:nth-child(2) { font-size: 17px !important; }' });
       const tabsGroot = await page.evaluate(() => Array.from(document.querySelectorAll('[role="tab"]'))

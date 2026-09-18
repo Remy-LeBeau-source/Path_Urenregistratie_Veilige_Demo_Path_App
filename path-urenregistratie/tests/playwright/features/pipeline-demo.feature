@@ -226,7 +226,7 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
   @negative
   Scenario: [PIPE-N-001] de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon
     # Testtechniek: Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole
-    # Aantoonbare Playwright-assertions in deze case: 16
+    # Aantoonbare Playwright-assertions in deze case: 20
     Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid
     When de Kennisbank op de telefoon wordt geopend
     Then tekent de Living Doc tien regels per keer, lokaal vóór echt, en bewaart hij er hooguit 25

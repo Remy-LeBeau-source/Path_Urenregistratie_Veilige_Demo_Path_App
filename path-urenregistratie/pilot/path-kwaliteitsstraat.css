@@ -562,10 +562,24 @@ tr.toon-meer-rij td { padding: 6px 10px; }
   /* Krimpen mag, uitpuilen niet: zonder overflow zou de naam gewoon buiten zijn
      eigen (gekrompen) vak doorlopen en alsnog over de rand van het scherm gaan. */
   .workspace-tabs button > span:nth-child(2) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* De stappenbalk: vier stappen van minstens 104px passen niet in de ruim 340px
+     van een telefoon, dus stap 4 viel in zijn eentje naar een tweede regel en het
+     verbindingslijntje liep rechts uit beeld (gezien 18 sep op TEST). Vier gelijke
+     kolommen houden de vier stappen op één lijn; het label mag daaronder op twee
+     regels. */
+  .flow-checkpoints { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .flow-checkpoints li { min-width: 0; font-size: 10.5px; line-height: 1.25; text-wrap: balance; }
   .drop-panel, .drop-panel.wide { left: 8px; right: 8px; width: auto; }
   .living-doc li { grid-template-columns: minmax(0, 1fr); }
   .living-doc time { grid-row: 1; justify-self: start; }
   .workspace { padding: 14px 14px 30px; }
+}
+
+/* Op de smalste telefoons wint de naam van het aantal: met de tellers erbij
+   werden "Kennisbank" en "Testbeheer" afgekapt tot "Kennisba…" (gezien 18 sep).
+   Het aantal staat binnen elk scherm ook boven de kolommen. */
+@media (max-width: 430px) {
+  .workspace-tabs b { display: none; }
 }
 
 /* Jira toont op elke kaart rechtsonder wie hem oppakt. */
