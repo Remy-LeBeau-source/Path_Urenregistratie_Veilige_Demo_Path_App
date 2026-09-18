@@ -1,6 +1,6 @@
 {
-  "appVersion": "2.0.158",
-  "generatedAt": "2026-09-18T01:07:55.474Z",
+  "appVersion": "2.0.159",
+  "generatedAt": "2026-09-18T01:46:38.759Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {

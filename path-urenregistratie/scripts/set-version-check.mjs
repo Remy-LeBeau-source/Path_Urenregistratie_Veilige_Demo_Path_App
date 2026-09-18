@@ -22,7 +22,10 @@ try {
   for (const file of files.slice(2)) write(file, 'v0.0.1 ?v=0.0.1 "0.0.1" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n');
   // Een notitie in "Nieuw in de app" noemt een oude versie bewust en schuift niet mee.
   const notitie = '<li><span class="nieuw-versie">0.0.1</span></li>\r\n';
-  write("index.html", 'v0.0.1 ?v=0.0.1 "0.0.1" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n' + notitie);
+  // Een commentaarregel gemarkeerd met [versie-vast] noemt eveneens bewust een oude
+  // versie (waarin iets is ingevoerd) en mag daarom ook niet meeschuiven.
+  const vast = '<!-- ingevoerd in v0.0.1 [versie-vast] -->\r\n';
+  write("index.html", 'v0.0.1 ?v=0.0.1 "0.0.1" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n' + notitie + vast);
   copyFileSync(new URL("set-version.mjs", import.meta.url), join(fixture, "scripts/set-version.mjs"));
   // De twee lijsten moeten gelijk lopen. Zonder deze controle valt de test bij een
   // vergeten regel om op een ontbrekend bestand (ENOENT) in plaats van op een
@@ -35,7 +38,7 @@ try {
   const changed = run("0.0.2");
   assert.equal(changed.status, 0, changed.stderr);
   for (const file of files.slice(3)) assert.equal(readFileSync(join(fixture, file), "utf8"), 'v0.0.2 ?v=0.0.2 "0.0.2" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n');
-  assert.equal(readFileSync(join(fixture, "index.html"), "utf8"), 'v0.0.2 ?v=0.0.2 "0.0.2" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n' + notitie);
+  assert.equal(readFileSync(join(fixture, "index.html"), "utf8"), 'v0.0.2 ?v=0.0.2 "0.0.2" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n' + notitie + vast);
   assert.match(readFileSync(join(fixture, "package-lock.json"), "utf8"), /dependency: "0\.0\.1"/);
   assert.equal(run("--check").status, 0);
   write("tests/playwright/auth.spec.ts", "version missing\n");

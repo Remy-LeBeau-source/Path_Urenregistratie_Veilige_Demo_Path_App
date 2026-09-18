@@ -63,6 +63,12 @@ function verwerk(inhoud, oud, nieuw, maxRegel) {
     // hoort bij de versie waarin de wijziging kwam en schuift niet mee (gemeten 15 sep:
     // de notitie van 2.0.94 werd bij het ophogen 2.0.95).
     if (regel.includes('class="nieuw-versie"')) return regel;
+    // Zelfde probleem, algemener: een commentaarregel die verwijst naar de versie
+    // waarin iets is ingevoerd ("sinds vX.Y.Z") schuift anders bij elke bump mee en
+    // beweert na verloop van tijd iets dat niet meer klopt (gevonden 17 sep in de
+    // procesmeter-toelichting: die noemde nog de huidige versie in plaats van de
+    // versie van invoering). Zet [versie-vast] in zo'n regel om hem vast te zetten.
+    if (regel.includes('[versie-vast]')) return regel;
     return regel.replace(patroon, () => {
       treffers += 1;
       return nieuw;
