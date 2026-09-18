@@ -63,13 +63,14 @@ function verwerk(inhoud, oud, nieuw, maxRegel) {
     // hoort bij de versie waarin de wijziging kwam en schuift niet mee (gemeten 15 sep:
     // de notitie van 2.0.94 werd bij het ophogen 2.0.95).
     if (regel.includes('class="nieuw-versie"')) return regel;
-    // Hetzelfde geldt buiten index.html: een toelichting die zegt sinds welke
-    // versie iets bestaat, hoort bij die versie en niet bij de volgende. Zonder
-    // deze uitzondering schoof de opmerking "sinds v2.0.155" bij elke ophoging
-    // mee en beweerde hij uiteindelijk iets dat aantoonbaar niet klopt (gemeten
-    // 17 sep: 2.0.155 werd 2.0.157). Zet [versie-vast] in de regel om hem te
-    // bevriezen; dat staat in de tekst zelf, zodat de volgende lezer ziet
-    // waarom hij niet meeschuift.
+    // Hetzelfde geldt voor elke toelichting die zegt sinds welke versie iets
+    // bestaat: die hoort bij die versie en niet bij de volgende, maar schoof bij
+    // elke ophoging mee en beweerde daardoor iets dat aantoonbaar niet klopt.
+    // Twee keer onafhankelijk gevonden op 17/18 sep: in de smoke-test ("sinds
+    // v2.0.155", was 2.0.157 geworden) en in de procesmeter-toelichting in
+    // index.html (hoorde bij v1.0.73, was 2.0.158 geworden). Zet [versie-vast]
+    // in de regel om hem te bevriezen; dat staat in de tekst zelf, zodat de
+    // volgende lezer ziet waarom hij niet meeschuift.
     if (regel.includes("[versie-vast]")) return regel;
     return regel.replace(patroon, () => {
       treffers += 1;

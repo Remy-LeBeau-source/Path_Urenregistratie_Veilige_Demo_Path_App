@@ -22,9 +22,12 @@ try {
   for (const file of files.slice(2)) write(file, 'v0.0.1 ?v=0.0.1 "0.0.1" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n');
   // Een notitie in "Nieuw in de app" noemt een oude versie bewust en schuift niet mee.
   const notitie = '<li><span class="nieuw-versie">0.0.1</span></li>\r\n';
-  write("index.html", 'v0.0.1 ?v=0.0.1 "0.0.1" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n' + notitie);
-  // Een toelichting in code die zegt sinds welke versie iets bestaat, blijft
-  // staan zodra hij als [versie-vast] gemarkeerd is.
+  // Een commentaarregel gemarkeerd met [versie-vast] noemt eveneens bewust een oude
+  // versie (waarin iets is ingevoerd) en mag daarom ook niet meeschuiven. Getoetst
+  // in twee bestanden, omdat het in de praktijk in allebei misging: in opmaak
+  // (index.html) en in code (scripts/smoke-test.mjs).
+  const vast = '<!-- ingevoerd in v0.0.1 [versie-vast] -->\r\n';
+  write("index.html", 'v0.0.1 ?v=0.0.1 "0.0.1" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n' + notitie + vast);
   const vasteToelichting = '// Sinds v0.0.1 bestaat dit scherm [versie-vast]\r\n';
   write("scripts/smoke-test.mjs", 'v0.0.1 ?v=0.0.1 "0.0.1" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n' + vasteToelichting);
   copyFileSync(new URL("set-version.mjs", import.meta.url), join(fixture, "scripts/set-version.mjs"));
@@ -42,9 +45,9 @@ try {
   assert.equal(
     readFileSync(join(fixture, "scripts/smoke-test.mjs"), "utf8"),
     'v0.0.2 ?v=0.0.2 "0.0.2" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n' + vasteToelichting,
-    "een als [versie-vast] gemarkeerde toelichting hoort niet mee te schuiven"
+    "een als [versie-vast] gemarkeerde toelichting in code hoort niet mee te schuiven"
   );
-  assert.equal(readFileSync(join(fixture, "index.html"), "utf8"), 'v0.0.2 ?v=0.0.2 "0.0.2" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n' + notitie);
+  assert.equal(readFileSync(join(fixture, "index.html"), "utf8"), 'v0.0.2 ?v=0.0.2 "0.0.2" 127.0.0.1 10.0.1 0.0.10 0.0.1.2\r\n' + notitie + vast);
   assert.match(readFileSync(join(fixture, "package-lock.json"), "utf8"), /dependency: "0\.0\.1"/);
   assert.equal(run("--check").status, 0);
   write("tests/playwright/auth.spec.ts", "version missing\n");
