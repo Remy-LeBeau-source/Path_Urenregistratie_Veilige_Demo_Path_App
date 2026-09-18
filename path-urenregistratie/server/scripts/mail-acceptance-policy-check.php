@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/cli-bootstrap.php';
 require_once __DIR__ . '/../mail/acceptance.php';
 
 $environmentKeys = ['PATH_APP_ENVIRONMENT', 'PLAYWRIGHT_ENVIRONMENT', 'APP_ENV', 'PLAYWRIGHT_STAGE'];

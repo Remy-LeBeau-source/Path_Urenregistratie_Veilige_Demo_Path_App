@@ -1,8 +1,14 @@
 {
-  "appVersion": "2.0.168",
-  "generatedAt": "2026-09-18T13:08:42.520Z",
+  "appVersion": "2.0.170",
+  "generatedAt": "2026-09-18T13:54:21.129Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "18 sep",
+      "version": "2.0.170",
+      "wish": "Vervolg op de herontwerp-vondst (open repository-boom op TEST/PROD): defense-in-depth voor server/scripts. De herontwerp-sessie meldde dat 22 van de 25 CLI-scripts niet controleren of ze via de opdrachtregel draaien -- .htaccess weigert die map nu wel, maar dat is één laag. Bij nazoeken bleken 18 van die 22 al indirect beschermd: ze laden cli-bootstrap.php, dat zelf ops_require_cli() uitvoert zodra het bestand wordt ingelezen. Echt onbeschermd waren er 4 (kwaliteitsstraat-opslag-check, mail-acceptance-policy-check, mail-environment-policy-check, test-reset-policy-check) -- alle vier krijgen nu dezelfde require. Bewezen met php-cgi (een echte niet-CLI SAPI, niet alleen beredeneerd): alle vier weigeren nu met \"CLI only\", en draaien nog gewoon via de opdrachtregel.",
+      "cases": []
+    },
     {
       "date": "18 sep",
       "version": "2.0.168",
@@ -395,7 +401,7 @@
           "technique": "Regressiecontrole na hernoeming: oude URL blijft bereikbaar en verwijst door (meta-refresh) naar de nieuwe naam",
           "assertions": 6,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de flow voor PIPE-N-003 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt"
+          "gherkin": ""
         },
         {
           "id": "PIPE-H-001",
@@ -404,7 +410,7 @@
           "technique": "Datagedreven vergelijking (pagina versus pilot/path-kwaliteitsstraat-data.json) + traceerbaarheid over drie projecties",
           "assertions": 38,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin\n  Given de zelfstandige TEST-only pipelinepagina met de echte projectstand\n  When de pagina is geladen, staan de vier fasen en de eerste echte opleveringen op het bord\n  And de zoekbalk vindt ook een oplevering die buiten de eerste lading valt\n  And Kennisbank en Testbeheer projecteren dezelfde echte cases, met paginering in plaats van een afkap\n  Then wordt met Playwright-assertions bevestigd dat de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin"
+          "gherkin": ""
         },
         {
           "id": "PIPE-H-004",
@@ -413,7 +419,7 @@
           "technique": "Equivalentieklassen op filters + toestandsovergang van het detailpaneel + sorteercontrole",
           "assertions": 26,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: zoeken, filteren, sorteren en het detailpaneel werken in alle drie de werkruimtes\n  Given de pipelinepagina met de echte projectstand\n  When er wordt gezocht, gefilterd, gesorteerd en een kaart wordt geopend\n  Then tonen bord, kennisbank en testbeheer telkens de bijbehorende selectie"
+          "gherkin": ""
         },
         {
           "id": "PIPE-N-001",
@@ -422,7 +428,7 @@
           "technique": "Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole",
           "assertions": 16,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de Kennisbank op de telefoon wordt geopend\n  Then tekent de Living Doc tien regels per keer, lokaal vóór echt, en bewaart hij er hooguit 25\n  And de pagina heeft geen horizontale overflow of gedeelde appcode"
+          "gherkin": ""
         }
       ]
     },
