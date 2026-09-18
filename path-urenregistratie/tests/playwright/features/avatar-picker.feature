@@ -44,7 +44,7 @@ Feature: Avatarkiezer in het profielmenu
   @happy
   Scenario: [AVATAR-H-005] een avatar kiezen is direct zichtbaar, sluit het menu niet, en blijft staan na een echte paginaherlading
     # Testtechniek: Toestandsovergang
-    # Aantoonbare Playwright-assertions in deze case: 6
+    # Aantoonbare Playwright-assertions in deze case: 5
     Given avatarkiezer in het profielmenu is voorbereid
     When een andere avatar dan de huidige wordt aangetikt
     Then verschijnt de keuze meteen, blijft het menu open, en is er geen aparte opslaan-knop nodig
