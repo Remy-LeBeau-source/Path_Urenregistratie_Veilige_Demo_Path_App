@@ -47,8 +47,42 @@ if ($omgeving === 'production') {
 
 $methode = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
 
+/**
+ * Namen alleen voor wie ingelogd is.
+ *
+ * Lezen staat open zolang deze pagina openbaar is, en dan horen er geen
+ * persoonsgegevens in het antwoord te staan. Wie een kaart verplaatste is de
+ * naam van een collega; een voorbijganger krijgt daarom alleen te zien DAT het
+ * een mens was, of dat het vanzelf ging. Ingelogd zie je wie het was -- dezelfde
+ * lijn als bij de mededelingen, waar een medewerker "Beheerder" ziet en de
+ * beheerder zelf de echte naam.
+ *
+ * "Pijplijn" en "Controlescript" zijn geen personen en blijven staan: juist dat
+ * onderscheid (vanzelf of door iemand) is wat de geschiedenis nuttig maakt.
+ *
+ * @param list<array<string,mixed>>|array<string,array<string,mixed>> $regels
+ */
+function store_zonder_namen(array $regels): array
+{
+    $geenPersoon = ['Pijplijn', 'Controlescript'];
+    foreach ($regels as $sleutel => $regel) {
+        if (!is_array($regel) || !isset($regel['by'])) {
+            continue;
+        }
+        if (!in_array((string)$regel['by'], $geenPersoon, true)) {
+            $regels[$sleutel]['by'] = 'Path-medewerker';
+        }
+    }
+
+    return $regels;
+}
+
 if ($methode === 'GET') {
     $stand = opslag_lees($pad);
+    if (kwaliteitsstraat_gebruiker() === null) {
+        $stand['historie'] = store_zonder_namen($stand['historie']);
+        $stand['voortgang'] = store_zonder_namen($stand['voortgang'] ?? []);
+    }
     store_antwoord(200, [
         'environment' => $omgeving,
         // Welke achterkant dit antwoord leverde. Zichtbaar maken is het punt:

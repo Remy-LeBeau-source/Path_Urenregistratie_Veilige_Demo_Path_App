@@ -476,9 +476,19 @@ test.describe('Path Pipeline TEST-demo', () => {
       expect(regel, 'de verplaatsing staat in de geschiedenis').toBeTruthy();
       expect(regel.from).toBe('done');
       expect(regel.to).toBe('doing');
-      // Wie het deed komt van de server, niet uit het verzoek: anders is de
-      // geschiedenis waardeloos zodra iemand zijn eigen naam mag invullen.
-      expect(regel.by, 'de geschiedenis noemt de ingelogde gebruiker').toBe('Gio Maatsen');
+      // Dit antwoord is ANONIEM opgehaald, en deze pagina is openbaar: dan hoort
+      // er geen naam van een collega in te staan. Tot 18 sep verwachtte deze
+      // regel hier letterlijk "Gio Maatsen" -- de test legde daarmee een lek vast
+      // als gewenst gedrag. Wel zichtbaar blijft DAT een mens het deed.
+      expect(regel.by, 'een voorbijganger ziet geen naam').toBe('Path-medewerker');
+      expect(JSON.stringify(stand), 'nergens in het anonieme antwoord een naam').not.toContain('Gio Maatsen');
+
+      // Ingelogd zie je wel wie het was. Wie het deed komt van de server, niet
+      // uit het verzoek: anders is de geschiedenis waardeloos zodra iemand zijn
+      // eigen naam mag invullen.
+      const ingelogd = await (await page.request.get(store)).json();
+      const eigenRegel = ingelogd.historie.find((h: { key: string }) => h.key === sleutel);
+      expect(eigenRegel.by, 'ingelogd noemt de geschiedenis de echte gebruiker').toBe('Gio Maatsen');
     });
 
     await test.step('And blijft hij daar na herladen, ook zonder de browseropslag', async () => {
