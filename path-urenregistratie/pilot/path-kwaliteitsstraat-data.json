@@ -1,6 +1,6 @@
 {
   "appVersion": "2.0.163",
-  "generatedAt": "2026-09-18T07:44:03.570Z",
+  "generatedAt": "2026-09-18T07:59:40.722Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
@@ -18,6 +18,28 @@
           "gherkin": "Scenario: de stappenbalk toont echte voortgang van de pijplijn en beweegt mee zonder herladen\n  Given anoniem voortgang melden wordt geweigerd\n  And een fase buiten 0 tot en met 4 wordt geweigerd\n  Then staat de balk op de simulatie zolang er niets loopt\n  When de pijplijn stap voor stap voortgang meldt\n  And schuift de kaart vanzelf mee met de fase\n  And laat fase 0 de balk weer los"
         }
       ]
+    },
+    {
+      "date": "18 sep",
+      "version": "2.0.161",
+      "wish": "Marc de Roon meldde: avatarkiezer sluit meteen op mobiel, geen avatar te kiezen. Het uitklappen van het twaalf-avatars-raster maakt het profielmenu op mobiel flink hoger (vaste positionering + eigen scrollbalk), wat een scroll-event geeft. Zonder markering dat dit een eigen hertekening was, sloot de bestaande scroll-sluitlogica (bedoeld voor een echte gebruikersscroll) het hele profielmenu meteen weer -- nog voor je iets kon aantikken. Zelfde patroon als eerder al bestond voor het openen van het menu zelf, alleen was de avatarkiezer daar destijds niet in meegenomen. AVATAR-H-008 nieuw (dwingt het scroll-event na de eigen genadeperiode af, bewijst dat het menu openblijft), avatar-picker.spec.ts draait nu ook op mobile-chrome/mobile-safari (stond alleen op desktop, dus dit gat was nooit gedekt). Tegenproef: fix teruggedraaid -> rood; teruggezet -> groen (ook echt met een scroll-event, niet alleen de klik zelf).",
+      "cases": [
+        {
+          "id": "AVATAR-H-008",
+          "title": "het openen van de avatarkiezer overleeft een scroll-event dat de eigen hoogtewijziging veroorzaakt",
+          "feature": "tests/playwright/features/avatar-picker.feature",
+          "technique": "Grenswaardenanalyse",
+          "assertions": 4,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: het openen van de avatarkiezer overleeft een scroll-event dat de eigen hoogtewijziging veroorzaakt\n  Given avatarkiezer in het profielmenu is voorbereid\n  When de avatarkiezer wordt geopend en dat, net als op mobiel, meteen een scroll-event oplevert\n  Then blijven het profielmenu en de avatarkiezer open"
+        }
+      ]
+    },
+    {
+      "date": "18 sep",
+      "version": "2.0.161",
+      "wish": "Marc de Roon meldde: \"Standaardweek vullen\" geeft hem op TEST steeds weer 40 uur i.p.v. 36, ondanks de fix in 2.0.153. Oorzaak gevonden met een echte database, niet alleen code lezen: elke TEST-uitrol (en elke Playwright-testrun) draait na de migraties een gedeelde-baseline-reset die de medewerkerstabel opnieuw zaait. Migratie 039 (het echte 36-uurpatroon van Marc/Brian/Shawn) stond niet in de lijst met bestanden die die reset na het zaaien herstelt -- exact hetzelfde gat dat al eerder voor migratie 038 was gevonden en opgelost, alleen was 039 er nooit aan toegevoegd toen hij bijkwam. Tegenproef met een echte database: reset zonder de regel -> Marc terug naar 40 uur/geen dagpatroon (en Shawn terug naar zijn oude, foute maandag-vrij-patroon); reset met de regel -> alle vier blijven op hun juiste patroon. test-reset-policy-check.php uitgebreid met een eigen controle die dit vastlegt.",
+      "cases": []
     },
     {
       "date": "18 sep",
@@ -452,7 +474,7 @@
           "technique": "Grenswaardenanalyse op viewportbreedte (net onder/boven de drempel, plus de standaard testbreedte als vaste regressie) + reproductie van \"Bureaubladsite aanvragen\"",
           "assertions": 13,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: tussen de mobiele en de bureaubladdrempel blijft de Confluence-kolom leesbaar breed\n  Given 1200px (net onder de drempel): de lay-out is gestapeld en breed genoeg om te lezen\n  When de viewport 1px breder wordt (1201px), then komt de zijbalk terug zonder de kolom kapot te knijpen\n  And op 1280px, de standaard testbreedte van deze hele suite, blijft de zijbalk zichtbaar en de kolom leesbaar\n  And ook op een gewoon breed bureaubladscherm (1600px) is de kolom nog steeds leesbaar breed\n  Then wordt met Playwright-assertions bevestigd dat tussen de mobiele en de bureaubladdrempel blijft de Confluence-kolom leesbaar breed"
+          "gherkin": ""
         }
       ]
     },
@@ -468,7 +490,7 @@
           "technique": "API-contract + equivalentieklasse",
           "assertions": 3,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: config voorbeeld bevat voorbereide CSP/CORS/HSTS flags\n  Given authenticatie- en API-beveiliging is voorbereid\n  When de flow voor SEC-H-007 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat config voorbeeld bevat voorbereide CSP/CORS/HSTS flags"
+          "gherkin": ""
         },
         {
           "id": "SEC-H-008",
@@ -477,7 +499,7 @@
           "technique": "API-contract + equivalentieklasse",
           "assertions": 5,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: draaiende server zet de vaste beveiligingsheaders echt op elk antwoord\n  Given een willekeurig, niet-geauthenticeerd endpoint\n  When de client dat endpoint bevraagt\n  Then staan de vaste beveiligingsheaders echt op het antwoord"
+          "gherkin": ""
         }
       ]
     },

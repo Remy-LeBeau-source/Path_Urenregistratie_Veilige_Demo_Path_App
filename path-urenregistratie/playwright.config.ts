@@ -89,14 +89,14 @@ export default defineConfig({
       use: {
         ...devices['Pixel 7'],
       },
-      testMatch: ['**/mobile-ui.spec.ts', '**/skin.spec.ts', '**/business-workflows-*.spec.ts', '**/dashboard*.spec.ts', '**/help-widget.spec.ts', '**/accessibility.spec.ts', '**/auth.spec.ts', '**/invoices.spec.ts', '**/pilot-page.spec.ts', '**/timesheet-review-ui.spec.ts'],
+      testMatch: ['**/mobile-ui.spec.ts', '**/skin.spec.ts', '**/business-workflows-*.spec.ts', '**/dashboard*.spec.ts', '**/help-widget.spec.ts', '**/accessibility.spec.ts', '**/auth.spec.ts', '**/invoices.spec.ts', '**/pilot-page.spec.ts', '**/timesheet-review-ui.spec.ts', '**/avatar-picker.spec.ts'],
     },
     {
       name: 'mobile-safari',
       use: {
         ...devices['iPhone 13'],
       },
-      testMatch: ['**/mobile-ui.spec.ts', '**/skin.spec.ts', '**/business-workflows-*.spec.ts', '**/dashboard*.spec.ts', '**/help-widget.spec.ts', '**/accessibility.spec.ts', '**/auth.spec.ts', '**/invoices.spec.ts', '**/pilot-page.spec.ts', '**/timesheet-review-ui.spec.ts'],
+      testMatch: ['**/mobile-ui.spec.ts', '**/skin.spec.ts', '**/business-workflows-*.spec.ts', '**/dashboard*.spec.ts', '**/help-widget.spec.ts', '**/accessibility.spec.ts', '**/auth.spec.ts', '**/invoices.spec.ts', '**/pilot-page.spec.ts', '**/timesheet-review-ui.spec.ts', '**/avatar-picker.spec.ts'],
     },
     // Fase 17-audit (13 sep): geen enkel project draaide op een tablet-breedte
     // (768x1024, tussen mobiel en desktop in) -- de opdracht vraagt dit expliciet.

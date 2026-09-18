@@ -30,6 +30,8 @@ And("gaat één stap terug weer naar een volle pagina van twaalf");
 When("een andere avatar dan de huidige wordt aangetikt");
 Then("verschijnt de keuze meteen, blijft het menu open, en is er geen aparte opslaan-knop nodig");
 And("staat dezelfde avatar er nog na een echte paginaherlading");
+When("de avatarkiezer wordt geopend en dat, net als op mobiel, meteen een scroll-event oplevert");
+Then("blijven het profielmenu en de avatarkiezer open");
 When("de flow voor AVATAR-N-001 wordt uitgevoerd");
 Then("is de achtergrond van het vinkje mint en de tekstkleur navy, geen wit");
 When("de flow voor AVATAR-H-006 wordt uitgevoerd");

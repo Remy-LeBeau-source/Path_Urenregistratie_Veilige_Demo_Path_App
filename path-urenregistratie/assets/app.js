@@ -5597,7 +5597,15 @@ function toggleAvatarPickerPanel() {
   const openen = panel.hidden;
   panel.hidden = !openen;
   trigger.setAttribute("aria-expanded", String(openen));
-  if (openen) renderAvatarPickerGrid();
+  if (openen) {
+    renderAvatarPickerGrid();
+    // Zelfde reden als bij toggleTopbarPopover: het raster met twaalf avatars
+    // maakt het profielmenu op mobiel flink hoger, wat een scroll-event geeft
+    // (vaste positionering + eigen scrollbalk). Zonder deze markering sloot dat
+    // scroll-event het hele profielmenu meteen weer, nog voor je iets kon
+    // kiezen -- gemeld op mobiel (17 sep).
+    markLayoutRender();
+  }
 }
 
 function stapAvatarPickerPagina(richting) {
