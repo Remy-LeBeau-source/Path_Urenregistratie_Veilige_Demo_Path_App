@@ -1,6 +1,6 @@
 {
   "name": "path-urenregistratie",
-  "version": "2.0.160",
+  "version": "2.0.161",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -59,7 +59,8 @@
     "docs:refresh": "npm run docs:sync && npm run test:e2e && npm run allure:generate && npm run docs:bundle",
     "pipeline:data": "node scripts/pipeline-demo-data.mjs",
     "intake": "node scripts/pipeline-intake-poll.mjs",
-    "intake:watch": "node scripts/pipeline-intake-watch.mjs"
+    "intake:watch": "node scripts/pipeline-intake-watch.mjs",
+    "intake:voortgang": "node scripts/pipeline-voortgang.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",

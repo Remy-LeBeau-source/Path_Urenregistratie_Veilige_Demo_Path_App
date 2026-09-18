@@ -333,6 +333,78 @@
   // kolom, nooit over de inhoud.
   var standUitOpslag = {};
 
+  // Waar elke wens in de straat staat, zoals de server het weet. Dit vervangt de
+  // gesimuleerde voortgang: de pijplijn meldt hier zijn stappen, en de pagina
+  // toont wat er echt gebeurd is in plaats van een dobbelsteen.
+  var voortgangUitOpslag = {};
+
+  function neemVoortgangOver(nieuw) {
+    if (!nieuw || typeof nieuw !== 'object') return false;
+    var veranderd = false;
+    Object.keys(nieuw).forEach(function (sleutel) {
+      var regel = nieuw[sleutel];
+      if (!regel || typeof regel.fase !== 'number') return;
+      var vorige = voortgangUitOpslag[sleutel];
+      if (!vorige || vorige.fase !== regel.fase || vorige.toelichting !== regel.toelichting) veranderd = true;
+      voortgangUitOpslag[sleutel] = regel;
+    });
+    return veranderd;
+  }
+
+  // De wens die nu onderhanden is: de hoogste fase die nog niet afgerond is.
+  // Staat alles op 4 (of op 0), dan loopt er niets en toont de balk dat ook.
+  function lopendeWens() {
+    var beste = null;
+    Object.keys(voortgangUitOpslag).forEach(function (sleutel) {
+      var regel = voortgangUitOpslag[sleutel];
+      if (!regel || regel.fase < 1 || regel.fase > 4) return;
+      if (!beste || String(regel.at || '') > String(beste.at || '')) beste = regel;
+    });
+    return beste;
+  }
+
+  // Meebewegen zonder te herladen. Opzettelijk eenvoudig: elke tien seconden de
+  // stand ophalen, en alleen opnieuw tekenen als er echt iets veranderd is --
+  // anders springt de pagina onder je handen weg terwijl je aan het lezen bent.
+  //
+  // Alleen als het tabblad zichtbaar is. Een pagina die op de achtergrond blijft
+  // pollen kost de server verzoeken voor niemand, en op een telefoon ook batterij.
+  var MEEBEWEGEN_MS = 10000;
+  var meebewegenTimer = null;
+
+  function haalStandOpnieuw() {
+    if (document.hidden) return;
+    fetch(STORE_URL, { cache: 'no-store' }).then(function (antwoord) {
+      if (!antwoord.ok) throw new Error('opslag ' + antwoord.status);
+      return antwoord.json();
+    }).then(function (json) {
+      var veranderd = false;
+      var items = (json && json.items) || {};
+      Object.keys(items).forEach(function (sleutel) {
+        var status = items[sleutel] && items[sleutel].status;
+        if (status && standUitOpslag[sleutel] !== status) {
+          standUitOpslag[sleutel] = status;
+          veranderd = true;
+        }
+      });
+      if (neemVoortgangOver(json && json.voortgang)) veranderd = true;
+      if (veranderd) render();
+    }).catch(function () {
+      // Een mislukte ronde is geen fout: de volgende komt over tien seconden.
+      // De stand op het scherm blijft gewoon staan.
+    });
+  }
+
+  function startMeebewegen() {
+    if (meebewegenTimer) return;
+    meebewegenTimer = setInterval(haalStandOpnieuw, MEEBEWEGEN_MS);
+    // Terug op het tabblad: meteen bijwerken in plaats van tot tien seconden
+    // naar een verouderde stand kijken.
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) haalStandOpnieuw();
+    });
+  }
+
   function metStand(ticket) {
     var opgeslagen = standUitOpslag[ticket.key];
     if (!opgeslagen || opgeslagen === ticket.status) return ticket;
@@ -830,13 +902,25 @@
     var status = $('[data-flow-status]');
     if (!monitor || !title || !status) return;
 
-    var running = state.activePhase >= 1 && state.activePhase <= 4;
-    var complete = state.activePhase > 4 && lastCompletedKey;
+    // Echte voortgang gaat vóór de simulatie. Meldt de pijplijn dat hij met een
+    // wens bezig is, dan is dát wat er op het scherm hoort te staan; de
+    // simulatieknop blijft bestaan om de flow te laten zien zonder dat er werk
+    // loopt, maar hij overschrijft nooit wat er werkelijk gebeurt.
+    var echt = lopendeWens();
+    var running = echt ? echt.fase >= 1 && echt.fase <= 4 : (state.activePhase >= 1 && state.activePhase <= 4);
+    var complete = !echt && state.activePhase > 4 && lastCompletedKey;
     var waiting = state.customTickets.filter(function (t) { return t.status === 'ingediend'; });
+    var fase = echt ? echt.fase : state.activePhase;
     monitor.classList.toggle('is-running', running);
     monitor.classList.toggle('is-complete', Boolean(complete));
 
-    if (running) {
+    if (running && echt) {
+      title.textContent = echt.key + ' · stap ' + echt.fase + ' van 4';
+      // De toelichting komt van de pijplijn zelf; die weet beter wat hij aan het
+      // doen is dan een vaste tekst per stap. Ontbreekt hij, dan valt het terug
+      // op de vaste omschrijving.
+      status.textContent = echt.toelichting || (phaseCopy[echt.fase].title + '. ' + phaseCopy[echt.fase].status);
+    } else if (running) {
       title.textContent = state.activeTicket + ' · stap ' + state.activePhase + ' van 4';
       status.textContent = phaseCopy[state.activePhase].title + '. ' + phaseCopy[state.activePhase].status;
     } else if (complete) {
@@ -852,9 +936,14 @@
 
     $$('[data-checkpoint]').forEach(function (checkpoint) {
       var phase = Number(checkpoint.getAttribute('data-checkpoint'));
-      checkpoint.classList.toggle('is-active', running && phase === state.activePhase);
-      checkpoint.classList.toggle('is-complete', state.activePhase > phase);
+      checkpoint.classList.toggle('is-active', running && phase === fase);
+      checkpoint.classList.toggle('is-complete', fase > phase);
     });
+    // Zichtbaar in de opmaak én leesbaar voor een test: komt deze stand van de
+    // pijplijn of uit de simulatie? Zonder dat onderscheid kan niemand (ook een
+    // testcase niet) zien of hier echt werk loopt.
+    monitor.setAttribute('data-bron', echt ? 'pijplijn' : 'simulatie');
+    if (echt) monitor.setAttribute('data-wens', echt.key); else monitor.removeAttribute('data-wens');
 
     var form = $('[data-ticket-form]');
     if (form) Array.prototype.forEach.call(form.elements, function (control) { control.disabled = Boolean(state.activeTicket); });
@@ -2154,6 +2243,7 @@
           if (items[sleutel] && items[sleutel].status) standUitOpslag[sleutel] = items[sleutel].status;
         });
         if (json && json.bord) bordInstelling = Object.assign(bordInstelling, json.bord);
+        neemVoortgangOver(json && json.voortgang);
         document.body.setAttribute('data-stand', 'loaded');
         render();
       }).catch(function () {
@@ -2171,6 +2261,8 @@
       if (mergeWachtrij(json && json.wishes)) render();
     }).catch(function () {
       document.body.setAttribute('data-queue', 'offline');
+    }).then(function () {
+      startMeebewegen();
     });
   } else {
     document.body.setAttribute('data-feed', 'fallback');

@@ -57,6 +57,9 @@ if ($methode === 'GET') {
         'opslag' => $stand['bron'],
         'items' => $stand['items'],
         'bord' => $stand['bord'],
+        // Waar elke wens in de straat staat. Hiermee toont de pagina echte
+        // voortgang in plaats van een gesimuleerde.
+        'voortgang' => $stand['voortgang'] ?? [],
         'historie' => array_slice($stand['historie'], 0, 50),
     ]);
 }
@@ -78,11 +81,39 @@ if (!is_array($invoer)) {
     store_antwoord(400, ['error' => 'Onleesbare invoer.']);
 }
 
+// De pijplijn zelf is de tweede schrijver. Die heeft geen browsersessie, dus
+// geen login; hij meldt zich met een sleutel die alleen op de server staat
+// (server/config.local.php, `kwaliteitsstraat.agent_sleutel`). Staat die sleutel
+// er niet, dan bestaat deze weg niet -- geen sleutel, geen ingang.
+//
+// Waarom niet gewoon openbaar schrijfbaar, zoals bij het indienen van een wens:
+// een wens indienen voegt iets toe dat daarna door een mens wordt beoordeeld,
+// maar voortgang melden verandert wat de pagina beweert over werk dat al loopt.
+// Als iedereen dat kan schrijven, kan iedereen laten zien dat iets "op TEST
+// staat" terwijl dat niet zo is, en dan is de pagina geen administratie meer.
+function store_is_pijplijn(): bool
+{
+    $ingesteld = (string)(opslag_instellingen()['agent_sleutel'] ?? '');
+    if ($ingesteld === '') {
+        return false;
+    }
+    $meegestuurd = (string)($_SERVER['HTTP_X_PATH_AGENT'] ?? '');
+    if ($meegestuurd === '') {
+        return false;
+    }
+
+    // Tekenvergelijking met vaste looptijd: een gewone vergelijking verraadt met
+    // zijn snelheid hoeveel tekens klopten.
+    return hash_equals($ingesteld, $meegestuurd);
+}
+
+$pijplijn = store_is_pijplijn();
+
 // Schrijven mag alleen ingelogd. Lezen blijft open zolang deze pagina openbaar
 // is en er geen persoons- of klantgegevens in staan; schrijven niet, want
 // anders kan elke voorbijganger het bord van een ander door elkaar gooien.
 $gebruiker = kwaliteitsstraat_gebruiker();
-if ($gebruiker === null) {
+if ($gebruiker === null && !$pijplijn) {
     store_antwoord(401, [
         'error' => 'niet-ingelogd',
         'message' => 'Log in bij Uren & Facturatie om een kaart te verplaatsen.',
@@ -122,6 +153,37 @@ if (($invoer['action'] ?? '') === 'bord') {
     store_antwoord(200, ['environment' => $omgeving, 'bord' => $bord]);
 }
 
+// ---- Voortgang in de straat (fase 1 t/m 4) ----------------------------------
+if (($invoer['action'] ?? '') === 'voortgang') {
+    $sleutel = intake_tekst($invoer['key'] ?? '', 40);
+    if ($sleutel === '') {
+        store_antwoord(422, ['error' => 'Zonder sleutel is niet te zeggen welke wens je bedoelt.']);
+    }
+    // 0 betekent "nog niet opgepakt"; 4 is op TEST met de Living Doc bij. Een
+    // getal daarbuiten is geen fase maar een vergissing, en die hoort te botsen
+    // in plaats van stil afgerond te worden.
+    if (!isset($invoer['fase']) || !is_numeric($invoer['fase'])) {
+        store_antwoord(422, ['error' => 'Een fase hoort een getal van 0 tot en met 4 te zijn.']);
+    }
+    $fase = (int)$invoer['fase'];
+    if ($fase < 0 || $fase > 4) {
+        store_antwoord(422, ['error' => 'Een fase hoort een getal van 0 tot en met 4 te zijn.']);
+    }
+    $toelichting = intake_tekst($invoer['toelichting'] ?? '', 200);
+
+    $uitkomst = opslag_zet_voortgang(
+        $pad,
+        $sleutel,
+        $fase,
+        $toelichting,
+        $pijplijn ? 'Pijplijn' : kwaliteitsstraat_naam($gebruiker)
+    );
+    if ($uitkomst === null) {
+        store_antwoord(503, ['error' => 'De opslag is nu niet beschikbaar.']);
+    }
+    store_antwoord(200, ['environment' => $omgeving, 'opslag' => $uitkomst['bron'], 'voortgang' => $uitkomst]);
+}
+
 // ---- Kaart verplaatsen ------------------------------------------------------
 $sleutel = intake_tekst($invoer['key'] ?? '', 40);
 $kolom = intake_tekst($invoer['status'] ?? '', 10);
@@ -143,8 +205,10 @@ $uitkomst = opslag_zet_status(
     $kolom,
     in_array($vanClient, STORE_KOLOMMEN, true) ? $vanClient : '',
     // Wie het deed komt van de server, niet uit het verzoek: een client die zijn
-    // eigen naam mag invullen maakt de geschiedenis waardeloos.
-    kwaliteitsstraat_naam($gebruiker)
+    // eigen naam mag invullen maakt de geschiedenis waardeloos. De pijplijn
+    // verschijnt onder zijn eigen naam, zodat in de geschiedenis te zien blijft
+    // wat een mens deed en wat vanzelf ging.
+    $pijplijn ? 'Pijplijn' : kwaliteitsstraat_naam($gebruiker)
 );
 if ($uitkomst === null) {
     store_antwoord(503, ['error' => 'De opslag is nu niet beschikbaar.']);

@@ -32,6 +32,7 @@ require_once __DIR__ . '/path-kwaliteitsstraat-intake-lib.php';
 const OPSLAG_TABEL_ITEMS = 'kwaliteitsstraat_items';
 const OPSLAG_TABEL_HISTORIE = 'kwaliteitsstraat_historie';
 const OPSLAG_TABEL_BORD = 'kwaliteitsstraat_bord';
+const OPSLAG_TABEL_VOORTGANG = 'kwaliteitsstraat_voortgang';
 const OPSLAG_MAX_HISTORIE = 500;
 
 /** @return array<string,mixed> */
@@ -118,6 +119,17 @@ function opslag_zorg_voor_tabellen(PDO $pdo): void
         sprint_eind VARCHAR(10) NOT NULL DEFAULT "",
         bijgewerkt DATETIME NOT NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+    // Waar een wens in de straat staat: fase 1 t/m 4, of 0 als hij nog niet
+    // opgepakt is. Eén rij per wens, want alleen de huidige stand telt; wie de
+    // geschiedenis wil ziet die al in de historietabel en in de Living Doc.
+    $pdo->exec('CREATE TABLE IF NOT EXISTS ' . OPSLAG_TABEL_VOORTGANG . ' (
+        sleutel VARCHAR(64) NOT NULL PRIMARY KEY,
+        fase TINYINT UNSIGNED NOT NULL,
+        toelichting VARCHAR(200) NOT NULL DEFAULT "",
+        door VARCHAR(120) NOT NULL DEFAULT "",
+        bijgewerkt DATETIME NOT NULL,
+        INDEX idx_bijgewerkt (bijgewerkt)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
 }
 
 function opslag_standaard_bord(): array
@@ -166,7 +178,17 @@ function opslag_lees(string $bestandsPad): array
                     'sprint_eind' => (string)$bordRij['sprint_eind'],
                 ];
             }
-            return ['items' => $items, 'historie' => $historie, 'bord' => $bord, 'bron' => 'mysql'];
+            $voortgang = [];
+            foreach ($pdo->query('SELECT sleutel, fase, toelichting, door, bijgewerkt FROM ' . OPSLAG_TABEL_VOORTGANG) as $rij) {
+                $voortgang[(string)$rij['sleutel']] = [
+                    'key' => (string)$rij['sleutel'],
+                    'fase' => (int)$rij['fase'],
+                    'toelichting' => (string)$rij['toelichting'],
+                    'by' => (string)$rij['door'],
+                    'at' => (string)$rij['bijgewerkt'],
+                ];
+            }
+            return ['items' => $items, 'historie' => $historie, 'bord' => $bord, 'voortgang' => $voortgang, 'bron' => 'mysql'];
         }
         // Ingesteld op mysql maar niet bereikbaar: terugvallen op het bestand en
         // dat eerlijk melden, in plaats van doen alsof er niets aan de hand is.
@@ -180,7 +202,7 @@ function opslag_lees(string $bestandsPad): array
 
 function opslag_lees_bestand(string $pad): array
 {
-    $leeg = ['items' => [], 'historie' => [], 'bord' => opslag_standaard_bord(), 'bron' => 'bestand'];
+    $leeg = ['items' => [], 'historie' => [], 'bord' => opslag_standaard_bord(), 'voortgang' => [], 'bron' => 'bestand'];
     if (!is_file($pad)) {
         return $leeg;
     }
@@ -197,6 +219,7 @@ function opslag_lees_bestand(string $pad): array
         'items' => is_array($data['items'] ?? null) ? $data['items'] : [],
         'historie' => is_array($data['historie'] ?? null) ? $data['historie'] : [],
         'bord' => is_array($data['bord'] ?? null) ? array_merge(opslag_standaard_bord(), $data['bord']) : opslag_standaard_bord(),
+        'voortgang' => is_array($data['voortgang'] ?? null) ? $data['voortgang'] : [],
         'bron' => 'bestand',
     ];
 }
@@ -356,4 +379,82 @@ function opslag_zet_bord(string $bestandsPad, array $bord): ?array
     fclose($slot);
 
     return array_merge($stand['bord'], ['bron' => 'bestand']);
+}
+
+/**
+ * Waar een wens in de straat staat: fase 0 (nog niet opgepakt) tot en met 4
+ * (op TEST, Living Doc bij). Dit is de enige plek waar die stand vandaan komt;
+ * de pagina verzint hem niet meer zelf.
+ *
+ * Alleen de huidige stand wordt bewaard, bewust. Wie wil weten wat er eerder
+ * gebeurde, heeft daar de kolomhistorie en de Living Doc al voor; een tweede
+ * geschiedenis die net iets anders vertelt is erger dan geen.
+ *
+ * @return array<string,mixed>|null null bij een opslagfout
+ */
+function opslag_zet_voortgang(string $bestandsPad, string $sleutel, int $fase, string $toelichting, string $door): ?array
+{
+    $fase = max(0, min(4, $fase));
+    $regel = [
+        'key' => $sleutel,
+        'fase' => $fase,
+        'toelichting' => $toelichting,
+        'by' => $door,
+        'at' => gmdate('c'),
+    ];
+
+    if (opslag_soort() === 'mysql') {
+        $pdo = opslag_pdo();
+        if ($pdo !== null) {
+            try {
+                $pdo->prepare('INSERT INTO ' . OPSLAG_TABEL_VOORTGANG . ' (sleutel, fase, toelichting, door, bijgewerkt)
+                    VALUES (:sleutel, :fase, :toelichting, :door, NOW())
+                    ON DUPLICATE KEY UPDATE fase = VALUES(fase), toelichting = VALUES(toelichting),
+                        door = VALUES(door), bijgewerkt = VALUES(bijgewerkt)')
+                    ->execute([
+                        ':sleutel' => $sleutel,
+                        ':fase' => $fase,
+                        ':toelichting' => $toelichting,
+                        ':door' => $door,
+                    ]);
+                return array_merge($regel, ['bron' => 'mysql']);
+            } catch (Throwable $fout) {
+                return null;
+            }
+        }
+    }
+
+    $slot = fopen($bestandsPad, 'c+');
+    if ($slot === false || !flock($slot, LOCK_EX)) {
+        if (is_resource($slot)) {
+            fclose($slot);
+        }
+        return null;
+    }
+    $inhoud = stream_get_contents($slot);
+    $stand = is_string($inhoud) && trim($inhoud) !== '' ? (json_decode($inhoud, true) ?: []) : [];
+    if (!is_array($stand)) {
+        $stand = [];
+    }
+    if (!isset($stand['items']) || !is_array($stand['items'])) {
+        $stand['items'] = [];
+    }
+    if (!isset($stand['voortgang']) || !is_array($stand['voortgang'])) {
+        $stand['voortgang'] = [];
+    }
+    $stand['voortgang'][$sleutel] = $regel;
+    $nieuw = json_encode($stand, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if ($nieuw === false) {
+        flock($slot, LOCK_UN);
+        fclose($slot);
+        return null;
+    }
+    rewind($slot);
+    ftruncate($slot, 0);
+    fwrite($slot, $nieuw . "\n");
+    fflush($slot);
+    flock($slot, LOCK_UN);
+    fclose($slot);
+
+    return array_merge($regel, ['bron' => 'bestand']);
 }

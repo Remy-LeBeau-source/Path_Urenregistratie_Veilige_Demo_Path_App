@@ -69,6 +69,18 @@ toets('de geschiedenis kent de herkomst', ($naZet['historie'][0]['from'] ?? null
 toets('de geschiedenis kent de bestemming', ($naZet['historie'][0]['to'] ?? null) === 'doing');
 toets('de geschiedenis kent de uitvoerder', ($naZet['historie'][0]['by'] ?? null) === 'Controlescript');
 
+$voortgang = opslag_zet_voortgang($standPad, 'PATH-900', 2, 'Zephyr-case geschreven', 'Controlescript');
+toets('voortgang is opgeslagen', is_array($voortgang));
+toets('de fase is bewaard', ($voortgang['fase'] ?? null) === 2);
+$naVoortgang = opslag_lees($standPad);
+toets('de voortgang is terug te lezen', ($naVoortgang['voortgang']['PATH-900']['fase'] ?? null) === 2);
+toets('de toelichting is terug te lezen', ($naVoortgang['voortgang']['PATH-900']['toelichting'] ?? '') === 'Zephyr-case geschreven');
+// Grenzen: buiten 0..4 hoort de laag niet stilletjes iets raars te bewaren.
+opslag_zet_voortgang($standPad, 'PATH-900', 9, '', 'Controlescript');
+toets('een te hoge fase wordt op 4 gehouden', (opslag_lees($standPad)['voortgang']['PATH-900']['fase'] ?? null) === 4);
+opslag_zet_voortgang($standPad, 'PATH-900', -3, '', 'Controlescript');
+toets('een negatieve fase wordt op 0 gehouden', (opslag_lees($standPad)['voortgang']['PATH-900']['fase'] ?? null) === 0);
+
 $bord = opslag_zet_bord($standPad, ['modus' => 'scrum', 'wip' => 3, 'sprint' => 'Sprint 1', 'sprint_eind' => '2026-12-31']);
 toets('de bordstand is opgeslagen', is_array($bord));
 $naBord = opslag_lees($standPad);
@@ -112,6 +124,7 @@ if (!$kanDatabase) {
         $pdo->exec('DELETE FROM ' . OPSLAG_TABEL_HISTORIE);
         $pdo->exec('DELETE FROM ' . OPSLAG_TABEL_ITEMS);
         $pdo->exec('DELETE FROM ' . OPSLAG_TABEL_BORD);
+        $pdo->exec('DELETE FROM ' . OPSLAG_TABEL_VOORTGANG);
 
         $dbEerste = opslag_zet_status($standPad, 'PATH-901', 'done', 'doing', 'Controlescript');
         toets('verplaatsen lukt in de database', is_array($dbEerste));
@@ -127,6 +140,13 @@ if (!$kanDatabase) {
         toets('de databasegeschiedenis kent de herkomst', ($dbStand['historie'][0]['from'] ?? null) === 'doing');
         toets('de databasegeschiedenis kent de uitvoerder', ($dbStand['historie'][0]['by'] ?? null) === 'Controlescript');
 
+        opslag_zet_voortgang($standPad, 'PATH-901', 3, 'Regressie draait', 'Controlescript');
+        $dbVoortgang = opslag_lees($standPad);
+        toets('de voortgang komt uit de database', ($dbVoortgang['voortgang']['PATH-901']['fase'] ?? null) === 3);
+        toets('de toelichting komt uit de database', ($dbVoortgang['voortgang']['PATH-901']['toelichting'] ?? '') === 'Regressie draait');
+        opslag_zet_voortgang($standPad, 'PATH-901', 4, 'Op TEST', 'Controlescript');
+        toets('een tweede melding overschrijft de eerste', (opslag_lees($standPad)['voortgang']['PATH-901']['fase'] ?? null) === 4);
+
         opslag_zet_bord($standPad, ['modus' => 'scrum', 'wip' => 2, 'sprint' => 'DB-sprint', 'sprint_eind' => '']);
         $dbBord = opslag_lees($standPad);
         toets('de werkwijze komt uit de database', ($dbBord['bord']['modus'] ?? '') === 'scrum');
@@ -138,6 +158,7 @@ if (!$kanDatabase) {
         $pdo->exec('DELETE FROM ' . OPSLAG_TABEL_HISTORIE);
         $pdo->exec('DELETE FROM ' . OPSLAG_TABEL_ITEMS);
         $pdo->exec('DELETE FROM ' . OPSLAG_TABEL_BORD);
+        $pdo->exec('DELETE FROM ' . OPSLAG_TABEL_VOORTGANG);
     }
 
     // -----------------------------------------------------------------------

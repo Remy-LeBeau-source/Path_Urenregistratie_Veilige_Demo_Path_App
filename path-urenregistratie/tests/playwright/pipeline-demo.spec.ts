@@ -559,6 +559,82 @@ test.describe('Path Pipeline TEST-demo', () => {
     });
   });
 
+  test('[PIPE-H-017] de stappenbalk toont echte voortgang van de pijplijn en beweegt mee zonder herladen', async ({ page, request }) => {
+    // De pagina haalt zijn stand elke tien seconden op, en deze case wacht vier
+    // keer op zo'n ronde. Dat past niet in de standaardtijd van een case, en de
+    // ronde korter maken voor de test zou het product aanpassen aan de test.
+    test.setTimeout(150_000);
+    // Opdracht Gio (17 sep): "het systeem moet dynamisch meebewegen zodat ik kan
+    // zien waar we zijn, en de kaarten moet hij zelf op in uitvoering zetten".
+    // Tot nu toe was de 1-2-3-4-balk een simulatie met een dobbelsteen: leuk om
+    // de flow te laten zien, maar hij vertelde niets over echt werk. Nu meldt de
+    // pijplijn zijn stappen aan de opslag en toont de pagina die.
+    //
+    // Techniek (TMap/ISTQB): toestandsovergangtest over de vier fasen (elke stap
+    // moet op het scherm terechtkomen, en teruggeven naar 0 moet hem ook weer
+    // loslaten), met grenswaarden op de fase (0 en 4 horen erbij, -1 en 5 niet)
+    // en een negatieve klasse voor het schrijfrecht (anoniem melden mag niet).
+    const store = '/pilot/path-kwaliteitsstraat-store.php';
+    const wens = 'PATH-VOORTGANG-TOETS';
+
+    await test.step('Given anoniem voortgang melden wordt geweigerd', async () => {
+      // Voortgang melden verandert wat de pagina beweert over lopend werk. Kan
+      // iedereen dat, dan kan iedereen laten zien dat iets op TEST staat terwijl
+      // dat niet zo is, en dan is dit geen administratie meer.
+      const zonder = await request.post(store, { data: { action: 'voortgang', key: wens, fase: 2 } });
+      expect(zonder.status()).toBe(401);
+      expect((await zonder.json()).error).toBe('niet-ingelogd');
+    });
+
+    await new AuthApi(page.request).login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    await test.step('And een fase buiten 0 tot en met 4 wordt geweigerd', async () => {
+      for (const fase of [-1, 5, 99]) {
+        const fout = await page.request.post(store, { data: { action: 'voortgang', key: wens, fase } });
+        expect(fout.status(), `fase ${fase} hoort te botsen`).toBe(422);
+      }
+      const geenGetal = await page.request.post(store, { data: { action: 'voortgang', key: wens, fase: 'twee' } });
+      expect(geenGetal.status()).toBe(422);
+      const zonderSleutel = await page.request.post(store, { data: { action: 'voortgang', fase: 2 } });
+      expect(zonderSleutel.status()).toBe(422);
+    });
+
+    await page.goto('/pilot/path-kwaliteitsstraat.html');
+    await expect(page.locator('body')).toHaveAttribute('data-stand', 'loaded');
+    const monitor = page.locator('[data-flow-monitor]');
+
+    await test.step('Then staat de balk op de simulatie zolang er niets loopt', async () => {
+      await expect(monitor).toHaveAttribute('data-bron', 'simulatie');
+    });
+
+    await test.step('When de pijplijn stap voor stap voortgang meldt', async () => {
+      for (const fase of [1, 2, 3, 4]) {
+        const gemeld = await page.request.post(store, {
+          data: { action: 'voortgang', key: wens, fase, toelichting: 'Stap ' + fase + ' bezig' },
+        });
+        expect(gemeld.status()).toBe(200);
+        expect((await gemeld.json()).voortgang.fase).toBe(fase);
+
+        // Niet herladen: de pagina hoort zelf bij te trekken. De wachttijd is
+        // ruim genomen omdat de ronde elke tien seconden loopt.
+        await expect(monitor).toHaveAttribute('data-wens', wens, { timeout: 20_000 });
+        await expect(monitor).toHaveAttribute('data-bron', 'pijplijn');
+        await expect(page.locator('[data-flow-title]')).toContainText('stap ' + fase + ' van 4', { timeout: 20_000 });
+        await expect(page.locator('[data-flow-status]')).toContainText('Stap ' + fase + ' bezig', { timeout: 20_000 });
+        // De bolletjes ervoor horen afgevinkt te zijn, het huidige actief.
+        await expect(page.locator(`[data-checkpoint="${fase}"]`)).toHaveClass(/is-active/, { timeout: 20_000 });
+        if (fase > 1) await expect(page.locator(`[data-checkpoint="${fase - 1}"]`)).toHaveClass(/is-complete/);
+      }
+    });
+
+    await test.step('And laat fase 0 de balk weer los', async () => {
+      const vrij = await page.request.post(store, { data: { action: 'voortgang', key: wens, fase: 0 } });
+      expect(vrij.status()).toBe(200);
+      await expect(monitor).toHaveAttribute('data-bron', 'simulatie', { timeout: 20_000 });
+      await expect(monitor).not.toHaveAttribute('data-wens', wens);
+    });
+  });
+
   test('[PIPE-H-016] de opslag vertelt eerlijk waar de stand vandaan komt, zonder verbindingsgegevens', async ({ page, request }) => {
     // De keuze tussen "bestand" en "eigen tabellen in een database" is een
     // instelling geworden (zie pilot/path-kwaliteitsstraat-opslag-lib.php), zodat
