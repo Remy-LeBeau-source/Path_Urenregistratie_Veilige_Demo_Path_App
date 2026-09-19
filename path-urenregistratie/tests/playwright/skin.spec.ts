@@ -2812,3 +2812,33 @@ test('[SKIN-H-040] het zijbalklogo volgt zijn eigen (donkere) ondergrond, niet e
     expect(await mobielLogo.getAttribute('src')).toBe(lichtLogoUrl);
   });
 });
+
+test('[SKIN-N-009] in Modern past de samenvattingskaart van Mijn uren op elke breedte binnen zijn kolom', async ({ page }) => {
+  // Monkey Modern seed 40 (19 sep): van 801 tot ruim 900px stonden kop, label en
+  // notitie van de samenvattingskaart tot 6px buiten het scherm. De kaart staat in
+  // Modern in een smalle rechterkolom, maar erfde onder 1100px de tweekoloms-
+  // opmaak uit styles.css, die niet onder de inhoud kromp. Techniek:
+  // grenswaardenanalyse op de breekpunten rond de kolom (800/801, 820/821,
+  // 1100/1101) plus een gangbare desktopbreedte.
+  const loginPage = new LoginPage(page);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await klikTestknop(page, '#quick-skin-toggle');
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+  await page.evaluate(() => { window.location.hash = 'timesheet'; });
+  const kaart = page.locator('#view-timesheet .summary-card');
+  await expect(kaart).toBeVisible();
+  for (const breedte of [800, 801, 820, 821, 900, 1100, 1101, 1280]) {
+    await test.step(`op ${breedte}px blijft alles binnen de kaart en binnen het scherm`, async () => {
+      await page.setViewportSize({ width: breedte, height: 900 });
+      await expect.poll(() => kaart.evaluate((el) => {
+        const k = el.getBoundingClientRect();
+        const rand = document.documentElement.clientWidth;
+        return [...el.querySelectorAll('*')]
+          .filter((c) => { const r = c.getBoundingClientRect(); return r.width > 0 && (r.right > k.right + 0.5 || r.right > rand + 0.5); })
+          .map((c) => `${c.tagName.toLowerCase()}${(c as HTMLElement).className ? '.' + (c as HTMLElement).className : ''}`);
+      }), { message: `niets in de samenvattingskaart hoort op ${breedte}px buiten de kaart of het scherm te steken` }).toEqual([]);
+    });
+  }
+});

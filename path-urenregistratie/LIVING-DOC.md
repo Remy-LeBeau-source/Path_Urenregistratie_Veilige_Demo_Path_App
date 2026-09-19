@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 654 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 655 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 654 unieke case-ID's
+- Playwright executable cases: 655 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 655 unieke case-ID's
+- Totaal executable cases: 656 unieke case-ID's
 - Playwright features: 33
 - Database features: 1
 - Playwright steps mappings: 33
 - Database steps mappings: 1
-- Uitvoeringen: 722
-- Niet-mobile projectuitvoeringen: 586
+- Uitvoeringen: 723
+- Niet-mobile projectuitvoeringen: 587
 - Mobile functionele cases: 68
 - Pixel 7 / Chromium-uitvoeringen: 68
 - iPhone 13 / WebKit-uitvoeringen: 68
 
-De 68 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 654 Playwright-functionele cases in totaal 722 resultaten op: 586 + (68 x 2) = 722.
+De 68 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 655 Playwright-functionele cases in totaal 723 resultaten op: 587 + (68 x 2) = 723.
 
 ## Documentatieketen
 
@@ -764,7 +764,7 @@ De 68 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 654 Playwri
 
 - Feature: `tests/playwright/features/skin.feature`
 - Source: `tests/playwright/skin.spec.ts`
-- Cases: 40
+- Cases: 41
 
 - [SKIN-H-001] de app start standaard in de klassieke vormgeving — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 3
 - [SKIN-H-002] Vormgeving op "Nieuw" zetten schakelt de skin en blijft na herladen staan — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 6
@@ -806,6 +806,7 @@ De 68 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 654 Playwri
 - [SKIN-N-008] met "minder beweging" houdt een dialoog met open toetsenbord de knoppen, de sluitactie en het typveld in beeld — Techniek: Toestandsovergang · Assertions: 7
 - [SKIN-H-039] de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect toont — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 2
 - [SKIN-H-040] het zijbalklogo volgt zijn eigen (donkere) ondergrond, niet een vast contrast met een ander element — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 6
+- [SKIN-N-009] in Modern past de samenvattingskaart van Mijn uren op elke breedte binnen zijn kolom — Techniek: Grenswaardenanalyse op de breekpunten rond de samenvattingskolom in Modern (800/801, 820/821, 1100/1101) plus een desktopbreedte · Assertions: 2
 
 ### Correctie- en goedkeuringsproces
 

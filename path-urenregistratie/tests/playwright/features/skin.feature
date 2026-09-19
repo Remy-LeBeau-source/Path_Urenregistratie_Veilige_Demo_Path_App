@@ -368,3 +368,11 @@ Feature: Vormgevingsschakelaar (klassiek / nieuw)
     Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
     When de flow voor SKIN-H-040 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat het zijbalklogo volgt zijn eigen (donkere) ondergrond, niet een vast contrast met een ander element
+
+  @negative
+  Scenario: [SKIN-N-009] in Modern past de samenvattingskaart van Mijn uren op elke breedte binnen zijn kolom
+    # Testtechniek: Grenswaardenanalyse op de breekpunten rond de samenvattingskolom in Modern (800/801, 820/821, 1100/1101) plus een desktopbreedte
+    # Aantoonbare Playwright-assertions in deze case: 2
+    Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid
+    When de flow voor SKIN-N-009 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat in Modern past de samenvattingskaart van Mijn uren op elke breedte binnen zijn kolom

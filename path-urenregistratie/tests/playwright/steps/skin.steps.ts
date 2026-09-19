@@ -159,3 +159,5 @@ When("de flow voor SKIN-H-039 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat de app hangt een passieve touchstart-luisteraar aan document, zodat iOS het indrukeffect toont");
 When("de flow voor SKIN-H-040 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat het zijbalklogo volgt zijn eigen (donkere) ondergrond, niet een vast contrast met een ander element");
+When("de flow voor SKIN-N-009 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat in Modern past de samenvattingskaart van Mijn uren op elke breedte binnen zijn kolom");

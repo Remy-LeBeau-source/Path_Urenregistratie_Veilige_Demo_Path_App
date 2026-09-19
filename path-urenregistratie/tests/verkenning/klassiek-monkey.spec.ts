@@ -52,6 +52,9 @@ function seedsUitOmgeving(): number[] {
 const STAPPEN = Number(process.env.MONKEY_STAPPEN || 120);
 // MONKEY_ROL=beheer verkent de Backoffice-kant in Klassiek; standaard de medewerker.
 const ROL = String(process.env.MONKEY_ROL || 'medewerker').trim().toLowerCase() === 'beheer' ? 'beheer' : 'medewerker';
+// MONKEY_SKIN=new verkent Modern in plaats van Klassiek (19 sep: Modern was nog nooit
+// willekeurig doorgeklikt). De invarianten gelden voor beide vormgevingen.
+const SKIN = String(process.env.MONKEY_SKIN || 'classic').trim().toLowerCase() === 'new' ? 'new' : 'classic';
 
 // Rommelinvoer: equivalentieklassen en grenswaarden die een formulierveld moet
 // verdragen zonder de app te breken.
@@ -72,7 +75,7 @@ const UITGESLOTEN = [
   '#mobile-switch-role',
   'a[target="_blank"]',
   'a[download]',
-  '[data-standard-choice-value="new"]',
+  SKIN === 'new' ? '[data-standard-choice-value="classic"], #quick-skin-toggle' : '[data-standard-choice-value="new"]',
 ].join(', ');
 
 type Handeling = { stap: number; soort: string; doel?: string; waarde?: string; scherm?: string };
@@ -153,7 +156,7 @@ async function beschrijf(page: Page, selector: string): Promise<string> {
 }
 
 for (const seed of seedsUitOmgeving()) {
-  test(`[VERK-${ROL === 'beheer' ? 'B' : ''}${seed}] monkey op de ${ROL} in Klassiek blijft heel (seed ${seed})`, async ({ page }, testInfo) => {
+  test(`[VERK-${SKIN === 'new' ? 'M' : ''}${ROL === 'beheer' ? 'B' : ''}${seed}] monkey op de ${ROL} in ${SKIN === 'new' ? 'Modern' : 'Klassiek'} blijft heel (seed ${seed})`, async ({ page }, testInfo) => {
     const rnd = prng(seed * 7919 + (testInfo.project.name.includes('telefoon') ? 1 : 0));
     const kies = <T>(lijst: T[]): T => lijst[Math.floor(rnd() * lijst.length)];
     const fouten: string[] = [];
@@ -208,6 +211,16 @@ for (const seed of seedsUitOmgeving()) {
     await loginPage.open();
     if (ROL === 'beheer') await loginPage.loginAsAdmin(); else await loginPage.loginAsEmployee();
     await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+    if (SKIN === 'new') {
+      await page.evaluate(() => {
+        const s = (0, eval)('state') as { preferences: Record<string, unknown> };
+        s.preferences.skin = 'new';
+        ((0, eval)('persistState') as () => void)();
+        ((0, eval)('applySkin') as () => void)();
+        ((0, eval)('renderAll') as () => void)();
+      });
+      await expect(page.locator('html')).toHaveAttribute('data-skin', 'new');
+    }
     const thema = seed % 2 === 0 ? 'dark' : 'light';
     await page.evaluate(t => {
       const s = (0, eval)('state') as { preferences: Record<string, unknown> };
@@ -221,7 +234,7 @@ for (const seed of seedsUitOmgeving()) {
       // Niet in outputDir: Playwright maakt die bij elke run leeg.
       const dir = join(process.cwd(), 'verkenning-rapport');
       mkdirSync(dir, { recursive: true });
-      writeFileSync(join(dir, `${testInfo.project.name}-${ROL}-seed-${seed}.json`), JSON.stringify({
+      writeFileSync(join(dir, `${testInfo.project.name}-${SKIN === 'new' ? 'modern-' : ''}${ROL}-seed-${seed}.json`), JSON.stringify({
         seed, rol: ROL, project: testInfo.project.name, thema, stappen: log.length, fouten, netlog,
         zachteBevindingen: Object.fromEntries(zachteBevindingen), log,
       }, null, 2));

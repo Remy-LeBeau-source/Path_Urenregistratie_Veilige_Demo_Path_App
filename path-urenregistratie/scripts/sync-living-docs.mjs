@@ -219,6 +219,14 @@ function techniqueFor(definition, testCase) {
     };
     return perCase[testCase.id] || 'Monkey testing (seeded) + negatieve equivalentieklasse + error guessing';
   }
+  // Vondsten uit de verkenningen (monkey Modern, toegankelijkheid) die een vaste
+  // SKIN-case kregen: de techniek van de vaste case.
+  if (definition.spec === 'skin.spec.ts') {
+    const perCase = {
+      'SKIN-N-009': 'Grenswaardenanalyse op de breekpunten rond de samenvattingskolom in Modern (800/801, 820/821, 1100/1101) plus een desktopbreedte',
+    };
+    if (perCase[testCase.id]) return perCase[testCase.id];
+  }
   if (testCase.id === 'DASH-H-052') return 'Equivalentieklassen op de eigenaarfilter (Backoffice/medewerkers/alle) + regressie op stabiele maandtotalen';
   if (testCase.id === 'HELP-N-003') return 'Toestandsovergangtest (onbekend -> bekend -> onbekend -> onbekend) op de hulpbot-teller, met inhoudscontrole van het samengevoegde contactbericht';
   if (testCase.id === 'ADM-WR-H-001') return 'Equivalentieklassen over alle Instellingen-velden (identiteit, merkkleuren, betaaltermijn, vier herinneringssoorten) met van de huidige waarde afwijkende testwaarden, elk teruggecontroleerd op de server';

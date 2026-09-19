@@ -3366,3 +3366,12 @@ html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-current {
 html[data-skin="new"] .new-bento-customer-expand .customer-timesheet-current strong {
   color: #102235;
 }
+
+/* In Modern staat de samenvattingskaart van Mijn uren altijd in een smalle rechter-
+   kolom (minmax(250px, .3fr)). De algemene regel voor <=1100px (styles.css) maakt
+   er twee kolommen van (1fr 1fr); die kromp niet onder de inhoud en duwde kop,
+   label en notitie van 801 tot ruim 900px tot 6px buiten het scherm (monkey
+   Modern seed 40, 19 sep; SKIN-N-009). Hier blijft het één kolom, zoals erboven. */
+@media (max-width: 1100px) {
+  html[data-skin="new"] #view-timesheet .summary-card { grid-template-columns: minmax(0, 1fr); }
+}

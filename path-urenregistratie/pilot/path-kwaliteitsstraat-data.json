@@ -1,8 +1,24 @@
 {
-  "appVersion": "2.0.207",
-  "generatedAt": "2026-09-19T15:38:57.264Z",
+  "appVersion": "2.0.209",
+  "generatedAt": "2026-09-19T16:34:45.304Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.209",
+      "wish": "Modern voor het eerst willekeurig doorgeklikt; de samenvattingskaart van Mijn uren past nu op elke breedte. De monkey-verkenner kende alleen Klassiek; met MONKEY_SKIN=new verkent hij nu ook Modern (tests/verkenning). Eerste ronde, medewerker op desktop, seeds 40 tot 47: 8 van 8 zonder harde fout, één zachte vondst. Van 801 tot ruim 900 pixels breed staken kop, label en notitie van de samenvattingskaart tot 6 pixels buiten het scherm. De kaart staat in Modern in een smalle rechterkolom, maar erfde onder 1100 pixels de tweekoloms opmaak van Klassiek, die niet kromp. Nu blijft hij daar één kolom, zoals erboven. Vastgelegd met SKIN-N-009 op 800/801, 820/821, 900, 1100/1101 en 1280 pixels. Techniek: grenswaardenanalyse op de breekpunten. Tegenproef: zonder de aanpassing rood (7 elementen buiten de kaart op 801 pixels), met groen; skin.spec op desktop en tablet 78 van 78 groen.",
+      "cases": [
+        {
+          "id": "SKIN-N-009",
+          "title": "in Modern past de samenvattingskaart van Mijn uren op elke breedte binnen zijn kolom",
+          "feature": "tests/playwright/features/skin.feature",
+          "technique": "Grenswaardenanalyse op de breekpunten rond de samenvattingskolom in Modern (800/801, 820/821, 1100/1101) plus een desktopbreedte",
+          "assertions": 2,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: in Modern past de samenvattingskaart van Mijn uren op elke breedte binnen zijn kolom\n  Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid\n  When de flow voor SKIN-N-009 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat in Modern past de samenvattingskaart van Mijn uren op elke breedte binnen zijn kolom"
+        }
+      ]
+    },
     {
       "date": "19 sep",
       "version": "2.0.207",
@@ -622,7 +638,7 @@
           "technique": "Toestandsovergang",
           "assertions": 21,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: op de goedkeurkaart staat Goedkeuren bovenaan en Correctie vragen eronder, over de volle breedte\n  Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid\n  When de flow voor SKIN-H-035 wordt uitgevoerd\n  Then staan de knoppen onder elkaar in de afgesproken volgorde, met 10px ertussen\n  And staat Goedkeuren ook in de DOM eerst, zodat de tabvolgorde klopt\n  And heeft Correctie vragen alleen een rand, geen vlak\n  And blijft dat zo in het donkere thema\n  And houdt de desktopkaart zijn beeld, met een DOM-volgorde die gelijk loopt met dat beeld\n  And springt de volgorde terug als het scherm weer smal wordt"
+          "gherkin": ""
         },
         {
           "id": "E2E-H-018",
@@ -631,7 +647,7 @@
           "technique": "Equivalentieklassen",
           "assertions": 20,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF\n  Given een goedgekeurde urenstaat klaarstaat voor facturatie\n  When Backoffice de factuur definitief maakt\n  Then levert de factuurbijlage een echte, geldige PDF met veilige headers\n  And blijft dezelfde bijlage na een verversing byte voor byte gelijk\n  And belooft geen enkele delivery een bijlage zonder werkelijk bestand"
+          "gherkin": ""
         }
       ]
     },
