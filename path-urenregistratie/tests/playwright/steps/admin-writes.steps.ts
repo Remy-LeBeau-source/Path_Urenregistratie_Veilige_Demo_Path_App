@@ -35,6 +35,8 @@ When("de flow voor ADM-WR-H-003 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat admin kan medewerker server-led aanmaken en bootstrap ziet deze terug");
 When("de flow voor ADM-WR-N-001 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount");
+When("de flow voor ADM-WR-N-012 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat een botsing die niets met het accountadres te maken heeft, meldt niet ten onrechte \"e-mailadres al in gebruik\"");
 When("de flow voor ADM-WR-N-003 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt geweigerd");
 Given("er al een medewerker met een vast e-mailadres bestaat");

@@ -1,8 +1,85 @@
 {
-  "appVersion": "2.0.181",
-  "generatedAt": "2026-09-18T23:55:22.537Z",
+  "appVersion": "2.0.183",
+  "generatedAt": "2026-09-19T00:46:38.271Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.183",
+      "wish": "Testset: testcases laten geen actieve testmedewerkers meer achter (TW-1, laatste deel). Vijf cases in drie specbestanden maakten een wegwerpmedewerker aan en ruimden die niet op, of hun opruimstap mislukte stil: bij REM-H-001 ontbrak het opruimen helemaal (en bleef ook de wekelijkse herinnering op \"nu\" staan), bij PWD-H-013, -H-017 en -H-019 ontbrak het, en bij E2E-H-010 en -H-013 kreeg de opruimstap een 409 omdat het eigen accountnummer of de startdatum niet werd meegestuurd. Elke latere beheerderslogin haalde voor die medewerkers alle maanden op, wat een volledige lokale run merkbaar trager maakte. Nu ruimt elke case op in een `finally`, en elke opruimstap controleert zijn eigen resultaat (zachte controle), zodat een mislukte opruiming voortaan zichtbaar rood is in plaats van stil. Controle na de run: alle testaccounts inactief. Techniek: testware-analyse op testonafhankelijkheid (ISTQB). Tegenproef: het accountnummer weglaten uit de opruimstap van E2E-H-013 geeft rood met precies de oude fout (409, e-mailadres al in gebruik); teruggezet en groen. Reminders, password-reset en email-queue: 79 van 79 groen.",
+      "cases": [
+        {
+          "id": "REM-H-001",
+          "title": "wekelijkse herinnering verstuurt eenmalig een reminder-mail aan medewerkers zonder uren deze week",
+          "feature": "tests/playwright/features/reminders.feature",
+          "technique": "Beslissingstabel rollen en autorisatie",
+          "assertions": 10,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: wekelijkse herinnering verstuurt eenmalig een reminder-mail aan medewerkers zonder uren deze week\n  Given de wekelijkse herinnering staat aan voor nu (vandaag, huidige tijd, Europe/Amsterdam)\n  When de scheduler voor het eerst draait\n  Then staat er een reminder-mail in de queue voor de nieuwe medewerker\n  And een tweede run binnen dezelfde week verstuurt niets extra (idempotent)"
+        },
+        {
+          "id": "PWD-H-013",
+          "title": "nieuwe ${role} wordt aangemaakt, krijgt een verzonden uitnodiging, stelt een wachtwoord in en kan inloggen",
+          "feature": "tests/playwright/features/password-reset.feature",
+          "technique": "Beslissingstabel rollen en autorisatie",
+          "assertions": 19,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: nieuwe ${role} wordt aangemaakt, krijgt een verzonden uitnodiging, stelt een wachtwoord in en kan inloggen\n  Given wachtwoordherstel en misbruikbeveiliging is voorbereid\n  When de uitgenodigde persoon de eenmalige link opent en een wachtwoord instelt\n  Then verschijnt een duidelijke bevestiging met een knop om in te loggen\n  And die knop brengt de persoon naar het inlogscherm"
+        },
+        {
+          "id": "E2E-H-010",
+          "title": "nieuw account, eigen tekst, en die tekst komt terug in de verzonden mail",
+          "feature": "tests/playwright/features/mail-delivery.feature",
+          "technique": "Beslissingstabel rollen en autorisatie",
+          "assertions": 28,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: nieuw account, eigen tekst, en die tekst komt terug in de verzonden mail\n  Given een nieuwe beheerder is aangemaakt\n  And een nieuwe medewerker met een eigen ontvanger, onderwerp en tekst\n  And de medewerker stelt via de eenmalige link een wachtwoord in\n  When de medewerker uren indient en Backoffice goedkeurt en factureert\n  Then staat de zelf ingevoerde tekst letterlijk in de verzonden mail\n  And opruimen: de aangemaakte accounts worden gedeactiveerd"
+        },
+        {
+          "id": "E2E-H-013",
+          "title": "Een nieuwe medewerker houdt zijn gegevens en komt tot een factuur met de juiste mail",
+          "feature": "tests/playwright/features/mail-delivery.feature",
+          "technique": "Beslissingstabel rollen en autorisatie",
+          "assertions": 38,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een nieuwe medewerker houdt zijn gegevens en komt tot een factuur met de juiste mail\n  Given een nieuwe medewerker met klant, broker, contract en een eigen ontvanger\n  Then blijven zijn gegevens staan, ook het contract\n  And krijgt hij toegang via de eenmalige link\n  When hij zelf uren indient\n  And verschijnt zijn urenstaat als werk voor Backoffice\n  And levert goedkeuren een echte serverfactuur op\n  And krijgt elke ontvanger de juiste mail, met de juiste bijlage\n  And opruimen: het aangemaakte account wordt gedeactiveerd"
+        }
+      ]
+    },
+    {
+      "date": "19 sep",
+      "version": "2.0.182",
+      "wish": "Serverbevinding van herontwerp opgelost: een botsing die niets met het account-e-mailadres te maken had, kreeg toch de melding \"Dit e-mailadres is al in gebruik\". In upsert_employee en upsert_admin (server/api/staff.php) ving de catch elke SQLSTATE 23000 (elke unieke- of sleutelbotsing binnen de opslagtransactie) op als e-mailconflict, ook als staff_find_email_conflict() null teruggaf omdat de echte botsing ergens anders zat -- bijvoorbeeld uq_mail_recipient_email op mail_recipients of de samengestelde sleutel van assignment_mail_routes. staff_send_email_conflict(null, ...) stuurde dan alsnog de misleidende 409-melding. Gezien in herontwerps volledige lokale run: ADM-WR-H-016 kreeg de melding bij het opslaan van de gezaaide een medewerker, terwijl zijn accountadres in de database gewoon bij zijn eigen user hoorde; los niet te reproduceren. Nieuwe gedeelde functie staff_handle_upsert_integrity_violation(): alleen de e-mailmelding bij een echte botsing op het account-e-mailadres, anders een neutrale 409 (\"Deze wijziging botst met bestaande gegevens\") en de echte database-melding met de naam van de botsende sleutel in de serverlog, nooit naar de client. ADM-WR-N-012 nieuw: twee nieuwe mailontvangers met hetzelfde adres botsen op uq_mail_recipient_email terwijl het medewerker-e-mailadres zelf uniek is. Tegenproef: zonder de fix faalde de test echt op error === 'email-already-in-use' (rood); met de fix groen, en de serverlog toont de echte sleutelnaam. Bestaande e-mailconflicttests (ADM-WR-N-001/003/004/006) blijven ongewijzigd groen.",
+      "cases": [
+        {
+          "id": "ADM-WR-H-016",
+          "title": "de routevinkjes van een opdracht blijven na opslaan en F5 staan zoals gezet",
+          "feature": "tests/playwright/features/organization-settings.feature",
+          "technique": "Herstelbaarheid + toestandsovergang",
+          "assertions": 3,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de routevinkjes van een opdracht blijven na opslaan en F5 staan zoals gezet\n  Given organisatie-instellingen beheren is voorbereid\n  When het brokervinkje wordt omgezet en opgeslagen\n  Then staat het na een herlaad nog steeds zo"
+        },
+        {
+          "id": "ADM-WR-N-012",
+          "title": "Een botsing die niets met het accountadres te maken heeft, meldt niet ten onrechte \"e-mailadres al in gebruik\"",
+          "feature": "tests/playwright/features/organization-settings.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 7,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een botsing die niets met het accountadres te maken heeft, meldt niet ten onrechte \"e-mailadres al in gebruik\"\n  Given organisatie-instellingen beheren is voorbereid\n  When de flow voor ADM-WR-N-012 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat een botsing die niets met het accountadres te maken heeft, meldt niet ten onrechte \"e-mailadres al in gebruik\""
+        },
+        {
+          "id": "ADM-WR-N-001",
+          "title": "dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount",
+          "feature": "tests/playwright/features/organization-settings.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 8,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount\n  Given organisatie-instellingen beheren is voorbereid\n  When de flow voor ADM-WR-N-001 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount"
+        }
+      ]
+    },
     {
       "date": "19 sep",
       "version": "2.0.181",
@@ -414,7 +491,7 @@
           "technique": "Beslistabel op de gemelde opslagbron (bestand, database, database ingesteld maar onbereikbaar) + structurele geheimhoudingscontrole op verboden sleutels in het antwoord + gelijkheidscontrole tussen lezen en schrijven",
           "assertions": 8,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de opslag vertelt eerlijk waar de stand vandaan komt, zonder verbindingsgegevens\n  Given het leesantwoord noemt de gebruikte achterkant\n  And het leesantwoord bevat geen verbindingsgegevens\n  When er iets wordt opgeslagen\n  Then noemt het schrijfantwoord dezelfde achterkant als het leesantwoord\n  And deze case laat geen kaart achter"
+          "gherkin": ""
         }
       ]
     },
@@ -430,7 +507,7 @@
           "technique": "Equivalentieklassen op de werkwijze (Kanban, Scrum met einddatum, Scrum zonder einddatum) + negatieve invoercontrole op de server (onbekende werkwijze, kromme datum, anoniem) + herstelbaarheid na herladen",
           "assertions": 16,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: het bord staat op Kanban, met Scrum klaar om aan te zetten\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de flow voor PIPE-H-015 wordt uitgevoerd\n  Then staat Kanban aan als standaard\n  And zegt Scrum zonder einddatum eerlijk dat de sprint doorloopt\n  And telt hij met een einddatum wel echt af\n  And weigert de server onzin en anonieme wijzigingen\n  And het bord gaat terug naar Kanban, zodat deze case geen sporen achterlaat"
+          "gherkin": ""
         }
       ]
     },
@@ -2041,14 +2118,9 @@
   ],
   "niceToHave": [
     {
-      "date": "16 sep",
-      "improvement": "Testset: vier specs laten actieve testmedewerkers achter (reminders, password-reset, admin-writes, email-queue); elke latere beheerderslogin haalt voor hen alle maanden op, wat een volledige lokale run trager maakt (TW-1, rest)",
-      "why": "Opruimen met startdatum erbij, anders weigert de server het deactiveren (409)."
-    },
-    {
       "date": "19 sep",
-      "improvement": "ADM-WR-H-016 viel één keer in een volledige lokale run met \"Dit e-mailadres is al in gebruik\" bij het opslaan van een gezaaide medewerker; los niet te reproduceren (40 van 40 groen)",
-      "why": "Nader bekijken bij de volgende volledige run; zie ook de serverbevinding bij main over die melding."
+      "improvement": "Testset: admin-writes.spec laat een reeks actieve testaccounts achter (medewerkers en beheerders) en mogelijk een skinvoorkeur; in de volledige run ruimen latere specs het op, maar direct erna draaiende specs worden trager (EQ-H-020 zag zijn melding pas na 5 seconden)",
+      "why": "Zelfde aanpak als 2.0.183: opruimen in een finally met een zachte controle op het resultaat."
     }
   ]
 }

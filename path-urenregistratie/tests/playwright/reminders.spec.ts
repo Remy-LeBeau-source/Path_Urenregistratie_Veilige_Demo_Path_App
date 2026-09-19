@@ -170,7 +170,17 @@ test.describe('serverplanning herinneringen', () => {
     expect(createEmployee.status()).toBe(200);
     const createdEmployeeBody = await createEmployee.json();
     expect(createdEmployeeBody.ok).toBe(true);
+    const gebruikerId = Number(createdEmployeeBody.user_id || 0);
+    const medewerkerId = Number(createdEmployeeBody.employee_id || 0);
+    const instellingenVooraf = await currentSettingsPayload(ctx);
 
+    // Opruimen, ook als een stap hieronder faalt. Eerder bleef de wegwerp-
+    // medewerker actief staan en de wekelijkse herinnering op "nu" staan. Elke
+    // latere beheerderslogin haalde voor die medewerker alle maanden op (vanaf
+    // 2020), wat een volledige lokale run merkbaar trager maakte (TW-1, 19 sep).
+    // startDate gaat mee: zonder valt de server terug op vandaag en weigert hij
+    // het deactiveren met 409 (employment-start-hides-history).
+    try {
     await test.step('Given de wekelijkse herinnering staat aan voor nu (vandaag, huidige tijd, Europe/Amsterdam)', async () => {
       const csrf = await ctx.get('/server/auth/csrf.php');
       const token = String(((await csrf.json()) as { csrf_token?: string }).csrf_token ?? '');
@@ -222,9 +232,27 @@ test.describe('serverplanning herinneringen', () => {
       expect(secondRun.sent.weekly).toBe(0);
     });
 
-    await test.step('And cleanup', async () => {
-      await authApi.logout();
+    } finally {
+      const csrf = await ctx.get('/server/auth/csrf.php');
+      const token = String(((await csrf.json()) as { csrf_token?: string }).csrf_token ?? '');
+      const terug = await ctx.post('/server/api/settings.php', { headers: { 'X-CSRF-Token': token }, data: { settings: instellingenVooraf } }).catch(() => null);
+      expect.soft(terug?.status(), 'opruimen: de oorspronkelijke herinneringsinstellingen horen terug te staan').toBe(200);
+      if (gebruikerId > 0) {
+        const opgeruimd = await ctx.post('/server/api/staff.php', {
+          headers: { 'X-CSRF-Token': token },
+          data: {
+            action: 'upsert_employee',
+            sendInvitation: false,
+            employee: {
+              name: `REM-H-001 Medewerker ${unique}`, email: freshEmail, role: 'Tester', startDate: '2020-01-01',
+              dbEmployeeId: medewerkerId, dbUserId: gebruikerId, active: false, weeklyHours: 36, rate: 0,
+            },
+          },
+        }).catch(() => null);
+        expect.soft(opgeruimd?.status(), 'opruimen: de wegwerpmedewerker hoort gedeactiveerd te worden').toBe(200);
+      }
+      await authApi.logout().catch(() => null);
       await ctx.dispose();
-    });
+    }
   });
 });

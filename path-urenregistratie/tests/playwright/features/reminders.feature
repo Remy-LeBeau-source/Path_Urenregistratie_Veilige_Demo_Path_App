@@ -14,4 +14,3 @@ Feature: Serverplanning herinneringen
     When de scheduler voor het eerst draait
     Then staat er een reminder-mail in de queue voor de nieuwe medewerker
     And een tweede run binnen dezelfde week verstuurt niets extra (idempotent)
-    And cleanup

@@ -2314,6 +2314,7 @@ test.describe('volledige keten van nieuw account tot mailinhoud', () => {
     });
 
     let medewerkerId = 0;
+    let medewerkerGebruikerId = 0;
     await test.step('And een nieuwe medewerker met een eigen ontvanger, onderwerp en tekst', async () => {
       const res = await postJson(ctx, '/server/api/staff.php', {
         action: 'upsert_employee',
@@ -2349,6 +2350,7 @@ test.describe('volledige keten van nieuw account tot mailinhoud', () => {
       });
       expect(res.status, JSON.stringify(res.body)).toBe(200);
       medewerkerId = Number(res.body.employee_id);
+      medewerkerGebruikerId = Number(res.body.user_id || 0);
       expect(medewerkerId, 'de medewerker moet een profiel krijgen').toBeGreaterThan(0);
 
       const na = await (await ctx.get('/server/api/bootstrap.php')).json();
@@ -2433,19 +2435,26 @@ test.describe('volledige keten van nieuw account tot mailinhoud', () => {
         action: 'upsert_admin',
         admin: { dbUserId: beheerderId, name: `Keten Beheerder ${uniek}`, email: beheerderAdres, active: false },
       });
-      await postJson(ctx, '/server/api/staff.php', {
+      const medewerkerOpgeruimd = await postJson(ctx, '/server/api/staff.php', {
         action: 'upsert_employee',
         sendInvitation: false,
+        // dbUserId en startDate horen mee: zonder dbUserId botst het eigen
+        // accountadres met zichzelf, zonder startDate valt de server terug op
+        // vandaag. Allebei gaven een 409, waarna de medewerker actief bleef
+        // en elke latere beheerderslogin trager maakte (TW-1, 19 sep).
         employee: {
           dbEmployeeId: medewerkerId,
+          dbUserId: medewerkerGebruikerId,
           name: `Keten Medewerker ${uniek}`,
           email: medewerkerAdres,
           role: 'Consultant',
+          startDate: '2026-01-01',
           active: false,
           mailRecipientRoutes: {},
         },
         mailRecipients: bestaandeOntvangers,
       });
+      expect.soft(medewerkerOpgeruimd.status, 'opruimen: de Keten-medewerker hoort gedeactiveerd te worden: ' + JSON.stringify(medewerkerOpgeruimd.body)).toBe(200);
     });
 
     await authApi.logout();
@@ -2865,6 +2874,7 @@ test.describe('nieuw account door de volledige keten', () => {
     const eigenAdres = `extra-${uniek}@example.invalid`;
 
     let medewerkerId = 0;
+    let gebruikerIdNieuw = 0;
     let opdrachtId = 0;
     let periode = '';
 
@@ -2905,6 +2915,7 @@ test.describe('nieuw account door de volledige keten', () => {
       });
       expect(res.status, JSON.stringify(res.body)).toBe(200);
       medewerkerId = Number(res.body.employee_id || 0);
+      gebruikerIdNieuw = Number(res.body.user_id || 0);
       expect(medewerkerId, 'de medewerker moet een profiel krijgen').toBeGreaterThan(0);
     });
 
@@ -3060,10 +3071,13 @@ test.describe('nieuw account door de volledige keten', () => {
       });
     } finally {
       await test.step('And opruimen: het aangemaakte account wordt gedeactiveerd', async () => {
-        await postJson(ctx, '/server/api/staff.php', {
+        const opgeruimd = await postJson(ctx, '/server/api/staff.php', {
           action: 'upsert_employee', sendInvitation: false,
-          employee: { name: naam, email: adres, dbEmployeeId: medewerkerId, role: 'Consultant', active: false },
+          // Zonder dbUserId botst het eigen accountadres met zichzelf (409) en
+          // bleef de medewerker actief staan (TW-1, 19 sep).
+          employee: { name: naam, email: adres, dbEmployeeId: medewerkerId, dbUserId: gebruikerIdNieuw, role: 'Consultant', active: false },
         }).catch(() => null);
+        expect.soft(opgeruimd?.status, 'opruimen: de nieuwe medewerker hoort gedeactiveerd te worden: ' + JSON.stringify(opgeruimd?.body)).toBe(200);
         await authApi.logout();
         await ctx.dispose();
       });

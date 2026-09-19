@@ -73,6 +73,14 @@ Feature: Organisatie-instellingen beheren
     Then wordt met Playwright-assertions bevestigd dat dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount
 
   @negative
+  Scenario: [ADM-WR-N-012] een botsing die niets met het accountadres te maken heeft, meldt niet ten onrechte "e-mailadres al in gebruik"
+    # Testtechniek: Negatieve equivalentieklasse + error guessing
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given organisatie-instellingen beheren is voorbereid
+    When de flow voor ADM-WR-N-012 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat een botsing die niets met het accountadres te maken heeft, meldt niet ten onrechte "e-mailadres al in gebruik"
+
+  @negative
   Scenario: [ADM-WR-N-003] beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt geweigerd
     # Testtechniek: Beslissingstabel rollen en autorisatie
     # Aantoonbare Playwright-assertions in deze case: 10

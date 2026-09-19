@@ -448,6 +448,12 @@ test.describe('password reset api', () => {
       const chosenPassword = 'RuimVoldoendeLang2026!';
       let userId = 0;
 
+      // Opruimen, ook als een stap faalt. Eerder bleven per run een actieve
+      // Ketentest-beheerder en -medewerker achter; elke latere beheerderslogin
+      // haalde voor die medewerker alle maanden op (TW-1, 19 sep). Deactiveren
+      // via Teambeheer (users.php) werkt voor beide rollen, en de app telt een
+      // medewerker met een gedeactiveerd account ook als inactief.
+      try {
       await test.step(`Given de administrator een nieuwe ${role} aanmaakt met uitnodiging`, async () => {
         const authApi = new AuthApi(ctx);
         await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
@@ -518,6 +524,16 @@ test.describe('password reset api', () => {
         expect(String(login.body.user?.role || '')).toBe(isAdmin ? 'administrator' : 'employee');
         await postAuth(ctx, '/server/auth/logout.php', {});
       });
+      } finally {
+        if (userId > 0) {
+          await postAuth(ctx, '/server/auth/logout.php', {}).catch(() => null);
+          const authApi = new AuthApi(ctx);
+          await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD')).catch(() => null);
+          const opgeruimd = await postAuth(ctx, '/server/api/users.php', { action: 'deactivate', user_id: userId }).catch(() => null);
+          expect.soft(opgeruimd?.status, 'opruimen: het testaccount hoort gedeactiveerd te worden').toBe(200);
+          await postAuth(ctx, '/server/auth/logout.php', {}).catch(() => null);
+        }
+      }
     });
   }
 
@@ -787,6 +803,10 @@ test.describe('password reset api', () => {
     const adres = `uitnodiging-${uniek}@example.invalid`;
 
     let token = '';
+    let aangemaaktId = 0;
+    // Opruimen, ook als een stap faalt: anders blijft de wegwerpmedewerker actief
+    // staan en haalt elke latere beheerderslogin voor hem alle maanden op (TW-1).
+    try {
     await test.step('Given een uitgenodigde collega met een geldige eenmalige link', async () => {
       const before = await (await ctx.get('/server/api/bootstrap.php')).json();
       const aangemaakt = await postAuth(ctx, '/server/api/staff.php', {
@@ -807,6 +827,7 @@ test.describe('password reset api', () => {
         mailRecipients: before.mail_recipients,
       });
       expect(aangemaakt.status, JSON.stringify(aangemaakt.body)).toBe(200);
+      aangemaaktId = Number(aangemaakt.body.user_id || 0);
 
       const reset = await postAuth(ctx, '/server/auth/request-reset.php', { email: adres });
       expect(reset.status).toBe(200);
@@ -851,9 +872,14 @@ test.describe('password reset api', () => {
       await page.locator('#auth-reset-complete-submit').click();
       await expect(page.locator('#auth-reset-complete-feedback')).toContainText('Je wachtwoord is ingesteld');
     });
-
-    await auth.logout();
-    await ctx.dispose();
+    } finally {
+      if (aangemaaktId > 0) {
+        const opgeruimd = await postAuth(ctx, '/server/api/users.php', { action: 'deactivate', user_id: aangemaaktId }).catch(() => null);
+        expect.soft(opgeruimd?.status, 'opruimen: het testaccount hoort gedeactiveerd te worden').toBe(200);
+      }
+      await auth.logout().catch(() => null);
+      await ctx.dispose();
+    }
   });
 
   test('[PWD-H-018] de accountuitnodiging gebruikt een aanpasbare welkomsttekst met een vaste afzender-handtekening', async () => {
@@ -889,6 +915,9 @@ test.describe('password reset api', () => {
     const email = `herhaal-uitnodiging-${suffix}@example.invalid`;
     let userId = 0;
 
+    // Opruimen, ook als een stap faalt: anders blijft de wegwerpmedewerker actief
+    // staan en haalt elke latere beheerderslogin voor hem alle maanden op (TW-1).
+    try {
     await test.step('Given een nieuwe medewerker met een verstuurde uitnodiging', async () => {
       const authApi = new AuthApi(ctx);
       await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
@@ -920,7 +949,12 @@ test.describe('password reset api', () => {
         .toContain("$purpose !== 'invitation'");
       expect(service, 'de publieke wachtwoord-vergeten houdt de begrenzing van 3').toContain('AUTH_PASSWORD_RESET_MAX_REQUESTS = 3');
     });
-
-    await ctx.dispose();
+    } finally {
+      if (userId > 0) {
+        const opgeruimd = await postAuth(ctx, '/server/api/users.php', { action: 'deactivate', user_id: userId }).catch(() => null);
+        expect.soft(opgeruimd?.status, 'opruimen: het testaccount hoort gedeactiveerd te worden').toBe(200);
+      }
+      await ctx.dispose();
+    }
   });
 });

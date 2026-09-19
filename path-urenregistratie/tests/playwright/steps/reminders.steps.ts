@@ -18,4 +18,3 @@ Given("de wekelijkse herinnering staat aan voor nu (vandaag, huidige tijd, Europ
 When("de scheduler voor het eerst draait");
 Then("staat er een reminder-mail in de queue voor de nieuwe medewerker");
 And("een tweede run binnen dezelfde week verstuurt niets extra (idempotent)");
-And("cleanup");
