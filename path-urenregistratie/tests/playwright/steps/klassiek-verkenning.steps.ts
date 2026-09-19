@@ -94,3 +94,6 @@ Then("is de server weer leidend: de resetvlag is weg");
 And("na F5 leest de app de urenstaat van de server en synchroniseert verder invullen gewoon");
 When("de medewerker toch iets invult");
 Then("noemt de melding de reden die de server gaf");
+Given("een maand die op de server is ingediend");
+When("de medewerker iets invult en de server dat weigert");
+Then("noemt de app de reden, laat hij de herstelstand los en staat de maand op slot");

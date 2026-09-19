@@ -222,3 +222,11 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
     Given vondsten uit de monkey-verkenning op Klassiek is voorbereid
     When de medewerker toch iets invult
     Then noemt de melding de reden die de server gaf
+
+  @negative
+  Scenario: [KLV-N-026] na "Herstel demo" zet een door de server geweigerde invoer de ingediende maand weer op slot
+    # Testtechniek: Toestandsovergang (lokaal leidend na reset naar server leidend na een weigering die de serverstand bewijst) + foutvermoeden uit monkey-verkenning
+    # Aantoonbare Playwright-assertions in deze case: 6
+    Given een maand die op de server is ingediend
+    When de medewerker iets invult en de server dat weigert
+    Then noemt de app de reden, laat hij de herstelstand los en staat de maand op slot

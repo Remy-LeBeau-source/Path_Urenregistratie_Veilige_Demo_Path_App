@@ -1266,3 +1266,67 @@ for (const klasse of [
     await page.unroute('**/server/api/timesheets.php');
   });
 }
+
+test('[KLV-N-026] na "Herstel demo" zet een door de server geweigerde invoer de ingediende maand weer op slot', async ({ page }) => {
+  // Monkey-vondst seeds 30 tot 35 op telefoon (19 sep): na "Herstel demo" is een
+  // maand die op de server al is ingediend lokaal weer bewerkbaar. Elke invoer kreeg
+  // van de server terecht een 409 "timesheet-locked", maar de app bleef de maand
+  // bewerkbaar tonen, want in de herstelstand leest hij de server niet. De weigering
+  // bewijst dat de server hier leidend is: de app hoort de herstelstand dan los te
+  // laten, de serverstand over te nemen en de maand op slot te zetten.
+  // Techniek: toestandsovergang (lokaal leidend -> server leidend na een weigering
+  // die de serverstand bewijst) + foutvermoeden uit monkey-verkenning.
+  test.setTimeout(120_000);
+  const loginPage = new LoginPage(page);
+  page.on('dialog', dialoog => { dialoog.accept().catch(() => undefined); });
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  const vlag = () => page.evaluate(() => localStorage.getItem('path-uren-demo-v07-final:local-reset-authoritative'));
+  const invoer = page.locator('#hours-grid .hours-input:not([disabled]):visible');
+
+  // Een eigen maand, 24 maanden vooruit: de andere cases in dit bestand gebruiken
+  // 8 tot en met 23, en de server staat tot 2 jaar vooruit toe.
+  const { maand, werkdag, medewerkerId } = await page.evaluate(() => {
+    const rt = window as unknown as IndienRt;
+    const nu = new Date();
+    const d = new Date(nu.getFullYear(), nu.getMonth() + 24, 1);
+    while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
+    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    return { maand: key, werkdag: key + '-' + String(d.getDate()).padStart(2, '0'), medewerkerId: rt.currentEmployee().id };
+  });
+
+  await test.step('Given een maand die op de server is ingediend', async () => {
+    const csrf = async () => String(((await (await page.request.get('/server/auth/csrf.php')).json()) as { csrf_token?: string }).csrf_token || '');
+    const lees = async () => ((await (await page.request.get(`/server/api/timesheets.php?period=${maand}&employee_id=${medewerkerId}`)).json()) as { timesheet?: { status?: string; version?: number } }).timesheet;
+    if (String((await lees())?.status || '') !== 'submitted') {
+      const uren = { period: maand, contractual_hours: 160, billable_hours: 8, leave_hours: 0, sickness_hours: 0, day_entries: [{ work_date: werkdag, hours: 8, description: 'KLV-N-026' }] };
+      const concept = await page.request.post('/server/api/timesheets.php', { headers: { 'X-CSRF-Token': await csrf() }, data: { action: 'save_draft', ...uren, expected_version: (await lees())?.version } });
+      expect(concept.status(), await concept.text()).toBe(200);
+      const versie = Number(((await concept.json()) as { timesheet?: { version?: number } }).timesheet?.version || 0);
+      const ingediend = await page.request.post('/server/api/timesheets.php', { headers: { 'X-CSRF-Token': await csrf() }, data: { action: 'submit', ...uren, expected_version: versie } });
+      expect(ingediend.status(), await ingediend.text()).toBe(200);
+    }
+    expect(String((await lees())?.status || ''), 'de maand hoort op de server ingediend te zijn').toBe('submitted');
+  });
+
+  await test.step('And na "Herstel demo" staat die maand lokaal weer open', async () => {
+    await klikTestknop(page, '#quick-reset-demo');
+    await page.locator('#modal-confirm').click();
+    await expect.poll(vlag).toBe('1');
+    await page.locator('.nav-item[data-view="timesheet"]:visible').first().click();
+    await kiesMaand(page, maand);
+    await expect(invoer.first(), 'in de herstelstand is de maand lokaal bewerkbaar').toBeVisible({ timeout: 15_000 });
+  });
+
+  await test.step('When de medewerker iets invult en de server dat weigert', async () => {
+    const geweigerd = page.waitForResponse(r => r.url().includes('/server/api/timesheets.php') && r.request().method() === 'POST' && r.status() === 409, { timeout: 20_000 });
+    await invoer.first().fill('7');
+    await geweigerd;
+  });
+
+  await test.step('Then noemt de app de reden, laat hij de herstelstand los en staat de maand op slot', async () => {
+    await expect(page.locator('#hours-autosave-status')).toContainText(/ingediend|Backoffice/, { timeout: 15_000 });
+    await expect.poll(vlag, { message: 'de weigering bewijst dat de server leidend is', timeout: 15_000 }).toBeNull();
+    await expect(invoer, 'na de weigering hoort de ingediende maand op slot te staan').toHaveCount(0, { timeout: 15_000 });
+  });
+});
