@@ -1,8 +1,42 @@
 {
-  "appVersion": "2.0.195",
-  "generatedAt": "2026-09-19T07:01:44.912Z",
+  "appVersion": "2.0.197",
+  "generatedAt": "2026-09-19T08:16:36.982Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.197",
+      "wish": "Verkenning afgerond en wisselvallige cases nagelopen, zonder nieuwe fouten. Monkey-ronde met langere reeksen (seeds 28 tot 35, 200 stappen) op desktop en telefoon: desktop 8 van 8 schoon; telefoon 7 van 8, de ene val was de browser die het netwerk stillegde tijdens herladen (net::ERR_NETWORK_IO_SUSPENDED), geen fout in de app. De laatste acht CI-runs nagelopen op cases die pas bij herhalen slaagden: SKIN-H-031 (onderzocht, zie Open), AUTH-H-003 en E2E-H-008 (terrein van main, doorgegeven). Eén verbetering voor de testknoppen als nice-to-have genoteerd.",
+      "cases": [
+        {
+          "id": "SKIN-H-031",
+          "title": "de vijf stappen lopen in volgorde en geen stap staat groen terwijl een eerdere nog open is",
+          "feature": "tests/playwright/features/skin.feature",
+          "technique": "End-to-end use-case + visuele contractasserties",
+          "assertions": 11,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de vijf stappen lopen in volgorde en geen stap staat groen terwijl een eerdere nog open is\n  Given vormgevingsschakelaar (klassiek / nieuw) is voorbereid\n  Then staan er vijf stappen, in de volgorde uit het designcontract\n  When de maand nog concept is maar de factuurstatus al op verwerkt staat\n  And schuift de huidige stap mee zodra de maand is ingediend"
+        },
+        {
+          "id": "AUTH-H-003",
+          "title": "Gebruiker logt uit en auth/me geeft authenticated false terug",
+          "feature": "tests/playwright/features/auth.feature",
+          "technique": "End-to-end use-case + visuele contractasserties",
+          "assertions": 4,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: Gebruiker logt uit en auth/me geeft authenticated false terug\n  Given een ingelogde Path gebruiker\n  When de gebruiker uitlogt\n  Then auth/me geeft authenticated false en geen actieve user"
+        },
+        {
+          "id": "E2E-H-008",
+          "title": "urencontrole vraagt na oude versie opnieuw op en maakt daarna toch goedkeuren af",
+          "feature": "tests/playwright/features/end-to-end-workflows.feature",
+          "technique": "Beslissingstabel rollen en autorisatie",
+          "assertions": 9,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: urencontrole vraagt na oude versie opnieuw op en maakt daarna toch goedkeuren af\n  Given een urencontrole eerst met een oude lokale versie opent\n  When Backoffice de confirm drukt na het vrijgeven van de versieverversing\n  Then wordt de urencontrole goedgekeurd en verdwijnt de taak"
+        }
+      ]
+    },
     {
       "date": "19 sep",
       "version": "2.0.195",
@@ -503,7 +537,7 @@
           "technique": "Toestandsovergangtest op het bord (kolom naar kolom) met controle op de server in plaats van op het scherm + herstelbaarheid na herladen zonder browseropslag + tweede lezer ziet dezelfde stand + equivalentieklassen op de lezer (anoniem ziet geen naam, ingelogd wel)",
           "assertions": 21,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: een kaart verplaatsen verandert de stand echt en blijft staan na herladen\n  Given anoniem verplaatsen wordt geweigerd\n  Given de opslag kent deze kaart nog niet\n  When de kaart naar In uitvoering wordt gesleept\n  Then weet de server het, met een geschiedenisregel erbij\n  And blijft hij daar na herladen, ook zonder de browseropslag\n  And een tweede lezer ziet dezelfde stand\n  And de kaart gaat terug, zodat deze case geen sporen achterlaat"
+          "gherkin": ""
         }
       ]
     },
@@ -2225,6 +2259,12 @@
   ],
   "open": [
     {
+      "date": "19 sep",
+      "wish": "Wisselvallig in CI: SKIN-H-031 (de vijf stappen in Modern) viel één keer op mobile-chrome en slaagde bij herhalen (run 35422224770): na het lokaal op \"ingediend\" zetten stond \"Maand ingediend\" nog op \"Nog niet\". Onderzocht en met een deterministische proef uitgesloten: (1) een lezing van de urenstaat na het zetten van de toestand, (2) een late eerste lezing na het inloggen -- beide laten de case groen. Geen oplossing doorgevoerd zonder bewijs. Opnieuw bekijken als hij nog eens valt; het CI-rapport (ci-playwright-report-6) bevat trace en schermbeeld.",
+      "who": "herontwerp",
+      "status": "in de gaten houden"
+    },
+    {
       "date": "18 sep",
       "wish": "Opgelost: het openbare assets/app.js bevatte echte tarieven en contractvormen per medewerker met naam -- ook op PROD. Zie de volledige toelichting bij Klaar (2.0.180). PO's antwoord op de vraag welke richting: \"Kies wat het best is. En maak een Security testen aan. Veel testen volgens de Security test technieken toevoegen over de gehele applicatie.\"",
       "who": "main",
@@ -2291,6 +2331,11 @@
     }
   ],
   "niceToHave": [
+    {
+      "date": "19 sep",
+      "improvement": "Na \"Herstel demo\" op een maand die op de server al is ingediend, laat de app de maand bewerkbaar en krijgt elke invoer opnieuw een 409; bij zo'n weigering zou de app de lokale herstelstand kunnen loslaten en de serverstand overnemen (alleen waar de testknoppen bestaan)",
+      "why": "Gezien in vijf monkey-seeds op telefoon (28 tot 35); de melding zelf klopt sinds 2.0.194, maar de maand gaat nu pas op slot na verversen."
+    },
     {
       "date": "19 sep",
       "improvement": "Goedkeuringen sneller laden: de werkvoorraad doet bij elke beheerderslogin twee verzoeken per maand per medewerker (in een volle testdatabase 76 stuks); één gebundeld verzoek zou dat terugbrengen tot één",
