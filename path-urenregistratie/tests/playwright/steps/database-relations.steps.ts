@@ -22,3 +22,7 @@ Then("wordt met Playwright-assertions bevestigd dat de afhankelijke tabellen heb
 Given("een net aangemaakte medewerker met opdracht en mailroute");
 When("de beheerder de medewerker deactiveert en definitief verwijdert");
 Then("bestaat er geen enkele rij meer die naar die medewerker verwijst");
+Given("een geïsoleerde medewerker met opdracht, een urenstaat met een dagregel/correctie, en een mailroute op de opdracht");
+When("de urenstaat rechtstreeks in de database wordt verwijderd, buiten de app om");
+Then("heeft de database zelf de dagregel en de correctie meegenomen");
+And("heeft het rechtstreeks verwijderen van de opdracht ook de mailroute meegenomen");

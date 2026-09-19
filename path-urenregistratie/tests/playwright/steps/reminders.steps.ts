@@ -18,3 +18,7 @@ Given("de wekelijkse herinnering staat aan voor nu (vandaag, huidige tijd, Europ
 When("de scheduler voor het eerst draait");
 Then("staat er een reminder-mail in de queue voor de nieuwe medewerker");
 And("een tweede run binnen dezelfde week verstuurt niets extra (idempotent)");
+Given("de wekelijkse herinnering staat aan voor nu en is al eenmaal verstuurd (reminder_log heeft minstens één rij)");
+When("de gedeelde testreset draait");
+Then("is reminder_log echt leeg");
+And("kan dezelfde herinnering (opnieuw ingeschakeld na de reset) opnieuw echt verstuurd worden");

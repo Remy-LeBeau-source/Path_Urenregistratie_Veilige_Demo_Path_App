@@ -1,12 +1,39 @@
 import { expect, request as playwrightRequest, test } from '@playwright/test';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import mysql from 'mysql2/promise';
 import { AuthApi } from './api/AuthApi';
 import { EmailQueueApi } from './api/EmailQueueApi';
 import { TimesheetApi } from './api/TimesheetApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 
 const execFileAsync = promisify(execFile);
+
+// Zelfde databasetoegang als database-integrity.spec.ts: puur voor het
+// aflezen van reminder_log na de gedeelde testreset.
+function dbConfig() {
+  const database = String(
+    process.env.PATH_APP_DB_NAME || process.env.PLAYWRIGHT_DB_NAME || process.env.DB_NAME || '',
+  ).trim();
+  return {
+    host: process.env.PATH_APP_DB_HOST || process.env.PLAYWRIGHT_DB_HOST || process.env.DB_HOST || '127.0.0.1',
+    port: Number(process.env.PATH_APP_DB_PORT || process.env.PLAYWRIGHT_DB_PORT || process.env.DB_PORT || 3306),
+    user: process.env.PATH_APP_DB_USER || process.env.PLAYWRIGHT_DB_USER || process.env.DB_USER || 'root',
+    password: process.env.PATH_APP_DB_PASSWORD || process.env.PLAYWRIGHT_DB_PASSWORD || process.env.DB_PASSWORD || 'root',
+    database,
+  };
+}
+
+async function withDb<T>(fn: (conn: mysql.Connection) => Promise<T>): Promise<T> {
+  const cfg = dbConfig();
+  expect(cfg.database.toLowerCase().endsWith('_test'), `databasenaam moet op _test eindigen, is "${cfg.database}"`).toBe(true);
+  const conn = await mysql.createConnection(cfg);
+  try {
+    return await fn(conn);
+  } finally {
+    await conn.end();
+  }
+}
 
 type ReminderRunResult = { ok: boolean; now: string; sent: Record<string, number> };
 
@@ -251,6 +278,88 @@ test.describe('serverplanning herinneringen', () => {
         }).catch(() => null);
         expect.soft(opgeruimd?.status(), 'opruimen: de wegwerpmedewerker hoort gedeactiveerd te worden').toBe(200);
       }
+      await authApi.logout().catch(() => null);
+      await ctx.dispose();
+    }
+  });
+
+  test('[REM-H-002] de gedeelde testreset maakt reminder_log echt leeg, zodat een eerder verstuurde herinnering daarna opnieuw kan', async () => {
+    // Gemeld door herontwerp (19 sep): 2.0.132 voegde reminder_log toe aan de
+    // TRUNCATE-lijst in server/lib/test-reset.php (de enige tabel met een
+    // foreign key die de demoseed daarvoor niet leegmaakte), maar niets
+    // bewaakte dat -- grep op reminder_log in tests/ gaf niets. Zonder die
+    // regel blijft een eerder verstuurde herinnering geregistreerd staan terwijl
+    // de gebruiker waarnaar hij verwijst opnieuw is aangemaakt met een ander id,
+    // óf (bij een deterministisch hergebruikt id) blokkeert hij een latere,
+    // legitieme verzending via de unieke sleutel (user_id, reminder_type, period_key).
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const now = new Date();
+    const nowIso = now.toISOString();
+    const { day: nowDayAmsterdam, time: nowTimeAmsterdam } = amsterdamWeekdayAndTime(now);
+    const instellingenVooraf = await currentSettingsPayload(ctx);
+
+    try {
+      await test.step('Given de wekelijkse herinnering staat aan voor nu en is al eenmaal verstuurd (reminder_log heeft minstens één rij)', async () => {
+        const csrf = await ctx.get('/server/auth/csrf.php');
+        const token = String(((await csrf.json()) as { csrf_token?: string }).csrf_token ?? '');
+        const settings = await currentSettingsPayload(ctx);
+        const response = await ctx.post('/server/api/settings.php', {
+          headers: { 'X-CSRF-Token': token },
+          data: { settings: { ...settings, weeklyReminderEnabled: true, weeklyReminderDay: nowDayAmsterdam, weeklyReminderTime: nowTimeAmsterdam } },
+        });
+        expect(response.status()).toBe(200);
+
+        const firstRun = await runReminders(nowIso);
+        expect(firstRun.ok).toBe(true);
+
+        const aantalVoorReset = await withDb(async conn => {
+          const [rows] = await conn.query('SELECT COUNT(*) AS aantal FROM reminder_log');
+          return Number((rows as Array<{ aantal: number }>)[0]?.aantal ?? 0);
+        });
+        expect(aantalVoorReset, 'vóór de reset hoort er minstens één reminder_log-rij te staan').toBeGreaterThan(0);
+      });
+
+      await test.step('When de gedeelde testreset draait', async () => {
+        const csrf = await ctx.get('/server/auth/csrf.php');
+        const token = String(((await csrf.json()) as { csrf_token?: string }).csrf_token ?? '');
+        const resetResponse = await ctx.post('/server/api/test-reset.php', {
+          headers: { 'X-CSRF-Token': token },
+          data: { confirm: 'RESET_SHARED_TEST_BASELINE' },
+        });
+        const resetBody = await resetResponse.text();
+        expect(resetResponse.ok(), `TEST-reset gaf HTTP ${resetResponse.status()}: ${resetBody}`).toBe(true);
+      });
+
+      await test.step('Then is reminder_log echt leeg', async () => {
+        const aantalNaReset = await withDb(async conn => {
+          const [rows] = await conn.query('SELECT COUNT(*) AS aantal FROM reminder_log');
+          return Number((rows as Array<{ aantal: number }>)[0]?.aantal ?? 0);
+        });
+        expect(aantalNaReset, 'reminder_log hoort na de gedeelde testreset leeg te zijn').toBe(0);
+      });
+
+      await test.step('And kan dezelfde herinnering (opnieuw ingeschakeld na de reset) opnieuw echt verstuurd worden', async () => {
+        const csrf = await ctx.get('/server/auth/csrf.php');
+        const token = String(((await csrf.json()) as { csrf_token?: string }).csrf_token ?? '');
+        const settingsNaReset = await currentSettingsPayload(ctx);
+        const response = await ctx.post('/server/api/settings.php', {
+          headers: { 'X-CSRF-Token': token },
+          data: { settings: { ...settingsNaReset, weeklyReminderEnabled: true, weeklyReminderDay: nowDayAmsterdam, weeklyReminderTime: nowTimeAmsterdam } },
+        });
+        expect(response.status()).toBe(200);
+
+        const runNaReset = await runReminders(nowIso);
+        expect(runNaReset.ok).toBe(true);
+        expect(runNaReset.sent.weekly, 'na een echt lege reminder_log hoort de herinnering opnieuw te versturen, niet stil overgeslagen te worden').toBeGreaterThan(0);
+      });
+    } finally {
+      const csrf = await ctx.get('/server/auth/csrf.php');
+      const token = String(((await csrf.json()) as { csrf_token?: string }).csrf_token ?? '');
+      const terug = await ctx.post('/server/api/settings.php', { headers: { 'X-CSRF-Token': token }, data: { settings: instellingenVooraf } }).catch(() => null);
+      expect.soft(terug?.status(), 'opruimen: de oorspronkelijke herinneringsinstellingen horen terug te staan').toBe(200);
       await authApi.logout().catch(() => null);
       await ctx.dispose();
     }

@@ -1,8 +1,67 @@
 {
-  "appVersion": "2.0.201",
-  "generatedAt": "2026-09-19T11:54:49.402Z",
+  "appVersion": "2.0.204",
+  "generatedAt": "2026-09-19T13:22:41.942Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.204",
+      "wish": "Dekkingsronde, tweede pas: reminder_log-testreset (gemeld door herontwerp). 2.0.132 voegde reminder_log toe aan de TRUNCATE-lijst in server/lib/test-reset.php (de enige tabel met een foreign key die de demoseed daarvoor niet leegmaakte), maar niets bewaakte dat -- grep op reminder_log in tests/ gaf niets. Nieuw REM-H-002: verstuur een wekelijkse herinnering (reminder_log krijgt een rij), draai de gedeelde testreset, en bevestig dat de tabel daarna echt leeg is én dat dezelfde herinnering opnieuw kan worden verstuurd (niet stil overgeslagen door de unieke sleutel op user/type/periode). Tegenproef: reminder_log tijdelijk uit de TRUNCATE-lijst gehaald -> rood (4 achtergebleven rijen); teruggezet -> groen. SEC-H-017 (live CSP-header, eerder als mogelijk gat genoemd) bleek bij nader onderzoek géén gat: scripts/csp-header-check.mjs bewaakt dit al bewust via een broncodecontrole, met een uitleg in het bestand zelf waarom een live HTTP-check hier niet werkt (config.local.php is gedeeld tussen lokale runs/shards en heeft daarom bewust geen CSP-waarde; CI's eigen configstappen bevestigen dat). Niet toegevoegd.",
+      "cases": [
+        {
+          "id": "REM-H-002",
+          "title": "de gedeelde testreset maakt reminder_log echt leeg, zodat een eerder verstuurde herinnering daarna opnieuw kan",
+          "feature": "tests/playwright/features/reminders.feature",
+          "technique": "Toestandsovergang",
+          "assertions": 8,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de gedeelde testreset maakt reminder_log echt leeg, zodat een eerder verstuurde herinnering daarna opnieuw kan\n  Given de wekelijkse herinnering staat aan voor nu en is al eenmaal verstuurd (reminder_log heeft minstens één rij)\n  When de gedeelde testreset draait\n  Then is reminder_log echt leeg\n  And kan dezelfde herinnering (opnieuw ingeschakeld na de reset) opnieuw echt verstuurd worden"
+        }
+      ]
+    },
+    {
+      "date": "19 sep",
+      "version": "2.0.202",
+      "wish": "Dekkingsronde (PO: \"pak alle openstaande taken op en doe een volledige dekkingronde\"), eerste pas: databasegat. Vijf gebiedsonderzoeken (auth/security/teambeheer, dashboard/uren/goedkeuringen, facturen/klanturenstaten/mail, notificaties/instellingen/hulp/PWA/uiterlijk, database) tegen DEKKINGSRONDE.md. Vier van de vijf gebieden waren al volledig gedekt met echte assertions; het databasegebied had een echt gat: DB-H-003 controleerde alleen de information_schema-metadata (staat ON DELETE CASCADE als tekst gedeclareerd?), nooit dat de database die regel ook echt uitvoert -- de app zelf ruimt kindrijen altijd zelf op (DB-N-005), dus de echte CASCADE-uitvoering werd nergens getriggerd. Nieuw DB-H-004: rechtstreeks in de database (buiten de app om) een urenstaat en een opdracht verwijderen, en bevestigen dat time_entries/timesheet_corrections/assignment_mail_routes echt meeverdwijnen. Tegenproef: de drie ON DELETE CASCADE-clausules tijdelijk uit database/schema.sql gehaald en de geïsoleerde testdatabase opnieuw opgebouwd -> rood (FK-fout bij de verwijdering zelf); teruggezet -> groen. Overige vier gevonden gaten (SEC-H-017 live CSP-header, MOB-H-032 mobiele teambeheer-schrijfactie, REM-H-002+ overige herinneringssoorten, betaaltermijn-effect op vervaldatum) volgen in de volgende passen.",
+      "cases": [
+        {
+          "id": "DB-H-003",
+          "title": "de afhankelijke tabellen hebben de beloofde ON DELETE CASCADE",
+          "feature": "tests/playwright/features/database-relations.feature",
+          "technique": "API-contract + equivalentieklasse",
+          "assertions": 4,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de afhankelijke tabellen hebben de beloofde ON DELETE CASCADE\n  Given relationele database-integriteit is voorbereid\n  When de flow voor DB-H-003 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de afhankelijke tabellen hebben de beloofde ON DELETE CASCADE"
+        },
+        {
+          "id": "DB-N-005",
+          "title": "Een verwijderde medewerker zonder historie laat geen weesrijen achter",
+          "feature": "tests/playwright/features/database-relations.feature",
+          "technique": "Beslissingstabel rollen en autorisatie",
+          "assertions": 7,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een verwijderde medewerker zonder historie laat geen weesrijen achter\n  Given een net aangemaakte medewerker met opdracht en mailroute\n  When de beheerder de medewerker deactiveert en definitief verwijdert\n  Then bestaat er geen enkele rij meer die naar die medewerker verwijst"
+        },
+        {
+          "id": "DB-H-004",
+          "title": "het rechtstreeks verwijderen van een urenstaat of opdracht in de database neemt de kindrijen echt mee (ON DELETE CASCADE, niet alleen de metadata)",
+          "feature": "tests/playwright/features/database-relations.feature",
+          "technique": "API-contract + equivalentieklasse",
+          "assertions": 9,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: het rechtstreeks verwijderen van een urenstaat of opdracht in de database neemt de kindrijen echt mee (ON DELETE CASCADE, niet alleen de metadata)\n  Given een geïsoleerde medewerker met opdracht, een urenstaat met een dagregel/correctie, en een mailroute op de opdracht\n  When de urenstaat rechtstreeks in de database wordt verwijderd, buiten de app om\n  Then heeft de database zelf de dagregel en de correctie meegenomen\n  And heeft het rechtstreeks verwijderen van de opdracht ook de mailroute meegenomen"
+        },
+        {
+          "id": "REM-H-002",
+          "title": "de gedeelde testreset maakt reminder_log echt leeg, zodat een eerder verstuurde herinnering daarna opnieuw kan",
+          "feature": "tests/playwright/features/reminders.feature",
+          "technique": "Toestandsovergang",
+          "assertions": 8,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de gedeelde testreset maakt reminder_log echt leeg, zodat een eerder verstuurde herinnering daarna opnieuw kan\n  Given de wekelijkse herinnering staat aan voor nu en is al eenmaal verstuurd (reminder_log heeft minstens één rij)\n  When de gedeelde testreset draait\n  Then is reminder_log echt leeg\n  And kan dezelfde herinnering (opnieuw ingeschakeld na de reset) opnieuw echt verstuurd worden"
+        }
+      ]
+    },
     {
       "date": "19 sep",
       "version": "2.0.201",
@@ -542,7 +601,7 @@
           "technique": "Contractcontrole op het koppelingen-endpoint (vorm, statusregels per bron) + negatieve inhoudscontrole dat geen enkele instelling naar buiten lekt",
           "assertions": 22,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de koppelingen tonen welke bron geldt en lekken nooit een instelling\n  Given het koppelingen-endpoint van de open demo-omgeving\n  When de flow voor PIPE-H-009 wordt uitgevoerd\n  Then geldt onze eigen bron en staan de drie klantbronnen klaar\n  And staat er nergens een instelling in het antwoord\n  And legt de Kennisbank uit wat er per koppeling nodig is\n  And zegt de pagina over gegevens wat een voorbijganger wel en niet ziet"
+          "gherkin": ""
         }
       ]
     },
@@ -558,7 +617,7 @@
           "technique": "Datagedreven over alle openstaande kaarten (elk getal nagerekend tegen zijn eigen begindatum) + grenswaarden op de weekdrempel (6 gewoon, 7 valt op) en op enkelvoud/meervoud (vandaag, 1 dag, meer dagen), met een vastgezette klok",
           "assertions": 12,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: elke openstaande kaart toont hoe lang hij al open is, en valt op vanaf een week\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de flow voor PIPE-H-018 wordt uitgevoerd\n  Then heeft elke openstaande kaart een label, en opgeleverd werk niet\n  And klopt het getal voor elke kaart met zijn eigen begindatum\n  And valt hij pas op vanaf zeven dagen"
+          "gherkin": ""
         }
       ]
     },
