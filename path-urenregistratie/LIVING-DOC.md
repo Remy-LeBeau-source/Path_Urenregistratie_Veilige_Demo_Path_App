@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 651 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 654 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 651 unieke case-ID's
+- Playwright executable cases: 654 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 652 unieke case-ID's
+- Totaal executable cases: 655 unieke case-ID's
 - Playwright features: 33
 - Database features: 1
 - Playwright steps mappings: 33
 - Database steps mappings: 1
-- Uitvoeringen: 717
-- Niet-mobile projectuitvoeringen: 585
-- Mobile functionele cases: 66
-- Pixel 7 / Chromium-uitvoeringen: 66
-- iPhone 13 / WebKit-uitvoeringen: 66
+- Uitvoeringen: 722
+- Niet-mobile projectuitvoeringen: 586
+- Mobile functionele cases: 68
+- Pixel 7 / Chromium-uitvoeringen: 68
+- iPhone 13 / WebKit-uitvoeringen: 68
 
-De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 651 Playwright-functionele cases in totaal 717 resultaten op: 585 + (66 x 2) = 717.
+De 68 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 654 Playwright-functionele cases in totaal 722 resultaten op: 586 + (68 x 2) = 722.
 
 ## Documentatieketen
 
@@ -181,9 +181,9 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 651 Playwri
 - [E2E-H-019] dubbel klikken maakt nooit dubbele statussen, facturen of mails — Techniek: Toestandsovergang · Assertions: 24
 - [E2E-H-028] uren invullen en meteen verversen wordt native afgeraden zolang het concept nog niet is opgeslagen, in beide skins — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 9
 - [E2E-H-022] iedere case laat database en private opslag aantoonbaar schoon achter — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 20
-- [E2E-N-017] submitted, approved en invoiced blokkeren iedere verboden medewerkerwrite — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 34
+- [E2E-N-017] submitted, approved en invoiced blokkeren iedere verboden medewerkerwrite — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 26
 - [E2E-H-026] de definitieve factuur-PDF bevat de juiste bedragen en identiteit en geen conceptwatermerk — Techniek: Equivalentieklassen · Assertions: 16
-- [E2E-H-027] elk kanaal krijgt de standaardtekst van de server en geen enkele mail verlaat de machine — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 21
+- [E2E-H-027] elk kanaal krijgt de standaardtekst van de server en geen enkele mail verlaat de machine — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 14
 - [E2E-H-023] twee nieuw toegevoegde ontvangers krijgen via de volledige GUI-keten ieder hun eigen factuurmail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 12
 - [E2E-H-024] een nieuw account krijgt via de GUI toegang en zijn eigen tekst komt letterlijk in de verzonden mail — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 21
 - [E2E-H-025] een aangepaste standaardtekst werkt in de echte mail en is via de GUI terug te zetten — Techniek: End-to-end use-case + visuele contractasserties · Assertions: 15
@@ -382,9 +382,10 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 651 Playwri
 
 - Feature: `tests/playwright/features/invoice-locking.feature`
 - Source: `tests/playwright/invoice-lock.spec.ts`
-- Cases: 12
+- Cases: 13
 
 - [INV-H-004] admin lockt approved timesheet naar definitieve immutable factuur — Techniek: Concurrency + toestandsovergang · Assertions: 26
+- [INV-H-026] de betaaltermijn uit Instellingen bepaalt echt de vervaldatum op de factuur — Techniek: API-contract + equivalentieklasse · Assertions: 4
 - [INV-N-015] definitief gefactureerde uren kunnen niet voor correctie worden heropend — Techniek: Toestandsovergang · Assertions: 9
 - [INV-H-025] een goedgekeurde urenstaat mag terug naar correctie zolang er alleen een niet-vergrendelde conceptfactuur ligt — Techniek: Toestandsovergang · Assertions: 8
 - [INV-N-008] anonieme gebruiker kan factuur niet locken — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
@@ -452,7 +453,7 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 651 Playwri
 
 - Feature: `tests/playwright/features/mobile.feature`
 - Source: `tests/playwright/mobile-ui.spec.ts`
-- Cases: 31
+- Cases: 32
 
 - [MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 31
 - [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken — Techniek: Responsive viewport + end-to-end use-case · Assertions: 21
@@ -477,6 +478,7 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 651 Playwri
 - [MOB-H-021] de service worker en de iOS-beginschermmeta vormen een geldig installatiecontract — Techniek: Responsive viewport + end-to-end use-case · Assertions: 11
 - [MOB-H-022] de mobiele Home-knop zet de maandkiezer terug op de actuele maand — Techniek: Responsive viewport + end-to-end use-case · Assertions: 6
 - [MOB-H-023] het sluitkruisje van een lange dialoog blijft op de telefoon in beeld — Techniek: Responsive viewport + end-to-end use-case · Assertions: 19
+- [MOB-H-032] een medewerker aanmaken op de telefoon doet echt een serverschrijfactie, niet alleen een layoutcheck — Techniek: Responsive viewport + end-to-end use-case · Assertions: 9
 - [MOB-H-024] een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert — Techniek: Responsive viewport + end-to-end use-case · Assertions: 7
 - [MOB-H-025] elke .segmented-control krijgt een schuifrand zodra hij écht overloopt, generiek voor de hele app — Techniek: Responsive viewport + end-to-end use-case · Assertions: 6
 - [MOB-H-026] getypte velden blijven op 16px zodat iOS Safari niet inzoomt bij focus — Techniek: Responsive viewport + end-to-end use-case · Assertions: 9
@@ -730,7 +732,7 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 651 Playwri
 
 - Feature: `tests/playwright/features/pipeline-demo.feature`
 - Source: `tests/playwright/pipeline-demo.spec.ts`
-- Cases: 24
+- Cases: 25
 
 - [PIPE-N-003] de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt — Techniek: Regressiecontrole na hernoeming: oude URL blijft bereikbaar en verwijst door (meta-refresh) naar de nieuwe naam · Assertions: 6
 - [PIPE-H-001] de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin — Techniek: Datagedreven vergelijking (pagina versus pilot/path-kwaliteitsstraat-data.json) + traceerbaarheid over drie projecties · Assertions: 38
@@ -756,6 +758,7 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 651 Playwri
 - [PIPE-H-005] de weergaveknop kiest licht, donker of systeem en onthoudt die keuze — Techniek: Toestandsovergang over drie weergavestanden + meting van berekende stijl + persistentie na herladen · Assertions: 13
 - [PIPE-N-001] de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon — Techniek: Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole · Assertions: 20
 - [PIPE-H-006] de Living Doc leest op vijftien pixels, in licht en in donker — Techniek: Meting van berekende stijl in licht en donker + responsive viewport (intake #45) · Assertions: 5
+- [PIPE-H-019] elke kaart toont met initialen wie hem oppakt, afgeleid uit de wensenlijst — Techniek: Equivalentieklassen op het veld Wie (herontwerp, PO, oude PO-naam, besluit, main, leeg) met een nagebootste feed · Assertions: 5
 
 ### Vormgevingsschakelaar (klassiek / nieuw)
 

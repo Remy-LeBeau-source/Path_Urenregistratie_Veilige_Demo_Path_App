@@ -1,8 +1,112 @@
 {
-  "appVersion": "2.0.205",
-  "generatedAt": "2026-09-19T13:42:05.991Z",
+  "appVersion": "2.0.207",
+  "generatedAt": "2026-09-19T15:38:57.264Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.207",
+      "wish": "Volledige dekkingsronde: alle vier projecten lokaal in één run, 1183 geslaagd, 3 gevallen, 14 overgeslagen (2,2 uur); de drie vallers zijn opgelost of verklaard. Vannacht gaf alleen desktop al 5 vallers. E2E-H-025 en E2E-H-026 (mail en factuur-PDF) leunden nog op de huidige maand van de gezaaide medewerker en sloegen indienen stil over als er geen vrij vak was; ze gebruiken nu dezelfde hulpfunctie met een eigen goedgekeurde maand als E2E-H-018 en E2E-N-019 (dezelfde cases waren op de mobiele projecten in dezelfde run wel groen, dus het ging om de volgorde). TS-REV-UI-H-008 liep over zijn tijdslimiet terwijl er twee volledige runs tegelijk op de machine draaiden; los twee keer groen. Daarnaast een dekkingsanalyse van alle 137 Klaar-regels tegen de testcode: twee gaten gevonden en gedicht, de testreset van de herinneringen (door main, REM-H-002 in 2.0.204) en de avatar op de kaarten van de kwaliteitsstraat (PIPE-H-019: equivalentieklassen op het veld Wie, met nagebootste feed; tegenproef met een andere initiaal voor herontwerp gaf rood). Impactset groen: desktop 33 van 33, mobiel 6 van 6.",
+      "cases": [
+        {
+          "id": "E2E-H-025",
+          "title": "Een aangepaste standaardtekst werkt in de echte mail en is via de GUI terug te zetten",
+          "feature": "tests/playwright/features/end-to-end-workflows.feature",
+          "technique": "End-to-end use-case + visuele contractasserties",
+          "assertions": 15,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een aangepaste standaardtekst werkt in de echte mail en is via de GUI terug te zetten\n  Given Backoffice de standaardtekst voor Boekhouding opent\n  When Backoffice zonder wijziging opslaat, is er geen eigen tekst vastgelegd\n  When Backoffice een eigen standaardtekst invoert en de keten afrondt\n  Then zet Terug naar de meegeleverde tekst de eigen tekst weer weg"
+        },
+        {
+          "id": "E2E-H-026",
+          "title": "de definitieve factuur-PDF bevat de juiste bedragen en identiteit en geen conceptwatermerk",
+          "feature": "tests/playwright/features/end-to-end-workflows.feature",
+          "technique": "Equivalentieklassen",
+          "assertions": 16,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de definitieve factuur-PDF bevat de juiste bedragen en identiteit en geen conceptwatermerk\n  Given bedrijfsketens van medewerker tot Backoffice is voorbereid\n  When de flow voor E2E-H-026 wordt uitgevoerd\n  Then staan factuurnummer, identiteit en betaalregel letterlijk in de PDF\n  And kloppen de bedragen op de factuur met de vastgelegde waarden\n  And staat er geen conceptwatermerk op de definitieve factuur"
+        },
+        {
+          "id": "E2E-H-018",
+          "title": "iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF",
+          "feature": "tests/playwright/features/end-to-end-workflows.feature",
+          "technique": "Equivalentieklassen",
+          "assertions": 20,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF\n  Given een goedgekeurde urenstaat klaarstaat voor facturatie\n  When Backoffice de factuur definitief maakt\n  Then levert de factuurbijlage een echte, geldige PDF met veilige headers\n  And blijft dezelfde bijlage na een verversing byte voor byte gelijk\n  And belooft geen enkele delivery een bijlage zonder werkelijk bestand"
+        },
+        {
+          "id": "E2E-N-019",
+          "title": "Een mislukte factuurpoging laat niets half achter en opnieuw proberen levert één factuur",
+          "feature": "tests/playwright/features/end-to-end-workflows.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 13,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een mislukte factuurpoging laat niets half achter en opnieuw proberen levert één factuur\n  Given een goedgekeurde urenstaat en de voorstatus is vastgelegd\n  When de eerste factuurpoging gecontroleerd faalt\n  Then blijven taak, status, versie, factuur en deliveries onaangeroerd\n  When Backoffice het opnieuw probeert, ontstaat precies één factuur\n  And ontstaat per ontvanger precies één bericht zonder dubbele bijlage"
+        },
+        {
+          "id": "TS-REV-UI-H-008",
+          "title": "browserflow: correctie, herindiening, goedkeuring en heropening blijven servergestuurd",
+          "feature": "tests/playwright/features/correction-approval-ui.feature",
+          "technique": "Toestandsovergang",
+          "assertions": 30,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: browserflow: correctie, herindiening, goedkeuring en heropening blijven servergestuurd\n  Given de medewerker een urenstaat indient in de browser\n  When de administrator een correctieverzoek plaatst\n  Then ziet de medewerker het correctieverzoek en dient opnieuw in\n  And de administrator keurt de herindiening goed\n  Then ziet de medewerker de eindstatus Goedgekeurd\n  When de administrator de goedkeuring met reden intrekt\n  Then opent de medewerker de dashboardcorrectie en kan opnieuw indienen"
+        },
+        {
+          "id": "REM-H-002",
+          "title": "de gedeelde testreset maakt reminder_log echt leeg, zodat een eerder verstuurde herinnering daarna opnieuw kan",
+          "feature": "tests/playwright/features/reminders.feature",
+          "technique": "Toestandsovergang",
+          "assertions": 8,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de gedeelde testreset maakt reminder_log echt leeg, zodat een eerder verstuurde herinnering daarna opnieuw kan\n  Given de wekelijkse herinnering staat aan voor nu en is al eenmaal verstuurd (reminder_log heeft minstens één rij)\n  When de gedeelde testreset draait\n  Then is reminder_log echt leeg\n  And kan dezelfde herinnering (opnieuw ingeschakeld na de reset) opnieuw echt verstuurd worden"
+        },
+        {
+          "id": "PIPE-H-019",
+          "title": "elke kaart toont met initialen wie hem oppakt, afgeleid uit de wensenlijst",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Equivalentieklassen op het veld Wie (herontwerp, PO, oude PO-naam, besluit, main, leeg) met een nagebootste feed",
+          "assertions": 5,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: elke kaart toont met initialen wie hem oppakt, afgeleid uit de wensenlijst\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  And staat er nergens een persoonsnaam in een avatar\n  When de flow voor PIPE-H-019 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat elke kaart toont met initialen wie hem oppakt, afgeleid uit de wensenlijst"
+        }
+      ]
+    },
+    {
+      "date": "19 sep",
+      "version": "2.0.206",
+      "wish": "Dekkingsronde, derde en vierde pas: betaaltermijn-effect en een echte mobiele teambeheer-schrijfactie. INV-H-026: paymentTerm werd tot nu toe alleen als persistence-check teruggelezen (staat de instelling zelf goed opgeslagen?), nooit het effect ervan -- server/api/invoices.php telt payment_term_days dagen op bij de factuurdatum voor de vervaldatum. Nieuwe test zet de betaaltermijn op 45 dagen (ver van de standaard 30), lockt een factuur, en bevestigt dat de vervaldatum precies 45 dagen na de factuurdatum valt. Tegenproef: de berekening tijdelijk vastgezet op 30 dagen -> rood (2026-10-19 in plaats van 2026-11-03); teruggezet -> groen. MOB-H-032: MOB-H-023/025/031 dekten alleen de layout van Teambeheer op de telefoon, geen enkele mobiele case liet een echte schrijfactie (aanmaken/aanpassen/deactiveren) tot een echte API-aanroep doorlopen -- admin-writes.spec.ts/user-management.spec.ts dekken dat wel inhoudelijk maar draaien alleen op desktop. Nieuwe test maakt op mobile-chrome én mobile-safari een medewerker aan via de echte UI en bevestigt de serverschrijfactie (met page reload, zodat een puur lokale UI-illusie niet zou volstaan). Eigen valkuil onderweg: de eerste versie gebruikte per ongeluk isolateFrontendState() (de gemockte sandbox voor pure layouttests, bedoeld voor bijvoorbeeld MOB-H-023) -- daarmee retourneerde de gemockte staff.php altijd dezelfde gefingeerde medewerkerlijst, ongeacht de actie, en leek de test te slagen zonder ooit de echte server te raken (bevestigd doordat de aanroep zelfs niet in het PHP-toegangslog verscheen). Verwijderd; de test draait nu tegen de echte, draaiende testserver zoals de niet-gemockte cases verderop in hetzelfde bestand.",
+      "cases": [
+        {
+          "id": "INV-H-026",
+          "title": "de betaaltermijn uit Instellingen bepaalt echt de vervaldatum op de factuur",
+          "feature": "tests/playwright/features/invoice-locking.feature",
+          "technique": "API-contract + equivalentieklasse",
+          "assertions": 4,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de betaaltermijn uit Instellingen bepaalt echt de vervaldatum op de factuur\n  Given de betaaltermijn op 45 dagen staat\n  And een medewerker een urenstaat indient die wordt goedgekeurd\n  When de administrator de factuur finaliseert\n  Then valt de vervaldatum precies 45 dagen na de factuurdatum"
+        },
+        {
+          "id": "MOB-H-032",
+          "title": "Een medewerker aanmaken op de telefoon doet echt een serverschrijfactie, niet alleen een layoutcheck",
+          "feature": "tests/playwright/features/mobile.feature",
+          "technique": "Responsive viewport + end-to-end use-case",
+          "assertions": 9,
+          "platform": "mobile",
+          "gherkin": "Scenario: een medewerker aanmaken op de telefoon doet echt een serverschrijfactie, niet alleen een layoutcheck\n  Given een administrator opent op de telefoon Teambeheer en het aanmaakformulier\n  When opslaan wordt getikt\n  Then sluit de dialoog en toont het scherm de echte serverstand, niet alleen lokale UI-state"
+        },
+        {
+          "id": "MOB-H-023",
+          "title": "het sluitkruisje van een lange dialoog blijft op de telefoon in beeld",
+          "feature": "tests/playwright/features/mobile.feature",
+          "technique": "Responsive viewport + end-to-end use-case",
+          "assertions": 19,
+          "platform": "mobile",
+          "gherkin": "Scenario: het sluitkruisje van een lange dialoog blijft op de telefoon in beeld\n  Given een administrator opent op de telefoon een medewerker om aan te passen\n  When de flow voor MOB-H-023 wordt uitgevoerd\n  Then valt de dialoog volledig binnen het zichtbare scherm en staat het kruisje rechtsboven in beeld\n  And blijft het kruisje in beeld nadat de inhoud helemaal naar onderen is gescrold"
+        }
+      ]
+    },
     {
       "date": "19 sep",
       "version": "2.0.205",
@@ -66,6 +170,15 @@
           "assertions": 9,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: het rechtstreeks verwijderen van een urenstaat of opdracht in de database neemt de kindrijen echt mee (ON DELETE CASCADE, niet alleen de metadata)\n  Given een geïsoleerde medewerker met opdracht, een urenstaat met een dagregel/correctie, en een mailroute op de opdracht\n  When de urenstaat rechtstreeks in de database wordt verwijderd, buiten de app om\n  Then heeft de database zelf de dagregel en de correctie meegenomen\n  And heeft het rechtstreeks verwijderen van de opdracht ook de mailroute meegenomen"
+        },
+        {
+          "id": "MOB-H-032",
+          "title": "Een medewerker aanmaken op de telefoon doet echt een serverschrijfactie, niet alleen een layoutcheck",
+          "feature": "tests/playwright/features/mobile.feature",
+          "technique": "Responsive viewport + end-to-end use-case",
+          "assertions": 9,
+          "platform": "mobile",
+          "gherkin": "Scenario: een medewerker aanmaken op de telefoon doet echt een serverschrijfactie, niet alleen een layoutcheck\n  Given een administrator opent op de telefoon Teambeheer en het aanmaakformulier\n  When opslaan wordt getikt\n  Then sluit de dialoog en toont het scherm de echte serverstand, niet alleen lokale UI-state"
         },
         {
           "id": "REM-H-002",
@@ -534,7 +647,7 @@
           "technique": "Toestandsovergangtest (N open → Compleet) + grenswaarde (laatste open dag)",
           "assertions": 7,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: het label onder het weeknummer telt de open dagen van die week af tot Compleet\n  Given een week met nog open werkdagen\n  When de medewerker één dag invult, dan telt het label één af\n  Then staat er Compleet zodra elke werkdag van de week is ingevuld"
+          "gherkin": ""
         },
         {
           "id": "KLV-H-018",
@@ -543,7 +656,7 @@
           "technique": "Omgevingsafhankelijke test (TEST/lokaal vs PROD-host) + ordening- en grenscontrole (nieuwste ≤ appversie) + inhoudscontrole (geen namen of gevoelige gegevens) + responsive viewport",
           "assertions": 29,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: Berichten toont \"Nieuw in de app\" met de laatste 20 updates en tijdstip, 5 per pagina, zonder namen, alleen buiten PROD\n  Given vondsten uit de monkey-verkenning op Klassiek is voorbereid\n  When de flow voor KLV-H-018 wordt uitgevoerd\n  Then staan er lokaal/op TEST 20 updates met datum en tijdstip, nieuwste eerst\n  And staan er 5 per pagina met Vorige en Volgende, tot en met de laatste pagina\n  And staat geen naam of gevoelig gegeven in de teksten\n  And op de PROD-host is het blok weg"
+          "gherkin": ""
         }
       ]
     },
@@ -559,7 +672,7 @@
           "technique": "API-contract + equivalentieklasse",
           "assertions": 3,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: assets/app.js bevat nooit meer de echte financiële gegevens van de genoemde testers\n  Given het publiek opgehaalde assets/app.js\n  When de flow voor SEC-H-014 wordt uitgevoerd\n  Then bevat het geen van de echte tarieven, contractvormen of bemiddelaargegevens\n  And staat de scheiding zelf overeind: app.js verwijst naar het aparte seed-bestand, kent het niet uit het hoofd"
+          "gherkin": ""
         },
         {
           "id": "SEC-N-009",
@@ -568,7 +681,7 @@
           "technique": "Negatieve equivalentieklasse + error guessing",
           "assertions": 5,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: SQL-injectiepogingen op het loginformulier falen netjes, nooit met een serverfout\n  Given authenticatie- en API-beveiliging is voorbereid\n  When de flow voor SEC-N-009 wordt uitgevoerd\n  Then werkt een normale login daarna nog gewoon (de tabel bestaat nog, niets is gecorrumpeerd)"
+          "gherkin": ""
         },
         {
           "id": "SEC-N-010",
@@ -577,7 +690,7 @@
           "technique": "Negatieve equivalentieklasse + error guessing",
           "assertions": 3,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: een padtraversalpoging op een periode-parameter wordt afgewezen, niet stilzwijgend genegeerd tot een ander antwoord\n  Given authenticatie- en API-beveiliging is voorbereid\n  When de flow voor SEC-N-010 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat een padtraversalpoging op een periode-parameter wordt afgewezen, niet stilzwijgend genegeerd tot een ander antwoord"
+          "gherkin": ""
         },
         {
           "id": "SEC-H-015",
@@ -586,7 +699,7 @@
           "technique": "API-contract + equivalentieklasse",
           "assertions": 4,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de sessiecookie draagt HttpOnly en SameSite=Lax\n  Given authenticatie- en API-beveiliging is voorbereid\n  When de flow voor SEC-H-015 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de sessiecookie draagt HttpOnly en SameSite=Lax"
+          "gherkin": ""
         },
         {
           "id": "SEC-N-011",
@@ -595,7 +708,7 @@
           "technique": "Negatieve equivalentieklasse + error guessing",
           "assertions": 2,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: een kapotte JSON-payload lekt geen bestandspad of stacktrace naar de client\n  Given authenticatie- en API-beveiliging is voorbereid\n  When de flow voor SEC-N-011 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat een kapotte JSON-payload lekt geen bestandspad of stacktrace naar de client"
+          "gherkin": ""
         }
       ]
     },

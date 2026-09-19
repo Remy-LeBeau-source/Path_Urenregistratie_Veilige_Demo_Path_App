@@ -17,6 +17,15 @@ Feature: Facturen definitief maken en vergrendelen
     And de administrator kan de server-side gegenereerde factuur-PDF downloaden
     And cleanup de administrator-sessie wordt afgesloten
 
+  @happy
+  Scenario: [INV-H-026] de betaaltermijn uit Instellingen bepaalt echt de vervaldatum op de factuur
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given de betaaltermijn op 45 dagen staat
+    And een medewerker een urenstaat indient die wordt goedgekeurd
+    When de administrator de factuur finaliseert
+    Then valt de vervaldatum precies 45 dagen na de factuurdatum
+
   @negative
   Scenario: [INV-N-015] definitief gefactureerde uren kunnen niet voor correctie worden heropend
     # Testtechniek: Toestandsovergang

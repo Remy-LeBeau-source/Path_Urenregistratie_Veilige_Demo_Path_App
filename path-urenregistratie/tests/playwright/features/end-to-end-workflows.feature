@@ -161,7 +161,7 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
   @negative
   Scenario: [E2E-N-017] submitted, approved en invoiced blokkeren iedere verboden medewerkerwrite
     # Testtechniek: Beslissingstabel rollen en autorisatie
-    # Aantoonbare Playwright-assertions in deze case: 34
+    # Aantoonbare Playwright-assertions in deze case: 26
     Given een medewerker zijn urenstaat indient
     Then blokkeert submitted iedere medewerkerwrite
     When Backoffice goedkeurt, blokkeert approved die write opnieuw
@@ -181,7 +181,7 @@ Feature: Bedrijfsketens van medewerker tot Backoffice
   @happy
   Scenario: [E2E-H-027] elk kanaal krijgt de standaardtekst van de server en geen enkele mail verlaat de machine
     # Testtechniek: End-to-end use-case + visuele contractasserties
-    # Aantoonbare Playwright-assertions in deze case: 21
+    # Aantoonbare Playwright-assertions in deze case: 14
     Given bedrijfsketens van medewerker tot Backoffice is voorbereid
     When de flow voor E2E-H-027 wordt uitgevoerd
     Then draagt geen enkele delivery een onvervangen veld of lege tekst

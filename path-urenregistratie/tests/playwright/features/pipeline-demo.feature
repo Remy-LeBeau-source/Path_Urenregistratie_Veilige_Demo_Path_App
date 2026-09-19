@@ -250,3 +250,12 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
     Given de Living Doc in de Kennisbank
     When de flow voor PIPE-H-006 wordt uitgevoerd
     Then blijft de regel ook op een telefoon binnen beeld
+
+  @happy
+  Scenario: [PIPE-H-019] elke kaart toont met initialen wie hem oppakt, afgeleid uit de wensenlijst
+    # Testtechniek: Equivalentieklassen op het veld Wie (herontwerp, PO, oude PO-naam, besluit, main, leeg) met een nagebootste feed
+    # Aantoonbare Playwright-assertions in deze case: 5
+    Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid
+    And staat er nergens een persoonsnaam in een avatar
+    When de flow voor PIPE-H-019 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat elke kaart toont met initialen wie hem oppakt, afgeleid uit de wensenlijst

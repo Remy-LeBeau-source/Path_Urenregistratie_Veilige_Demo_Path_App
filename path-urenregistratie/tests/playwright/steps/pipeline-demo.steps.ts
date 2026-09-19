@@ -131,3 +131,6 @@ And("de pagina heeft geen horizontale overflow of gedeelde appcode");
 Given("de Living Doc in de Kennisbank");
 When("de flow voor PIPE-H-006 wordt uitgevoerd");
 Then("blijft de regel ook op een telefoon binnen beeld");
+And("staat er nergens een persoonsnaam in een avatar");
+When("de flow voor PIPE-H-019 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat elke kaart toont met initialen wie hem oppakt, afgeleid uit de wensenlijst");

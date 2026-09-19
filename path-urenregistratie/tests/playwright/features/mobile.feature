@@ -204,6 +204,14 @@ Feature: Mobiele gebruikerservaring
     And blijft het kruisje in beeld nadat de inhoud helemaal naar onderen is gescrold
 
   @happy
+  Scenario: [MOB-H-032] een medewerker aanmaken op de telefoon doet echt een serverschrijfactie, niet alleen een layoutcheck
+    # Testtechniek: Responsive viewport + end-to-end use-case
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given een administrator opent op de telefoon Teambeheer en het aanmaakformulier
+    When opslaan wordt getikt
+    Then sluit de dialoog en toont het scherm de echte serverstand, niet alleen lokale UI-state
+
+  @happy
   Scenario: [MOB-H-024] een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert
     # Testtechniek: Responsive viewport + end-to-end use-case
     # Aantoonbare Playwright-assertions in deze case: 7
