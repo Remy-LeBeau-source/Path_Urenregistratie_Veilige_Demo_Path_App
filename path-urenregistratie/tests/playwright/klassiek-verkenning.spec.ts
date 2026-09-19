@@ -1222,3 +1222,47 @@ test('[KLV-N-024] na "Herstel demo" leest de app de server weer zodra de uren zi
     await herstel().catch(() => undefined);
   }
 });
+
+// Monkey-vondst seed 24 op telefoon (19 sep): na indienen bleef een tweede weergave
+// van dezelfde maand bewerkbaar (bij de monkey via "Herstel demo", in het echt bv.
+// een tweede tabblad). Elke invoer kreeg van de server terecht een 409
+// "timesheet-locked", maar de app verving de servermelding altijd door "al
+// goedgekeurd of gefactureerd" -- ook als de maand alleen was ingediend en gewoon
+// bij Backoffice ligt. De server geeft per situatie de juiste zin; de app hoort die
+// door te geven. Techniek: equivalentieklassen op de reden van het slot (ingediend
+// tegenover goedgekeurd/gefactureerd), met de letterlijke serverantwoorden.
+for (const klasse of [
+  { naam: 'ingediend', melding: 'Een ingediende urenstaat ligt bij Backoffice en kan niet meer worden gewijzigd.', mag: /ingediend|Backoffice/, magNiet: /goedgekeurd\w* of gefactureerd/ },
+  { naam: 'goedgekeurd', melding: 'Een goedgekeurde of gefactureerde urenstaat kan niet meer worden gewijzigd.', mag: /goedgekeurd\w* of gefactureerd/, magNiet: /ingediend/ },
+]) {
+  test(`[KLV-N-025] een geweigerde opslag omdat de maand ${klasse.naam} is, noemt de echte reden`, async ({ page }) => {
+    test.setTimeout(90_000);
+    const loginPage = new LoginPage(page);
+    await loginPage.open();
+    await loginPage.loginAsEmployee();
+    await page.locator('.nav-item[data-view="timesheet"]:visible').first().click();
+    const veld = page.locator('#hours-grid .hours-input:not([disabled]):visible').first();
+    await expect(veld).toBeVisible();
+
+    await test.step(`Given de server weigert opslaan omdat de urenstaat ${klasse.naam} is`, async () => {
+      await page.route('**/server/api/timesheets.php', route => {
+        if (route.request().method() !== 'POST') return route.continue();
+        return route.fulfill({ status: 409, json: { ok: false, error: 'timesheet-locked', message: klasse.melding } });
+      });
+    });
+
+    await test.step('When de medewerker toch iets invult', async () => {
+      const geweigerd = page.waitForResponse(r => r.url().includes('/server/api/timesheets.php') && r.request().method() === 'POST');
+      await veld.fill('7');
+      await geweigerd;
+    });
+
+    await test.step('Then noemt de melding de reden die de server gaf', async () => {
+      const status = page.locator('#hours-autosave-status');
+      await expect(status).toContainText('Niet gesynchroniseerd', { timeout: 15_000 });
+      await expect(status).toContainText(klasse.mag);
+      await expect(status).not.toContainText(klasse.magNiet);
+    });
+    await page.unroute('**/server/api/timesheets.php');
+  });
+}

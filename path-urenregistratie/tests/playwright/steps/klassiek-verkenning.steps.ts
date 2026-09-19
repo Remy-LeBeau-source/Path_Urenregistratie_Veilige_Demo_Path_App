@@ -92,3 +92,5 @@ Given("de medewerker heeft de voorbeeldgegevens hersteld en staat op Mijn uren")
 When("de medewerker uren invult en die op de server worden opgeslagen");
 Then("is de server weer leidend: de resetvlag is weg");
 And("na F5 leest de app de urenstaat van de server en synchroniseert verder invullen gewoon");
+When("de medewerker toch iets invult");
+Then("noemt de melding de reden die de server gaf");

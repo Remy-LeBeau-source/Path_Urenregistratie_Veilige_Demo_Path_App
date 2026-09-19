@@ -214,3 +214,11 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
     When de medewerker uren invult en die op de server worden opgeslagen
     Then is de server weer leidend: de resetvlag is weg
     And na F5 leest de app de urenstaat van de server en synchroniseert verder invullen gewoon
+
+  @negative
+  Scenario: [KLV-N-025] een geweigerde opslag omdat de maand ${klasse.naam} is, noemt de echte reden
+    # Testtechniek: Equivalentieklassen op de reden van het slot (ingediend tegenover goedgekeurd/gefactureerd) met de letterlijke serverantwoorden
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given vondsten uit de monkey-verkenning op Klassiek is voorbereid
+    When de medewerker toch iets invult
+    Then noemt de melding de reden die de server gaf
