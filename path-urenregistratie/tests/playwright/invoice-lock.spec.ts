@@ -240,6 +240,88 @@ test('[INV-H-004] admin lockt approved timesheet naar definitieve immutable fact
   });
 });
 
+test('[INV-H-026] de betaaltermijn uit Instellingen bepaalt echt de vervaldatum op de factuur', async ({ request }) => {
+  // Dekkingsronde 19 sep: paymentTerm werd tot nu toe alleen teruggelezen als
+  // persistence-check (staat de instelling zelf goed opgeslagen?), nooit het
+  // effect ervan -- server/api/invoices.php regel ~735-736 telt payment_term_days
+  // dagen op bij de factuurdatum voor de vervaldatum. Grenswaarde: 45 dagen,
+  // ver van de standaardwaarde van 30, zodat een terugval op de standaard
+  // deze test zichtbaar rood zou maken.
+  const authApi = new AuthApi(request);
+  const invoiceApi = new InvoiceApi(request);
+  let instellingenVooraf: Record<string, unknown> | null = null;
+
+  try {
+    await test.step('Given de betaaltermijn op 45 dagen staat', async () => {
+      await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      const bootstrap = await (await request.get('/server/api/bootstrap.php')).json();
+      const company = (bootstrap.companies as Array<Record<string, unknown>>)[0];
+      instellingenVooraf = {
+        organizationName: company.trade_name,
+        invoiceNameDisplay: company.invoice_name_display,
+        appName: company.app_name,
+        supportName: company.support_name ?? '',
+        supportEmail: company.support_email ?? '',
+        website: company.website ?? '',
+        tagline: company.tagline ?? '',
+        brandPrimary: company.brand_primary,
+        brandAccent: company.brand_accent,
+        companyName: company.legal_name,
+        kvk: company.chamber_of_commerce_number,
+        vat: company.vat_number ?? '',
+        iban: company.iban ?? '',
+        address: company.address_line ?? '',
+        postalCity: [company.postal_code, company.city].filter(Boolean).join(' '),
+        phone: company.invoice_phone ?? '',
+        invoiceEmail: company.invoice_email ?? '',
+        paymentTerm: company.payment_term_days,
+      };
+      const csrf = await request.get('/server/auth/csrf.php');
+      const token = String(((await csrf.json()) as { csrf_token?: string }).csrf_token ?? '');
+      const response = await request.post('/server/api/settings.php', {
+        headers: { 'X-CSRF-Token': token },
+        data: { settings: { ...instellingenVooraf, paymentTerm: 45 } },
+      });
+      expect(response.status()).toBe(200);
+      await authApi.logout();
+    });
+
+    const submitted = await test.step('And een medewerker een urenstaat indient die wordt goedgekeurd', async () => {
+      const created = await createSubmittedTimesheet(request, 9);
+      return approveTimesheet(request, created);
+    });
+
+    let lockResponse: Awaited<ReturnType<InvoiceApi['lock']>>;
+    await test.step('When de administrator de factuur finaliseert', async () => {
+      await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      lockResponse = await invoiceApi.lock({ action: 'lock', timesheetId: submitted.timesheetId });
+      expect(lockResponse.status, JSON.stringify(lockResponse.body)).toBe(200);
+    });
+
+    await test.step('Then valt de vervaldatum precies 45 dagen na de factuurdatum', async () => {
+      const invoiceDate = String(lockResponse!.body.invoice.invoice_date || '');
+      const dueDate = String(lockResponse!.body.invoice.due_date || '');
+      expect(invoiceDate.length, 'de factuurdatum moet aanwezig zijn').toBeGreaterThan(0);
+      const verwacht = new Date(invoiceDate + 'T00:00:00Z');
+      verwacht.setUTCDate(verwacht.getUTCDate() + 45);
+      expect(dueDate).toBe(verwacht.toISOString().slice(0, 10));
+      await authApi.logout();
+    });
+  } finally {
+    if (instellingenVooraf) {
+      await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD')).catch(() => null);
+      const csrf = await request.get('/server/auth/csrf.php');
+      const token = String(((await csrf.json()) as { csrf_token?: string }).csrf_token ?? '');
+      const terug = await request.post('/server/api/settings.php', {
+        headers: { 'X-CSRF-Token': token },
+        data: { settings: instellingenVooraf },
+      }).catch(() => null);
+      expect.soft(terug?.status(), 'opruimen: de oorspronkelijke betaaltermijn hoort terug te staan').toBe(200);
+      await authApi.logout().catch(() => null);
+    }
+  }
+});
+
 test('[INV-N-015] definitief gefactureerde uren kunnen niet voor correctie worden heropend', async ({ request }) => {
   const authApi = new AuthApi(request);
   const invoiceApi = new InvoiceApi(request);

@@ -1690,6 +1690,87 @@ test('[MOB-H-023] het sluitkruisje van een lange dialoog blijft op de telefoon i
   });
 });
 
+// Dekkingsronde 19 sep: MOB-H-023/025/031 dekken alleen de layout van
+// Teambeheer op de telefoon (past de dialoog in beeld, geen overflow) --
+// geen enkele mobiele case liet daadwerkelijk een schrijfactie (aanmaken,
+// aanpassen, deactiveren) tot een echte API-aanroep/DB-effect doorlopen.
+// admin-writes.spec.ts/user-management.spec.ts dekken die schrijfacties wel
+// inhoudelijk, maar draaien alleen op desktop-chromium (staan niet in de
+// testMatch-lijst van de mobiele projecten in playwright.config.ts).
+test('[MOB-H-032] een medewerker aanmaken op de telefoon doet echt een serverschrijfactie, niet alleen een layoutcheck', async ({ page }) => {
+  // Bewust GEEN isolateFrontendState(page): die mockt o.a. staff.php
+  // onvoorwaardelijk (retourneert altijd dezelfde gefingeerde medewerkerlijst,
+  // ongeacht de actie), precies bedoeld voor pure layouttests zoals MOB-H-023
+  // die geen echte serverschrijfactie nodig hebben. Deze case moet juist tegen
+  // de echte, draaiende testserver -- zelfde inlog als de niet-gemockte cases
+  // verderop in dit bestand (loginAsAdmin() zonder voorafgaande mock-sandbox).
+  const loginPage = new LoginPage(page);
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+
+  const suffix = Date.now().toString().slice(-7);
+  const naam = `MOB-H-032 Medewerker ${suffix}`;
+  const email = `mob-h-032-${suffix}@example.invalid`;
+  let userId = 0;
+
+  try {
+    await test.step('Given een administrator opent op de telefoon Teambeheer en het aanmaakformulier', async () => {
+      await openView(page, 'employees');
+      await expect(page.locator('#view-employees')).toHaveClass(/is-active/);
+      await page.locator('#add-employee').click();
+      await expect(page.locator('#modal')).toBeVisible();
+      await page.locator('#edit-name').fill(naam);
+      await page.locator('#edit-account-email').fill(email);
+      await page.locator('#edit-role').fill('Consultant');
+      await page.locator('#edit-client').fill('MOB-H-032 klant');
+      await page.locator('#edit-project').fill(`MOB${suffix}`);
+      await page.locator('#edit-broker').fill('MOB-H-032 broker');
+      await page.locator('#edit-broker-email').fill('broker@example.invalid');
+    });
+
+    await test.step('When opslaan wordt getikt', async () => {
+      const schrijfAntwoord = page.waitForResponse(response => {
+        if (!response.url().includes('/server/api/staff.php') || response.request().method() !== 'POST') return false;
+        try {
+          const payload = response.request().postDataJSON() as { action?: string } | null;
+          return payload?.action === 'upsert_employee';
+        } catch {
+          return false;
+        }
+      });
+      await page.locator('#modal-confirm').click();
+      const antwoord = await schrijfAntwoord;
+      expect(antwoord.ok(), 'de server hoort de nieuwe medewerker echt op te slaan').toBe(true);
+      const body = await antwoord.json();
+      expect(body.ok).toBe(true);
+      userId = Number(body.user_id || 0);
+      expect(userId).toBeGreaterThan(0);
+    });
+
+    await test.step('Then sluit de dialoog en toont het scherm de echte serverstand, niet alleen lokale UI-state', async () => {
+      await expect(page.locator('#modal')).toBeHidden();
+      await expect(page.locator('#employee-grid')).toContainText(naam);
+
+      // Herlaad de pagina: als de eerdere stap alleen lokaal iets had getekend
+      // zonder echte serverschrijfactie, zou de nieuwe medewerker hier verdwijnen.
+      await page.reload();
+      await expect(page.locator('#login-screen')).toBeHidden();
+      await openView(page, 'employees');
+      await expect(page.locator('#employee-grid')).toContainText(naam, { timeout: 15_000 });
+    });
+  } finally {
+    if (userId > 0) {
+      const csrf = await page.request.get('/server/auth/csrf.php');
+      const token = String(((await csrf.json()) as { csrf_token?: string }).csrf_token ?? '');
+      const opgeruimd = await page.request.post('/server/api/users.php', {
+        headers: { 'X-CSRF-Token': token },
+        data: { action: 'deactivate', user_id: userId },
+      }).catch(() => null);
+      expect.soft(opgeruimd?.status(), 'opruimen: de wegwerpmedewerker hoort gedeactiveerd te worden').toBe(200);
+    }
+  }
+});
+
 // Regressie op de PWA-hang: bij de eerste login als medewerker kon
 // currentEmployee() heel even null zijn terwijl de serverdata binnenkwam, wat
 // midden in de hydratie-afronding een TypeError gaf -- geen hertekening, en op

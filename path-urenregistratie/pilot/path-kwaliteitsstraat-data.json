@@ -1,8 +1,42 @@
 {
-  "appVersion": "2.0.204",
-  "generatedAt": "2026-09-19T13:22:41.942Z",
+  "appVersion": "2.0.206",
+  "generatedAt": "2026-09-19T13:54:43.100Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.206",
+      "wish": "Dekkingsronde, derde en vierde pas: betaaltermijn-effect en een echte mobiele teambeheer-schrijfactie. INV-H-026: paymentTerm werd tot nu toe alleen als persistence-check teruggelezen (staat de instelling zelf goed opgeslagen?), nooit het effect ervan -- server/api/invoices.php telt payment_term_days dagen op bij de factuurdatum voor de vervaldatum. Nieuwe test zet de betaaltermijn op 45 dagen (ver van de standaard 30), lockt een factuur, en bevestigt dat de vervaldatum precies 45 dagen na de factuurdatum valt. Tegenproef: de berekening tijdelijk vastgezet op 30 dagen -> rood (2026-10-19 in plaats van 2026-11-03); teruggezet -> groen. MOB-H-032: MOB-H-023/025/031 dekten alleen de layout van Teambeheer op de telefoon, geen enkele mobiele case liet een echte schrijfactie (aanmaken/aanpassen/deactiveren) tot een echte API-aanroep doorlopen -- admin-writes.spec.ts/user-management.spec.ts dekken dat wel inhoudelijk maar draaien alleen op desktop. Nieuwe test maakt op mobile-chrome én mobile-safari een medewerker aan via de echte UI en bevestigt de serverschrijfactie (met page reload, zodat een puur lokale UI-illusie niet zou volstaan). Eigen valkuil onderweg: de eerste versie gebruikte per ongeluk isolateFrontendState() (de gemockte sandbox voor pure layouttests, bedoeld voor bijvoorbeeld MOB-H-023) -- daarmee retourneerde de gemockte staff.php altijd dezelfde gefingeerde medewerkerlijst, ongeacht de actie, en leek de test te slagen zonder ooit de echte server te raken (bevestigd doordat de aanroep zelfs niet in het PHP-toegangslog verscheen). Verwijderd; de test draait nu tegen de echte, draaiende testserver zoals de niet-gemockte cases verderop in hetzelfde bestand.",
+      "cases": [
+        {
+          "id": "INV-H-026",
+          "title": "de betaaltermijn uit Instellingen bepaalt echt de vervaldatum op de factuur",
+          "feature": "tests/playwright/features/invoice-locking.feature",
+          "technique": "API-contract + equivalentieklasse",
+          "assertions": 4,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de betaaltermijn uit Instellingen bepaalt echt de vervaldatum op de factuur\n  Given de betaaltermijn op 45 dagen staat\n  And een medewerker een urenstaat indient die wordt goedgekeurd\n  When de administrator de factuur finaliseert\n  Then valt de vervaldatum precies 45 dagen na de factuurdatum"
+        },
+        {
+          "id": "MOB-H-032",
+          "title": "Een medewerker aanmaken op de telefoon doet echt een serverschrijfactie, niet alleen een layoutcheck",
+          "feature": "tests/playwright/features/mobile.feature",
+          "technique": "Responsive viewport + end-to-end use-case",
+          "assertions": 9,
+          "platform": "mobile",
+          "gherkin": "Scenario: een medewerker aanmaken op de telefoon doet echt een serverschrijfactie, niet alleen een layoutcheck\n  Given een administrator opent op de telefoon Teambeheer en het aanmaakformulier\n  When opslaan wordt getikt\n  Then sluit de dialoog en toont het scherm de echte serverstand, niet alleen lokale UI-state"
+        },
+        {
+          "id": "MOB-H-023",
+          "title": "het sluitkruisje van een lange dialoog blijft op de telefoon in beeld",
+          "feature": "tests/playwright/features/mobile.feature",
+          "technique": "Responsive viewport + end-to-end use-case",
+          "assertions": 19,
+          "platform": "mobile",
+          "gherkin": "Scenario: het sluitkruisje van een lange dialoog blijft op de telefoon in beeld\n  Given een administrator opent op de telefoon een medewerker om aan te passen\n  When de flow voor MOB-H-023 wordt uitgevoerd\n  Then valt de dialoog volledig binnen het zichtbare scherm en staat het kruisje rechtsboven in beeld\n  And blijft het kruisje in beeld nadat de inhoud helemaal naar onderen is gescrold"
+        }
+      ]
+    },
     {
       "date": "19 sep",
       "version": "2.0.204",
@@ -50,6 +84,15 @@
           "assertions": 9,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: het rechtstreeks verwijderen van een urenstaat of opdracht in de database neemt de kindrijen echt mee (ON DELETE CASCADE, niet alleen de metadata)\n  Given een geïsoleerde medewerker met opdracht, een urenstaat met een dagregel/correctie, en een mailroute op de opdracht\n  When de urenstaat rechtstreeks in de database wordt verwijderd, buiten de app om\n  Then heeft de database zelf de dagregel en de correctie meegenomen\n  And heeft het rechtstreeks verwijderen van de opdracht ook de mailroute meegenomen"
+        },
+        {
+          "id": "MOB-H-032",
+          "title": "Een medewerker aanmaken op de telefoon doet echt een serverschrijfactie, niet alleen een layoutcheck",
+          "feature": "tests/playwright/features/mobile.feature",
+          "technique": "Responsive viewport + end-to-end use-case",
+          "assertions": 9,
+          "platform": "mobile",
+          "gherkin": "Scenario: een medewerker aanmaken op de telefoon doet echt een serverschrijfactie, niet alleen een layoutcheck\n  Given een administrator opent op de telefoon Teambeheer en het aanmaakformulier\n  When opslaan wordt getikt\n  Then sluit de dialoog en toont het scherm de echte serverstand, niet alleen lokale UI-state"
         },
         {
           "id": "REM-H-002",
@@ -585,7 +628,7 @@
           "technique": "Monkey testing (seeded) + grenswaardenanalyse + negatieve equivalentieklasse",
           "assertions": 11,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: meer dan 24 uur op een dag wordt direct in het vak gemeld en niet naar de server gestuurd\n  Given een medewerker op Mijn uren van een open maand\n  When de medewerker 25 uur op een dag intypt\n  Then is het vak ongeldig, staat er een duidelijke melding en gaat er niets naar de server\n  And geldt 24,5 ook als te veel, maar 24 precies niet"
+          "gherkin": ""
         }
       ]
     },

@@ -284,6 +284,7 @@
 | HELP-N-002 | ui | help-widget.feature | met een voorkeur voor verminderde beweging sluit het paneel direct, zonder op een animatie te wachten | Toestandsovergang | 2 | help-widget.steps.ts | help-widget.spec.ts | UI Desktop | Hulp & Contact | met een voorkeur voor verminderde beweging sluit het paneel direct, zonder op een animatie te wachten | Negative | 17 | Actueel |
 | HELP-H-005 | ui | help-widget.feature | op telefoon zit hulp in het profielmenu in plaats van een zwevende knop, voor medewerker en beheerder | Beslissingstabel rollen en autorisatie | 6 | help-widget.steps.ts | help-widget.spec.ts | UI Desktop | Hulp & Contact | op telefoon zit hulp in het profielmenu in plaats van een zwevende knop, voor medewerker en beheerder | Happy | 17 | Actueel |
 | INV-H-004 | integration | invoice-locking.feature | admin lockt approved timesheet naar definitieve immutable factuur | Concurrency + toestandsovergang | 26 | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | Factuur definitief maken | Happy | 11 | Actueel |
+| INV-H-026 | integration | invoice-locking.feature | de betaaltermijn uit Instellingen bepaalt echt de vervaldatum op de factuur | API-contract + equivalentieklasse | 4 | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | de betaaltermijn uit Instellingen bepaalt echt de vervaldatum op de factuur | Happy | 11 | Actueel |
 | INV-N-015 | integration | invoice-locking.feature | definitief gefactureerde uren kunnen niet voor correctie worden heropend | Toestandsovergang | 9 | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | definitief gefactureerde uren kunnen niet voor correctie worden heropend | Negative | 11 | Actueel |
 | INV-H-025 | integration | invoice-locking.feature | een goedgekeurde urenstaat mag terug naar correctie zolang er alleen een niet-vergrendelde conceptfactuur ligt | Toestandsovergang | 8 | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | een goedgekeurde urenstaat mag terug naar correctie zolang er alleen een niet-vergrendelde conceptfactuur ligt | Happy | 11 | Actueel |
 | INV-N-008 | integration | invoice-locking.feature | anonieme gebruiker kan factuur niet locken | Beslissingstabel rollen en autorisatie | 3 | invoice-locking.steps.ts | invoice-lock.spec.ts | DB / Integratie | Facturatie | Factuur definitief maken | Negative | 11 | Actueel |
@@ -355,6 +356,7 @@
 | MOB-H-021 | ui | mobile.feature | de service worker en de iOS-beginschermmeta vormen een geldig installatiecontract | Responsive viewport + end-to-end use-case | 11 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | de service worker en de iOS-beginschermmeta vormen een geldig installatiecontract | Happy | 15 | Actueel |
 | MOB-H-022 | ui | mobile.feature | de mobiele Home-knop zet de maandkiezer terug op de actuele maand | Responsive viewport + end-to-end use-case | 6 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | de mobiele Home-knop zet de maandkiezer terug op de actuele maand | Happy | 15 | Actueel |
 | MOB-H-023 | ui | mobile.feature | het sluitkruisje van een lange dialoog blijft op de telefoon in beeld | Responsive viewport + end-to-end use-case | 19 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | het sluitkruisje van een lange dialoog blijft op de telefoon in beeld | Happy | 15 | Actueel |
+| MOB-H-032 | ui | mobile.feature | een medewerker aanmaken op de telefoon doet echt een serverschrijfactie, niet alleen een layoutcheck | Responsive viewport + end-to-end use-case | 9 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | een medewerker aanmaken op de telefoon doet echt een serverschrijfactie, niet alleen een layoutcheck | Happy | 15 | Actueel |
 | MOB-H-024 | ui | mobile.feature | een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert | Responsive viewport + end-to-end use-case | 7 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert | Happy | 15 | Actueel |
 | MOB-H-025 | ui | mobile.feature | elke .segmented-control krijgt een schuifrand zodra hij écht overloopt, generiek voor de hele app | Responsive viewport + end-to-end use-case | 6 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | elke .segmented-control krijgt een schuifrand zodra hij écht overloopt, generiek voor de hele app | Happy | 15 | Actueel |
 | MOB-H-026 | ui | mobile.feature | getypte velden blijven op 16px zodat iOS Safari niet inzoomt bij focus | Responsive viewport + end-to-end use-case | 9 | mobile.steps.ts | mobile-ui.spec.ts | UI Mobile | Mobile Experience | getypte velden blijven op 16px zodat iOS Safari niet inzoomt bij focus | Happy | 15 | Actueel |
@@ -672,9 +674,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 650
+- Playwright executable cases: 652
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 651
+- Totaal unieke executable cases: 653
 - Playwright features: 33
 - Database features: 1
 - Playwright steps mappings: 33

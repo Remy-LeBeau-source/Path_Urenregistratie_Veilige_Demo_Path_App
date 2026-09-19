@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 650 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 652 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 650 unieke case-ID's
+- Playwright executable cases: 652 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 651 unieke case-ID's
+- Totaal executable cases: 653 unieke case-ID's
 - Playwright features: 33
 - Database features: 1
 - Playwright steps mappings: 33
 - Database steps mappings: 1
-- Uitvoeringen: 716
-- Niet-mobile projectuitvoeringen: 584
-- Mobile functionele cases: 66
-- Pixel 7 / Chromium-uitvoeringen: 66
-- iPhone 13 / WebKit-uitvoeringen: 66
+- Uitvoeringen: 719
+- Niet-mobile projectuitvoeringen: 585
+- Mobile functionele cases: 67
+- Pixel 7 / Chromium-uitvoeringen: 67
+- iPhone 13 / WebKit-uitvoeringen: 67
 
-De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 650 Playwright-functionele cases in totaal 716 resultaten op: 584 + (66 x 2) = 716.
+De 67 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 652 Playwright-functionele cases in totaal 719 resultaten op: 585 + (67 x 2) = 719.
 
 ## Documentatieketen
 
@@ -382,9 +382,10 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 650 Playwri
 
 - Feature: `tests/playwright/features/invoice-locking.feature`
 - Source: `tests/playwright/invoice-lock.spec.ts`
-- Cases: 12
+- Cases: 13
 
 - [INV-H-004] admin lockt approved timesheet naar definitieve immutable factuur — Techniek: Concurrency + toestandsovergang · Assertions: 26
+- [INV-H-026] de betaaltermijn uit Instellingen bepaalt echt de vervaldatum op de factuur — Techniek: API-contract + equivalentieklasse · Assertions: 4
 - [INV-N-015] definitief gefactureerde uren kunnen niet voor correctie worden heropend — Techniek: Toestandsovergang · Assertions: 9
 - [INV-H-025] een goedgekeurde urenstaat mag terug naar correctie zolang er alleen een niet-vergrendelde conceptfactuur ligt — Techniek: Toestandsovergang · Assertions: 8
 - [INV-N-008] anonieme gebruiker kan factuur niet locken — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
@@ -452,7 +453,7 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 650 Playwri
 
 - Feature: `tests/playwright/features/mobile.feature`
 - Source: `tests/playwright/mobile-ui.spec.ts`
-- Cases: 31
+- Cases: 32
 
 - [MOB-H-001] mobiele login navigatie en dashboard blijven volledig bereikbaar — Techniek: Responsive viewport + end-to-end use-case · Assertions: 31
 - [MOB-H-002] mobiele medewerker kan concepturen opslaan indienen en documentupload bereiken — Techniek: Responsive viewport + end-to-end use-case · Assertions: 21
@@ -477,6 +478,7 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 650 Playwri
 - [MOB-H-021] de service worker en de iOS-beginschermmeta vormen een geldig installatiecontract — Techniek: Responsive viewport + end-to-end use-case · Assertions: 11
 - [MOB-H-022] de mobiele Home-knop zet de maandkiezer terug op de actuele maand — Techniek: Responsive viewport + end-to-end use-case · Assertions: 6
 - [MOB-H-023] het sluitkruisje van een lange dialoog blijft op de telefoon in beeld — Techniek: Responsive viewport + end-to-end use-case · Assertions: 19
+- [MOB-H-032] een medewerker aanmaken op de telefoon doet echt een serverschrijfactie, niet alleen een layoutcheck — Techniek: Responsive viewport + end-to-end use-case · Assertions: 9
 - [MOB-H-024] een net ingelogde medewerker ziet op de telefoon een volledig geladen dashboard, ook als de eerste sync-afronding hapert — Techniek: Responsive viewport + end-to-end use-case · Assertions: 7
 - [MOB-H-025] elke .segmented-control krijgt een schuifrand zodra hij écht overloopt, generiek voor de hele app — Techniek: Responsive viewport + end-to-end use-case · Assertions: 6
 - [MOB-H-026] getypte velden blijven op 16px zodat iOS Safari niet inzoomt bij focus — Techniek: Responsive viewport + end-to-end use-case · Assertions: 9
