@@ -1,4 +1,5 @@
-// LET OP: deze smoke duurt ongeveer 15 minuten en schrijft PAS AAN HET EIND iets
+// LET OP: deze smoke duurt lokaal ongeveer 5 minuten (was 8-15 vóór het snelpad
+// voor querySelector("#id") hieronder, 19 sep) en schrijft PAS AAN HET EIND iets
 // naar stdout -- één regel: "Path vX.Y.Z volledige smoke test: geslaagd".
 // Nul uitvoer onderweg is dus normaal en géén symptoom.
 //
@@ -34,6 +35,33 @@ const dom = new JSDOM(html, {
 });
 
 dom.window.scrollTo = () => {};
+// Snelpad voor document.querySelector("#id"). De smoke rendert de hele app vele
+// keren in JSDOM, en nwsapi doorzoekt voor een id-selector telkens de volledige
+// boom; getElementById gebruikt een index. Dat haalde de looptijd lokaal van 514
+// naar 315 seconden (19 sep). Alleen een kale id-selector op document gaat via
+// het snelpad; al het andere blijft ongewijzigd. Eenmalig vergeleken over de hele
+// smoke: 56.209 aanroepen, nul verschillen. Omdat dubbele id's dat ooit anders
+// kunnen maken, vergelijkt elke 25e aanroep alsnog met het trage pad en stopt de
+// smoke met een duidelijke melding als ze verschillen. Die melding wordt ook
+// bewaard en aan het eind hard gecontroleerd: binnen een event-handler van de app
+// vangt JSDOM een fout af als "Uncaught", en dan zou de smoke toch slagen.
+const snelpadAfwijkingen = [];
+{
+  const doc = dom.window.document;
+  const traag = doc.querySelector.bind(doc);
+  const kaleId = /^#[A-Za-z][A-Za-z0-9_-]*$/;
+  let teller = 0;
+  doc.querySelector = (sel) => {
+    if (typeof sel !== "string" || !kaleId.test(sel)) return traag(sel);
+    const snel = doc.getElementById(sel.slice(1));
+    teller += 1;
+    if (teller % 25 === 0 && snel !== traag(sel)) {
+      snelpadAfwijkingen.push(sel);
+      throw new Error("Snelpad voor querySelector wijkt af bij " + sel + " (dubbel id?). Haal het snelpad weg of los het dubbele id op.");
+    }
+    return snel;
+  };
+}
 dom.window.URL.createObjectURL = () => "blob:test";
 dom.window.URL.revokeObjectURL = () => {};
 dom.window.fetch = () => new Promise(() => {});
@@ -2192,6 +2220,7 @@ assert((playwrightConfigSrc.match(/override:\s*false/g) || []).length >= 2, "Pla
 }
 
 dom.window.close();
+assert(snelpadAfwijkingen.length === 0, "Snelpad voor querySelector week af bij: " + [...new Set(snelpadAfwijkingen)].join(", ") + " (dubbel id?)");
 console.log("Path v2.0.186 volledige smoke test: geslaagd");
 // app.js schedules browser refresh timers. In JSDOM those timers can keep Node
 // alive after every assertion has completed, which made the release check look
