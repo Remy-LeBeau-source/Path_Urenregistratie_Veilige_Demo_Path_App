@@ -1,8 +1,24 @@
 {
-  "appVersion": "2.0.190",
-  "generatedAt": "2026-09-19T05:14:31.269Z",
+  "appVersion": "2.0.191",
+  "generatedAt": "2026-09-19T05:37:53.012Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.191",
+      "wish": "Monkey-vondst van herontwerp: het gewone opslaan van uren hief de lokale herstelvoorrang niet op. Van de acht plekken in app.js die na een geslaagde serverschrijfactie releaseLocalResetAuthorityAfterServerWrite() horen aan te roepen (de klanturenstaat is er op 18 sep al eerder om gerepareerd, zie die toelichting hierboven), miste writeTimesheetToApi -- het gewone opslaan/indienen van Mijn uren -- deze aanroep als enige nog. Gevolg: bleef de lokale-herstelvlag staan na \"↶ Herstel demo\" of de TEST-reset, dan werden alle serverlezingen genegeerd, ook na F5, terwijl er gewoon uren werden opgeslagen; een volgende invoer liep dan tegen een 409 \"door iemand anders gewijzigd\" aan die de bestaande herstelstap (KLV-N-004) niet kon oplossen omdat die zelf ook op serverlezingen leunt. Regel toegevoegd op precies dezelfde plek als bij de klanturenstaat. Tegenproef door herontwerp uitgevoerd tegen de echte reset-knop (#quick-reset-demo): rood op de ongewijzigde code (de vlag bleef \"1\" na een geslaagde opslag), groen met deze ene regel; nieuwe case KLV-N-024 volgt apart op herontwerp.",
+      "cases": [
+        {
+          "id": "KLV-N-004",
+          "title": "Een trage opslag die pas na herladen aankomt, blokkeert de volgende invoer niet",
+          "feature": "tests/playwright/features/klassiek-verkenning.feature",
+          "technique": "Monkey testing (seeded) + concurrency + herstelbaarheid",
+          "assertions": 7,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een trage opslag die pas na herladen aankomt, blokkeert de volgende invoer niet\n  Given een medewerker op Mijn uren met een urenstaat die al een serverversie heeft\n  When een opslag onderweg is, de pagina herlaadt en die opslag pas daarna aankomt\n  And de medewerker daarna gewoon verder invult\n  Then wordt die invoer zonder foutmelding opgeslagen en staat hij na nog een herlading op de server"
+        }
+      ]
+    },
     {
       "date": "19 sep",
       "version": "2.0.190",
@@ -504,7 +520,7 @@
           "technique": "Grenswaardenanalyse",
           "assertions": 4,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: het openen van de avatarkiezer overleeft een scroll-event dat de eigen hoogtewijziging veroorzaakt\n  Given avatarkiezer in het profielmenu is voorbereid\n  When de avatarkiezer wordt geopend en dat, net als op mobiel, meteen een scroll-event oplevert\n  Then blijven het profielmenu en de avatarkiezer open"
+          "gherkin": ""
         }
       ]
     },
