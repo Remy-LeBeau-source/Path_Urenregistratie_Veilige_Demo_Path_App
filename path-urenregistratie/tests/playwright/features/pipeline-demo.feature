@@ -179,7 +179,7 @@ Feature: Interactieve Path Pipeline als zelfstandige TEST-demo met echte project
   @happy
   Scenario: [PIPE-H-007] de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet
     # Testtechniek: Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst
-    # Aantoonbare Playwright-assertions in deze case: 26
+    # Aantoonbare Playwright-assertions in deze case: 25
     Given de keuzelijst toont de nice-to-haves uit GIO-WENSEN
     When de PO een verbetering kiest, then staan samenvatting en waarde ingevuld en blijft het criterium aan hem
     And zelf typen blijft mogelijk: aanpassen maakt de keuze niet ongedaan, loslaten wel

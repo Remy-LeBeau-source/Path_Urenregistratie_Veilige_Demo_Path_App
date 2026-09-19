@@ -1296,12 +1296,21 @@ test.describe('Path Pipeline TEST-demo', () => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     // De Confluence-pagina heeft zelf ook koppen als Stakeholdervraag: velden binnen het formulier zoeken.
     const formulier = page.locator('[data-ticket-form]');
+    // Een vaste keuzelijst in de feed. Eerder las de case de actuele GIO-WENSEN, en
+    // toen de laatste nice-to-have klaar was en de lijst leeg werd, viel hij om
+    // zonder dat er aan het formulier iets mis was (CI 2.0.184, 19 sep; TW-1).
+    // De rest van de feed (versie, tijdstip) blijft echt.
+    const echteFeed = await page.request.get('/pilot/path-kwaliteitsstraat-data.json').then((r) => r.json()) as Record<string, unknown>;
+    const feed = {
+      ...echteFeed,
+      niceToHave: [
+        { date: '19 sep', improvement: 'Proefverbetering A voor de keuzelijst: een zin die lang genoeg is om af te kappen in de samenvatting van het formulier', why: 'Waarom A: zodat de case altijd iets heeft om te kiezen, los van de actuele wensenlijst' },
+        { date: '19 sep', improvement: 'Proefverbetering B voor de keuzelijst', why: 'Waarom B' },
+      ],
+    } as { appVersion: string; generatedAt: string; niceToHave: Array<{ improvement: string; why: string }> };
+    await page.route('**/pilot/path-kwaliteitsstraat-data.json*', (route) => route.fulfill({ json: feed }));
     await page.goto('/pilot/path-kwaliteitsstraat.html');
     await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
-    const feed = await page.request.get('/pilot/path-kwaliteitsstraat-data.json').then((r) => r.json()) as {
-      appVersion: string; generatedAt: string; niceToHave: Array<{ improvement: string; why: string }>;
-    };
-    expect(feed.niceToHave.length, 'GIO-WENSEN "Nice to have" levert de keuzelijst').toBeGreaterThan(0);
 
     await test.step('Given de keuzelijst toont de nice-to-haves uit GIO-WENSEN', async () => {
       const chips = page.locator('[data-keuzelijst] [data-keuze]:not([data-keuze="-1"])');

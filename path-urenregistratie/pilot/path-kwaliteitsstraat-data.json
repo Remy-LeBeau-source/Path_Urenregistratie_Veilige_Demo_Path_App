@@ -1,8 +1,24 @@
 {
-  "appVersion": "2.0.184",
-  "generatedAt": "2026-09-19T01:04:23.856Z",
+  "appVersion": "2.0.186",
+  "generatedAt": "2026-09-19T01:36:22.364Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.186",
+      "wish": "Testset: de keuzelijst-case op de kwaliteitsstraat hangt niet meer af van wat er toevallig in \"Nice to have\" staat. Toen in 2.0.184 de laatste nice-to-have klaar was en de lijst leeg werd, viel PIPE-H-007 in CI, terwijl het formulier gewoon werkte. De case zet nu zelf een vaste keuzelijst van twee verbeteringen in de feed en toetst daarmee kiezen, voorinvullen en loslaten; versie en tijdstip blijven echt. Daarnaast twee echte nice-to-haves toegevoegd die uit de metingen van vannacht komen (Goedkeuringen sneller laden, smoke-test korter). Techniek: testware-analyse op testonafhankelijkheid (ISTQB). Tegenproef: de pagina de keuzelijst uit de feed laten negeren geeft rood (verwacht 2, kreeg 0); teruggezet en groen. pipeline-demo 24 van 24 groen.",
+      "cases": [
+        {
+          "id": "PIPE-H-007",
+          "title": "de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet",
+          "feature": "tests/playwright/features/pipeline-demo.feature",
+          "technique": "Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst",
+          "assertions": 25,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet\n  Given de keuzelijst toont de nice-to-haves uit GIO-WENSEN\n  When de PO een verbetering kiest, then staan samenvatting en waarde ingevuld en blijft het criterium aan hem\n  And zelf typen blijft mogelijk: aanpassen maakt de keuze niet ongedaan, loslaten wel\n  And het type heet Onderhoud, niet Chore\n  And de volgorde in Te doen is met het toetsenbord te wijzigen en blijft na herladen\n  And bovenin staat hoe vers de stand is en de versie staat in de voet zoals in de urenapp\n  Then wordt met Playwright-assertions bevestigd dat de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet"
+        }
+      ]
+    },
     {
       "date": "19 sep",
       "version": "2.0.184",
@@ -1116,7 +1132,7 @@
           "title": "de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet",
           "feature": "tests/playwright/features/pipeline-demo.feature",
           "technique": "Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst",
-          "assertions": 26,
+          "assertions": 25,
           "platform": "desktop-chromium",
           "gherkin": ""
         }
@@ -1132,7 +1148,7 @@
           "title": "de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet",
           "feature": "tests/playwright/features/pipeline-demo.feature",
           "technique": "Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst",
-          "assertions": 26,
+          "assertions": 25,
           "platform": "desktop-chromium",
           "gherkin": ""
         }
@@ -1148,7 +1164,7 @@
           "title": "de keuzelijst vult het formulier voor, Te doen laat zich ordenen en de versie staat in de voet",
           "feature": "tests/playwright/features/pipeline-demo.feature",
           "technique": "Beslistabel op de keuzelijst (kiezen, zelf typen, loslaten) + toestandsovergang van de volgorde in Te doen (toetsenbord, herladen) + inhoudscontrole van versheidsregel en voettekst",
-          "assertions": 26,
+          "assertions": 25,
           "platform": "desktop-chromium",
           "gherkin": ""
         },
@@ -2141,5 +2157,16 @@
       "status": "open"
     }
   ],
-  "niceToHave": []
+  "niceToHave": [
+    {
+      "date": "19 sep",
+      "improvement": "Goedkeuringen sneller laden: de werkvoorraad doet bij elke beheerderslogin twee verzoeken per maand per medewerker (in een volle testdatabase 76 stuks); één gebundeld verzoek zou dat terugbrengen tot één",
+      "why": "Met meer medewerkers en maanden groeit de laadtijd van Goedkeuringen en het dashboard mee; gemeten in de volledige lokale run van 19 sep."
+    },
+    {
+      "date": "19 sep",
+      "improvement": "De smoke-test sneller maken of opsplitsen: lokaal duurt hij 8 tot 12 minuten, in CI ongeveer 4",
+      "why": "Een kortere controle vóór elke push houdt de doorlooptijd van een wijziging laag."
+    }
+  ]
 }
