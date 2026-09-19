@@ -1359,3 +1359,45 @@ test('[KLV-N-027] de snelknoppen 0, 8 en 9 in Mijn uren zijn op telefoon groot g
     });
   }
 });
+
+test('[KLV-N-028] de beheerdersbalk op telefoon toont korte, volledige labels en noemt schermlezers de hele naam', async ({ page }) => {
+  // Verkenning tekstafstand (19 sep): zes volledige woorden pasten niet in de
+  // beheerdersbalk op 320-360px ("Dashbo...", "Goedke..."). Besluit Gio: korte
+  // labels op telefoon, de volledige naam voor schermlezers en als tooltip.
+  // Techniek: grenswaardenanalyse op de schermbreedte (320, 360, 390, de rand van
+  // de balk 820 en net erboven 821) + controle op de toegankelijke naam.
+  const loginPage = new LoginPage(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await loginPage.open();
+  await loginPage.loginAsAdmin();
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic');
+  const knoppen: Array<[string, string, string]> = [
+    ['dashboard', 'Dashboard', 'Start'], ['approvals', 'Goedkeuringen', 'Keuren'], ['invoices', 'Facturen', 'Facturen'],
+    ['employees', 'Medewerkers', 'Team'], ['announcements', 'Mededelingen', 'Nieuws'], ['settings', 'Instellingen', 'Opties'],
+  ];
+  for (const breedte of [320, 360, 390, 820]) {
+    await test.step(`op ${breedte}px staat elk label heel in beeld`, async () => {
+      await page.setViewportSize({ width: breedte, height: 780 });
+      for (const [view, vol, kort] of knoppen) {
+        const knop = page.locator(`.nav-item[data-view="${view}"]`);
+        await expect(knop, `${vol} hoort in de balk te staan`).toBeVisible();
+        const beeld = await knop.evaluate(el => {
+          const zichtbaar = [...el.querySelectorAll('span')].filter(s => {
+            const r = s.getBoundingClientRect();
+            return r.width > 2 && r.height > 2 && (s.textContent || '').trim() && !s.classList.contains('nav-count') && !s.closest('.nav-count-group');
+          });
+          const label = zichtbaar[0] as HTMLElement | undefined;
+          return label ? { tekst: (label.textContent || '').trim(), afgekapt: label.scrollWidth > label.clientWidth + 1 } : null;
+        });
+        expect(beeld?.tekst, `op ${breedte}px hoort ${vol} als "${kort}" in beeld te staan`).toBe(kort);
+        expect(beeld?.afgekapt, `"${kort}" hoort op ${breedte}px niet afgekapt te zijn`).toBe(false);
+        await expect(knop).toHaveAccessibleName(new RegExp('^' + vol));
+      }
+    });
+  }
+  await test.step('op 821px (buiten de balk) staat de volledige naam in beeld', async () => {
+    await page.setViewportSize({ width: 821, height: 900 });
+    await expect(page.locator('.nav-item[data-view="approvals"] .nav-label-vol')).toBeVisible();
+    await expect(page.locator('.nav-item[data-view="approvals"] .nav-label-kort')).toBeHidden();
+  });
+});

@@ -238,3 +238,11 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
     Given vondsten uit de monkey-verkenning op Klassiek is voorbereid
     When de flow voor KLV-N-027 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat de snelknoppen 0, 8 en 9 in Mijn uren zijn op telefoon groot genoeg om te raken
+
+  @negative
+  Scenario: [KLV-N-028] de beheerdersbalk op telefoon toont korte, volledige labels en noemt schermlezers de hele naam
+    # Testtechniek: Grenswaardenanalyse op de schermbreedte (320, 360, 390, de rand 820 en 821) + controle op de toegankelijke naam
+    # Aantoonbare Playwright-assertions in deze case: 7
+    Given vondsten uit de monkey-verkenning op Klassiek is voorbereid
+    When de flow voor KLV-N-028 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat de beheerdersbalk op telefoon toont korte, volledige labels en noemt schermlezers de hele naam

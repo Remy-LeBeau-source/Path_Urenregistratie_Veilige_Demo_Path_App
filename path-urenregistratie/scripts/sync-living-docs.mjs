@@ -208,6 +208,7 @@ function techniqueFor(definition, testCase) {
       'KLV-N-025': 'Equivalentieklassen op de reden van het slot (ingediend tegenover goedgekeurd/gefactureerd) met de letterlijke serverantwoorden',
       'KLV-N-026': 'Toestandsovergang (lokaal leidend na reset naar server leidend na een weigering die de serverstand bewijst) + foutvermoeden uit monkey-verkenning',
       'KLV-N-027': 'Grenswaardenanalyse op de schermbreedte (320, 390 en de rand van het telefoonblok 720) + WCAG 2.5.8 doelgrootte',
+      'KLV-N-028': 'Grenswaardenanalyse op de schermbreedte (320, 360, 390, de rand 820 en 821) + controle op de toegankelijke naam',
       'KLV-N-022': 'Responsive viewport (320/360/390) + grenswaarden smalle telefoon + lay-outmeting binnen de kaart',
       'KLV-H-021': 'Toestandsovergangtest (licht↔donker, Klassiek↔Modern, heen en terug) + toegankelijkheidsinspectie (geen misleidend aria-pressed)',
       'KLV-H-020':'Beslistabel (stap → knoptekst) + visuele consistentie met de huisstijlknop in licht en donker',

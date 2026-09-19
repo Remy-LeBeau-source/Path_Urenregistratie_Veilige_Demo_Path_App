@@ -1,8 +1,24 @@
 {
-  "appVersion": "2.0.201",
-  "generatedAt": "2026-09-19T11:54:49.402Z",
+  "appVersion": "2.0.203",
+  "generatedAt": "2026-09-19T13:02:48.254Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.203",
+      "wish": "De beheerdersbalk op telefoon toont korte, volledige labels in plaats van afgekapte woorden. Gevonden met de nieuwe verkenning tekstafstand (WCAG 1.4.12), maar het speelde ook zonder extra tekstafstand: op 320-360px las je \"Dashbo...\", \"Goedke...\", \"Medede...\" en \"Instellin...\". Volgens PO's keuze staan er in Klassiek op telefoon nu korte labels (Start, Keuren, Facturen, Team, Nieuws, Opties). De volledige naam blijft wat een schermlezer voorleest en staat als tooltip; desktop en Modern veranderen niet. Vastgelegd met KLV-N-028 op 320, 360, 390, 820 en 821px. Techniek: grenswaardenanalyse op de schermbreedte + controle op de toegankelijke naam. Tegenproef: op de oude opmaak rood (\"Dashboard\" waar \"Start\" hoort), met de nieuwe groen; de toegankelijkheidscases (A11Y) op alle projecten groen. Verder twee verkenningen toegevoegd (buiten CI): reflow op 320px (WCAG 1.4.10), nergens iets buiten beeld, en tekstafstand (WCAG 1.4.12), op deze balk en twee lange namen bij Instellingen na schoon.",
+      "cases": [
+        {
+          "id": "KLV-N-028",
+          "title": "de beheerdersbalk op telefoon toont korte, volledige labels en noemt schermlezers de hele naam",
+          "feature": "tests/playwright/features/klassiek-verkenning.feature",
+          "technique": "Grenswaardenanalyse op de schermbreedte (320, 360, 390, de rand 820 en 821) + controle op de toegankelijke naam",
+          "assertions": 7,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de beheerdersbalk op telefoon toont korte, volledige labels en noemt schermlezers de hele naam\n  Given vondsten uit de monkey-verkenning op Klassiek is voorbereid\n  When de flow voor KLV-N-028 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de beheerdersbalk op telefoon toont korte, volledige labels en noemt schermlezers de hele naam"
+        }
+      ]
+    },
     {
       "date": "19 sep",
       "version": "2.0.201",
@@ -558,7 +574,7 @@
           "technique": "Datagedreven over alle openstaande kaarten (elk getal nagerekend tegen zijn eigen begindatum) + grenswaarden op de weekdrempel (6 gewoon, 7 valt op) en op enkelvoud/meervoud (vandaag, 1 dag, meer dagen), met een vastgezette klok",
           "assertions": 12,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: elke openstaande kaart toont hoe lang hij al open is, en valt op vanaf een week\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de flow voor PIPE-H-018 wordt uitgevoerd\n  Then heeft elke openstaande kaart een label, en opgeleverd werk niet\n  And klopt het getal voor elke kaart met zijn eigen begindatum\n  And valt hij pas op vanaf zeven dagen"
+          "gherkin": ""
         }
       ]
     },
@@ -2333,6 +2349,12 @@
     }
   ],
   "open": [
+    {
+      "date": "19 sep",
+      "wish": "Beheerdersbalk op telefoon: zes volledige woorden passen niet op 320-360px (\"Dashbo...\", \"Goedke...\"). PO koos uit drie opties: korte labels op telefoon (Start, Keuren, Facturen, Team, Nieuws, Opties), met de volledige naam voor schermlezers en als tooltip.",
+      "who": "besluit",
+      "status": "vastgelegd"
+    },
     {
       "date": "19 sep",
       "wish": "Wisselvallig in CI: SKIN-H-031 (de vijf stappen in Modern) viel één keer op mobile-chrome en slaagde bij herhalen (run 35422224770): na het lokaal op \"ingediend\" zetten stond \"Maand ingediend\" nog op \"Nog niet\". Onderzocht en met een deterministische proef uitgesloten: (1) een lezing van de urenstaat na het zetten van de toestand, (2) een late eerste lezing na het inloggen -- beide laten de case groen. Geen oplossing doorgevoerd zonder bewijs. Opnieuw bekijken als hij nog eens valt; het CI-rapport (ci-playwright-report-6) bevat trace en schermbeeld.",

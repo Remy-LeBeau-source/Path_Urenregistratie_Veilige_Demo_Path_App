@@ -99,3 +99,5 @@ When("de medewerker iets invult en de server dat weigert");
 Then("noemt de app de reden, laat hij de herstelstand los en staat de maand op slot");
 When("de flow voor KLV-N-027 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat de snelknoppen 0, 8 en 9 in Mijn uren zijn op telefoon groot genoeg om te raken");
+When("de flow voor KLV-N-028 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat de beheerdersbalk op telefoon toont korte, volledige labels en noemt schermlezers de hele naam");
