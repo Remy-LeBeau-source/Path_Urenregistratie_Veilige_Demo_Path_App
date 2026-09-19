@@ -2389,7 +2389,12 @@ function writeTimesheetToApi(action, suppliedPayload = null, applyResponse = tru
           const periodKey = String(payload.period || currentPeriod().key);
           return refreshTimesheetReadApi(periodKey, employee.id, true).catch(() => null).then(() => {
             renderHoursGrid();
-            throw new Error("Deze maand is al goedgekeurd of gefactureerd en kan niet meer worden aangepast.");
+            // Monkey-vondst (herontwerp, 19 sep): deze vaste zin overschreef de
+            // echte reden van de server. Een ingediende (niet per se goedgekeurde)
+            // maand gaf hier ten onrechte "al goedgekeurd of gefactureerd" -- de
+            // servertekst is specifieker (ingediend/bij Backoffice vs. goedgekeurd/
+            // gefactureerd) en gaat nu voor, met deze zin alleen nog als terugval.
+            throw new Error(String(raw || "Deze maand is al goedgekeurd of gefactureerd en kan niet meer worden aangepast."));
           });
         }
         const fout = new Error(String(raw || "Opslaan op server mislukt."));

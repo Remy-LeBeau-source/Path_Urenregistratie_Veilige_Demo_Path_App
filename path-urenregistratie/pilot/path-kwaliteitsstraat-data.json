@@ -1,8 +1,56 @@
 {
-  "appVersion": "2.0.192",
-  "generatedAt": "2026-09-19T06:01:44.183Z",
+  "appVersion": "2.0.195",
+  "generatedAt": "2026-09-19T07:01:44.912Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.195",
+      "wish": "Een geweigerde opslag noemt nu de echte reden: \"ingediend\" is niet hetzelfde als \"goedgekeurd\". Monkey-vondst op telefoon (seed 24): wie een maand bewerkt die intussen is ingediend (bijvoorbeeld in een tweede tabblad), kreeg te lezen dat de maand \"al goedgekeurd of gefactureerd\" was, terwijl hij gewoon bij Backoffice ligt. De server gaf de juiste zin wel, maar de app verving hem. Main heeft de regel aangepast (2.0.194): de app geeft nu de melding van de server door, met de oude zin als terugval. Vastgelegd met KLV-N-025: twee equivalentieklassen (ingediend en goedgekeurd/gefactureerd) met de letterlijke serverantwoorden. Tegenproef: op de oude code is \"ingediend\" rood, met de regel zijn beide groen. De monkey-rondes van vandaag (seeds 20 tot 27, medewerker en beheer, desktop en telefoon) zijn daarmee schoon op deze twee vondsten na.",
+      "cases": [
+        {
+          "id": "KLV-N-025",
+          "title": "Een geweigerde opslag omdat de maand ${klasse.naam} is, noemt de echte reden",
+          "feature": "tests/playwright/features/klassiek-verkenning.feature",
+          "technique": "Equivalentieklassen op de reden van het slot (ingediend tegenover goedgekeurd/gefactureerd) met de letterlijke serverantwoorden",
+          "assertions": 4,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een geweigerde opslag omdat de maand ${klasse.naam} is, noemt de echte reden\n  Given vondsten uit de monkey-verkenning op Klassiek is voorbereid\n  When de medewerker toch iets invult\n  Then noemt de melding de reden die de server gaf"
+        }
+      ]
+    },
+    {
+      "date": "19 sep",
+      "version": "2.0.194",
+      "wish": "Monkey-vondst van herontwerp: een vaste foutmelding overschreef de echte reden van de server. In writeTimesheetToApi (foutcode \"timesheet-locked\") stond een vaste zin \"Deze maand is al goedgekeurd of gefactureerd en kan niet meer worden aangepast.\", ook als de server een specifiekere reden gaf (\"Een ingediende urenstaat ligt bij Backoffice en kan niet meer worden gewijzigd.\"). Een medewerker met een tweede tabblad, of iemand na \"Herstel demo\", kreeg zo te horen dat de maand al goedgekeurd was terwijl hij alleen ingediend was. De servermelding gaat nu voor, met de oude zin alleen nog als terugval als de server geen tekst meestuurt. Tegenproef door herontwerp uitgevoerd (KLV-N-025, equivalentieklassen ingediend/goedgekeurd): rood op de ongewijzigde code voor \"ingediend\", groen met deze regel.",
+      "cases": [
+        {
+          "id": "KLV-N-025",
+          "title": "Een geweigerde opslag omdat de maand ${klasse.naam} is, noemt de echte reden",
+          "feature": "tests/playwright/features/klassiek-verkenning.feature",
+          "technique": "Equivalentieklassen op de reden van het slot (ingediend tegenover goedgekeurd/gefactureerd) met de letterlijke serverantwoorden",
+          "assertions": 4,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een geweigerde opslag omdat de maand ${klasse.naam} is, noemt de echte reden\n  Given vondsten uit de monkey-verkenning op Klassiek is voorbereid\n  When de medewerker toch iets invult\n  Then noemt de melding de reden die de server gaf"
+        }
+      ]
+    },
+    {
+      "date": "19 sep",
+      "version": "2.0.193",
+      "wish": "Vervolg op PO's opdracht: bewaking van de Secure-vlag op de sessiecookie, in alle zes redelijke combinaties. server/auth/session.php bepaalt zelf of de sessiecookie het Secure-attribuut krijgt: `$isHttps || ($requireHttps && !$isLocalHost)`. SEC-H-015 (eerder deze ronde) toetst alleen HttpOnly en SameSite tegen een lokale Playwright-server, waar $isHttps en require_https allebei altijd onwaar zijn -- de andere combinaties (echte HTTPS, het vangnet van require_https zonder HTTPS, en de localhost-uitzondering daarop) kwamen nooit aan bod. Nieuw server/scripts/session-cookie-secure-policy-check.php (in npm run check) roept auth_start_session_secure() rechtstreeks aan met een synthetisch verzoek per equivalentieklasse (elke combinatie in een eigen PHP-subproces): echte HTTPS (met en zonder require_https), geen HTTPS zonder de eis, geen HTTPS mét de eis (het vangnet moet de cookie alsnog secure maken), en de localhost-uitzondering daarop (met en zonder echte HTTPS). Twee tegenproeven, beide rood: de formule versimpeld tot alleen $isHttps -> het vangnet-scenario faalt; de localhost-uitzondering weggehaald -> dat scenario faalt. Beide teruggezet -> groen.",
+      "cases": [
+        {
+          "id": "SEC-H-015",
+          "title": "de sessiecookie draagt HttpOnly en SameSite=Lax",
+          "feature": "tests/playwright/features/security.feature",
+          "technique": "API-contract + equivalentieklasse",
+          "assertions": 4,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de sessiecookie draagt HttpOnly en SameSite=Lax\n  Given authenticatie- en API-beveiliging is voorbereid\n  When de flow voor SEC-H-015 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de sessiecookie draagt HttpOnly en SameSite=Lax"
+        }
+      ]
+    },
     {
       "date": "19 sep",
       "version": "2.0.192",
@@ -471,7 +519,7 @@
           "technique": "Toestandsovergang",
           "assertions": 5,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: een avatar kiezen is direct zichtbaar, sluit het menu niet, en blijft staan na een echte paginaherlading\n  Given avatarkiezer in het profielmenu is voorbereid\n  When een andere avatar dan de huidige wordt aangetikt\n  Then verschijnt de keuze meteen, blijft het menu open, en is er geen aparte opslaan-knop nodig\n  And staat dezelfde avatar er nog na een echte paginaherlading"
+          "gherkin": ""
         }
       ]
     },
@@ -487,7 +535,7 @@
           "technique": "Beslistabel op de gemelde opslagbron (bestand, database, database ingesteld maar onbereikbaar) + structurele geheimhoudingscontrole op verboden sleutels in het antwoord + gelijkheidscontrole tussen lezen en schrijven",
           "assertions": 8,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de opslag vertelt eerlijk waar de stand vandaan komt, zonder verbindingsgegevens\n  Given het leesantwoord noemt de gebruikte achterkant\n  And het leesantwoord bevat geen verbindingsgegevens\n  When er iets wordt opgeslagen\n  Then noemt het schrijfantwoord dezelfde achterkant als het leesantwoord\n  And deze case laat geen kaart achter"
+          "gherkin": ""
         }
       ]
     },
@@ -503,7 +551,7 @@
           "technique": "Toestandsovergangtest over de vier fasen van de straat (elke stap moet op het scherm terechtkomen, en vrijgeven moet hem weer loslaten) + grenswaarden op de fase (0 en 4 horen erbij, -1 en 5 niet) + negatieve klasse op het schrijfrecht",
           "assertions": 31,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de stappenbalk toont echte voortgang van de pijplijn en beweegt mee zonder herladen\n  Given anoniem voortgang melden wordt geweigerd\n  And een fase buiten 0 tot en met 4 wordt geweigerd\n  Then staat de balk op de simulatie zolang er niets loopt\n  When de pijplijn stap voor stap voortgang meldt\n  And schuift de kaart vanzelf mee met de fase\n  And mag een pijplijnsleutel niets anders dan voortgang melden\n  And laat fase 0 de balk weer los"
+          "gherkin": ""
         }
       ]
     },
