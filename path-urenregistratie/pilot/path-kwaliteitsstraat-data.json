@@ -1,8 +1,24 @@
 {
-  "appVersion": "2.0.186",
-  "generatedAt": "2026-09-19T01:36:22.364Z",
+  "appVersion": "2.0.187",
+  "generatedAt": "2026-09-19T04:06:03.061Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.187",
+      "wish": "Vervolg op PO's opdracht \"veel security testen over de gehele applicatie\": een echte autorisatiegrenstest over bedrijven heen. Uitgezocht of een beheerder via een geraden gebruikers-id een medewerker van een ánder bedrijf kan de- of reactiveren (IDOR / broken access control, OWASP A01) -- de gevoeligste plek daarvoor is server/api/users.php, dat gebruikers direct via een payload-id aanspreekt. Bevinding: dat was al goed dichtgezet (de doelgebruiker wordt eerst opgehaald MET company_id in dezelfde WHERE-clausule), maar er bestond nog geen test die dat vastlegde -- een toekomstige regressie zou pas op TEST of erger zijn opgevallen. Nieuwe test SEC-H-016 zet twee volledig geïsoleerde wegwerpbedrijven op (zelfde patroon als admin-writes.spec.ts) en bewijst dat de beheerder van bedrijf B een medewerker van bedrijf A niet kan aanraken (404, en het slachtofferaccount blijft ongewijzigd). Tegenproef zelf uitgevoerd: de company_id-voorwaarde tijdelijk uit de query gehaald -> de aanval slaagt écht (200, account gedeactiveerd) -- rood; teruggezet -> groen. Bij dezelfde audit zijn periods.php, invoices.php en staff.php nagelopen op hetzelfde patroon (id direct van de client zonder bedrijfsscope): allemaal al correct, geen wijziging nodig.",
+      "cases": [
+        {
+          "id": "SEC-H-016",
+          "title": "Een beheerder kan via een geraden gebruikers-id geen medewerker van een ander bedrijf de- of reactiveren",
+          "feature": "tests/playwright/features/security.feature",
+          "technique": "Beslissingstabel rollen en autorisatie",
+          "assertions": 3,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een beheerder kan via een geraden gebruikers-id geen medewerker van een ander bedrijf de- of reactiveren\n  Given authenticatie- en API-beveiliging is voorbereid\n  When de flow voor SEC-H-016 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat een beheerder kan via een geraden gebruikers-id geen medewerker van een ander bedrijf de- of reactiveren"
+        }
+      ]
+    },
     {
       "date": "19 sep",
       "version": "2.0.186",

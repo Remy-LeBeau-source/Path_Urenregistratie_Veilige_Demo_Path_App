@@ -1,9 +1,57 @@
-import { expect, test, type APIResponse } from '@playwright/test';
+import { execSync } from 'node:child_process';
+import { expect, request as playwrightRequest, test, type APIResponse } from '@playwright/test';
+import mysql from 'mysql2/promise';
 import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { LoginPage } from './pages/LoginPage';
+
+// Zelfde databasetoegang als admin-writes.spec.ts en database-integrity.spec.ts:
+// puur voor het opzetten van geïsoleerde wegwerpbedrijven bij een tenant-
+// grenstest, nooit voor het lezen of wijzigen van de gedeelde seed.
+function dbConfig() {
+  const database = String(
+    process.env.PATH_APP_DB_NAME || process.env.PLAYWRIGHT_DB_NAME || process.env.DB_NAME || '',
+  ).trim();
+  return {
+    host: process.env.PATH_APP_DB_HOST || process.env.PLAYWRIGHT_DB_HOST || process.env.DB_HOST || '127.0.0.1',
+    port: Number(process.env.PATH_APP_DB_PORT || process.env.PLAYWRIGHT_DB_PORT || process.env.DB_PORT || 3306),
+    user: process.env.PATH_APP_DB_USER || process.env.PLAYWRIGHT_DB_USER || process.env.DB_USER || 'root',
+    password: process.env.PATH_APP_DB_PASSWORD || process.env.PLAYWRIGHT_DB_PASSWORD || process.env.DB_PASSWORD || 'root',
+    database,
+  };
+}
+
+async function withDb<T>(fn: (conn: mysql.Connection) => Promise<T>): Promise<T> {
+  const cfg = dbConfig();
+  expect(cfg.database.toLowerCase().endsWith('_test'), `databasenaam moet op _test eindigen, is "${cfg.database}"`).toBe(true);
+  const conn = await mysql.createConnection(cfg);
+  try {
+    return await fn(conn);
+  } finally {
+    await conn.end();
+  }
+}
+
+async function getCSRFToken(ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>) {
+  const r = await ctx.get('/server/auth/csrf.php');
+  const body = await r.json();
+  return String(body.csrf_token || '');
+}
+
+async function postJsonAs(
+  ctx: Awaited<ReturnType<typeof playwrightRequest.newContext>>,
+  path: string,
+  payload: Record<string, unknown>,
+) {
+  const token = await getCSRFToken(ctx);
+  const response = await ctx.post(path, {
+    headers: { 'X-CSRF-Token': token },
+    data: payload,
+  });
+  return { status: response.status(), body: await response.json() };
+}
 
 test('[SEC-H-001] csrf token endpoint werkt', async ({ request }) => {
   let response: APIResponse | null = null;
@@ -651,4 +699,67 @@ test('[SEC-N-011] een kapotte JSON-payload lekt geen bestandspad of stacktrace n
   for (const lek of ['fatal error', 'stack trace', '.php on line', 'c:\\\\', '/var/www', '/data/sites']) {
     expect(tekst.toLowerCase().includes(lek), `het antwoord mag "${lek}" niet bevatten`).toBe(false);
   }
+});
+
+test('[SEC-H-016] een beheerder kan via een geraden gebruikers-id geen medewerker van een ander bedrijf de- of reactiveren', async () => {
+  // Techniek: autorisatiegrenstest over een tenant-grens (IDOR / broken access
+  // control, OWASP A01). server/api/users.php haalt de doelgebruiker eerst op
+  // MET company_id in dezelfde WHERE-clausule, dus dit hoort al dicht te
+  // zitten -- deze test legt dat vast in plaats van het alleen te beredeneren.
+  // Twee volledig geïsoleerde wegwerpbedrijven (zelfde patroon als
+  // admin-writes.spec.ts) zodat niets van de gedeelde seed wordt geraakt.
+  const unique = Date.now().toString().slice(-7);
+  const wachtwoord = `Proef${unique}TenantGrens`;
+
+  const { slachtofferId, aanvallerEmail } = await withDb(async conn => {
+    const hash = execSync('php -r "echo password_hash(getenv(\'SEC_TENANT_PW\'), PASSWORD_DEFAULT);"', {
+      env: { ...process.env, SEC_TENANT_PW: wachtwoord },
+    }).toString();
+
+    const [slachtofferBedrijf] = await conn.query(
+      'INSERT INTO companies (slug, legal_name, trade_name, chamber_of_commerce_number) VALUES (?, ?, ?, ?)',
+      [`sec-tenant-a-${unique}`, `SEC-TENANT-A ${unique} BV`, `SEC-TENANT-A ${unique} BV`, '12345678'],
+    );
+    const slachtofferBedrijfId = (slachtofferBedrijf as mysql.ResultSetHeader).insertId;
+    const [slachtofferUser] = await conn.query(
+      'INSERT INTO users (company_id, email, display_name, role, active, password_hash, force_password_change) VALUES (?, ?, ?, "employee", 1, ?, 0)',
+      [slachtofferBedrijfId, `sec-tenant-a-slachtoffer-${unique}@example.invalid`, `SEC-TENANT-A Medewerker ${unique}`, hash],
+    );
+    const slachtofferId = (slachtofferUser as mysql.ResultSetHeader).insertId;
+
+    const [aanvallerBedrijf] = await conn.query(
+      'INSERT INTO companies (slug, legal_name, trade_name, chamber_of_commerce_number) VALUES (?, ?, ?, ?)',
+      [`sec-tenant-b-${unique}`, `SEC-TENANT-B ${unique} BV`, `SEC-TENANT-B ${unique} BV`, '87654321'],
+    );
+    const aanvallerBedrijfId = (aanvallerBedrijf as mysql.ResultSetHeader).insertId;
+    const aanvallerEmail = `sec-tenant-b-beheerder-${unique}@example.invalid`;
+    await conn.query(
+      'INSERT INTO users (company_id, email, display_name, role, active, password_hash, force_password_change) VALUES (?, ?, ?, "administrator", 1, ?, 0)',
+      [aanvallerBedrijfId, aanvallerEmail, `SEC-TENANT-B Beheerder ${unique}`, hash],
+    );
+
+    return { slachtofferId, aanvallerEmail };
+  });
+
+  const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+  const authApi = new AuthApi(ctx);
+  await authApi.login(aanvallerEmail, wachtwoord);
+
+  for (const actie of ['deactivate', 'reactivate']) {
+    const poging = await postJsonAs(ctx, '/server/api/users.php', {
+      action: actie,
+      user_id: slachtofferId,
+    });
+    expect(poging.status, `${actie} over de bedrijfsgrens hoort 404 te geven, kreeg ${JSON.stringify(poging.body)}`).toBe(404);
+    expect(poging.body.error).toBe('user-not-found');
+  }
+
+  const nogSteedsActief = await withDb(async conn => {
+    const [rows] = await conn.query('SELECT active FROM users WHERE id = ?', [slachtofferId]);
+    return Number((rows as Array<{ active: number }>)[0]?.active ?? -1);
+  });
+  expect(nogSteedsActief, 'het slachtofferaccount in het andere bedrijf moet ongewijzigd actief blijven').toBe(1);
+
+  await authApi.logout();
+  await ctx.dispose();
 });

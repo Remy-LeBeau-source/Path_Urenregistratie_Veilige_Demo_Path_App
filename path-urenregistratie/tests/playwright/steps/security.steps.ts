@@ -85,3 +85,5 @@ When("de flow voor SEC-H-015 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat de sessiecookie draagt HttpOnly en SameSite=Lax");
 When("de flow voor SEC-N-011 wordt uitgevoerd");
 Then("wordt met Playwright-assertions bevestigd dat een kapotte JSON-payload lekt geen bestandspad of stacktrace naar de client");
+When("de flow voor SEC-H-016 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat een beheerder kan via een geraden gebruikers-id geen medewerker van een ander bedrijf de- of reactiveren");

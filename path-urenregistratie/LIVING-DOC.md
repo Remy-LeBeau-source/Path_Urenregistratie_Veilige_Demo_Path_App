@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 643 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 644 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 643 unieke case-ID's
+- Playwright executable cases: 644 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 644 unieke case-ID's
+- Totaal executable cases: 645 unieke case-ID's
 - Playwright features: 33
 - Database features: 1
 - Playwright steps mappings: 33
 - Database steps mappings: 1
-- Uitvoeringen: 709
-- Niet-mobile projectuitvoeringen: 577
+- Uitvoeringen: 710
+- Niet-mobile projectuitvoeringen: 578
 - Mobile functionele cases: 66
 - Pixel 7 / Chromium-uitvoeringen: 66
 - iPhone 13 / WebKit-uitvoeringen: 66
 
-De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 643 Playwright-functionele cases in totaal 709 resultaten op: 577 + (66 x 2) = 709.
+De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 644 Playwright-functionele cases in totaal 710 resultaten op: 578 + (66 x 2) = 710.
 
 ## Documentatieketen
 
@@ -659,7 +659,7 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 643 Playwri
 
 - Feature: `tests/playwright/features/security.feature`
 - Source: `tests/playwright/security.spec.ts`
-- Cases: 26
+- Cases: 27
 
 - [SEC-H-001] csrf token endpoint werkt — Techniek: API-contract + equivalentieklasse · Assertions: 4
 - [SEC-H-002] login met csrf werkt — Techniek: API-contract + equivalentieklasse · Assertions: 2
@@ -687,6 +687,7 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 643 Playwri
 - [SEC-N-010] een padtraversalpoging op een periode-parameter wordt afgewezen, niet stilzwijgend genegeerd tot een ander antwoord — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 3
 - [SEC-H-015] de sessiecookie draagt HttpOnly en SameSite=Lax — Techniek: API-contract + equivalentieklasse · Assertions: 4
 - [SEC-N-011] een kapotte JSON-payload lekt geen bestandspad of stacktrace naar de client — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 2
+- [SEC-H-016] een beheerder kan via een geraden gebruikers-id geen medewerker van een ander bedrijf de- of reactiveren — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 3
 
 ### Vondsten uit de monkey-verkenning op Klassiek
 
