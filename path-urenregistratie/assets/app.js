@@ -2400,6 +2400,14 @@ function writeTimesheetToApi(action, suppliedPayload = null, applyResponse = tru
       const periodKey = String(payload.period || currentPeriod().key);
       readApiRuntime.timesheetMutationEpochByKey[mutationKey] = Number(readApiRuntime.timesheetMutationEpochByKey[mutationKey] || 0) + 1;
       readApiRuntime.lastTimesheetsByKey[mutationKey] = Date.now();
+      // Monkey-vondst (herontwerp, 19 sep): dit is het gewone opslaan van uren,
+      // en het enige van de acht serverschrijfwegen dat deze aanroep nog miste
+      // (writeCustomerTimesheetToApi hieronder is er eerder om gerepareerd).
+      // Bleef de lokale-herstelvlag staan na "Herstel demo" of de TEST-reset,
+      // dan werd elke serverlezing genegeerd -- ook na F5 -- terwijl er gewoon
+      // uren werden opgeslagen; een volgende invoer liep dan tegen een 409
+      // "door iemand anders gewijzigd" aan die de herstelstap niet kon oplossen.
+      releaseLocalResetAuthorityAfterServerWrite();
       if (applyResponse) applyTimesheetApiPayload(employee.id, periodKey, result.data && result.data.timesheet);
       return result.data;
     });

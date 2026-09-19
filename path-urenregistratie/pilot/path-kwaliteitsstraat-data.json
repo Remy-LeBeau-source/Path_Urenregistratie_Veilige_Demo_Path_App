@@ -1,8 +1,55 @@
 {
-  "appVersion": "2.0.189",
-  "generatedAt": "2026-09-19T04:41:58.343Z",
+  "appVersion": "2.0.192",
+  "generatedAt": "2026-09-19T06:01:44.183Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.192",
+      "wish": "Monkey-vondst vastgelegd: na \"Herstel demo\" gaf verder invullen soms onterecht \"door iemand anders gewijzigd\". Een nieuwe monkey-ronde (medewerker en beheer op desktop, seeds 20 tot 27) vond het in seeds 22 en 24; seed 24 gaf het ook bij een tweede run. Na \"Herstel demo\" of de TEST-reset negeert de app serverlezingen tot een schrijfactie dat vrijgeeft, en het gewone opslaan van uren gaf dat niet vrij. Wie dan invulde, F5 drukte en verder typte, werkte met een verouderd versienummer. Main heeft de ontbrekende regel toegevoegd (2.0.191); deze versie legt het vast met KLV-N-024: na een reset en één geslaagde urenopslag is de server weer leidend, en na F5 synchroniseert verder invullen gewoon. Geldt alleen waar de testknoppen bestaan (lokaal en TEST). Techniek: toestandsovergang + foutvermoeden uit monkey-verkenning. Tegenproef: rood op de code zonder de regel (de resetvlag bleef staan), groen met de regel. De beheerronde was 8 van 8 schoon.",
+      "cases": [
+        {
+          "id": "KLV-N-024",
+          "title": "na \"Herstel demo\" leest de app de server weer zodra de uren zijn opgeslagen",
+          "feature": "tests/playwright/features/klassiek-verkenning.feature",
+          "technique": "Toestandsovergang (lokaal leidend na reset naar server leidend na een geslaagde urenopslag) + foutvermoeden uit monkey-verkenning",
+          "assertions": 4,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: na \"Herstel demo\" leest de app de server weer zodra de uren zijn opgeslagen\n  Given de medewerker heeft de voorbeeldgegevens hersteld en staat op Mijn uren\n  When de medewerker uren invult en die op de server worden opgeslagen\n  Then is de server weer leidend: de resetvlag is weg\n  And na F5 leest de app de urenstaat van de server en synchroniseert verder invullen gewoon"
+        }
+      ]
+    },
+    {
+      "date": "19 sep",
+      "version": "2.0.191",
+      "wish": "Monkey-vondst van herontwerp: het gewone opslaan van uren hief de lokale herstelvoorrang niet op. Van de acht plekken in app.js die na een geslaagde serverschrijfactie releaseLocalResetAuthorityAfterServerWrite() horen aan te roepen (de klanturenstaat is er op 18 sep al eerder om gerepareerd, zie die toelichting hierboven), miste writeTimesheetToApi -- het gewone opslaan/indienen van Mijn uren -- deze aanroep als enige nog. Gevolg: bleef de lokale-herstelvlag staan na \"↶ Herstel demo\" of de TEST-reset, dan werden alle serverlezingen genegeerd, ook na F5, terwijl er gewoon uren werden opgeslagen; een volgende invoer liep dan tegen een 409 \"door iemand anders gewijzigd\" aan die de bestaande herstelstap (KLV-N-004) niet kon oplossen omdat die zelf ook op serverlezingen leunt. Regel toegevoegd op precies dezelfde plek als bij de klanturenstaat. Tegenproef door herontwerp uitgevoerd tegen de echte reset-knop (#quick-reset-demo): rood op de ongewijzigde code (de vlag bleef \"1\" na een geslaagde opslag), groen met deze ene regel; nieuwe case KLV-N-024 volgt apart op herontwerp.",
+      "cases": [
+        {
+          "id": "KLV-N-004",
+          "title": "Een trage opslag die pas na herladen aankomt, blokkeert de volgende invoer niet",
+          "feature": "tests/playwright/features/klassiek-verkenning.feature",
+          "technique": "Monkey testing (seeded) + concurrency + herstelbaarheid",
+          "assertions": 7,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een trage opslag die pas na herladen aankomt, blokkeert de volgende invoer niet\n  Given een medewerker op Mijn uren met een urenstaat die al een serverversie heeft\n  When een opslag onderweg is, de pagina herlaadt en die opslag pas daarna aankomt\n  And de medewerker daarna gewoon verder invult\n  Then wordt die invoer zonder foutmelding opgeslagen en staat hij na nog een herlading op de server"
+        },
+        {
+          "id": "KLV-N-024",
+          "title": "na \"Herstel demo\" leest de app de server weer zodra de uren zijn opgeslagen",
+          "feature": "tests/playwright/features/klassiek-verkenning.feature",
+          "technique": "Toestandsovergang (lokaal leidend na reset naar server leidend na een geslaagde urenopslag) + foutvermoeden uit monkey-verkenning",
+          "assertions": 4,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: na \"Herstel demo\" leest de app de server weer zodra de uren zijn opgeslagen\n  Given de medewerker heeft de voorbeeldgegevens hersteld en staat op Mijn uren\n  When de medewerker uren invult en die op de server worden opgeslagen\n  Then is de server weer leidend: de resetvlag is weg\n  And na F5 leest de app de urenstaat van de server en synchroniseert verder invullen gewoon"
+        }
+      ]
+    },
+    {
+      "date": "19 sep",
+      "version": "2.0.190",
+      "wish": "Gemeld door herontwerp, uitgezocht met de echte GitHub-API: de PROD-wekker (release-pipeline.yml) kon de PROD-poort ten onrechte als \"afgehandeld\" lezen. Bij release 2.0.187 (run 35420967252, commit 8ddcbcbe) stond de PROD-goedkeuring urenlang open terwijl de wekker na zijn eerste controle (10 minuten) al \"PROD-poort wacht niet meer; niets te doen\" had gemeld en gestopt was. Uitgezocht via gh api in plaats van alleen beredeneerd: beide jobs (\"Promote Prod (goedkeuring)\" en \"Promote Prod (wekker)\") bleken zelf pas 35 minuten na het vrijkomen van de poort te starten (Een tekort aan hosted runners, los van deze wekker), en de wekker las alleen het aantal wachtende deployment-reviews (pending_deployments) -- nul wachtende reviews werd altijd gelezen als \"al afgehandeld\", terwijl dat evengoed kan betekenen dat de goedkeuringsjob zelf nog niet eens is gestart en dus nog niet als wachtend is geregistreerd. De wekker vraagt nu bij nul wachtende reviews eerst de status van de \"Promote Prod (goedkeuring)\"-job zelf op (via de jobs-API); alleen bij status \"completed\" (echt goedgekeurd-en-doorgelopen, afgewezen, of overgeslagen) stopt hij, anders blijft hij net als bij een nieuwere release gewoon doorcontroleren tot het tijdbudget op is. Tegenproef is bij een CI-race lastig te forceren; wel geverifieerd met een echte, live gh api-aanroep tegen de betrokken run dat de nieuwe jobs-query het juiste veld en de juiste job vindt, en dat de bestaande, veelvuldig teruggedraaide logica (pending_deployments-telling, nieuwere-release-detectie, force-cancel) ongewijzigd blijft voor het geval dat al goed werkte. Peer heeft de vastgelopen poort van 2.0.187 handmatig afgewezen volgens de staande afspraak (nooit zelf goedkeuren); PROD is niet geraakt.",
+      "cases": []
+    },
     {
       "date": "19 sep",
       "version": "2.0.189",
@@ -472,7 +519,7 @@
           "technique": "Toestandsovergangtest over de vier fasen van de straat (elke stap moet op het scherm terechtkomen, en vrijgeven moet hem weer loslaten) + grenswaarden op de fase (0 en 4 horen erbij, -1 en 5 niet) + negatieve klasse op het schrijfrecht",
           "assertions": 31,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de stappenbalk toont echte voortgang van de pijplijn en beweegt mee zonder herladen\n  Given anoniem voortgang melden wordt geweigerd\n  And een fase buiten 0 tot en met 4 wordt geweigerd\n  Then staat de balk op de simulatie zolang er niets loopt\n  When de pijplijn stap voor stap voortgang meldt\n  And schuift de kaart vanzelf mee met de fase\n  And mag een pijplijnsleutel niets anders dan voortgang melden\n  And laat fase 0 de balk weer los"
+          "gherkin": ""
         }
       ]
     },
@@ -488,7 +535,7 @@
           "technique": "API-contract + equivalentieklasse",
           "assertions": 9,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: een net geopend bericht blijft op zijn pagina staan, ook al telt het meteen als gelezen\n  Given het te openen bericht staat als tweede, ongelezen, op pagina 1 (de twee ongelezen vooraan)\n  When het bericht wordt opengeklapt (en dus meteen als gelezen telt)\n  Then blijft het bericht zichtbaar en opengeklapt op pagina 1, niet verplaatst naar pagina 2"
+          "gherkin": ""
         }
       ]
     },
@@ -504,7 +551,7 @@
           "technique": "Grenswaardenanalyse",
           "assertions": 4,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: het openen van de avatarkiezer overleeft een scroll-event dat de eigen hoogtewijziging veroorzaakt\n  Given avatarkiezer in het profielmenu is voorbereid\n  When de avatarkiezer wordt geopend en dat, net als op mobiel, meteen een scroll-event oplevert\n  Then blijven het profielmenu en de avatarkiezer open"
+          "gherkin": ""
         }
       ]
     },

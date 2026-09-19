@@ -1126,8 +1126,29 @@ jobs:
           while true; do
             wachtend="$(gh api "repos/$REPO/actions/runs/$RUN_ID/pending_deployments" --jq '[.[] | select(.environment.name == "prod")] | length')"
             if [ "${wachtend:-0}" -eq 0 ]; then
-              echo "PROD-poort wacht niet meer (goedgekeurd of afgewezen); niets te doen."
-              exit 0
+              # Nul wachtende deployment-reviews betekent niet automatisch dat de
+              # poort al is afgehandeld: als "Promote Prod (goedkeuring)" zelf nog
+              # niet is gestart (bijvoorbeeld een tijdelijk tekort aan hosted
+              # runners), staat er ook nog niets in pending_deployments, en dit
+              # las dat ten onrechte als "klaar". Vals-negatief gezien bij release
+              # 2.0.187 (19 sep, herontwerp): de eerste controle na 10 minuten zag
+              # 0 wachtend, terwijl de poort daarna uren echt op goedkeuring stond
+              # (bevestigd via pending_deployments zelf, later in dezelfde run).
+              # Vraag daarom de status van de goedkeuringsjob zelf op: alleen
+              # "completed" (goedgekeurd-en-doorgelopen, afgewezen, of
+              # overgeslagen) betekent dat de poort echt is afgehandeld.
+              gate_status="$(gh api "repos/$REPO/actions/runs/$RUN_ID/jobs" --paginate --jq '[.jobs[] | select(.name == "Promote Prod (goedkeuring)")][0].status // empty')"
+              if [ "$gate_status" = "completed" ]; then
+                echo "PROD-poort wacht niet meer (goedgekeurd of afgewezen); niets te doen."
+                exit 0
+              fi
+              echo "Nul wachtende deployment-reviews, maar Promote Prod (goedkeuring) staat nog op '${gate_status:-onbekend}' -- nog niet echt afgehandeld. Volgende controle over ${HERHAAL_SECONDEN}s."
+              if [ "$(date +%s)" -ge "$EINDE" ]; then
+                echo "Geen nieuwere release binnen het tijdbudget van deze job. De goedkeuring blijft gewoon open voor Gio; deze wekker stopt met controleren."
+                exit 0
+              fi
+              sleep "$HERHAAL_SECONDEN"
+              continue
             fi
 
             main_sha="$(gh api "repos/$REPO/commits/main" --jq '.sha')"
