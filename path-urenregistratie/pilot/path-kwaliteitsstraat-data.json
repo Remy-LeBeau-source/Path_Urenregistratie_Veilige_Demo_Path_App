@@ -1,6 +1,6 @@
 {
   "appVersion": "2.0.189",
-  "generatedAt": "2026-09-19T04:41:33.220Z",
+  "generatedAt": "2026-09-19T04:41:58.343Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
@@ -8,6 +8,22 @@
       "version": "2.0.189",
       "wish": "De smoke-test (de controle vóór elke push) duurt lokaal ongeveer 5 minuten in plaats van 8 tot 15. Nice-to-have van vannacht opgepakt. Uit een profiel bleek dat de helft van de tijd opging aan het opzoeken van een element op id: de testomgeving (JSDOM) doorzocht daarvoor telkens de hele pagina. De smoke-test gebruikt voor een kale id-selectie nu de ingebouwde index; alle andere selecties blijven ongewijzigd, en aan de app zelf verandert niets. Gemeten: 514 naar 315 seconden. Eenmalig over de hele smoke beide paden naast elkaar gedraaid: 56.209 aanroepen, nul verschillen. Daarbij gevonden dat de testomgeving bij een dubbel id het verkeerde element kan teruggeven, dus elke 25e aanroep vergelijkt alsnog met het trage pad en de smoke eindigt hard rood bij een verschil. Techniek: equivalentiecontrole (oud en nieuw pad naast elkaar) plus foutinjectie. Tegenproef: een dubbel id na de bestaande unieke-id-controle geeft rood met \"week af bij: #page-title (dubbel id?)\"; teruggezet en groen.",
       "cases": []
+    },
+    {
+      "date": "19 sep",
+      "version": "2.0.188",
+      "wish": "Vervolg op PO's opdracht: een blijvende bewaking dat elk schrijvend endpoint csrf-bescherming heeft, niet alleen een test per endpoint. SEC-N-001/002 bewijzen csrf-afdwinging voor login/logout, maar niets bewaakte dat een NIEUW endpoint die aanroep zou vergeten. Nieuw server/scripts/csrf-endpoint-coverage-check.php (in npm run check via test:ops) loopt elk bestand in server/api langs: staat het niet op een beredeneerde uitzonderingslijst (alleen-lezen, of een gedeelde schrijfbibliotheek die op zijn aanroepers leunt), dan moet het security_require_csrf_token() aanroepen. Elke uitzondering wordt zelf ook gecontroleerd (geen schrijvende SQL, of de aanroepers dwingen het zelf af) zodat de lijst niet stilzwijgend fout kan worden. Eigen fout gevonden en gefixt tijdens het bouwen: de eerste versie zocht met een kale tekstmatch naar de aanroep, en zag die dus ook in een uitgecommentarieerde regel (`//security_require_csrf_token();`) als \"aanwezig\" -- exact dezelfde soort fout als eerder bij de X-Forwarded-For-controle in health-exposure-policy-check.php. Vervangen door echte PHP-tokenanalyse (token_get_all), die commentaar negeert. Tegenproef nu drievoudig, alle rood vóór herstel: de aanroep in users.php uitgecommentarieerd (ving de tekstmatch-versie niet, de tokenversie wel); dezelfde aanroep in staff.php uitgecommentarieerd (bewijst dat de gedeelde-bibliotheekcontrole op mail-recipients.php ook werkt); teruggezet -> groen op alle drie.",
+      "cases": [
+        {
+          "id": "SEC-N-001",
+          "title": "login zonder csrf faalt netjes",
+          "feature": "tests/playwright/features/security.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 3,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: login zonder csrf faalt netjes\n  Given een loginpoging zonder csrf-header\n  When login zonder csrf wordt verstuurd\n  Then geeft de server csrf-invalid met status 403 terug"
+        }
+      ]
     },
     {
       "date": "19 sep",
