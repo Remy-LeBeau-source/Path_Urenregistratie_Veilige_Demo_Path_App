@@ -5350,3 +5350,14 @@ html:not([data-skin="new"]) body[data-role="employee"] .testbalk .topbar-quick-r
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-terug-vandaag:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; border-radius: 8px; }
   html:not([data-skin="new"]) body[data-role="employee"] #view-timesheet .hours-weekcel small { margin-inline-start: 4px; }
 }
+
+/* KLV-N-028 speling: de beheerdersbalk heeft zes tabs. Op 320-380px paste
+   "Facturen" (geen korte variant) op Windows precies, maar met de lettertypen
+   van Linux in CI viel hij af ("Factu..."). Minder binnenruimte en een iets
+   kleinere letter geven speling voor elk lettertype. De medewerkersbalk (vier
+   tabs) en Modern blijven ongemoeid. */
+@media (max-width: 380px) {
+  html:not([data-skin="new"]) body:not([data-role="employee"]) .nav-item { padding-inline: 1px; }
+  html:not([data-skin="new"]) body:not([data-role="employee"]) .nav-item span:nth-child(2),
+  html:not([data-skin="new"]) body:not([data-role="employee"]) .nav-item > .nav-label-kort { font-size: 10px; }
+}
