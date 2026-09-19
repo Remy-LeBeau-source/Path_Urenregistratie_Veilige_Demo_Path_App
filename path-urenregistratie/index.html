@@ -19,13 +19,13 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <title>Uren & Facturatie</title>
-  <link rel="stylesheet" href="assets/styles.css?v=2.0.191">
+  <link rel="stylesheet" href="assets/styles.css?v=2.0.193">
   <!-- Met versieparameter, net als styles.css hierboven. Zonder die parameter
        houdt de browser (en een geïnstalleerde app helemaal) de oude New-skin
        vast na een release: de versiebadge springt vooruit en Klassiek
        vernieuwt, terwijl de hele Nieuw-vormgeving op de vorige versie blijft
        staan. Gemeld als "ik zie geen verschil in de nieuwe versie". -->
-  <link rel="stylesheet" href="assets/styles-new.css?v=2.0.191">
+  <link rel="stylesheet" href="assets/styles-new.css?v=2.0.193">
 </head>
 <body class="auth-booting">
   <section class="login-screen" id="login-screen" aria-labelledby="login-title">
@@ -103,7 +103,7 @@
       </form>
       <p class="login-note" id="auth-mode-indicator">Controle van auth-sessie wordt uitgevoerd.</p>
       <p class="login-note" id="local-login-note">De standaardgegevens gebruiken veilige voorbeeldadressen. Je mag zelf echte gegevens invoeren; deze lokale versie bewaart ze alleen in deze browser en e-mailverzending is uitgeschakeld.</p>
-      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 2.0.191</span></footer>
+      <footer class="login-footer"><span>© 2026 Path Consultancy IT · Ontwikkeld en beheerd door Team Path.</span><span>Versie 2.0.193</span></footer>
     </div>
   </section>
 
@@ -192,7 +192,7 @@
           <span><strong id="workspace-name">Gio Maatsen</strong><small id="workspace-role">Beheerder</small></span>
         </div>
         <button class="switch-role" id="switch-role">Andere rol kiezen</button>
-      <span class="demo-badge">Versie 2.0.191</span>
+      <span class="demo-badge">Versie 2.0.193</span>
       </div>
     </aside>
 
@@ -219,7 +219,7 @@
         <div class="topbar-title">
           <p class="eyebrow" id="organization-name">Path Consultancy</p>
           <h1 id="page-title">Urenoverzicht</h1>
-          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 2.0.191</span><span class="environment-badge" id="environment-badge" hidden></span></span>
+          <span class="topbar-context"><span class="demo-badge mobile-version-badge">Versie 2.0.193</span><span class="environment-badge" id="environment-badge" hidden></span></span>
         </div>
         <div class="topbar-actions">
           <!-- Zelfde knip als de Klassieke zijbalk (Werkvoorraad/Organisatie, zie de
@@ -1073,6 +1073,7 @@
         <section class="panel nieuw-in-de-app" id="nieuw-in-de-app" aria-labelledby="nieuw-in-de-app-kop" hidden>
           <div class="panel-heading"><div><span class="section-label">Alleen in de testomgeving</span><h3 id="nieuw-in-de-app-kop">Nieuw in de app</h3></div><small>Laatste 20 updates</small></div>
           <ol class="nieuw-in-de-app-lijst" id="nieuw-in-de-app-lijst">
+            <li><span class="nieuw-versie">2.0.193</span><div class="nieuw-tekst"><strong>Extra controle op de beveiliging van je sessie</strong><p>Een nieuwe automatische controle bewaakt dat je inlogsessie in elke situatie de juiste beveiligingsinstelling krijgt. Voor je werk in de app verandert er niets.</p></div><time datetime="2026-09-19T08:18">19 sep · 08:18</time></li>
             <li><span class="nieuw-versie">2.0.191</span><div class="nieuw-tekst"><strong>Uren blijven gesynchroniseerd na een demoherstel</strong><p>Na "↶ Herstel demo" kon het opslaan van uren soms niet meer met de server bijwerken, waardoor een volgende invoer een melding "door iemand anders gewijzigd" kon geven. Dat is opgelost.</p></div><time datetime="2026-09-19T07:36">19 sep · 07:36</time></li>
             <li><span class="nieuw-versie">2.0.190</span><div class="nieuw-tekst"><strong>Uitrolproces betrouwbaarder gemaakt</strong><p>Een onderdeel van het uitrolproces achter de schermen kon een openstaande goedkeuring soms te vroeg als afgehandeld beschouwen. Voor je werk in de app verandert er niets.</p></div><time datetime="2026-09-19T07:13">19 sep · 07:13</time></li>
             <li><span class="nieuw-versie">2.0.188</span><div class="nieuw-tekst"><strong>Blijvende bewaking tegen vergeten beveiliging</strong><p>Een nieuwe automatische controle bewaakt dat elk onderdeel dat gegevens opslaat, dat ook veilig blijft doen -- ook bij toekomstige aanpassingen. Voor je werk in de app verandert er niets.</p></div><time datetime="2026-09-19T06:24">19 sep · 06:24</time></li>
@@ -1092,7 +1093,6 @@
             <li><span class="nieuw-versie">2.0.173</span><div class="nieuw-tekst"><strong>Interne werkbord beter leesbaar op de telefoon</strong><p>Op een telefoon staan de vier stappen van het interne werkbord weer op één regel, en de namen van de tabbladen passen voluit.</p></div><time datetime="2026-09-18T19:10">18 sep · 19:10</time></li>
             <li><span class="nieuw-versie">2.0.172</span><div class="nieuw-tekst"><strong>Controle na uitrol toegevoegd</strong><p>Na elke uitrol kan nu met één opdracht worden nagelopen dat alleen de onderdelen van de app via het web bereikbaar zijn. Voor je werk in de app verandert er niets.</p></div><time datetime="2026-09-18T17:40">18 sep · 17:40</time></li>
             <li><span class="nieuw-versie">2.0.171</span><div class="nieuw-tekst"><strong>Interne documentatie bijgewerkt</strong><p>Een paar correcties in de interne aantekeningen achter de schermen. Voor je werk in de app verandert er niets.</p></div><time datetime="2026-09-18T16:20">18 sep · 16:20</time></li>
-            <li><span class="nieuw-versie">2.0.170</span><div class="nieuw-tekst"><strong>Interne scripts extra beveiligd</strong><p>Een aantal interne beheerscripts controleert nu ook zelf dat het alleen via de opdrachtregel draait, als extra laag naast de bestaande afscherming. Voor de app zelf verandert er niets.</p></div><time datetime="2026-09-18T15:53">18 sep · 15:53</time></li>
           </ol>
           <nav class="lijst-paginering" id="nieuw-in-de-app-paginering" aria-label="Meer updates" hidden>
             <button class="button button-ghost" type="button" data-pagina-vorige>‹ Vorige</button>
@@ -1324,7 +1324,7 @@
       <footer class="app-footer" aria-label="Applicatie-informatie">
         <span>© 2026 Path Consultancy IT</span>
         <span>Ontwikkeld en beheerd door Team Path.</span>
-        <span class="app-footer-version">Versie 2.0.191</span>
+        <span class="app-footer-version">Versie 2.0.193</span>
       </footer>
     </main>
   </div>
@@ -1391,8 +1391,8 @@
        het bestand (op PROD), dan start de app met een lege medewerkerslijst
        tot de server (auth-mode) de echte data levert -- zie de toelichting
        bij window.PATH_EMPLOYEES_SEED in assets/app.js. -->
-  <script vite-ignore defer src="assets/employees-seed.js?v=2.0.191"></script>
-  <script vite-ignore defer src="assets/app.js?v=2.0.191"></script>
-  <script vite-ignore defer src="assets/pwa-install.js?v=2.0.191"></script>
+  <script vite-ignore defer src="assets/employees-seed.js?v=2.0.193"></script>
+  <script vite-ignore defer src="assets/app.js?v=2.0.193"></script>
+  <script vite-ignore defer src="assets/pwa-install.js?v=2.0.193"></script>
 </body>
 </html>

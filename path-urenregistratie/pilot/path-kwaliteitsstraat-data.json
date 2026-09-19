@@ -1,8 +1,24 @@
 {
-  "appVersion": "2.0.191",
-  "generatedAt": "2026-09-19T05:37:53.012Z",
+  "appVersion": "2.0.193",
+  "generatedAt": "2026-09-19T06:18:42.323Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.193",
+      "wish": "Vervolg op PO's opdracht: bewaking van de Secure-vlag op de sessiecookie, in alle zes redelijke combinaties. server/auth/session.php bepaalt zelf of de sessiecookie het Secure-attribuut krijgt: `$isHttps || ($requireHttps && !$isLocalHost)`. SEC-H-015 (eerder deze ronde) toetst alleen HttpOnly en SameSite tegen een lokale Playwright-server, waar $isHttps en require_https allebei altijd onwaar zijn -- de andere combinaties (echte HTTPS, het vangnet van require_https zonder HTTPS, en de localhost-uitzondering daarop) kwamen nooit aan bod. Nieuw server/scripts/session-cookie-secure-policy-check.php (in npm run check) roept auth_start_session_secure() rechtstreeks aan met een synthetisch verzoek per equivalentieklasse (elke combinatie in een eigen PHP-subproces): echte HTTPS (met en zonder require_https), geen HTTPS zonder de eis, geen HTTPS mét de eis (het vangnet moet de cookie alsnog secure maken), en de localhost-uitzondering daarop (met en zonder echte HTTPS). Twee tegenproeven, beide rood: de formule versimpeld tot alleen $isHttps -> het vangnet-scenario faalt; de localhost-uitzondering weggehaald -> dat scenario faalt. Beide teruggezet -> groen.",
+      "cases": [
+        {
+          "id": "SEC-H-015",
+          "title": "de sessiecookie draagt HttpOnly en SameSite=Lax",
+          "feature": "tests/playwright/features/security.feature",
+          "technique": "API-contract + equivalentieklasse",
+          "assertions": 4,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de sessiecookie draagt HttpOnly en SameSite=Lax\n  Given authenticatie- en API-beveiliging is voorbereid\n  When de flow voor SEC-H-015 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de sessiecookie draagt HttpOnly en SameSite=Lax"
+        }
+      ]
+    },
     {
       "date": "19 sep",
       "version": "2.0.191",
@@ -504,7 +520,7 @@
           "technique": "API-contract + equivalentieklasse",
           "assertions": 9,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: een net geopend bericht blijft op zijn pagina staan, ook al telt het meteen als gelezen\n  Given het te openen bericht staat als tweede, ongelezen, op pagina 1 (de twee ongelezen vooraan)\n  When het bericht wordt opengeklapt (en dus meteen als gelezen telt)\n  Then blijft het bericht zichtbaar en opengeklapt op pagina 1, niet verplaatst naar pagina 2"
+          "gherkin": ""
         }
       ]
     },
