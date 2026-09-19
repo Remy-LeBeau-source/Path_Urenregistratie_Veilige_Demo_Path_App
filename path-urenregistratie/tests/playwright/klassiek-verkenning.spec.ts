@@ -1172,3 +1172,53 @@ test('[KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net
     await herstel().catch(() => undefined);
   }
 });
+
+test('[KLV-N-024] na "Herstel demo" leest de app de server weer zodra de uren zijn opgeslagen', async ({ page }) => {
+  // Monkey-vondst seeds 22 en 24 (19 sep): na "↶ Herstel demo" negeert de app alle
+  // serverlezingen tot een serverschrijfactie dat vrijgeeft. Zeven schrijfpaden
+  // deden dat, het gewone opslaan van uren niet. Wie daarna invulde, F5 drukte en
+  // verder typte, kreeg "door iemand anders gewijzigd": de herstelstap uit
+  // KLV-N-004 kan de actuele versie niet ophalen zolang lezen uit staat.
+  // Techniek: toestandsovergang (lokaal leidend -> server leidend na een
+  // geslaagde schrijfactie) + foutvermoeden.
+  test.setTimeout(90_000);
+  const loginPage = new LoginPage(page);
+  page.on('dialog', dialoog => { dialoog.accept().catch(() => undefined); });
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  const herstel = await bewaarUrenstaat(page);
+  const vlag = () => page.evaluate(() => localStorage.getItem('path-uren-demo-v07-final:local-reset-authoritative'));
+  try {
+    await test.step('Given de medewerker heeft de voorbeeldgegevens hersteld en staat op Mijn uren', async () => {
+      await klikTestknop(page, '#quick-reset-demo');
+      await page.locator('#modal-confirm').click();
+      await expect.poll(vlag, { message: 'de reset hoort de lokale gegevens leidend te maken' }).toBe('1');
+      await page.locator('.nav-item[data-view="timesheet"]:visible').first().click();
+      await expect(page.locator('#hours-grid .hours-input:not([disabled]):visible').first()).toBeVisible();
+    });
+
+    await test.step('When de medewerker uren invult en die op de server worden opgeslagen', async () => {
+      const opgeslagen = page.waitForResponse(r => r.url().includes('/server/api/timesheets.php') && r.request().method() === 'POST' && r.status() === 200, { timeout: 20_000 });
+      await page.locator('#hours-grid .hours-input:not([disabled]):visible').first().fill('7');
+      await opgeslagen;
+    });
+
+    await test.step('Then is de server weer leidend: de resetvlag is weg', async () => {
+      await expect.poll(vlag, { message: 'na een geslaagde urenopslag hoort de app de server weer te lezen', timeout: 10_000 }).toBeNull();
+    });
+
+    await test.step('And na F5 leest de app de urenstaat van de server en synchroniseert verder invullen gewoon', async () => {
+      const lezing = page.waitForResponse(r => r.url().includes('/server/api/timesheets.php?') && r.request().method() === 'GET', { timeout: 30_000 });
+      await page.reload({ timeout: 20_000 });
+      await lezing;
+      const velden = page.locator('#hours-grid .hours-input:not([disabled]):visible');
+      await expect(velden.nth(1)).toBeVisible({ timeout: 20_000 });
+      await velden.nth(1).fill('6');
+      const status = page.locator('#hours-autosave-status');
+      await expect(status).toContainText('Gesynchroniseerd', { timeout: 20_000 });
+      await expect(status).not.toContainText('Niet gesynchroniseerd');
+    });
+  } finally {
+    await herstel().catch(() => undefined);
+  }
+});

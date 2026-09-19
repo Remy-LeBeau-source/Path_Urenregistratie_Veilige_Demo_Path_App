@@ -204,6 +204,7 @@ function techniqueFor(definition, testCase) {
       'ADM-WR-N-008': 'Grenswaardenanalyse met niet-ASCII invoer (naam op de kolomgrens) + persistentiecontrole',
       'TS-REV-API-N-002': 'Toestandsovergangtest (verboden overgangen in de statustabel) + controle dat een geweigerde overgang niets verandert',
       'KLV-N-023': 'Grenswaardenanalyse (maandmaximum voor verlof en ziekte) + foutafhandeling zonder serverfout',
+      'KLV-N-024': 'Toestandsovergang (lokaal leidend na reset naar server leidend na een geslaagde urenopslag) + foutvermoeden uit monkey-verkenning',
       'KLV-N-022': 'Responsive viewport (320/360/390) + grenswaarden smalle telefoon + lay-outmeting binnen de kaart',
       'KLV-H-021': 'Toestandsovergangtest (licht↔donker, Klassiek↔Modern, heen en terug) + toegankelijkheidsinspectie (geen misleidend aria-pressed)',
       'KLV-H-020':'Beslistabel (stap → knoptekst) + visuele consistentie met de huisstijlknop in licht en donker',

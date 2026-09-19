@@ -205,3 +205,12 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
     And de urenstaat staat al met een versie op de server
     When de eerste invoer onderweg is en er intussen twee nieuwe invoeren volgen
     Then slaagt elke opslag en staan alle drie de waarden daarna op de server
+
+  @negative
+  Scenario: [KLV-N-024] na "Herstel demo" leest de app de server weer zodra de uren zijn opgeslagen
+    # Testtechniek: Toestandsovergang (lokaal leidend na reset naar server leidend na een geslaagde urenopslag) + foutvermoeden uit monkey-verkenning
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given de medewerker heeft de voorbeeldgegevens hersteld en staat op Mijn uren
+    When de medewerker uren invult en die op de server worden opgeslagen
+    Then is de server weer leidend: de resetvlag is weg
+    And na F5 leest de app de urenstaat van de server en synchroniseert verder invullen gewoon

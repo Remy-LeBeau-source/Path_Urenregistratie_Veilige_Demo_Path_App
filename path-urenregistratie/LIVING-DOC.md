@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 644 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 645 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 644 unieke case-ID's
+- Playwright executable cases: 645 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 645 unieke case-ID's
+- Totaal executable cases: 646 unieke case-ID's
 - Playwright features: 33
 - Database features: 1
 - Playwright steps mappings: 33
 - Database steps mappings: 1
-- Uitvoeringen: 710
-- Niet-mobile projectuitvoeringen: 578
+- Uitvoeringen: 711
+- Niet-mobile projectuitvoeringen: 579
 - Mobile functionele cases: 66
 - Pixel 7 / Chromium-uitvoeringen: 66
 - iPhone 13 / WebKit-uitvoeringen: 66
 
-De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 644 Playwright-functionele cases in totaal 710 resultaten op: 578 + (66 x 2) = 710.
+De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 645 Playwright-functionele cases in totaal 711 resultaten op: 579 + (66 x 2) = 711.
 
 ## Documentatieketen
 
@@ -693,7 +693,7 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 644 Playwri
 
 - Feature: `tests/playwright/features/klassiek-verkenning.feature`
 - Source: `tests/playwright/klassiek-verkenning.spec.ts`
-- Cases: 23
+- Cases: 24
 
 - [KLV-N-002] het maandkeuzepaneel valt op geen enkele breedte buiten het scherm — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 8
 - [KLV-N-003] in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 3
@@ -718,6 +718,7 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 644 Playwri
 - [KLV-H-019] ingevulde uren op Mijn uren zijn leesbaar in licht en donker, op telefoon en desktop — Techniek: Contrastmeting (WCAG 4,5:1) + themacombinaties (licht/donker) × responsive viewport (390/1280) · Assertions: 2
 - [KLV-H-020] de actieknop in Mijn maanden heeft de huisstijl en zegt wat er nu te doen is — Techniek: Beslistabel (stap → knoptekst) + visuele consistentie met de huisstijlknop in licht en donker · Assertions: 5
 - [KLV-N-001] snel achter elkaar uren invullen botst nooit met de eigen, net opgeslagen versie — Techniek: Monkey testing (seeded) + concurrency + toestandsovergang · Assertions: 11
+- [KLV-N-024] na "Herstel demo" leest de app de server weer zodra de uren zijn opgeslagen — Techniek: Toestandsovergang (lokaal leidend na reset naar server leidend na een geslaagde urenopslag) + foutvermoeden uit monkey-verkenning · Assertions: 4
 
 ### Interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand
 

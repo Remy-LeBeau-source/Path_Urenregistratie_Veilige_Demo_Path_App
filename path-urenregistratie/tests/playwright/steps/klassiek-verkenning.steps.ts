@@ -88,3 +88,7 @@ And("heeft de knop dezelfde vorm als de andere hoofdknoppen, in licht en donker"
 And("de urenstaat staat al met een versie op de server");
 When("de eerste invoer onderweg is en er intussen twee nieuwe invoeren volgen");
 Then("slaagt elke opslag en staan alle drie de waarden daarna op de server");
+Given("de medewerker heeft de voorbeeldgegevens hersteld en staat op Mijn uren");
+When("de medewerker uren invult en die op de server worden opgeslagen");
+Then("is de server weer leidend: de resetvlag is weg");
+And("na F5 leest de app de urenstaat van de server en synchroniseert verder invullen gewoon");
