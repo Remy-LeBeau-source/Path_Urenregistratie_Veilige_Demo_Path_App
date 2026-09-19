@@ -1,8 +1,14 @@
 {
-  "appVersion": "2.0.196",
-  "generatedAt": "2026-09-19T08:22:23.325Z",
+  "appVersion": "2.0.198",
+  "generatedAt": "2026-09-19T08:40:46.471Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.198",
+      "wish": "Nice-to-have uit 2.0.197 opgeleverd, monkey-vondst van herontwerp: na \"Herstel demo\" bleef een ingediende maand ten onrechte lokaal bewerkbaar. In writeTimesheetToApi, tak lockedByApprovalOrInvoice (foutcode \"timesheet-locked\"): de refresh die na de 409 volgt deed niets zolang de lokale herstelvoorrang nog stond, want fetchReadApi geeft dan null terug. De maand bleef daardoor lokaal open en elke volgende invoer botste opnieuw op dezelfde 409. releaseLocalResetAuthorityAfterServerWrite() toegevoegd vóór die refresh -- de 409 zelf bewijst al dat de server leidend is. Tegenproef door herontwerp uitgevoerd (KLV-N-026, eigen maand via de API ingediend, Herstel demo, invullen, 409): rood op de ongewijzigde code (vlag bleef \"1\"), groen met deze regel, inclusief dat de invoervelden verdwijnen. Regressietest volgt apart op herontwerp.",
+      "cases": []
+    },
     {
       "date": "19 sep",
       "version": "2.0.195",
@@ -503,7 +509,7 @@
           "technique": "Toestandsovergangtest op het bord (kolom naar kolom) met controle op de server in plaats van op het scherm + herstelbaarheid na herladen zonder browseropslag + tweede lezer ziet dezelfde stand + equivalentieklassen op de lezer (anoniem ziet geen naam, ingelogd wel)",
           "assertions": 21,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: een kaart verplaatsen verandert de stand echt en blijft staan na herladen\n  Given anoniem verplaatsen wordt geweigerd\n  Given de opslag kent deze kaart nog niet\n  When de kaart naar In uitvoering wordt gesleept\n  Then weet de server het, met een geschiedenisregel erbij\n  And blijft hij daar na herladen, ook zonder de browseropslag\n  And een tweede lezer ziet dezelfde stand\n  And de kaart gaat terug, zodat deze case geen sporen achterlaat"
+          "gherkin": ""
         }
       ]
     },

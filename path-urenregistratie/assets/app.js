@@ -2387,6 +2387,12 @@ function writeTimesheetToApi(action, suppliedPayload = null, applyResponse = tru
         if (lockedByApprovalOrInvoice) {
           const employee = currentEmployee();
           const periodKey = String(payload.period || currentPeriod().key);
+          // Monkey-vondst (herontwerp, 19 sep): na "Herstel demo" bleef de lokale
+          // herstelvoorrang staan, dus de refresh hieronder deed niets (fetchReadApi
+          // geeft null zolang die vlag staat) -- de maand bleef lokaal open en elke
+          // invoer botste opnieuw op deze 409. De 409 zelf bewijst al dat de server
+          // leidend is, dus de voorrang mag hier meteen weg, vóór de refresh.
+          releaseLocalResetAuthorityAfterServerWrite();
           return refreshTimesheetReadApi(periodKey, employee.id, true).catch(() => null).then(() => {
             renderHoursGrid();
             // Monkey-vondst (herontwerp, 19 sep): deze vaste zin overschreef de
