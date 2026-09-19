@@ -1,8 +1,14 @@
 {
-  "appVersion": "2.0.187",
-  "generatedAt": "2026-09-19T04:06:03.061Z",
+  "appVersion": "2.0.189",
+  "generatedAt": "2026-09-19T04:41:33.220Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.189",
+      "wish": "De smoke-test (de controle vóór elke push) duurt lokaal ongeveer 5 minuten in plaats van 8 tot 15. Nice-to-have van vannacht opgepakt. Uit een profiel bleek dat de helft van de tijd opging aan het opzoeken van een element op id: de testomgeving (JSDOM) doorzocht daarvoor telkens de hele pagina. De smoke-test gebruikt voor een kale id-selectie nu de ingebouwde index; alle andere selecties blijven ongewijzigd, en aan de app zelf verandert niets. Gemeten: 514 naar 315 seconden. Eenmalig over de hele smoke beide paden naast elkaar gedraaid: 56.209 aanroepen, nul verschillen. Daarbij gevonden dat de testomgeving bij een dubbel id het verkeerde element kan teruggeven, dus elke 25e aanroep vergelijkt alsnog met het trage pad en de smoke eindigt hard rood bij een verschil. Techniek: equivalentiecontrole (oud en nieuw pad naast elkaar) plus foutinjectie. Tegenproef: een dubbel id na de bestaande unieke-id-controle geeft rood met \"week af bij: #page-title (dubbel id?)\"; teruggezet en groen.",
+      "cases": []
+    },
     {
       "date": "19 sep",
       "version": "2.0.187",
@@ -504,7 +510,7 @@
           "technique": "Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole",
           "assertions": 20,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de Kennisbank op de telefoon wordt geopend\n  Then tekent de Living Doc tien regels per keer, lokaal vóór echt, en bewaart hij er hooguit 25\n  And de pagina heeft geen horizontale overflow of gedeelde appcode"
+          "gherkin": ""
         }
       ]
     },
@@ -2178,11 +2184,6 @@
       "date": "19 sep",
       "improvement": "Goedkeuringen sneller laden: de werkvoorraad doet bij elke beheerderslogin twee verzoeken per maand per medewerker (in een volle testdatabase 76 stuks); één gebundeld verzoek zou dat terugbrengen tot één",
       "why": "Met meer medewerkers en maanden groeit de laadtijd van Goedkeuringen en het dashboard mee; gemeten in de volledige lokale run van 19 sep."
-    },
-    {
-      "date": "19 sep",
-      "improvement": "De smoke-test sneller maken of opsplitsen: lokaal duurt hij 8 tot 12 minuten, in CI ongeveer 4",
-      "why": "Een kortere controle vóór elke push houdt de doorlooptijd van een wijziging laag."
     }
   ]
 }
