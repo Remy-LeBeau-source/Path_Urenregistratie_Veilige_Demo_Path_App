@@ -1,8 +1,40 @@
 {
-  "appVersion": "2.0.197",
-  "generatedAt": "2026-09-19T08:16:36.982Z",
+  "appVersion": "2.0.199",
+  "generatedAt": "2026-09-19T08:46:47.282Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.199",
+      "wish": "Na \"Herstel demo\" gaat een maand die op de server al is ingediend weer op slot zodra de server een invoer weigert. Nice-to-have uit 2.0.197 opgepakt. Na de lokale herstelstand leest de app de server niet, dus een op de server ingediende maand was lokaal bewerkbaar en elke invoer kreeg opnieuw een weigering (monkey, telefoon, seeds 30 tot 35). De weigering bewijst dat de server leidend is: main heeft de app die herstelstand dan laten loslaten en de serverstand laten overnemen (2.0.198). Vastgelegd met KLV-N-026: een eigen maand via de API ingediend, \"Herstel demo\", invullen, weigering; daarna noemt de app de reden, is de herstelstand weg en staan er geen invoervelden meer. Techniek: toestandsovergang + foutvermoeden uit monkey-verkenning. Tegenproef: op de code zonder de regel rood (herstelstand bleef staan), met de regel groen. Geldt alleen waar de testknoppen bestaan.",
+      "cases": [
+        {
+          "id": "KLV-N-026",
+          "title": "na \"Herstel demo\" zet een door de server geweigerde invoer de ingediende maand weer op slot",
+          "feature": "tests/playwright/features/klassiek-verkenning.feature",
+          "technique": "Toestandsovergang (lokaal leidend na reset naar server leidend na een weigering die de serverstand bewijst) + foutvermoeden uit monkey-verkenning",
+          "assertions": 6,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: na \"Herstel demo\" zet een door de server geweigerde invoer de ingediende maand weer op slot\n  Given een maand die op de server is ingediend\n  When de medewerker iets invult en de server dat weigert\n  Then noemt de app de reden, laat hij de herstelstand los en staat de maand op slot"
+        }
+      ]
+    },
+    {
+      "date": "19 sep",
+      "version": "2.0.198",
+      "wish": "Nice-to-have uit 2.0.197 opgeleverd, monkey-vondst van herontwerp: na \"Herstel demo\" bleef een ingediende maand ten onrechte lokaal bewerkbaar. In writeTimesheetToApi, tak lockedByApprovalOrInvoice (foutcode \"timesheet-locked\"): de refresh die na de 409 volgt deed niets zolang de lokale herstelvoorrang nog stond, want fetchReadApi geeft dan null terug. De maand bleef daardoor lokaal open en elke volgende invoer botste opnieuw op dezelfde 409. releaseLocalResetAuthorityAfterServerWrite() toegevoegd vóór die refresh -- de 409 zelf bewijst al dat de server leidend is. Tegenproef door herontwerp uitgevoerd (KLV-N-026, eigen maand via de API ingediend, Herstel demo, invullen, 409): rood op de ongewijzigde code (vlag bleef \"1\"), groen met deze regel, inclusief dat de invoervelden verdwijnen. Regressietest volgt apart op herontwerp.",
+      "cases": [
+        {
+          "id": "KLV-N-026",
+          "title": "na \"Herstel demo\" zet een door de server geweigerde invoer de ingediende maand weer op slot",
+          "feature": "tests/playwright/features/klassiek-verkenning.feature",
+          "technique": "Toestandsovergang (lokaal leidend na reset naar server leidend na een weigering die de serverstand bewijst) + foutvermoeden uit monkey-verkenning",
+          "assertions": 6,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: na \"Herstel demo\" zet een door de server geweigerde invoer de ingediende maand weer op slot\n  Given een maand die op de server is ingediend\n  When de medewerker iets invult en de server dat weigert\n  Then noemt de app de reden, laat hij de herstelstand los en staat de maand op slot"
+        }
+      ]
+    },
     {
       "date": "19 sep",
       "version": "2.0.197",
@@ -515,7 +547,7 @@
           "technique": "Datagedreven over de volledige personenlijst uit het zaaibestand (naam, voornaam, delen van een dubbele voornaam, mailadres) + equivalentieklassen over elke openbare bron van de pagina (projectstand, html, script, anonieme opslag, koppelingen)",
           "assertions": 4,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: geen enkele openbare bron van de kwaliteitsstraat bevat namen of mailadressen van medewerkers\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de flow voor PIPE-N-006 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat geen enkele openbare bron van de kwaliteitsstraat bevat namen of mailadressen van medewerkers"
+          "gherkin": ""
         }
       ]
     },
@@ -2306,6 +2338,12 @@
       "status": "klaar, 2.0.179 t/m 2.0.184"
     },
     {
+      "date": "19 sep",
+      "wish": "Twee wisselvallige cases op main's terrein, gevonden door herontwerp bij het nalopen van de laatste 8 CI-runs: AUTH-H-003 (mobile-safari, run 35410988413) en E2E-H-008 (mobile-safari, run 35397301064), elk één keer gefaald op de eerste poging, groen bij de automatische herhaling. Foutdetails staan in de ci-playwright-report-<shard>-artefacten van die runs. Nog niet zelf gereproduceerd of onderzocht; te weinig herhaling (1 op 8 runs) om zonder bewijs iets te patchen.",
+      "who": "main",
+      "status": "in de gaten houden"
+    },
+    {
       "date": "15 sep",
       "wish": "Wisselvallig op mobile-safari: SKIN-H-040. 15 sep 5 van 5 keer groen herhaald, niet te reproduceren; opnieuw bekijken als hij in CI nog eens valt.",
       "who": "herontwerp",
@@ -2331,11 +2369,6 @@
     }
   ],
   "niceToHave": [
-    {
-      "date": "19 sep",
-      "improvement": "Na \"Herstel demo\" op een maand die op de server al is ingediend, laat de app de maand bewerkbaar en krijgt elke invoer opnieuw een 409; bij zo'n weigering zou de app de lokale herstelstand kunnen loslaten en de serverstand overnemen (alleen waar de testknoppen bestaan)",
-      "why": "Gezien in vijf monkey-seeds op telefoon (28 tot 35); de melding zelf klopt sinds 2.0.194, maar de maand gaat nu pas op slot na verversen."
-    },
     {
       "date": "19 sep",
       "improvement": "Goedkeuringen sneller laden: de werkvoorraad doet bij elke beheerderslogin twee verzoeken per maand per medewerker (in een volle testdatabase 76 stuks); één gebundeld verzoek zou dat terugbrengen tot één",
