@@ -5,6 +5,7 @@ import { AuthApi } from './api/AuthApi';
 import { appConfig, requirePassword } from './fixtures/appConfig';
 import { LoginPage } from './pages/LoginPage';
 import { klikTestknop } from './fixtures/testknoppen';
+import { actieveAccountIds, deactiveerNieuweAccounts } from './fixtures/nieuweAccountsOpruimen';
 
 // Zelfde databasetoegang als database-integrity.spec.ts: puur voor het opzetten
 // van een geïsoleerd wegwerpbedrijf, nooit voor het lezen of wijzigen van de
@@ -55,6 +56,16 @@ async function postJson(
     body: await response.json(),
   };
 }
+
+// Elke case die een account aanmaakt en actief laat staan, ruimt dat na afloop
+// op (zie fixtures/nieuweAccountsOpruimen.ts; TW-1, 19 sep).
+let accountsVooraf = new Set<number>();
+test.beforeEach(async () => {
+  accountsVooraf = await actieveAccountIds();
+});
+test.afterEach(async () => {
+  await deactiveerNieuweAccounts(accountsVooraf);
+});
 
 test.describe('admin write endpoints', () => {
   test('[ADM-WR-H-019] latere startdatum vraagt bevestiging en vermeldt dat historie bewaard blijft', async ({ page }) => {

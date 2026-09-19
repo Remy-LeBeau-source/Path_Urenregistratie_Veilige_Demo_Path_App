@@ -1,8 +1,33 @@
 {
-  "appVersion": "2.0.183",
-  "generatedAt": "2026-09-19T00:46:38.271Z",
+  "appVersion": "2.0.184",
+  "generatedAt": "2026-09-19T01:04:23.856Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.184",
+      "wish": "Testset: admin-writes ruimt na elke case de accounts op die de case heeft aangemaakt (TW-1, afgerond). Een reeks cases in admin-writes.spec maakte medewerkers en beheerders aan en liet ze actief staan. In de volledige run ruimden latere specs dat toevallig op, maar een spec die direct daarna draaide werd trager: EQ-H-020 zag zijn melding \"3 e-mails verzonden\" pas na meer dan 5 seconden en viel twee keer op rij. Nu legt een gedeelde hulpfunctie vóór elke case vast welke accounts actief zijn, en deactiveert na de case elk account dat erbij is gekomen, met een zachte controle op het resultaat. Techniek: testware-analyse op testonafhankelijkheid (ISTQB). Tegenproeven: zonder de opruimstap valt EQ-H-020 na admin-writes (twee keer rood), met de opruimstap 84 van 84 groen en na afloop alleen de vaste accounts actief; een opruimstap die mislukt maakt de case rood (ADM-WR-H-002, verwacht 200, kreeg 400).",
+      "cases": [
+        {
+          "id": "EQ-H-020",
+          "title": "Backoffice finaliseert de branded serverfactuur en verzendt drie echte TEST-mails",
+          "feature": "tests/playwright/features/mail-delivery.feature",
+          "technique": "API-contract + equivalentieklasse",
+          "assertions": 19,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: Backoffice finaliseert de branded serverfactuur en verzendt drie echte TEST-mails\n  Given een goedgekeurde maar nog niet definitieve serverfactuur als Backoffice-taak klaarstaat\n  When Backoffice de verzending één keer afrondt\n  Then wordt eerst gelockt, niet te vroeg gequeued en verdwijnt de afgeronde vervolgtaak"
+        },
+        {
+          "id": "ADM-WR-H-002",
+          "title": "admin kan beheerder server-led aanmaken en wijzigen",
+          "feature": "tests/playwright/features/organization-settings.feature",
+          "technique": "Beslissingstabel rollen en autorisatie",
+          "assertions": 12,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: admin kan beheerder server-led aanmaken en wijzigen\n  Given organisatie-instellingen beheren is voorbereid\n  When de flow voor ADM-WR-H-002 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat admin kan beheerder server-led aanmaken en wijzigen"
+        }
+      ]
+    },
     {
       "date": "19 sep",
       "version": "2.0.183",
@@ -475,7 +500,7 @@
           "technique": "Foutinjectie op de netwerklaag met grenswaardeanalyse op het aantal pogingen (twee mislukkingen nog goed, drie mislukkingen geeft de eerlijke terugvalmelding)",
           "assertions": 3,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: een haperende verbinding kost de pagina geen echte stand, maar drie keer mislukken wordt wel gemeld\n  Given de projectstand pas bij de derde poging binnenkomt\n  When de flow voor PIPE-N-005 wordt uitgevoerd\n  Then toont de pagina toch de echte stand, niet de voorbeelddata\n  And blijft de pagina het eerlijk melden als het echt niet lukt"
+          "gherkin": ""
         }
       ]
     },
@@ -2089,7 +2114,7 @@
       "date": "16 sep",
       "wish": "Eigen vondst in de testset zelf: een paar cases leunen op de gezaaide urenstaat, dus wie lokaal de hele suite in één keer draait krijgt rood op cases die niets mankeren (E2E-H-018, SKIN-H-035). In CI valt het niet op omdat die in aparte shards met een eigen database draaien. Oplossing is dezelfde als eerder bij de dashboardcases: elke schrijvende case maakt zijn eigen maand aan (TW-1 in CODEX_HANDOFF.md).",
       "who": "herontwerp",
-      "status": "open, na go-live"
+      "status": "klaar, 2.0.179 t/m 2.0.184"
     },
     {
       "date": "15 sep",
@@ -2116,11 +2141,5 @@
       "status": "open"
     }
   ],
-  "niceToHave": [
-    {
-      "date": "19 sep",
-      "improvement": "Testset: admin-writes.spec laat een reeks actieve testaccounts achter (medewerkers en beheerders) en mogelijk een skinvoorkeur; in de volledige run ruimen latere specs het op, maar direct erna draaiende specs worden trager (EQ-H-020 zag zijn melding pas na 5 seconden)",
-      "why": "Zelfde aanpak als 2.0.183: opruimen in een finally met een zachte controle op het resultaat."
-    }
-  ]
+  "niceToHave": []
 }
