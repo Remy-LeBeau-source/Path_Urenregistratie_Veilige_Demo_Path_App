@@ -224,6 +224,7 @@
 | DB-H-002 | integration | database-relations.feature | geen enkele kerntabel bevat een weesverwijzing | API-contract + equivalentieklasse | 1 | database-relations.steps.ts | database-integrity.spec.ts | DB / Integratie | Database & Infrastructure | geen enkele kerntabel bevat een weesverwijzing | Happy | 16 | Actueel |
 | DB-H-003 | integration | database-relations.feature | de afhankelijke tabellen hebben de beloofde ON DELETE CASCADE | API-contract + equivalentieklasse | 4 | database-relations.steps.ts | database-integrity.spec.ts | DB / Integratie | Database & Infrastructure | de afhankelijke tabellen hebben de beloofde ON DELETE CASCADE | Happy | 16 | Actueel |
 | DB-N-005 | integration | database-relations.feature | een verwijderde medewerker zonder historie laat geen weesrijen achter | Beslissingstabel rollen en autorisatie | 7 | database-relations.steps.ts | database-integrity.spec.ts | DB / Integratie | Database & Infrastructure | een verwijderde medewerker zonder historie laat geen weesrijen achter | Negative | 16 | Actueel |
+| DB-H-004 | integration | database-relations.feature | het rechtstreeks verwijderen van een urenstaat of opdracht in de database neemt de kindrijen echt mee (ON DELETE CASCADE, niet alleen de metadata) | API-contract + equivalentieklasse | 9 | database-relations.steps.ts | database-integrity.spec.ts | DB / Integratie | Database & Infrastructure | het rechtstreeks verwijderen van een urenstaat of opdracht in de database neemt de kindrijen echt mee (ON DELETE CASCADE, niet alleen de metadata) | Happy | 16 | Actueel |
 | EQ-H-001 | api | mail-delivery.feature | factuurlock maakt queue-items aan met dry_run=true | Toestandsovergang | 5 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | factuurlock maakt queue-items aan met dry_run=true | Happy | 12 | Actueel |
 | EQ-H-002 | api | mail-delivery.feature | broker-channel stuurt alleen de factuur | API-contract + equivalentieklasse | 2 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | broker-channel stuurt alleen de factuur | Happy | 12 | Actueel |
 | EQ-H-003 | api | mail-delivery.feature | EasySalary-channel heeft attachment_policy none | Equivalentieklassen | 2 | email-queue.steps.ts | email-queue.spec.ts | API | E-mailverwerking | EasySalary-channel heeft attachment_policy none | Happy | 12 | Actueel |
@@ -468,6 +469,7 @@
 | SAFE-H-011 | security | production-safety.feature | groene main-pipeline rolt exact dezelfde release veilig uit naar productie | Toestandsovergang + foutinjectie + beslissingstabel | 28 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | groene main-pipeline rolt exact dezelfde release veilig uit naar productie | Happy | 14 | Actueel |
 | SAFE-H-016 | security | production-safety.feature | de eerste 1.x-uitrol normaliseert PROD naar de afgesproken baseline en controleert die streng | Beslissingstabel rollen en autorisatie | 32 | production-safety.steps.ts | production-safety.spec.ts | Security | Audit & Security | de eerste 1.x-uitrol normaliseert PROD naar de afgesproken baseline en controleert die streng | Happy | 14 | Actueel |
 | REM-H-001 | api | reminders.feature | wekelijkse herinnering verstuurt eenmalig een reminder-mail aan medewerkers zonder uren deze week | Beslissingstabel rollen en autorisatie | 10 | reminders.steps.ts | reminders.spec.ts | API | Herinneringen | wekelijkse herinnering verstuurt eenmalig een reminder-mail aan medewerkers zonder uren deze week | Happy | 15 | Actueel |
+| REM-H-002 | api | reminders.feature | de gedeelde testreset maakt reminder_log echt leeg, zodat een eerder verstuurde herinnering daarna opnieuw kan | Toestandsovergang | 8 | reminders.steps.ts | reminders.spec.ts | API | Herinneringen | de gedeelde testreset maakt reminder_log echt leeg, zodat een eerder verstuurde herinnering daarna opnieuw kan | Happy | 15 | Actueel |
 | ROLE-N-003 | security | roles-authorization.feature | zonder sessie geeft protected API 401 | Beslissingstabel rollen en autorisatie | 2 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | zonder sessie geeft protected API 401 | Negative | 4 | Actueel |
 | ROLE-H-001 | security | roles-authorization.feature | admin ziet volledige data | Beslissingstabel rollen en autorisatie | 7 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | admin ziet volledige data | Happy | 4 | Actueel |
 | ROLE-H-002 | security | roles-authorization.feature | employee ziet alleen eigen data | Beslissingstabel rollen en autorisatie | 8 | roles-api.steps.ts | roles-api.spec.ts | Security | Audit & Security | employee ziet alleen eigen data | Happy | 4 | Actueel |
@@ -671,9 +673,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 649
+- Playwright executable cases: 651
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 650
+- Totaal unieke executable cases: 652
 - Playwright features: 33
 - Database features: 1
 - Playwright steps mappings: 33

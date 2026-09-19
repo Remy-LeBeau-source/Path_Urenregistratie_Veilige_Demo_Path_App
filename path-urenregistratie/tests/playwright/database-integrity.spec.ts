@@ -143,4 +143,132 @@ test.describe('database integriteit', () => {
       await authApi.logout();
     });
   });
+
+  // DB-H-003 controleert alleen de information_schema-metadata (staat de regel
+  // er als tekst?), niet dat de database die regel ook echt uitvoert. Dit
+  // verwijdert rechtstreeks in de database, buiten de app om, en bewijst dat
+  // de kindrijen daadwerkelijk verdwijnen -- puur op naam van de constraint zelf,
+  // niet door opruimcode van de app (de app ruimt zelf al netjes op, zie
+  // DB-N-005, maar dat bewijst niets over de database-CASCADE zelf).
+  test('[DB-H-004] het rechtstreeks verwijderen van een urenstaat of opdracht in de database neemt de kindrijen echt mee (ON DELETE CASCADE, niet alleen de metadata)', async ({ request }) => {
+    const authApi = new AuthApi(request);
+    const suffix = Date.now().toString().slice(-7);
+    const email = `db-cascade-${suffix}@example.invalid`;
+    let userId = 0;
+    let assignmentId = 0;
+    let timesheetId = 0;
+
+    await test.step('Given een geïsoleerde medewerker met opdracht, een urenstaat met een dagregel/correctie, en een mailroute op de opdracht', async () => {
+      await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+      const post = async (path: string, data: Record<string, unknown>) => {
+        const csrf = await request.get('/server/auth/csrf.php');
+        const token = String((await csrf.json()).csrf_token || '');
+        return request.post(path, { headers: { 'X-CSRF-Token': token }, data });
+      };
+      const created = await post('/server/api/staff.php', {
+        action: 'upsert_employee', sendInvitation: false,
+        employee: {
+          name: `DB Cascade ${suffix}`, email, role: 'Consultant', startDate: '2026-08-01', active: true,
+          client: 'Cascadeklant', broker: 'Cascadebroker', brokerEmail: 'broker@example.invalid', projectCode: `CASC-${suffix}`,
+        },
+        mailRecipients: [],
+      });
+      const body = await created.json();
+      expect(created.status(), JSON.stringify(body)).toBe(200);
+      userId = Number(body.user_id);
+      expect(userId).toBeGreaterThan(0);
+
+      await withDb(async conn => {
+        const [empRows] = await conn.query('SELECT id, company_id FROM employees WHERE user_id = ?', [userId]);
+        const employee = (empRows as Array<{ id: number; company_id: number }>)[0];
+        const [assignRows] = await conn.query('SELECT id FROM assignments WHERE employee_id = ? ORDER BY id DESC LIMIT 1', [employee.id]);
+        assignmentId = Number((assignRows as Array<{ id: number }>)[0]?.id || 0);
+        expect(assignmentId).toBeGreaterThan(0);
+
+        const year = 3000 + (Date.now() % 900);
+        const [periodResult] = await conn.query(
+          'INSERT INTO periods (company_id, year, month, status) VALUES (?, ?, ?, "open")',
+          [employee.company_id, year, 1],
+        );
+        const periodId = (periodResult as mysql.ResultSetHeader).insertId;
+
+        const [tsResult] = await conn.query(
+          'INSERT INTO timesheets (period_id, employee_id, assignment_id, status) VALUES (?, ?, ?, "draft")',
+          [periodId, employee.id, assignmentId],
+        );
+        timesheetId = (tsResult as mysql.ResultSetHeader).insertId;
+
+        await conn.query(
+          'INSERT INTO time_entries (timesheet_id, work_date, entry_type, hours) VALUES (?, ?, "billable", 8)',
+          [timesheetId, `${year}-01-06`],
+        );
+        await conn.query(
+          'INSERT INTO timesheet_corrections (timesheet_id, requested_by, correction_message) VALUES (?, ?, ?)',
+          [timesheetId, userId, 'Cascadetest'],
+        );
+
+        const [recipientResult] = await conn.query(
+          'INSERT INTO mail_recipients (company_id, recipient_category, display_name, email) VALUES (?, "other", ?, ?)',
+          [employee.company_id, `Cascade ontvanger ${suffix}`, `cascade-ontvanger-${suffix}@example.invalid`],
+        );
+        const recipientId = (recipientResult as mysql.ResultSetHeader).insertId;
+        await conn.query(
+          'INSERT INTO assignment_mail_routes (assignment_id, mail_recipient_id, enabled) VALUES (?, ?, 1)',
+          [assignmentId, recipientId],
+        );
+
+        const [checkRows] = await conn.query(
+          `SELECT
+            (SELECT COUNT(*) FROM time_entries WHERE timesheet_id = ?) AS entries,
+            (SELECT COUNT(*) FROM timesheet_corrections WHERE timesheet_id = ?) AS corrections,
+            (SELECT COUNT(*) FROM assignment_mail_routes WHERE assignment_id = ?) AS routes`,
+          [timesheetId, timesheetId, assignmentId],
+        );
+        const check = (checkRows as Array<{ entries: number; corrections: number; routes: number }>)[0];
+        expect(Number(check.entries), 'de dagregel moet er staan vóór de proef').toBe(1);
+        expect(Number(check.corrections), 'de correctie moet er staan vóór de proef').toBe(1);
+        expect(Number(check.routes), 'de mailroute moet er staan vóór de proef').toBe(1);
+      });
+    });
+
+    await test.step('When de urenstaat rechtstreeks in de database wordt verwijderd, buiten de app om', async () => {
+      await withDb(async conn => {
+        await conn.query('DELETE FROM timesheets WHERE id = ?', [timesheetId]);
+      });
+    });
+
+    await test.step('Then heeft de database zelf de dagregel en de correctie meegenomen', async () => {
+      await withDb(async conn => {
+        const [rows] = await conn.query(
+          `SELECT
+            (SELECT COUNT(*) FROM time_entries WHERE timesheet_id = ?) AS entries,
+            (SELECT COUNT(*) FROM timesheet_corrections WHERE timesheet_id = ?) AS corrections`,
+          [timesheetId, timesheetId],
+        );
+        const row = (rows as Array<{ entries: number; corrections: number }>)[0];
+        expect(Number(row.entries), 'time_entries hoort door ON DELETE CASCADE mee te zijn verdwenen').toBe(0);
+        expect(Number(row.corrections), 'timesheet_corrections hoort door ON DELETE CASCADE mee te zijn verdwenen').toBe(0);
+      });
+    });
+
+    await test.step('And heeft het rechtstreeks verwijderen van de opdracht ook de mailroute meegenomen', async () => {
+      await withDb(async conn => {
+        await conn.query('DELETE FROM assignments WHERE id = ?', [assignmentId]);
+        const [rows] = await conn.query('SELECT COUNT(*) AS aantal FROM assignment_mail_routes WHERE assignment_id = ?', [assignmentId]);
+        expect(Number((rows as Array<{ aantal: number }>)[0]?.aantal || 0), 'assignment_mail_routes hoort door ON DELETE CASCADE mee te zijn verdwenen').toBe(0);
+      });
+    });
+
+    await test.step('Cleanup: de wegwerpmedewerker deactiveren en verwijderen', async () => {
+      const post = async (data: Record<string, unknown>) => {
+        const csrf = await request.get('/server/auth/csrf.php');
+        const token = String((await csrf.json()).csrf_token || '');
+        return request.post('/server/api/users.php', { headers: { 'X-CSRF-Token': token }, data });
+      };
+      await post({ action: 'deactivate', user_id: userId });
+      const del = await post({ action: 'delete', user_id: userId });
+      expect.soft(del.status(), 'opruimen: de wegwerpmedewerker hoort verwijderd te kunnen worden').toBe(200);
+      await authApi.logout();
+    });
+  });
 });

@@ -30,3 +30,12 @@ Feature: Relationele database-integriteit
     Given een net aangemaakte medewerker met opdracht en mailroute
     When de beheerder de medewerker deactiveert en definitief verwijdert
     Then bestaat er geen enkele rij meer die naar die medewerker verwijst
+
+  @happy
+  Scenario: [DB-H-004] het rechtstreeks verwijderen van een urenstaat of opdracht in de database neemt de kindrijen echt mee (ON DELETE CASCADE, niet alleen de metadata)
+    # Testtechniek: API-contract + equivalentieklasse
+    # Aantoonbare Playwright-assertions in deze case: 9
+    Given een geïsoleerde medewerker met opdracht, een urenstaat met een dagregel/correctie, en een mailroute op de opdracht
+    When de urenstaat rechtstreeks in de database wordt verwijderd, buiten de app om
+    Then heeft de database zelf de dagregel en de correctie meegenomen
+    And heeft het rechtstreeks verwijderen van de opdracht ook de mailroute meegenomen

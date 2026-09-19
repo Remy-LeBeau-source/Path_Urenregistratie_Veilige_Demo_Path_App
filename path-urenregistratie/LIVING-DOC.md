@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 649 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 651 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 649 unieke case-ID's
+- Playwright executable cases: 651 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 650 unieke case-ID's
+- Totaal executable cases: 652 unieke case-ID's
 - Playwright features: 33
 - Database features: 1
 - Playwright steps mappings: 33
 - Database steps mappings: 1
-- Uitvoeringen: 715
-- Niet-mobile projectuitvoeringen: 583
+- Uitvoeringen: 717
+- Niet-mobile projectuitvoeringen: 585
 - Mobile functionele cases: 66
 - Pixel 7 / Chromium-uitvoeringen: 66
 - iPhone 13 / WebKit-uitvoeringen: 66
 
-De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 649 Playwright-functionele cases in totaal 715 resultaten op: 583 + (66 x 2) = 715.
+De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 651 Playwright-functionele cases in totaal 717 resultaten op: 585 + (66 x 2) = 717.
 
 ## Documentatieketen
 
@@ -299,11 +299,12 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 649 Playwri
 
 - Feature: `tests/playwright/features/database-relations.feature`
 - Source: `tests/playwright/database-integrity.spec.ts`
-- Cases: 3
+- Cases: 4
 
 - [DB-H-002] geen enkele kerntabel bevat een weesverwijzing — Techniek: API-contract + equivalentieklasse · Assertions: 1
 - [DB-H-003] de afhankelijke tabellen hebben de beloofde ON DELETE CASCADE — Techniek: API-contract + equivalentieklasse · Assertions: 4
 - [DB-N-005] een verwijderde medewerker zonder historie laat geen weesrijen achter — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 7
+- [DB-H-004] het rechtstreeks verwijderen van een urenstaat of opdracht in de database neemt de kindrijen echt mee (ON DELETE CASCADE, niet alleen de metadata) — Techniek: API-contract + equivalentieklasse · Assertions: 9
 
 ### Mailroutering en aflevering
 
@@ -636,9 +637,10 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 649 Playwri
 
 - Feature: `tests/playwright/features/reminders.feature`
 - Source: `tests/playwright/reminders.spec.ts`
-- Cases: 1
+- Cases: 2
 
 - [REM-H-001] wekelijkse herinnering verstuurt eenmalig een reminder-mail aan medewerkers zonder uren deze week — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
+- [REM-H-002] de gedeelde testreset maakt reminder_log echt leeg, zodat een eerder verstuurde herinnering daarna opnieuw kan — Techniek: Toestandsovergang · Assertions: 8
 
 ### Rollen, rechten en gegevensafscherming
 
