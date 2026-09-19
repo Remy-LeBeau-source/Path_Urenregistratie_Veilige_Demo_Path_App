@@ -24,6 +24,18 @@ async function openView(page: Page, view: 'dashboard' | 'timesheet' | 'approvals
   await page.locator(`button[data-view="${view}"]:visible`).first().click();
 }
 
+// Goedkeuringen toont een laadtoestand tot de serverwerkvoorraad binnen is
+// (TS-REV-UI-N-013). Die werkvoorraad leest elke maand x elke actieve
+// medewerker, en de ingebouwde PHP-server doet dat een verzoek tegelijk. In een
+// volledige lokale run (verse database, alle specs na elkaar) staan er meer
+// maanden en medewerkers, en stond de pagina na 5 seconden nog op "laden" --
+// TS-REV-UI-H-008 en -H-011 vielen daarop (TW-1, 19 sep). Wachten op het
+// signaal dat de app zelf geeft, niet op een vaste tijd; toBeHidden slaagt
+// direct als er niets te laden valt.
+async function wachtOpWerkvoorraad(page: Page) {
+  await expect(page.locator('#approval-loading'), 'Goedkeuringen hoort klaar te zijn met laden').toBeHidden({ timeout: 30_000 });
+}
+
 async function setPeriod(page: Page, periodKey: string) {
   await page.evaluate((nextPeriod) => {
     const control = document.querySelector('#period-picker') as HTMLInputElement | null;
@@ -322,6 +334,7 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
     await loginPage.loginAsAdmin();
     await openView(page, 'approvals');
     await setPeriod(page, PERIOD_KEY);
+    await wachtOpWerkvoorraad(page);
 
     const approvalCard = page
       .locator(`article.approval-card[data-approval-period="${PERIOD_KEY}"]`)
@@ -394,6 +407,7 @@ test('[TS-REV-UI-H-008] browserflow: correctie, herindiening, goedkeuring en her
     await loginPage.loginAsAdmin();
     await openView(page, 'approvals');
     await setPeriod(page, PERIOD_KEY);
+    await wachtOpWerkvoorraad(page);
 
     const approvalCardAfterResubmit = page
       .locator(`article.approval-card[data-approval-period="${PERIOD_KEY}"]`)
@@ -699,6 +713,7 @@ test('[TS-REV-UI-H-011] urencontrole toont dag/week-uitsplitsing vóór goedkeur
     await loginPage.loginAsAdmin();
     await openView(page, 'approvals');
     await setPeriod(page, PERIOD_KEY);
+    await wachtOpWerkvoorraad(page);
     const approvalCard = page
       .locator(`article.approval-card[data-approval-period="${PERIOD_KEY}"]`)
       .filter({ hasText: employeeName })
@@ -793,6 +808,12 @@ test('[TS-REV-UI-N-014] verlof en ziekte staan uit met een duidelijke uitleg', a
 // help-widget.spec.ts).
 
 test('[TS-REV-UI-H-012] beheerder zet verlof en ziekte aan; de medewerker kan ze dan zelf invullen en het blijft na F5 staan', async ({ page }) => {
+  // Twee logins, een herlaad en een opruimstap via de API. In een volledige
+  // lokale run (verse database, alle specs na elkaar, een PHP-server die een
+  // verzoek tegelijk doet) liep dat over de standaard 45 seconden, en viel de
+  // case in zijn opruimstap (TW-1, 19 sep). Zelfde ruimte als TS-REV-UI-H-008;
+  // geen enkele controle wordt erdoor losser.
+  test.setTimeout(90_000);
   const loginPage = new LoginPage(page);
   await mockEmploymentStartDate(page);
 

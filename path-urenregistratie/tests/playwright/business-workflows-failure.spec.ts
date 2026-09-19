@@ -1,8 +1,7 @@
 import { test, expect } from './fixtures/e2eIsolation';
 import type { Page } from '@playwright/test';
 import { useFixedDemoClock } from './fixtures/fixedDemoClock';
-import { LoginPage } from './pages/LoginPage';
-import { kiesHeleMaand } from './fixtures/heleMaand';
+import { eigenGoedgekeurdeUrenstaat } from './fixtures/eigenGoedgekeurdeUrenstaat';
 
 // Wat er gebeurt als het misgaat en je het opnieuw probeert.
 //
@@ -44,17 +43,9 @@ async function deliveryIds(page: Page): Promise<number[]> {
     .map(item => Number(item.id)).sort((left, right) => left - right);
 }
 
-function periodeKey(label: string): string {
-  const maanden = ['januari', 'februari', 'maart', 'april', 'mei', 'juni',
-    'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
-  const delen = label.toLowerCase().split(/\s+/);
-  return `${delen[1]}-${String(maanden.indexOf(delen[0]) + 1).padStart(2, '0')}`;
-}
-
 test('[E2E-N-019] een mislukte factuurpoging laat niets half achter en opnieuw proberen levert één factuur', async ({ page }) => {
   test.setTimeout(210_000);
 
-  const loginPage = new LoginPage(page);
   let periodeSleutel = '';
   let medewerkerId = 0;
   let urenstaatId = 0;
@@ -62,56 +53,17 @@ test('[E2E-N-019] een mislukte factuurpoging laat niets half achter en opnieuw p
   let versieVooraf = 0;
 
   await test.step('Given een goedgekeurde urenstaat en de voorstatus is vastgelegd', async () => {
-    await loginPage.open();
-    await loginPage.loginAsEmployee();
-    await page.locator('button[data-view="timesheet"]').click();
-    await expect(page.locator('#timesheet-status')).toBeVisible();
-    periodeSleutel = periodeKey(String(await page.locator('#period-label').textContent() || '').trim());
+    ({ periodeSleutel, medewerkerId, urenstaatId, versie: versieVooraf } = await eigenGoedgekeurdeUrenstaat(page, 'E2E-N-019'));
 
-    const ik = await (await page.request.get('/server/auth/me.php')).json() as Json;
-    const bootstrap = await (await page.request.get('/server/api/bootstrap.php')).json() as Json;
-    medewerkerId = Number((bootstrap.employees as Json[]).find(
-      item => Number(item.user_id) === Number((ik.user as Json).id))?.id || 0);
-    expect(medewerkerId).toBeGreaterThan(0);
-
-    const invoer = page.locator('#hours-grid .hours-input:not([disabled])').first();
-    if (await invoer.count()) {
-      await invoer.fill('8');
-      await invoer.press('Tab');
-      await kiesHeleMaand(page);
-      const schrijf = page.waitForResponse(response =>
-        response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
-      await page.locator('#submit-timesheet').click();
-      await expect(page.locator('#modal-confirm')).toBeVisible();
-      await page.locator('#modal-confirm').click();
-      await schrijf;
-    }
-    urenstaatId = Number((await leesUrenstaat(page, periodeSleutel, medewerkerId)).id || 0);
-
-    await page.request.post('/server/auth/logout.php', { headers: { 'X-CSRF-Token': await csrf(page) } });
-    await loginPage.open();
-    await loginPage.loginAsAdmin();
-
-    if (String((await leesUrenstaat(page, periodeSleutel, medewerkerId)).status) === 'submitted') {
-      await page.locator('button[data-view="approvals"]').click();
-      const goedkeuren = page.locator(`[data-approve="${medewerkerId}"]`).first();
-      await expect(goedkeuren).toBeVisible();
-      const schrijf = page.waitForResponse(response =>
-        response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
-      await goedkeuren.click();
-      await schrijf;
-    }
-    const urenstaat = await leesUrenstaat(page, periodeSleutel, medewerkerId);
-    expect(String(urenstaat.status), 'de urenstaat hoort goedgekeurd te zijn').toBe('approved');
-    versieVooraf = Number(urenstaat.version || 0);
-
-    // Let op: zodra een urenstaat is goedgekeurd bestaat er al een CONCEPTfactuur.
-    // De invariant gaat dus niet over 'geen factuur' maar over 'niets definitiefs',
-    // en over: geen tweede concept erbij door een mislukte poging.
-    const conceptVooraf = await facturenVoor(page, periodeSleutel, urenstaatId);
-    expect(conceptVooraf.filter(item => item.locked === true),
-      'vooraf hoort er nog niets definitief te zijn').toHaveLength(0);
-    expect(conceptVooraf, 'vooraf hoort er precies één conceptfactuur te staan').toHaveLength(1);
+    // De app maakt pas een factuurregel aan bij "definitief maken" (invoices.php,
+    // actie 'lock', zet locked_at meteen mee). Een goedgekeurde urenstaat heeft dus
+    // nog geen factuurregel. Eerder verwachtte deze case hier één conceptfactuur,
+    // maar die kwam alleen uit de oude demodata van de huidige maand (zie
+    // test_seed_unlocked_invoice_concept in server/lib/test-reset.php). In een eigen
+    // maand is de invariant strenger en eenvoudiger: vooraf niets, na een gestrande
+    // poging nog steeds niets, na opnieuw proberen precies één definitieve factuur.
+    const vooraf = await facturenVoor(page, periodeSleutel, urenstaatId);
+    expect(vooraf, 'vooraf hoort er nog geen factuurregel te bestaan').toHaveLength(0);
     deliveriesVooraf = await deliveryIds(page);
   });
 
@@ -152,9 +104,7 @@ test('[E2E-N-019] een mislukte factuurpoging laat niets half achter en opnieuw p
       'een gestrande poging mag de versie niet ophogen').toBe(versieVooraf);
 
     const naFout = await facturenVoor(page, periodeSleutel, urenstaatId);
-    expect(naFout, 'een gestrande poging mag geen tweede factuurregel achterlaten').toHaveLength(1);
-    expect(naFout.filter(item => item.locked === true),
-      'een gestrande poging mag niets definitief hebben gemaakt').toHaveLength(0);
+    expect(naFout, 'een gestrande poging mag geen (halve) factuurregel achterlaten').toHaveLength(0);
     expect(await deliveryIds(page),
       'een gestrande poging mag geen mailitems hebben klaargezet').toEqual(deliveriesVooraf);
   });

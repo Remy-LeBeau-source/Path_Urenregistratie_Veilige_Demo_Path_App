@@ -1,8 +1,51 @@
 {
-  "appVersion": "2.0.180",
-  "generatedAt": "2026-09-18T22:52:21.531Z",
+  "appVersion": "2.0.181",
+  "generatedAt": "2026-09-18T23:55:22.537Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.181",
+      "wish": "Testset: de volledige lokale regressie is weer een geldige meting (TW-1, tweede deel). Een volledige desktop-run op een verse database (562 geslaagd, 5 gevallen) liet zien waar cases nog op elkaar leunden. E2E-N-019 (mislukte factuurpoging) slaagde alleen omdat E2E-H-018 eerder in dezelfde run de huidige maand had goedgekeurd; nu zetten beide via een gedeelde hulpfunctie een eigen goedgekeurde urenstaat klaar in een ongebruikte maand. Daarbij bleek de oude verwachting \"vooraf precies één conceptfactuur\" alleen uit oude demodata te komen: de app maakt pas bij definitief maken een factuurregel. De case toetst nu strenger: vooraf geen factuurregel, na de gestrande poging nog steeds geen, na opnieuw proberen precies één definitieve. TS-REV-UI-H-008 en -H-011 gaven Goedkeuringen 5 seconden terwijl die in een volle database nog aan het laden was; ze wachten nu op het laadsignaal dat de app zelf toont. TS-REV-UI-H-012 krijgt dezelfde 90 seconden als H-008. Techniek: testware-analyse op testonafhankelijkheid (ISTQB). Tegenproeven: klanturenstaat-verzoeken 2 seconden vertraagd, zonder wachtstap rood op precies de oorspronkelijke fout en met wachtstap groen; een factuurpoging die de server wél verwerkt en waarvan alleen het antwoord verloren gaat, geeft rood op E2E-N-019 (urenstaat al gefactureerd). Impactset 12 van 12 groen.",
+      "cases": [
+        {
+          "id": "E2E-N-019",
+          "title": "Een mislukte factuurpoging laat niets half achter en opnieuw proberen levert één factuur",
+          "feature": "tests/playwright/features/end-to-end-workflows.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 13,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een mislukte factuurpoging laat niets half achter en opnieuw proberen levert één factuur\n  Given een goedgekeurde urenstaat en de voorstatus is vastgelegd\n  When de eerste factuurpoging gecontroleerd faalt\n  Then blijven taak, status, versie, factuur en deliveries onaangeroerd\n  When Backoffice het opnieuw probeert, ontstaat precies één factuur\n  And ontstaat per ontvanger precies één bericht zonder dubbele bijlage"
+        },
+        {
+          "id": "E2E-H-018",
+          "title": "iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF",
+          "feature": "tests/playwright/features/end-to-end-workflows.feature",
+          "technique": "Equivalentieklassen",
+          "assertions": 20,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF\n  Given een goedgekeurde urenstaat klaarstaat voor facturatie\n  When Backoffice de factuur definitief maakt\n  Then levert de factuurbijlage een echte, geldige PDF met veilige headers\n  And blijft dezelfde bijlage na een verversing byte voor byte gelijk\n  And belooft geen enkele delivery een bijlage zonder werkelijk bestand"
+        },
+        {
+          "id": "TS-REV-UI-H-008",
+          "title": "browserflow: correctie, herindiening, goedkeuring en heropening blijven servergestuurd",
+          "feature": "tests/playwright/features/correction-approval-ui.feature",
+          "technique": "Toestandsovergang",
+          "assertions": 30,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: browserflow: correctie, herindiening, goedkeuring en heropening blijven servergestuurd\n  Given de medewerker een urenstaat indient in de browser\n  When de administrator een correctieverzoek plaatst\n  Then ziet de medewerker het correctieverzoek en dient opnieuw in\n  And de administrator keurt de herindiening goed\n  Then ziet de medewerker de eindstatus Goedgekeurd\n  When de administrator de goedkeuring met reden intrekt\n  Then opent de medewerker de dashboardcorrectie en kan opnieuw indienen"
+        },
+        {
+          "id": "TS-REV-UI-H-012",
+          "title": "beheerder zet verlof en ziekte aan; de medewerker kan ze dan zelf invullen en het blijft na F5 staan",
+          "feature": "tests/playwright/features/correction-approval-ui.feature",
+          "technique": "Beslissingstabel rollen en autorisatie",
+          "assertions": 14,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: beheerder zet verlof en ziekte aan; de medewerker kan ze dan zelf invullen en het blijft na F5 staan\n  Given de beheerder verlof en ziekte handmatig invullen aanzet via de instellingen-schakelaar\n  When de medewerker Mijn uren opent\n  Then staan verlof en ziekte niet meer uitgeschakeld en is de uitleg verdwenen\n  When de medewerker verlof en ziekte zelf invult\n  Then blijven de ingevulde waarden staan na een herlaad"
+        }
+      ]
+    },
     {
       "date": "18 sep",
       "version": "2.0.179",
@@ -22,7 +65,7 @@
           "title": "iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF",
           "feature": "tests/playwright/features/end-to-end-workflows.feature",
           "technique": "Equivalentieklassen",
-          "assertions": 29,
+          "assertions": 20,
           "platform": "desktop-chromium",
           "gherkin": "Scenario: iedere beloofde factuurbijlage bestaat werkelijk als geldige en te openen PDF\n  Given een goedgekeurde urenstaat klaarstaat voor facturatie\n  When Backoffice de factuur definitief maakt\n  Then levert de factuurbijlage een echte, geldige PDF met veilige headers\n  And blijft dezelfde bijlage na een verversing byte voor byte gelijk\n  And belooft geen enkele delivery een bijlage zonder werkelijk bestand"
         }
@@ -403,7 +446,7 @@
           "technique": "Beslistabel op het kaartmenu (welke actie hoort erin, welke bewust niet, en welke is uitgeschakeld in de huidige kolom) + controle op de server dat de actie echt uitgevoerd is",
           "assertions": 14,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de rechtermuisknop op een kaart geeft alleen acties die echt iets doen\n  Given het menu is dicht tot je rechtsklikt\n  When de flow voor PIPE-H-014 wordt uitgevoerd\n  Then staan er alleen acties in die hier betekenis hebben\n  And sluit Escape het menu zonder iets te doen\n  And de kaart gaat terug, zodat deze case geen sporen achterlaat"
+          "gherkin": ""
         }
       ]
     },
@@ -1999,13 +2042,13 @@
   "niceToHave": [
     {
       "date": "16 sep",
-      "improvement": "Testset: elke schrijvende case zijn eigen maand geven (TW-1)",
-      "why": "Dan is een lokale volledige regressie weer een geldige meting in plaats van ruis."
+      "improvement": "Testset: vier specs laten actieve testmedewerkers achter (reminders, password-reset, admin-writes, email-queue); elke latere beheerderslogin haalt voor hen alle maanden op, wat een volledige lokale run trager maakt (TW-1, rest)",
+      "why": "Opruimen met startdatum erbij, anders weigert de server het deactiveren (409)."
     },
     {
-      "date": "16 sep",
-      "improvement": "De drie TS-REV-UI-cases (H-008, H-011, H-012) die in een volledige lokale run omvallen onafhankelijk maken (E2E-H-018 en SKIN-H-035 zijn al los, 2.0.179)",
-      "why": "Zelfde reden; nu valt de groep om zodra een andere spec eerder liep."
+      "date": "19 sep",
+      "improvement": "ADM-WR-H-016 viel één keer in een volledige lokale run met \"Dit e-mailadres is al in gebruik\" bij het opslaan van een gezaaide medewerker; los niet te reproduceren (40 van 40 groen)",
+      "why": "Nader bekijken bij de volgende volledige run; zie ook de serverbevinding bij main over die melding."
     }
   ]
 }
