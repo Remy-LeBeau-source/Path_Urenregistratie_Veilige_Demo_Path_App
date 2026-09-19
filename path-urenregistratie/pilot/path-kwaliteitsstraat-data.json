@@ -1,8 +1,14 @@
 {
-  "appVersion": "2.0.193",
-  "generatedAt": "2026-09-19T06:18:42.323Z",
+  "appVersion": "2.0.194",
+  "generatedAt": "2026-09-19T06:39:41.067Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.194",
+      "wish": "Monkey-vondst van herontwerp: een vaste foutmelding overschreef de echte reden van de server. In writeTimesheetToApi (foutcode \"timesheet-locked\") stond een vaste zin \"Deze maand is al goedgekeurd of gefactureerd en kan niet meer worden aangepast.\", ook als de server een specifiekere reden gaf (\"Een ingediende urenstaat ligt bij Backoffice en kan niet meer worden gewijzigd.\"). Een medewerker met een tweede tabblad, of iemand na \"Herstel demo\", kreeg zo te horen dat de maand al goedgekeurd was terwijl hij alleen ingediend was. De servermelding gaat nu voor, met de oude zin alleen nog als terugval als de server geen tekst meestuurt. Tegenproef door herontwerp uitgevoerd (KLV-N-025, equivalentieklassen ingediend/goedgekeurd): rood op de ongewijzigde code voor \"ingediend\", groen met deze regel.",
+      "cases": []
+    },
     {
       "date": "19 sep",
       "version": "2.0.193",
@@ -504,7 +510,7 @@
           "technique": "Toestandsovergangtest over de vier fasen van de straat (elke stap moet op het scherm terechtkomen, en vrijgeven moet hem weer loslaten) + grenswaarden op de fase (0 en 4 horen erbij, -1 en 5 niet) + negatieve klasse op het schrijfrecht",
           "assertions": 31,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de stappenbalk toont echte voortgang van de pijplijn en beweegt mee zonder herladen\n  Given anoniem voortgang melden wordt geweigerd\n  And een fase buiten 0 tot en met 4 wordt geweigerd\n  Then staat de balk op de simulatie zolang er niets loopt\n  When de pijplijn stap voor stap voortgang meldt\n  And schuift de kaart vanzelf mee met de fase\n  And mag een pijplijnsleutel niets anders dan voortgang melden\n  And laat fase 0 de balk weer los"
+          "gherkin": ""
         }
       ]
     },
