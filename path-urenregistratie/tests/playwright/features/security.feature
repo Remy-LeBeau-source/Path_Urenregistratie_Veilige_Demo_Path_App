@@ -219,3 +219,11 @@ Feature: Authenticatie- en API-beveiliging
     Given authenticatie- en API-beveiliging is voorbereid
     When de flow voor SEC-N-011 wordt uitgevoerd
     Then wordt met Playwright-assertions bevestigd dat een kapotte JSON-payload lekt geen bestandspad of stacktrace naar de client
+
+  @happy
+  Scenario: [SEC-H-016] een beheerder kan via een geraden gebruikers-id geen medewerker van een ander bedrijf de- of reactiveren
+    # Testtechniek: Beslissingstabel rollen en autorisatie
+    # Aantoonbare Playwright-assertions in deze case: 3
+    Given authenticatie- en API-beveiliging is voorbereid
+    When de flow voor SEC-H-016 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat een beheerder kan via een geraden gebruikers-id geen medewerker van een ander bedrijf de- of reactiveren
