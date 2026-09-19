@@ -1,8 +1,14 @@
 {
-  "appVersion": "2.0.188",
-  "generatedAt": "2026-09-19T04:26:09.239Z",
+  "appVersion": "2.0.190",
+  "generatedAt": "2026-09-19T05:14:31.269Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.190",
+      "wish": "Gemeld door herontwerp, uitgezocht met de echte GitHub-API: de PROD-wekker (release-pipeline.yml) kon de PROD-poort ten onrechte als \"afgehandeld\" lezen. Bij release 2.0.187 (run 35420967252, commit 8ddcbcbe) stond de PROD-goedkeuring urenlang open terwijl de wekker na zijn eerste controle (10 minuten) al \"PROD-poort wacht niet meer; niets te doen\" had gemeld en gestopt was. Uitgezocht via gh api in plaats van alleen beredeneerd: beide jobs (\"Promote Prod (goedkeuring)\" en \"Promote Prod (wekker)\") bleken zelf pas 35 minuten na het vrijkomen van de poort te starten (Een tekort aan hosted runners, los van deze wekker), en de wekker las alleen het aantal wachtende deployment-reviews (pending_deployments) -- nul wachtende reviews werd altijd gelezen als \"al afgehandeld\", terwijl dat evengoed kan betekenen dat de goedkeuringsjob zelf nog niet eens is gestart en dus nog niet als wachtend is geregistreerd. De wekker vraagt nu bij nul wachtende reviews eerst de status van de \"Promote Prod (goedkeuring)\"-job zelf op (via de jobs-API); alleen bij status \"completed\" (echt goedgekeurd-en-doorgelopen, afgewezen, of overgeslagen) stopt hij, anders blijft hij net als bij een nieuwere release gewoon doorcontroleren tot het tijdbudget op is. Tegenproef is bij een CI-race lastig te forceren; wel geverifieerd met een echte, live gh api-aanroep tegen de betrokken run dat de nieuwe jobs-query het juiste veld en de juiste job vindt, en dat de bestaande, veelvuldig teruggedraaide logica (pending_deployments-telling, nieuwere-release-detectie, force-cancel) ongewijzigd blijft voor het geval dat al goed werkte. Peer heeft de vastgelopen poort van 2.0.187 handmatig afgewezen volgens de staande afspraak (nooit zelf goedkeuren); PROD is niet geraakt.",
+      "cases": []
+    },
     {
       "date": "19 sep",
       "version": "2.0.188",
