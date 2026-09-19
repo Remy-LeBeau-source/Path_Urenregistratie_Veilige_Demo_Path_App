@@ -1,6 +1,6 @@
 {
-  "appVersion": "2.0.195",
-  "generatedAt": "2026-09-19T07:01:44.912Z",
+  "appVersion": "2.0.196",
+  "generatedAt": "2026-09-19T08:22:23.325Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
     {
@@ -2264,6 +2264,12 @@
       "wish": "Eigen vondst in de testset zelf: een paar cases leunen op de gezaaide urenstaat, dus wie lokaal de hele suite in één keer draait krijgt rood op cases die niets mankeren (E2E-H-018, SKIN-H-035). In CI valt het niet op omdat die in aparte shards met een eigen database draaien. Oplossing is dezelfde als eerder bij de dashboardcases: elke schrijvende case maakt zijn eigen maand aan (TW-1 in CODEX_HANDOFF.md).",
       "who": "herontwerp",
       "status": "klaar, 2.0.179 t/m 2.0.184"
+    },
+    {
+      "date": "19 sep",
+      "wish": "Twee wisselvallige cases op main's terrein, gevonden door herontwerp bij het nalopen van de laatste 8 CI-runs: AUTH-H-003 (mobile-safari, run 35410988413) en E2E-H-008 (mobile-safari, run 35397301064), elk één keer gefaald op de eerste poging, groen bij de automatische herhaling. Foutdetails staan in de ci-playwright-report-<shard>-artefacten van die runs. Nog niet zelf gereproduceerd of onderzocht; te weinig herhaling (1 op 8 runs) om zonder bewijs iets te patchen.",
+      "who": "main",
+      "status": "in de gaten houden"
     },
     {
       "date": "15 sep",
