@@ -209,6 +209,33 @@ function staff_send_email_conflict(?array $existing = null, int $companyId = 0):
     auth_send_json($response, 409);
 }
 
+/**
+ * De catch rond een opslagtransactie ving elke SQLSTATE 23000 (elke unieke- of
+ * sleutelbotsing) op als "e-mailadres al in gebruik", ook als de botsing ergens
+ * anders zat -- bijvoorbeeld uq_mail_recipient_email of de samengestelde sleutel
+ * van assignment_mail_routes. staff_find_email_conflict gaf dan null terug (het
+ * account-e-mailadres zelf botste niet), maar staff_send_email_conflict(null, ...)
+ * stuurde alsnog de misleidende e-mailmelding: die geeft altijd 409 met dezelfde
+ * tekst, ongeacht of $existing null is. Gemeld door herontwerp (19 sep): een
+ * opgeslagen, gezaaide medewerker kreeg deze melding terwijl zijn e-mailadres in
+ * de database gewoon bij hemzelf hoorde. Nu alleen de e-mailmelding bij een
+ * echte botsing; anders een neutrale 409 en de echte database-melding (met de
+ * naam van de botsende sleutel) in de serverlog, nooit naar de client.
+ */
+function staff_handle_upsert_integrity_violation(PDOException $e, PDO $pdo, string $email, int $excludeUserId, int $companyId): never
+{
+    $emailConflict = staff_find_email_conflict($pdo, $email, $excludeUserId);
+    if ($emailConflict !== null) {
+        staff_send_email_conflict($emailConflict, $companyId);
+    }
+    error_log('Employee upsert integrity violation (not an e-mail conflict): ' . $e->getMessage());
+    auth_send_json([
+        'ok' => false,
+        'error' => 'save-conflict',
+        'message' => 'Deze wijziging botst met bestaande gegevens. Probeer het opnieuw.',
+    ], 409);
+}
+
 // Het opslaan zelf staat in mail-recipients.php, gedeeld met settings.php.
 // Hier alleen de keuze die dit eindpunt maakt: een onjuist adres wordt
 // overgeslagen, want een medewerker opslaan mag niet stuklopen op een
@@ -466,7 +493,7 @@ if ($action === 'upsert_admin') {
             $pdo->rollBack();
         }
         if ($e instanceof PDOException && (string)$e->getCode() === '23000') {
-            staff_send_email_conflict(staff_find_email_conflict($pdo, $email, $dbUserId), $companyId);
+            staff_handle_upsert_integrity_violation($e, $pdo, $email, $dbUserId, $companyId);
         }
         // Without this the cause is thrown away and a failed save is not
         // diagnosable: the caller only sees a generic 500.
@@ -947,8 +974,9 @@ if ($action === 'upsert_employee') {
             $pdo->rollBack();
         }
         if ($e instanceof PDOException && (string)$e->getCode() === '23000') {
-            staff_send_email_conflict(staff_find_email_conflict($pdo, $email, $employeeDbUserId), $companyId);
+            staff_handle_upsert_integrity_violation($e, $pdo, $email, $employeeDbUserId, $companyId);
         }
+        error_log('Employee upsert failed: ' . $e->getMessage());
         $message = $e instanceof RuntimeException
             ? $e->getMessage()
             : 'De medewerker kon niet worden opgeslagen. Probeer het opnieuw.';

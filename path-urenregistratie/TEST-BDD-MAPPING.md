@@ -33,6 +33,7 @@
 | ADM-WR-H-013 | api | organization-settings.feature | onderwerp en begeleidende tekst van een opdracht blijven bewaard | API-contract + equivalentieklasse | 5 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | onderwerp en begeleidende tekst van een opdracht blijven bewaard | Happy | 2 | Actueel |
 | ADM-WR-H-003 | api | organization-settings.feature | admin kan medewerker server-led aanmaken en bootstrap ziet deze terug | Beslissingstabel rollen en autorisatie | 11 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | admin kan medewerker server-led aanmaken en bootstrap ziet deze terug | Happy | 2 | Actueel |
 | ADM-WR-N-001 | api | organization-settings.feature | dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount | Negatieve equivalentieklasse + error guessing | 8 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount | Negative | 2 | Actueel |
+| ADM-WR-N-012 | api | organization-settings.feature | een botsing die niets met het accountadres te maken heeft, meldt niet ten onrechte "e-mailadres al in gebruik" | Negatieve equivalentieklasse + error guessing | 7 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | een botsing die niets met het accountadres te maken heeft, meldt niet ten onrechte "e-mailadres al in gebruik" | Negative | 2 | Actueel |
 | ADM-WR-N-003 | api | organization-settings.feature | beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt geweigerd | Beslissingstabel rollen en autorisatie | 10 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt geweigerd | Negative | 2 | Actueel |
 | ADM-WR-N-004 | api | organization-settings.feature | beheerder aanmaken met het e-mailadres van een bestaande medewerker toont een duidelijke melding (geen silent failure) | Beslissingstabel rollen en autorisatie | 13 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | beheerder aanmaken met het e-mailadres van een bestaande medewerker toont een duidelijke melding (geen silent failure) | Negative | 2 | Actueel |
 | ADM-WR-N-002 | api | organization-settings.feature | dubbel accountadres opent het bestaande account zonder duplicaat | Negatieve equivalentieklasse + error guessing | 14 | admin-writes.steps.ts | admin-writes.spec.ts | API | Beheer & Instellingen | dubbel accountadres opent het bestaande account zonder duplicaat | Negative | 2 | Actueel |
@@ -664,9 +665,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 642
+- Playwright executable cases: 643
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 643
+- Totaal unieke executable cases: 644
 - Playwright features: 33
 - Database features: 1
 - Playwright steps mappings: 33

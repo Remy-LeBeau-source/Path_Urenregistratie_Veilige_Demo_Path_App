@@ -1,8 +1,42 @@
 {
-  "appVersion": "2.0.180",
-  "generatedAt": "2026-09-18T22:52:21.531Z",
+  "appVersion": "2.0.182",
+  "generatedAt": "2026-09-19T00:11:56.312Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.182",
+      "wish": "Serverbevinding van herontwerp opgelost: een botsing die niets met het account-e-mailadres te maken had, kreeg toch de melding \"Dit e-mailadres is al in gebruik\". In upsert_employee en upsert_admin (server/api/staff.php) ving de catch elke SQLSTATE 23000 (elke unieke- of sleutelbotsing binnen de opslagtransactie) op als e-mailconflict, ook als staff_find_email_conflict() null teruggaf omdat de echte botsing ergens anders zat -- bijvoorbeeld uq_mail_recipient_email op mail_recipients of de samengestelde sleutel van assignment_mail_routes. staff_send_email_conflict(null, ...) stuurde dan alsnog de misleidende 409-melding. Gezien in herontwerps volledige lokale run: ADM-WR-H-016 kreeg de melding bij het opslaan van de gezaaide een medewerker, terwijl zijn accountadres in de database gewoon bij zijn eigen user hoorde; los niet te reproduceren. Nieuwe gedeelde functie staff_handle_upsert_integrity_violation(): alleen de e-mailmelding bij een echte botsing op het account-e-mailadres, anders een neutrale 409 (\"Deze wijziging botst met bestaande gegevens\") en de echte database-melding met de naam van de botsende sleutel in de serverlog, nooit naar de client. ADM-WR-N-012 nieuw: twee nieuwe mailontvangers met hetzelfde adres botsen op uq_mail_recipient_email terwijl het medewerker-e-mailadres zelf uniek is. Tegenproef: zonder de fix faalde de test echt op error === 'email-already-in-use' (rood); met de fix groen, en de serverlog toont de echte sleutelnaam. Bestaande e-mailconflicttests (ADM-WR-N-001/003/004/006) blijven ongewijzigd groen.",
+      "cases": [
+        {
+          "id": "ADM-WR-H-016",
+          "title": "de routevinkjes van een opdracht blijven na opslaan en F5 staan zoals gezet",
+          "feature": "tests/playwright/features/organization-settings.feature",
+          "technique": "Herstelbaarheid + toestandsovergang",
+          "assertions": 3,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de routevinkjes van een opdracht blijven na opslaan en F5 staan zoals gezet\n  Given organisatie-instellingen beheren is voorbereid\n  When het brokervinkje wordt omgezet en opgeslagen\n  Then staat het na een herlaad nog steeds zo"
+        },
+        {
+          "id": "ADM-WR-N-012",
+          "title": "Een botsing die niets met het accountadres te maken heeft, meldt niet ten onrechte \"e-mailadres al in gebruik\"",
+          "feature": "tests/playwright/features/organization-settings.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 7,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: een botsing die niets met het accountadres te maken heeft, meldt niet ten onrechte \"e-mailadres al in gebruik\"\n  Given organisatie-instellingen beheren is voorbereid\n  When de flow voor ADM-WR-N-012 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat een botsing die niets met het accountadres te maken heeft, meldt niet ten onrechte \"e-mailadres al in gebruik\""
+        },
+        {
+          "id": "ADM-WR-N-001",
+          "title": "dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount",
+          "feature": "tests/playwright/features/organization-settings.feature",
+          "technique": "Negatieve equivalentieklasse + error guessing",
+          "assertions": 8,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount\n  Given organisatie-instellingen beheren is voorbereid\n  When de flow voor ADM-WR-N-001 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount"
+        }
+      ]
+    },
     {
       "date": "18 sep",
       "version": "2.0.179",
@@ -403,7 +437,7 @@
           "technique": "Beslistabel op het kaartmenu (welke actie hoort erin, welke bewust niet, en welke is uitgeschakeld in de huidige kolom) + controle op de server dat de actie echt uitgevoerd is",
           "assertions": 14,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de rechtermuisknop op een kaart geeft alleen acties die echt iets doen\n  Given het menu is dicht tot je rechtsklikt\n  When de flow voor PIPE-H-014 wordt uitgevoerd\n  Then staan er alleen acties in die hier betekenis hebben\n  And sluit Escape het menu zonder iets te doen\n  And de kaart gaat terug, zodat deze case geen sporen achterlaat"
+          "gherkin": ""
         }
       ]
     },

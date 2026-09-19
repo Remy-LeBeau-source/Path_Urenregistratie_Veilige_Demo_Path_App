@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 642 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 643 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 642 unieke case-ID's
+- Playwright executable cases: 643 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 643 unieke case-ID's
+- Totaal executable cases: 644 unieke case-ID's
 - Playwright features: 33
 - Database features: 1
 - Playwright steps mappings: 33
 - Database steps mappings: 1
-- Uitvoeringen: 708
-- Niet-mobile projectuitvoeringen: 576
+- Uitvoeringen: 709
+- Niet-mobile projectuitvoeringen: 577
 - Mobile functionele cases: 66
 - Pixel 7 / Chromium-uitvoeringen: 66
 - iPhone 13 / WebKit-uitvoeringen: 66
 
-De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 642 Playwright-functionele cases in totaal 708 resultaten op: 576 + (66 x 2) = 708.
+De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 643 Playwright-functionele cases in totaal 709 resultaten op: 577 + (66 x 2) = 709.
 
 ## Documentatieketen
 
@@ -47,7 +47,7 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 642 Playwri
 
 - Feature: `tests/playwright/features/organization-settings.feature`
 - Source: `tests/playwright/admin-writes.spec.ts`
-- Cases: 33
+- Cases: 34
 
 - [ADM-WR-H-019] latere startdatum vraagt bevestiging en vermeldt dat historie bewaard blijft — Techniek: API-contract + equivalentieklasse · Assertions: 9
 - [ADM-WR-H-020] server berekent echte historische impact vóór een latere startdatum wordt opgeslagen — Techniek: API-contract + equivalentieklasse · Assertions: 12
@@ -57,6 +57,7 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 642 Playwri
 - [ADM-WR-H-013] onderwerp en begeleidende tekst van een opdracht blijven bewaard — Techniek: API-contract + equivalentieklasse · Assertions: 5
 - [ADM-WR-H-003] admin kan medewerker server-led aanmaken en bootstrap ziet deze terug — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 11
 - [ADM-WR-N-001] dubbel accountadres geeft veilige metadata van het bestaande bedrijfsaccount — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 8
+- [ADM-WR-N-012] een botsing die niets met het accountadres te maken heeft, meldt niet ten onrechte "e-mailadres al in gebruik" — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 7
 - [ADM-WR-N-003] beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt geweigerd — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 10
 - [ADM-WR-N-004] beheerder aanmaken met het e-mailadres van een bestaande medewerker toont een duidelijke melding (geen silent failure) — Techniek: Beslissingstabel rollen en autorisatie · Assertions: 13
 - [ADM-WR-N-002] dubbel accountadres opent het bestaande account zonder duplicaat — Techniek: Negatieve equivalentieklasse + error guessing · Assertions: 14

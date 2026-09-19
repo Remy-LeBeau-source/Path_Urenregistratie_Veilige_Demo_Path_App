@@ -590,6 +590,49 @@ Uren: {uren} uur.`;
     await ctx.dispose();
   });
 
+  test('[ADM-WR-N-012] een botsing die niets met het accountadres te maken heeft, meldt niet ten onrechte "e-mailadres al in gebruik"', async () => {
+    // Gemeld door herontwerp (19 sep): de catch rond de opslagtransactie ving
+    // elke SQLSTATE 23000 op als een e-mailconflict op het account, ook als de
+    // echte botsing ergens anders zat (hier: uq_mail_recipient_email op
+    // mail_recipients, een andere tabel in dezelfde transactie). Twee nieuwe
+    // mailontvangers met hetzelfde adres triggeren precies die botsing, terwijl
+    // het medewerker-e-mailadres zelf uniek is.
+    const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
+    const authApi = new AuthApi(ctx);
+    await authApi.login(appConfig.adminEmail, requirePassword(appConfig.adminPassword, 'PLAYWRIGHT_ADMIN_PASSWORD'));
+
+    const suffix = Date.now().toString().slice(-7);
+    const employeeEmail = `botsing-medewerker-${suffix}@example.invalid`;
+    const recipientEmail = `botsing-ontvanger-${suffix}@example.invalid`;
+
+    const write = await postJson(ctx, '/server/api/staff.php', {
+      action: 'upsert_employee',
+      sendInvitation: false,
+      employee: { name: `Botsing medewerker ${suffix}`, email: employeeEmail },
+      mailRecipients: [
+        { id: `nieuwe-ontvanger-a-${suffix}`, email: recipientEmail, name: 'Ontvanger A' },
+        { id: `nieuwe-ontvanger-b-${suffix}`, email: recipientEmail, name: 'Ontvanger B' },
+      ],
+    });
+
+    expect(write.status).toBe(409);
+    expect(write.body.ok).toBe(false);
+    expect(write.body.error).not.toBe('email-already-in-use');
+    expect(write.body.message).not.toContain('Dit e-mailadres is al in gebruik');
+    expect(write.body.message).not.toContain('hoort al bij');
+    expect(JSON.stringify(write.body)).not.toContain('SQLSTATE');
+
+    // De transactie moet volledig zijn teruggedraaid: geen halve medewerker.
+    const bootstrapAfter = await ctx.get('/server/api/bootstrap.php');
+    const afterBody = await bootstrapAfter.json();
+    const created = (afterBody.users as Array<{ email: string }>)
+      .filter(user => String(user.email).toLowerCase() === employeeEmail.toLowerCase());
+    expect(created).toHaveLength(0);
+
+    await authApi.logout();
+    await ctx.dispose();
+  });
+
   test('[ADM-WR-N-003] beheerder aanmaken met het e-mailadres van een bestaande medewerker wordt geweigerd', async () => {
     const ctx = await playwrightRequest.newContext({ baseURL: appConfig.baseUrl });
     const authApi = new AuthApi(ctx);
