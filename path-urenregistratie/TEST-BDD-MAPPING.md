@@ -529,6 +529,7 @@
 | KLV-N-024 | ui | klassiek-verkenning.feature | na "Herstel demo" leest de app de server weer zodra de uren zijn opgeslagen | Toestandsovergang (lokaal leidend na reset naar server leidend na een geslaagde urenopslag) + foutvermoeden uit monkey-verkenning | 4 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | na "Herstel demo" leest de app de server weer zodra de uren zijn opgeslagen | Negative | 19 | Actueel |
 | KLV-N-025 | ui | klassiek-verkenning.feature | een geweigerde opslag omdat de maand ${klasse.naam} is, noemt de echte reden | Equivalentieklassen op de reden van het slot (ingediend tegenover goedgekeurd/gefactureerd) met de letterlijke serverantwoorden | 4 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | een geweigerde opslag omdat de maand ${klasse.naam} is, noemt de echte reden | Negative | 19 | Actueel |
 | KLV-N-026 | ui | klassiek-verkenning.feature | na "Herstel demo" zet een door de server geweigerde invoer de ingediende maand weer op slot | Toestandsovergang (lokaal leidend na reset naar server leidend na een weigering die de serverstand bewijst) + foutvermoeden uit monkey-verkenning | 6 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | na "Herstel demo" zet een door de server geweigerde invoer de ingediende maand weer op slot | Negative | 19 | Actueel |
+| KLV-N-027 | ui | klassiek-verkenning.feature | de snelknoppen 0, 8 en 9 in Mijn uren zijn op telefoon groot genoeg om te raken | Grenswaardenanalyse op de schermbreedte (320, 390 en de rand van het telefoonblok 720) + WCAG 2.5.8 doelgrootte | 4 | klassiek-verkenning.steps.ts | klassiek-verkenning.spec.ts | UI Desktop | Vormgeving | de snelknoppen 0, 8 en 9 in Mijn uren zijn op telefoon groot genoeg om te raken | Negative | 19 | Actueel |
 | PIPE-N-003 | ui | pipeline-demo.feature | de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt | Regressiecontrole na hernoeming: oude URL blijft bereikbaar en verwijst door (meta-refresh) naar de nieuwe naam | 6 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | de oude bestandsnaam wijst door naar Path Kwaliteitsstraat, en de bestemming laadt zijn eigen stylesheet en script echt | Negative | 18 | Actueel |
 | PIPE-H-001 | ui | pipeline-demo.feature | de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin | Datagedreven vergelijking (pagina versus pilot/path-kwaliteitsstraat-data.json) + traceerbaarheid over drie projecties | 38 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | de demo toont de echte laatste opleveringen uit GIO-WENSEN met hun cases en Gherkin | Happy | 18 | Actueel |
 | PIPE-H-002 | ui | pipeline-demo.feature | opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub | Toestandsovergangtest (aangenomen → wacht op VS Code → simulatie → opgeleverd) + contractcontrole van het wachtrij-antwoord + negatieve controle dat GitHub niet meer wordt benaderd | 42 | pipeline-demo.steps.ts | pipeline-demo.spec.ts | UI Desktop | Werkwijze & pipeline | opslaan in het Confluence-loket is genoeg: de wens landt in de wachtrij op de server, niet bij GitHub | Happy | 18 | Actueel |
@@ -669,9 +670,9 @@
 
 ## Totalen
 
-- Playwright executable cases: 647
+- Playwright executable cases: 648
 - SQL/DB executable cases: 1
-- Totaal unieke executable cases: 648
+- Totaal unieke executable cases: 649
 - Playwright features: 33
 - Database features: 1
 - Playwright steps mappings: 33

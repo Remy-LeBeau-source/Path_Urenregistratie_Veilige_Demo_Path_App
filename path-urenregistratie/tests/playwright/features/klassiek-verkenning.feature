@@ -230,3 +230,11 @@ Feature: Vondsten uit de monkey-verkenning op Klassiek
     Given een maand die op de server is ingediend
     When de medewerker iets invult en de server dat weigert
     Then noemt de app de reden, laat hij de herstelstand los en staat de maand op slot
+
+  @negative
+  Scenario: [KLV-N-027] de snelknoppen 0, 8 en 9 in Mijn uren zijn op telefoon groot genoeg om te raken
+    # Testtechniek: Grenswaardenanalyse op de schermbreedte (320, 390 en de rand van het telefoonblok 720) + WCAG 2.5.8 doelgrootte
+    # Aantoonbare Playwright-assertions in deze case: 4
+    Given vondsten uit de monkey-verkenning op Klassiek is voorbereid
+    When de flow voor KLV-N-027 wordt uitgevoerd
+    Then wordt met Playwright-assertions bevestigd dat de snelknoppen 0, 8 en 9 in Mijn uren zijn op telefoon groot genoeg om te raken

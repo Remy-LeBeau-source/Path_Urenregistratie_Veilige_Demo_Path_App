@@ -4178,6 +4178,10 @@ body.toont-installatieaanbod .main-content {
   html:not([data-skin="new"]) .hours-day-entry .hours-day-presets {
     display: flex;
     flex: 0 0 auto;
+    /* De basisregel geeft deze groep width: 64px. Daarin kromp elke knop van
+       44px naar 20px: onder de WCAG-minimummaat van 24px en lastig te raken
+       (verkenning doelgrootte, 19 sep; KLV-N-027). */
+    width: auto;
     gap: 0;
     border: 1px solid var(--line);
     border-radius: 11px;

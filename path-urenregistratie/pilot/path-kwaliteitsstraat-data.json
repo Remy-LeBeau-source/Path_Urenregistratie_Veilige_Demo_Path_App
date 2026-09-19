@@ -1,8 +1,51 @@
 {
-  "appVersion": "2.0.199",
-  "generatedAt": "2026-09-19T08:46:47.282Z",
+  "appVersion": "2.0.201",
+  "generatedAt": "2026-09-19T11:54:49.402Z",
   "source": "GIO-WENSEN.md + tests/playwright/features + LIVING-DOC.md",
   "delivered": [
+    {
+      "date": "19 sep",
+      "version": "2.0.201",
+      "wish": "Toegankelijkheid nagelopen; de snelknoppen 0, 8 en 9 in Mijn uren zijn op telefoon weer groot genoeg om te raken. Twee nieuwe verkenningen (buiten CI, in tests/verkenning): (1) heeft elk zichtbaar bedieningselement een toegankelijke naam (WCAG 4.1.2), en (2) is elk bedieningselement minstens 24 bij 24 pixels of vrij genoeg (WCAG 2.5.8). Beide over alle schermen, medewerker en beheer, Klassiek en Modern, licht en donker, desktop en telefoon; per scherm 580 tot 670 elementen. Namen: nergens iets ontbrekend. Doelgrootte: in Klassiek op telefoon waren de snelknoppen 0/8/9 in Mijn uren maar 20 pixels breed en stonden ze tegen elkaar. Het ontwerp geeft ze 44 pixels, maar een algemene regel hield de groep op 64 pixels, zodat de knoppen kromp. Nu 44 pixels, van 320 tot 720 pixels breed, zonder dat de datum wordt afgekapt of de pagina gaat schuiven. Vastgelegd met KLV-N-027. Techniek: grenswaardenanalyse op de schermbreedte + WCAG 2.5.8. Tegenproef: zonder de aanpassing rood (20 pixels), met groen; impactset (DASH-H-035, DASH-H-051, SKIN-H-025 en het KLV-bestand) groen.",
+      "cases": [
+        {
+          "id": "KLV-N-027",
+          "title": "de snelknoppen 0, 8 en 9 in Mijn uren zijn op telefoon groot genoeg om te raken",
+          "feature": "tests/playwright/features/klassiek-verkenning.feature",
+          "technique": "Grenswaardenanalyse op de schermbreedte (320, 390 en de rand van het telefoonblok 720) + WCAG 2.5.8 doelgrootte",
+          "assertions": 4,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de snelknoppen 0, 8 en 9 in Mijn uren zijn op telefoon groot genoeg om te raken\n  Given vondsten uit de monkey-verkenning op Klassiek is voorbereid\n  When de flow voor KLV-N-027 wordt uitgevoerd\n  Then wordt met Playwright-assertions bevestigd dat de snelknoppen 0, 8 en 9 in Mijn uren zijn op telefoon groot genoeg om te raken"
+        },
+        {
+          "id": "DASH-H-035",
+          "title": "Mijn uren op desktop toont alleen Ma–Vr, de datum boven elk veld, 0/8/9 eronder en het weektotaal rechts",
+          "feature": "tests/playwright/features/dashboard.feature",
+          "technique": "End-to-end use-case + visuele contractasserties",
+          "assertions": 9,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: Mijn uren op desktop toont alleen Ma–Vr, de datum boven elk veld, 0/8/9 eronder en het weektotaal rechts\n  Given dashboard en open werkvoorraad is voorbereid\n  When de flow voor DASH-H-035 wordt uitgevoerd\n  Then heeft de weekstaat alleen de werkdagen als kolommen\n  And staat in elke dagcel de datum boven het veld en 0/8/9 eronder, met het totaal rechts van de dagen"
+        },
+        {
+          "id": "DASH-H-051",
+          "title": "Mijn uren: dagen buiten de maand zijn gedempt met datum, en van week naar week gaat met pijltjes en Tab op vrijdag",
+          "feature": "tests/playwright/features/dashboard.feature",
+          "technique": "End-to-end use-case + visuele contractasserties",
+          "assertions": 15,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: Mijn uren: dagen buiten de maand zijn gedempt met datum, en van week naar week gaat met pijltjes en Tab op vrijdag\n  Given dashboard en open werkvoorraad is voorbereid\n  Then toont maandag 31 augustus zijn datum en een gedempt, niet invulbaar veld zonder 0/8/9\n  When de focus in de segmentrij staat, then wisselen pijl rechts en links van periode en loopt de focus mee\n  When de medewerker op het vrijdagveld van een week Tab drukt, then staat de volgende week open met de cursor in het eerste veld\n  And springt Tab op vrijdag bij Hele maand niet naar een andere week"
+        },
+        {
+          "id": "SKIN-H-025",
+          "title": "de 0/8/9-snelkeuze bij elke dag staat altijd zichtbaar, in Klassiek en in Nieuw",
+          "feature": "tests/playwright/features/skin.feature",
+          "technique": "End-to-end use-case + visuele contractasserties",
+          "assertions": 11,
+          "platform": "desktop-chromium",
+          "gherkin": "Scenario: de 0/8/9-snelkeuze bij elke dag staat altijd zichtbaar, in Klassiek en in Nieuw\n  Given Klassiek: minstens twee losse dagcellen tonen allebei hun eigen 0/8/9, zonder te focussen\n  When naar Nieuw wordt gewisseld op dezelfde week\n  Then tonen minstens twee bento-dagkaartjes allebei hun eigen 0/8/9, zonder te focussen"
+        }
+      ]
+    },
     {
       "date": "19 sep",
       "version": "2.0.199",
@@ -531,7 +574,7 @@
           "technique": "Grenswaardenanalyse (10 van 14 regels) + responsive viewport + negatieve integratiecontrole",
           "assertions": 20,
           "platform": "desktop-chromium",
-          "gherkin": "Scenario: de demo blijft lokaal, tekent de Living Doc in stappen en past op een telefoon\n  Given interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand is voorbereid\n  When de Kennisbank op de telefoon wordt geopend\n  Then tekent de Living Doc tien regels per keer, lokaal vóór echt, en bewaart hij er hooguit 25\n  And de pagina heeft geen horizontale overflow of gedeelde appcode"
+          "gherkin": ""
         }
       ]
     },

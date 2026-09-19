@@ -1,23 +1,23 @@
 # Living Doc - Path Uren & Facturatie
 
-De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 647 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
+De native Playwright specs zijn de uitvoerbare waarheid. Deze Living Documentation maakt dezelfde 648 Playwright-cases leesbaar en voegt 1 directe DB/SQL-case(s) toe zonder een tweede testrunner te introduceren.
 
 ## Actuele regressiestatus
 
-- Playwright executable cases: 647 unieke case-ID's
+- Playwright executable cases: 648 unieke case-ID's
 - SQL/DB executable cases: 1 unieke case-ID('s)
-- Totaal executable cases: 648 unieke case-ID's
+- Totaal executable cases: 649 unieke case-ID's
 - Playwright features: 33
 - Database features: 1
 - Playwright steps mappings: 33
 - Database steps mappings: 1
-- Uitvoeringen: 713
-- Niet-mobile projectuitvoeringen: 581
+- Uitvoeringen: 714
+- Niet-mobile projectuitvoeringen: 582
 - Mobile functionele cases: 66
 - Pixel 7 / Chromium-uitvoeringen: 66
 - iPhone 13 / WebKit-uitvoeringen: 66
 
-De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 647 Playwright-functionele cases in totaal 713 resultaten op: 581 + (66 x 2) = 713.
+De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 648 Playwright-functionele cases in totaal 714 resultaten op: 582 + (66 x 2) = 714.
 
 ## Documentatieketen
 
@@ -693,7 +693,7 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 647 Playwri
 
 - Feature: `tests/playwright/features/klassiek-verkenning.feature`
 - Source: `tests/playwright/klassiek-verkenning.spec.ts`
-- Cases: 26
+- Cases: 27
 
 - [KLV-N-002] het maandkeuzepaneel valt op geen enkele breedte buiten het scherm — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 8
 - [KLV-N-003] in de menubalk van de medewerker overlapt niets elkaar, op geen enkele desktopbreedte — Techniek: Monkey testing (seeded) + grenswaardenanalyse + responsive viewport · Assertions: 3
@@ -721,6 +721,7 @@ De 66 Mobile-cases worden op twee devices uitgevoerd. Daarom leveren 647 Playwri
 - [KLV-N-024] na "Herstel demo" leest de app de server weer zodra de uren zijn opgeslagen — Techniek: Toestandsovergang (lokaal leidend na reset naar server leidend na een geslaagde urenopslag) + foutvermoeden uit monkey-verkenning · Assertions: 4
 - [KLV-N-025] een geweigerde opslag omdat de maand ${klasse.naam} is, noemt de echte reden — Techniek: Equivalentieklassen op de reden van het slot (ingediend tegenover goedgekeurd/gefactureerd) met de letterlijke serverantwoorden · Assertions: 4
 - [KLV-N-026] na "Herstel demo" zet een door de server geweigerde invoer de ingediende maand weer op slot — Techniek: Toestandsovergang (lokaal leidend na reset naar server leidend na een weigering die de serverstand bewijst) + foutvermoeden uit monkey-verkenning · Assertions: 6
+- [KLV-N-027] de snelknoppen 0, 8 en 9 in Mijn uren zijn op telefoon groot genoeg om te raken — Techniek: Grenswaardenanalyse op de schermbreedte (320, 390 en de rand van het telefoonblok 720) + WCAG 2.5.8 doelgrootte · Assertions: 4
 
 ### Interactieve Path Pipeline als zelfstandige TEST-demo met echte projectstand
 

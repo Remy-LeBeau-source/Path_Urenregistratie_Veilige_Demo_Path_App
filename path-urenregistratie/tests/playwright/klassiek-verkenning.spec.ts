@@ -1330,3 +1330,32 @@ test('[KLV-N-026] na "Herstel demo" zet een door de server geweigerde invoer de 
     await expect(invoer, 'na de weigering hoort de ingediende maand op slot te staan').toHaveCount(0, { timeout: 15_000 });
   });
 });
+
+test('[KLV-N-027] de snelknoppen 0, 8 en 9 in Mijn uren zijn op telefoon groot genoeg om te raken', async ({ page }) => {
+  // Verkenning doelgrootte (WCAG 2.5.8, 19 sep): op telefoon waren de snelknoppen
+  // 20px breed en stonden ze tegen elkaar. Het telefoonblok geeft elke knop 44px
+  // (ontwerp), maar de basisregel hield de groep op 64px. Getoetst op de smalste
+  // breedte, een gangbare telefoon en de rand van het telefoonblok (max-width 720px).
+  // Techniek: grenswaardenanalyse op de schermbreedte + WCAG 2.5.8 doelgrootte.
+  const loginPage = new LoginPage(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await loginPage.open();
+  await loginPage.loginAsEmployee();
+  await page.evaluate(() => { window.location.hash = 'timesheet'; });
+  for (const breedte of [320, 390, 720]) {
+    await test.step(`op ${breedte}px`, async () => {
+      await page.setViewportSize({ width: breedte, height: 844 });
+      const groep = page.locator('#hours-grid .hours-day-presets:visible').first();
+      await expect(groep).toBeVisible();
+      await expect.poll(() => groep.evaluate(el => Math.min(...[...el.querySelectorAll('button')].map(b => b.getBoundingClientRect().width))),
+        { message: `elke snelknop hoort op ${breedte}px ruim te raken zijn (ontwerp 44px, WCAG-minimum 24px)` }).toBeGreaterThanOrEqual(40);
+      const meting = await groep.evaluate(el => {
+        const label = (el.closest('.hours-day-entry') as HTMLElement).querySelector('.date-number') as HTMLElement;
+        return { afgekapt: label.scrollWidth > label.clientWidth + 1, paginaBreed: document.documentElement.scrollWidth, knoppen: el.querySelectorAll('button').length };
+      });
+      expect(meting.knoppen, 'drie snelknoppen: 0, 8 en 9').toBe(3);
+      expect(meting.afgekapt, `de datum naast de knoppen blijft op ${breedte}px heel`).toBe(false);
+      expect(meting.paginaBreed, `de pagina schuift op ${breedte}px niet horizontaal`).toBeLessThanOrEqual(breedte);
+    });
+  }
+});

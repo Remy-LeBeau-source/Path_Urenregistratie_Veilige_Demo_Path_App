@@ -97,3 +97,5 @@ Then("noemt de melding de reden die de server gaf");
 Given("een maand die op de server is ingediend");
 When("de medewerker iets invult en de server dat weigert");
 Then("noemt de app de reden, laat hij de herstelstand los en staat de maand op slot");
+When("de flow voor KLV-N-027 wordt uitgevoerd");
+Then("wordt met Playwright-assertions bevestigd dat de snelknoppen 0, 8 en 9 in Mijn uren zijn op telefoon groot genoeg om te raken");
