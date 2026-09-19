@@ -1793,4 +1793,42 @@ test('[PIPE-N-004] tussen de mobiele en de bureaubladdrempel blijft de Confluenc
       await expect(page.locator('[data-living-doc] li').first()).toBeVisible();
     });
   });
+  test('[PIPE-H-019] elke kaart toont met initialen wie hem oppakt, afgeleid uit de wensenlijst', async ({ page }) => {
+    // Dekkingsronde 19 sep: de avatar op de Jira-kaarten (2.0.126) had geen case.
+    // De initialen komen uit het veld "Wie" van GIO-WENSEN: herontwerp, de PO (ook
+    // de oude schrijfwijze met de naam uit de browseropslag), een besluit, of main
+    // -- ook als "Wie" leeg is. Op een openbare pagina geen persoonsnamen: de PO
+    // heet "PO". Techniek: equivalentieklassen op het veld "Wie", met een
+    // nagebootste feed zodat de uitkomst niet afhangt van de actuele wensenlijst.
+    const klassen = [
+      { who: 'herontwerp', initialen: 'HW', naam: 'Herontwerp' },
+      { who: 'PO', initialen: 'PO', naam: 'PO' },
+      { who: 'gio', initialen: 'PO', naam: 'PO' },
+      { who: 'besluit', initialen: 'BO', naam: 'Besluit' },
+      { who: 'main', initialen: 'MA', naam: 'Main' },
+      { who: '', initialen: 'MA', naam: 'Main' },
+    ];
+    const echteFeed = await page.request.get('/pilot/path-kwaliteitsstraat-data.json').then((r) => r.json()) as Record<string, unknown>;
+    const feed = {
+      ...echteFeed,
+      open: klassen.map((k, i) => ({ date: '19 sep', wish: `Proefwens ${i + 1} voor de avatar (${k.who || 'leeg'})`, who: k.who, status: 'open' })),
+    };
+    await page.route('**/pilot/path-kwaliteitsstraat-data.json*', (route) => route.fulfill({ json: feed }));
+    await page.goto('/pilot/path-kwaliteitsstraat.html');
+    await expect(page.locator('body')).toHaveAttribute('data-feed', 'loaded');
+    await page.getByRole('tab', { name: /Backlog/ }).click();
+
+    for (const [i, k] of klassen.entries()) {
+      await test.step(`Then toont de kaart voor Wie = "${k.who || 'leeg'}" ${k.initialen} met als naam ${k.naam}`, async () => {
+        const avatar = page.locator(`.ticket-card[data-ticket="WENS-${i + 1}"] .card-avatar`);
+        await expect(avatar).toHaveText(k.initialen);
+        await expect(avatar).toHaveAttribute('title', k.naam);
+      });
+    }
+    await test.step('And staat er nergens een persoonsnaam in een avatar', async () => {
+      const titels = await page.locator('.card-avatar').evaluateAll((els) => els.map((e) => e.getAttribute('title') || ''));
+      expect(titels.length, 'er horen avatars te zijn').toBeGreaterThan(0);
+      for (const titel of titels) expect(['Herontwerp', 'PO', 'Besluit', 'Main'], `onbekende avatarnaam "${titel}"`).toContain(titel);
+    });
+  });
 });

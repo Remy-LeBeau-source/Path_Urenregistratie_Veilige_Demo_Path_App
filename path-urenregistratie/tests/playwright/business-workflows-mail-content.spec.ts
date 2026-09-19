@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures/e2eIsolation';
+import { eigenGoedgekeurdeUrenstaat } from './fixtures/eigenGoedgekeurdeUrenstaat';
 import type { Page } from '@playwright/test';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -97,64 +98,14 @@ function btwLabel(percentage: number): string {
 
 /** Rijdt uren -> goedkeuren -> definitieve factuur via de GUI en geeft het factuur-ID terug. */
 async function ketenTotFactuur(page: Page, loginPage: LoginPage): Promise<{ factuurId: number; periodeSleutel: string; medewerkerId: number }> {
-  await loginPage.open();
-  await loginPage.loginAsEmployee();
-  await page.locator('button[data-view="timesheet"]').click();
-  await expect(page.locator('#timesheet-status')).toBeVisible();
-  const periodeSleutel = periodeKey(String(await page.locator('#period-label').textContent() || '').trim());
-
-  const ik = await (await page.request.get('/server/auth/me.php')).json() as Json;
-  const bootstrap = await (await page.request.get('/server/api/bootstrap.php')).json() as Json;
-  const medewerkerId = Number((bootstrap.employees as Json[]).find(
-    item => Number(item.user_id) === Number((ik.user as Json).id))?.id || 0);
-  expect(medewerkerId, 'de ingelogde medewerker hoort een profiel te hebben').toBeGreaterThan(0);
-
-  const invoer = page.locator('#hours-grid .hours-input:not([disabled])').first();
-  if (await invoer.count()) {
-    await invoer.fill('8');
-    await invoer.press('Tab');
-    await kiesHeleMaand(page);
-    const schrijf = page.waitForResponse(response =>
-      response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
-    await page.locator('#submit-timesheet').click();
-    await page.locator('#modal-confirm').click();
-    await schrijf;
-  }
-  const urenstaatId = Number((await leesUrenstaat(page, periodeSleutel, medewerkerId)).id || 0);
-  expect(urenstaatId, 'de urenstaat hoort te bestaan').toBeGreaterThan(0);
-
-  // Sinds de verplichte klanturenstaat-check (server/api/invoices.php,
-  // customer-timesheet-required) moet die er staan voor er iets kan worden
-  // gefactureerd; alleen de medewerker zelf mag hem als rechtstreeks gemaild
-  // registreren, dus dat hoort hier, in zijn eigen sessie, vóór de rolwissel.
-  const klanturenstaat = await page.request.post('/server/api/customer-timesheets.php', {
-    headers: { 'X-CSRF-Token': await csrf(page) },
-    data: { action: 'mark_skipped', period: periodeSleutel, review_note: 'ketenTotFactuur: rechtstreeks gemaild.' },
-  });
-  expect(klanturenstaat.ok(), `klanturenstaat registreren hoort te slagen: ${await klanturenstaat.text()}`).toBe(true);
-
-  await page.request.post('/server/auth/logout.php', { headers: { 'X-CSRF-Token': await csrf(page) } });
-  await loginPage.open();
-  await loginPage.loginAsAdmin();
-  const confirmation = await page.request.post('/server/api/customer-timesheets.php', {
-    headers: { 'X-CSRF-Token': await csrf(page) },
-    data: { action: 'confirm_external', period: periodeSleutel, employee_id: medewerkerId, review_note: 'Ontvangst extern gecontroleerd.' },
-  });
-  expect(confirmation.ok(), `extern bevestigen hoort te slagen: ${await confirmation.text()}`).toBe(true);
-
-  if (String((await leesUrenstaat(page, periodeSleutel, medewerkerId)).status) === 'submitted') {
-    await page.locator('button[data-view="approvals"]').click();
-    const goedkeuren = page.locator(`[data-approve="${medewerkerId}"]`).first();
-    await expect(goedkeuren).toBeVisible();
-    const schrijf = page.waitForResponse(response =>
-      response.url().includes('/server/api/timesheets.php') && response.request().method() === 'POST');
-    await goedkeuren.click();
-    await schrijf;
-  }
-  await expect(async () => {
-    expect(String((await leesUrenstaat(page, periodeSleutel, medewerkerId)).status),
-      'de urenstaat hoort goedgekeurd te zijn voor het factureren').toBe('approved');
-  }).toPass({ timeout: 20_000, intervals: [250, 500, 1_000] });
+  // Een eigen, goedgekeurde urenstaat in een ongebruikte maand (fixtures/
+  // eigenGoedgekeurdeUrenstaat.ts). Eerder werkte deze keten in de huidige maand
+  // van de gezaaide medewerker en sloeg hij indienen stil over als er geen vrij
+  // vak meer was; in een volledige lokale run (19 sep) stond de maand dan op
+  // concept en vielen E2E-H-025 en E2E-H-026 op "hoort goedgekeurd te zijn",
+  // terwijl er aan mail en factuur niets mis was (TW-1).
+  void loginPage;
+  const { periodeSleutel, medewerkerId, urenstaatId } = await eigenGoedgekeurdeUrenstaat(page, 'ketenTotFactuur');
 
   const vergrendel = await page.request.post('/server/api/invoices.php', {
     headers: { 'X-CSRF-Token': await csrf(page) },
